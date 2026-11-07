@@ -42,7 +42,7 @@ class CLI(unittest.TestCase):
         self.assertEqual(decision["operations_without_decoding"], 3)
         self.assertEqual(decision["boundary_conversions"], 3)
         self.assertEqual(decision["internal_conversions"], 0)
-        self.assertEqual(decision["verification"], "not-verified-for-this-input")
+        self.assertEqual(decision["verification"], "proved-under-model")
         self.assertEqual((decision["a"] * decision["inverse"]) & 0xffffffff, 1)
         c, _, _ = self.run_source(source, "--seed", "43")
         self.assertNotEqual(a, c)
