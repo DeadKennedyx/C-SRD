@@ -1,0 +1,23 @@
+{
+  "csrd_version": "0.1.0",
+  "functions": [
+    {
+      "a": 1789947473,
+      "b": 1549411197,
+      "boundary_conversions": 3,
+      "column": 10,
+      "function": "calculate",
+      "internal_conversions": 0,
+      "inverse": 846699185,
+      "line": 3,
+      "operations_transformed": 3,
+      "operations_without_decoding": 3,
+      "representation": "affine-u32",
+      "status": "transformed",
+      "verification": "not-verified-for-this-input"
+    }
+  ],
+  "schema_version": 1,
+  "seed": "42",
+  "target": "arm64-apple-macosx26.0.0"
+}

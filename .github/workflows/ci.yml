@@ -1,0 +1,38 @@
+name: C-SRD correctness
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        build_type: [Debug, Release]
+    env:
+      CSRD_TEST_COMPILERS: clang-18:gcc
+      CSRD_REQUIRE_BOTH_COMPILERS: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build clang-18 llvm-18-dev libclang-18-dev libclang-cpp18-dev libclang-rt-18-dev gcc g++ python3 z3
+      - name: Configure
+        run: >-
+          cmake -S . -B build -G Ninja
+          -DCMAKE_C_COMPILER=clang-18 -DCMAKE_CXX_COMPILER=clang++-18
+          -DCMAKE_PREFIX_PATH=/usr/lib/llvm-18
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+      - name: Build
+        run: cmake --build build --parallel 2
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+      - name: Record arithmetic contracts
+        run: python3 tools/verify_rules.py --report build/rule-contracts.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: validation-${{ matrix.build_type }}
+          path: |
+            build/Testing/Temporary/LastTest.log
+            build/rule-contracts.json

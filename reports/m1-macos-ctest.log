@@ -1,0 +1,93 @@
+Start testing: Nov 07 17:00 CST
+----------------------------------------------------------
+1/4 Testing: representation
+1/4 Test: representation
+Command: "/Users/admin/C-SRD/build/representation_test"
+Directory: /Users/admin/C-SRD/build
+"representation" start time: Nov 07 17:00 CST
+Output:
+----------------------------------------------------------
+PASS 1988549 representation checks (empirical)
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"representation" end time: Nov 07 17:00 CST
+"representation" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/4 Testing: integration
+2/4 Test: integration
+Command: "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.14" "/Users/admin/C-SRD/tests/integration/test_cli.py" "/Users/admin/C-SRD/build/csrd"
+Directory: /Users/admin/C-SRD/build
+"integration" start time: Nov 07 17:00 CST
+Output:
+----------------------------------------------------------
+..........
+----------------------------------------------------------------------
+Ran 10 tests in 2.623s
+
+OK
+<end of output>
+Test time =   2.68 sec
+----------------------------------------------------------
+Test Passed.
+"integration" end time: Nov 07 17:00 CST
+"integration" time elapsed: 00:00:02
+----------------------------------------------------------
+
+3/4 Testing: differential
+3/4 Test: differential
+Command: "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.14" "/Users/admin/C-SRD/tests/differential/run.py" "--csrd" "/Users/admin/C-SRD/build/csrd"
+Directory: /Users/admin/C-SRD/build
+"differential" start time: Nov 07 17:00 CST
+Output:
+----------------------------------------------------------
+PASS Apple clang version 17.0.0 (clang-1700.6.4.2) -O0 seed=0: 31 functions
+PASS Apple clang version 17.0.0 (clang-1700.6.4.2) -O2 seed=0: 31 functions
+PASS gcc-16 (Homebrew GCC 16.2.0) 16.2.0 -O0 seed=0: 31 functions
+PASS gcc-16 (Homebrew GCC 16.2.0) 16.2.0 -O2 seed=0: 31 functions
+PASS Homebrew clang version 23.1.5 -O0 seed=0: 31 functions
+PASS Homebrew clang version 23.1.5 -O2 seed=0: 31 functions
+PASS Apple clang version 17.0.0 (clang-1700.6.4.2) -O0 seed=42: 31 functions
+PASS Apple clang version 17.0.0 (clang-1700.6.4.2) -O2 seed=42: 31 functions
+PASS Apple clang version 17.0.0 (clang-1700.6.4.2) -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all seed=42: 31 functions
+PASS gcc-16 (Homebrew GCC 16.2.0) 16.2.0 -O0 seed=42: 31 functions
+PASS gcc-16 (Homebrew GCC 16.2.0) 16.2.0 -O2 seed=42: 31 functions
+PASS Homebrew clang version 23.1.5 -O0 seed=42: 31 functions
+PASS Homebrew clang version 23.1.5 -O2 seed=42: 31 functions
+PASS Homebrew clang version 23.1.5 -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all seed=42: 31 functions
+PASS Apple clang version 17.0.0 (clang-1700.6.4.2) -O0 seed=18446744073709551615: 31 functions
+PASS Apple clang version 17.0.0 (clang-1700.6.4.2) -O2 seed=18446744073709551615: 31 functions
+PASS gcc-16 (Homebrew GCC 16.2.0) 16.2.0 -O0 seed=18446744073709551615: 31 functions
+PASS gcc-16 (Homebrew GCC 16.2.0) 16.2.0 -O2 seed=18446744073709551615: 31 functions
+PASS Homebrew clang version 23.1.5 -O0 seed=18446744073709551615: 31 functions
+PASS Homebrew clang version 23.1.5 -O2 seed=18446744073709551615: 31 functions
+PASS 20 configurations; 12450220 comparisons
+<end of output>
+Test time =   8.79 sec
+----------------------------------------------------------
+Test Passed.
+"differential" end time: Nov 07 17:00 CST
+"differential" time elapsed: 00:00:08
+----------------------------------------------------------
+
+4/4 Testing: rule_contracts
+4/4 Test: rule_contracts
+Command: "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.14" "/Users/admin/C-SRD/tools/verify_rules.py" "--z3" "/opt/homebrew/bin/z3"
+Directory: /Users/admin/C-SRD/build
+"rule_contracts" start time: Nov 07 17:00 CST
+Output:
+----------------------------------------------------------
+PASS add, subtract, scale: unsat counterexample queries over all 32-bit symbols
+PASS round-trip: all x and b, for six explicitly listed odd multipliers
+PASS incorrect-rule control: sat with a counterexample
+<end of output>
+Test time =   0.10 sec
+----------------------------------------------------------
+Test Passed.
+"rule_contracts" end time: Nov 07 17:00 CST
+"rule_contracts" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Nov 07 17:00 CST
