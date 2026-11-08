@@ -1,0 +1,285 @@
+{
+  "action": "transform",
+  "candidate_dependencies": [
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_types/_intmax_t.h",
+      "sha256": "215f90a4efdca4991735be55a1ff701964dde07d8b4a8382ec8ed41ecbf5f115"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_types/_uint16_t.h",
+      "sha256": "adf29323b0ecb87cbc43ac3ff25c096de7a214ceb90007c2828616151c66ad37"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_types/_uint32_t.h",
+      "sha256": "951131475ec815813c8ff40d5e875029cd968334fd3a42d5a65fbe7851d1718c"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_types/_uint64_t.h",
+      "sha256": "a5692cddb9c42d1b55ebcd6fa445b212c4b0c46db4583aaf3293ed6386d3d0d6"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_types/_uint8_t.h",
+      "sha256": "0a5c0353c8410f5e502db7971d987ac83a9ec3148905f10984c78152f541de68"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_types/_uintmax_t.h",
+      "sha256": "0b154b16a3945edff78f00321d90a662d522e197c08e7de3b68f0ea44ae0d042"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/arm/_types.h",
+      "sha256": "4f0bde85f9a41cc7d30fff22ebd7e8f4eb206a55a926eda012a2e7481e3524fa"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/machine/_types.h",
+      "sha256": "f27264f8fdec9f164b4fc2b556f666ed7c5c0e5b88fd9f23db0b731ffa6cf864"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/stdint.h",
+      "sha256": "9d070aad02d9f2ba1f2248d093b4194b62cf8d363778c737d1110f4736e5ed3c"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_posix_availability.h",
+      "sha256": "452bff9ae32655a49b65802e29b21c67a546be1446553f908ef9850a694746bd"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_types.h",
+      "sha256": "741433612525badf767d48b1924d4c7ba564ccc5c1bab5cb7045c238850fa86b"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_symbol_aliasing.h",
+      "sha256": "327a4fcaf7a1b000cfcf9bef670fea8b6e2fbb5bb7ee520186b5c0ffeec3e3a5"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types.h",
+      "sha256": "863c4f07045775002b63b7e616742d9f746e4a02da4441442d8fe1138bbd0ff9"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_int16_t.h",
+      "sha256": "e40d40ad59c6dc98577b2c7cfdba1121ebfee17b29e093cbd10b7936df496d8e"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_int32_t.h",
+      "sha256": "77127195e57f1690402377ddd72e3dcda684ddf591346f08ef4772dddcbbc281"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_int64_t.h",
+      "sha256": "a2427b34e5e83996bd28d83cec920cf3b82a366af90e767234557bd11fa33a18"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_int8_t.h",
+      "sha256": "607f6beede0251eb801e763493df26fd45d46eb951e4ff9cac17f1ac951b8cc0"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_intptr_t.h",
+      "sha256": "b2a7ba9b9b2d357d75e59114874658f893b23ea6d1357815b027d8189075daba"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_uintptr_t.h",
+      "sha256": "f435cf25e4f06dace9c1884c066392bafd204c6d71f16696e71acde5912bc81f"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h",
+      "sha256": "ac1a889ee7e6f3025e01be9981d26751489b9e63e926035201cae07ab9e6576f"
+    },
+    {
+      "path": "/opt/homebrew/Cellar/llvm/23.1.5/lib/clang/23/include/stdint.h",
+      "sha256": "5e0ab094f39830fafd0ecde083d329c423378ff325142a52700b17773977f6c3"
+    }
+  ],
+  "candidate_sha256": "8f21badc98f137c0770a53f1f34e19396db4be7a443a3dfa5d3c442bdf77f9ee",
+  "clang": "Homebrew clang version 23.1.5",
+  "coverage_percent": 50,
+  "csrd_version": "0.5.0",
+  "dependencies": [
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_types/_intmax_t.h",
+      "sha256": "215f90a4efdca4991735be55a1ff701964dde07d8b4a8382ec8ed41ecbf5f115"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_types/_uint16_t.h",
+      "sha256": "adf29323b0ecb87cbc43ac3ff25c096de7a214ceb90007c2828616151c66ad37"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_types/_uint32_t.h",
+      "sha256": "951131475ec815813c8ff40d5e875029cd968334fd3a42d5a65fbe7851d1718c"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_types/_uint64_t.h",
+      "sha256": "a5692cddb9c42d1b55ebcd6fa445b212c4b0c46db4583aaf3293ed6386d3d0d6"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_types/_uint8_t.h",
+      "sha256": "0a5c0353c8410f5e502db7971d987ac83a9ec3148905f10984c78152f541de68"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_types/_uintmax_t.h",
+      "sha256": "0b154b16a3945edff78f00321d90a662d522e197c08e7de3b68f0ea44ae0d042"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/arm/_types.h",
+      "sha256": "4f0bde85f9a41cc7d30fff22ebd7e8f4eb206a55a926eda012a2e7481e3524fa"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/machine/_types.h",
+      "sha256": "f27264f8fdec9f164b4fc2b556f666ed7c5c0e5b88fd9f23db0b731ffa6cf864"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/stdint.h",
+      "sha256": "9d070aad02d9f2ba1f2248d093b4194b62cf8d363778c737d1110f4736e5ed3c"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_posix_availability.h",
+      "sha256": "452bff9ae32655a49b65802e29b21c67a546be1446553f908ef9850a694746bd"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_types.h",
+      "sha256": "741433612525badf767d48b1924d4c7ba564ccc5c1bab5cb7045c238850fa86b"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_symbol_aliasing.h",
+      "sha256": "327a4fcaf7a1b000cfcf9bef670fea8b6e2fbb5bb7ee520186b5c0ffeec3e3a5"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types.h",
+      "sha256": "863c4f07045775002b63b7e616742d9f746e4a02da4441442d8fe1138bbd0ff9"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_int16_t.h",
+      "sha256": "e40d40ad59c6dc98577b2c7cfdba1121ebfee17b29e093cbd10b7936df496d8e"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_int32_t.h",
+      "sha256": "77127195e57f1690402377ddd72e3dcda684ddf591346f08ef4772dddcbbc281"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_int64_t.h",
+      "sha256": "a2427b34e5e83996bd28d83cec920cf3b82a366af90e767234557bd11fa33a18"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_int8_t.h",
+      "sha256": "607f6beede0251eb801e763493df26fd45d46eb951e4ff9cac17f1ac951b8cc0"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_intptr_t.h",
+      "sha256": "b2a7ba9b9b2d357d75e59114874658f893b23ea6d1357815b027d8189075daba"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_uintptr_t.h",
+      "sha256": "f435cf25e4f06dace9c1884c066392bafd204c6d71f16696e71acde5912bc81f"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h",
+      "sha256": "ac1a889ee7e6f3025e01be9981d26751489b9e63e926035201cae07ab9e6576f"
+    },
+    {
+      "path": "/opt/homebrew/Cellar/llvm/23.1.5/lib/clang/23/include/stdint.h",
+      "sha256": "5e0ab094f39830fafd0ecde083d329c423378ff325142a52700b17773977f6c3"
+    }
+  ],
+  "functions": [
+    {
+      "a": 1789947473,
+      "algorithm_candidate": "none",
+      "b": 1549411197,
+      "boundary_conversions": 3,
+      "column": 10,
+      "decodings": 1,
+      "encodings": 2,
+      "estimated_scalar_operations": 12,
+      "function": "calculate",
+      "graph": [
+        {
+          "id": 0,
+          "inputs": [],
+          "operation": "parameter",
+          "representation": "identity-u32"
+        },
+        {
+          "id": 1,
+          "inputs": [],
+          "operation": "parameter",
+          "representation": "identity-u32"
+        },
+        {
+          "id": 2,
+          "inputs": [
+            0,
+            1
+          ],
+          "operation": "add",
+          "representation": "affine-u32"
+        },
+        {
+          "id": 3,
+          "inputs": [
+            2
+          ],
+          "operation": "scale",
+          "representation": "affine-u32"
+        },
+        {
+          "id": 4,
+          "inputs": [],
+          "operation": "constant",
+          "representation": "identity-u32"
+        },
+        {
+          "id": 5,
+          "inputs": [
+            3,
+            4
+          ],
+          "operation": "add",
+          "representation": "affine-u32"
+        }
+      ],
+      "internal_conversions": 0,
+      "inverse": 846699185,
+      "line": 3,
+      "operations_transformed": 3,
+      "operations_without_decoding": 3,
+      "ordinary_value_nodes": 0,
+      "parameter_count": 2,
+      "planner_reason": "",
+      "planner_status": "baseline",
+      "proof": {
+        "obligation_sha256": "6ccff6412eaa705128916df1f307d0385325ff4398cc4aecfabd0fc04b2ec4d5",
+        "reason": "",
+        "smtlib": "; \n(set-info :status unknown)\n(declare-fun input_1 () (_ BitVec 32))\n(declare-fun input_0 () (_ BitVec 32))\n(assert\n (let ((?x18 (bvadd (bvadd (bvmul input_0 (_ bv1789947473 32)) (_ bv1549411197 32)) (bvadd (bvmul input_1 (_ bv1789947473 32)) (_ bv1549411197 32)))))\n(let ((?x26 (bvsub (bvsub (bvadd (bvadd (bvmul (bvsub ?x18 (_ bv1549411197 32)) (_ bv3 32)) (_ bv1196144902 32)) (_ bv4058964216 32)) (_ bv1549411197 32)) (_ bv1549411197 32))))\n(let ((?x28 (bvmul ?x26 (_ bv846699185 32))))\n(let ((?x11 (bvadd (bvmul (bvadd input_0 input_1) (_ bv3 32)) (_ bv11 32))))\n(and (distinct ?x11 ?x28) true))))))\n(check-sat)\n",
+        "solver_strategy": "simplify/bit-blast/sat",
+        "status": "proved-under-model"
+      },
+      "required_encoded_operations": 0,
+      "source_metrics": {
+        "ast_nodes": 14,
+        "ast_shape_sha256": "03e40259f4f5833d9025b4e0a461cb50b45c91bc96c9ce5bff2b53558ead4cd7",
+        "branches": 0,
+        "cfg_adjacency_sha256": "0776758444a55607502560b1a00bdb50388c5d7526a7605c1c35b517d91a8d2b",
+        "cfg_blocks": 3,
+        "cfg_edges": 2,
+        "cyclomatic": 1,
+        "expressions": 11,
+        "loops": 0,
+        "operators": {
+          "*": 1,
+          "+": 2
+        }
+      },
+      "status": "transformed",
+      "strategy": "affine",
+      "temporaries": 6,
+      "verification": "proved-under-model",
+      "xor_mask": 921324844
+    }
+  ],
+  "model": "pure-u32-c11-v2; identical target, headers and compilation environment required",
+  "objective": "balanced",
+  "output_written": true,
+  "schema_version": 2,
+  "seed": "42",
+  "solver": "5.3.3.0",
+  "source_sha256": "5291f929d99a94c0fe1cae0960ef09988ac62a45e9adeef149667844b4f96bf9",
+  "strategy": "affine",
+  "target": "arm64-apple-macosx26.0.0",
+  "timeout_ms": 10000
+}

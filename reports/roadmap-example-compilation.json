@@ -1,0 +1,138 @@
+[
+  {
+    "command": [
+      "/opt/homebrew/opt/llvm/bin/clang",
+      "-std=c11",
+      "-pedantic-errors",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-O0",
+      "-c",
+      "reports/calculate-v05-seed42.c",
+      "-o",
+      "build/report-example.o"
+    ],
+    "exit_code": 0,
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/opt/homebrew/opt/llvm/bin/clang",
+      "-std=c11",
+      "-pedantic-errors",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-O0",
+      "-c",
+      "reports/popcount8-swar.c",
+      "-o",
+      "build/report-example.o"
+    ],
+    "exit_code": 0,
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/opt/homebrew/opt/llvm/bin/clang",
+      "-std=c11",
+      "-pedantic-errors",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-O2",
+      "-c",
+      "reports/calculate-v05-seed42.c",
+      "-o",
+      "build/report-example.o"
+    ],
+    "exit_code": 0,
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/opt/homebrew/opt/llvm/bin/clang",
+      "-std=c11",
+      "-pedantic-errors",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-O2",
+      "-c",
+      "reports/popcount8-swar.c",
+      "-o",
+      "build/report-example.o"
+    ],
+    "exit_code": 0,
+    "stderr": ""
+  },
+  {
+    "command": [
+      "gcc-16",
+      "-std=c11",
+      "-pedantic-errors",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-O0",
+      "-c",
+      "reports/calculate-v05-seed42.c",
+      "-o",
+      "build/report-example.o"
+    ],
+    "exit_code": 0,
+    "stderr": ""
+  },
+  {
+    "command": [
+      "gcc-16",
+      "-std=c11",
+      "-pedantic-errors",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-O0",
+      "-c",
+      "reports/popcount8-swar.c",
+      "-o",
+      "build/report-example.o"
+    ],
+    "exit_code": 0,
+    "stderr": ""
+  },
+  {
+    "command": [
+      "gcc-16",
+      "-std=c11",
+      "-pedantic-errors",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-O2",
+      "-c",
+      "reports/calculate-v05-seed42.c",
+      "-o",
+      "build/report-example.o"
+    ],
+    "exit_code": 0,
+    "stderr": ""
+  },
+  {
+    "command": [
+      "gcc-16",
+      "-std=c11",
+      "-pedantic-errors",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-O2",
+      "-c",
+      "reports/popcount8-swar.c",
+      "-o",
+      "build/report-example.o"
+    ],
+    "exit_code": 0,
+    "stderr": ""
+  }
+]

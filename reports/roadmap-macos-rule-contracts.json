@@ -1,0 +1,80 @@
+{
+  "solver": "Z3 version 5.3.3 - 64 bit",
+  "contract_sha256": "569c33cc7d37b4d45be3c6ef75dd525361d0a2442c7ec5647c679211cac8e334",
+  "generic_rules": {
+    "add": "unsat",
+    "subtract": "unsat",
+    "scale": "unsat"
+  },
+  "xor_contract_sha256": "11b1192c72e69c52d5cd281c0a63466720eb680b1e42f95cc21923f61397e53b",
+  "xor_rules": {
+    "xor": "unsat",
+    "and": "unsat",
+    "or": "unsat",
+    "not": "unsat",
+    "shl": "unsat",
+    "lshr": "unsat"
+  },
+  "newton_steps": [
+    {
+      "from_correct_bits": 1,
+      "to_correct_bits": 2,
+      "result": "unsat"
+    },
+    {
+      "from_correct_bits": 2,
+      "to_correct_bits": 4,
+      "result": "unsat"
+    },
+    {
+      "from_correct_bits": 4,
+      "to_correct_bits": 8,
+      "result": "unsat"
+    },
+    {
+      "from_correct_bits": 8,
+      "to_correct_bits": 16,
+      "result": "unsat"
+    },
+    {
+      "from_correct_bits": 16,
+      "to_correct_bits": 32,
+      "result": "unsat"
+    }
+  ],
+  "concrete_multiplier_roundtrips": [
+    {
+      "a": 1,
+      "inverse": 1,
+      "result": "unsat"
+    },
+    {
+      "a": 3,
+      "inverse": 2863311531,
+      "result": "unsat"
+    },
+    {
+      "a": 5,
+      "inverse": 3435973837,
+      "result": "unsat"
+    },
+    {
+      "a": 4294967295,
+      "inverse": 4294967295,
+      "result": "unsat"
+    },
+    {
+      "a": 2147483649,
+      "inverse": 2147483649,
+      "result": "unsat"
+    },
+    {
+      "a": 1789947473,
+      "inverse": 846699185,
+      "result": "unsat"
+    }
+  ],
+  "negative_control": "sat\n((a #x00000003)\n (b #x00000001)\n (x #x00000000)\n (y #x00000000))",
+  "seconds": 0.12380575016140938,
+  "scope": "Solver-checked bit-vector formulas; not a proof of the C-to-C implementation."
+}

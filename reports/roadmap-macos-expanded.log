@@ -1,0 +1,11 @@
+PASS expanded subset: identity, seed 0
+PASS expanded subset: identity, seed 42
+PASS expanded subset: affine, seed 0
+PASS expanded subset: affine, seed 42
+PASS expanded subset: xor, seed 0
+PASS expanded subset: xor, seed 42
+PASS expanded subset: independent, seed 0
+PASS expanded subset: independent, seed 42
+PASS expanded subset: planned, seed 0
+PASS expanded subset: planned, seed 42
+PASS 64 configurations, 10281472 comparisons

@@ -1,0 +1,23 @@
+Test project /Users/admin/C-SRD/build
+    Start 1: representation
+1/9 Test #1: representation ...................   Passed    0.02 sec
+    Start 2: integration
+2/9 Test #2: integration ......................   Passed    4.48 sec
+    Start 3: translation_validation
+3/9 Test #3: translation_validation ...........   Passed    0.69 sec
+    Start 4: representation_planning
+4/9 Test #4: representation_planning ..........   Passed    2.17 sec
+    Start 5: algorithm_candidates
+5/9 Test #5: algorithm_candidates .............   Passed    6.99 sec
+    Start 6: defensive_evaluation
+6/9 Test #6: defensive_evaluation .............   Passed    1.79 sec
+    Start 7: differential
+7/9 Test #7: differential .....................   Passed    7.74 sec
+    Start 8: expanded_differential
+8/9 Test #8: expanded_differential ............   Passed   23.96 sec
+    Start 9: rule_contracts
+9/9 Test #9: rule_contracts ...................   Passed    0.16 sec
+
+100% tests passed out of 9
+
+Total Test time (real) =  48.00 sec
