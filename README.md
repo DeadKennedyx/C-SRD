@@ -1,38 +1,34 @@
 # C-SRD — C Semantic Representation Diversification
 
-Research project: **Verified Semantic and Representation Diversification for C Programs**.
+**Verified Semantic and Representation Diversification for C Programs**
 
-C-SRD 0.1 is a working Clang LibTooling C-to-C prototype. It automatically
-replaces eligible straight-line unsigned arithmetic with computation in an affine
-representation, while retaining the function signature. Parameters are encoded
-once, intermediate values stay encoded, and the return is decoded once.
+C-SRD 0.5 is a C++17/Clang LibTooling C-to-C research prototype. It computes in
+identity, modular affine and XOR representations, plans conversions across a
+value graph, and checks every transformed function against the **reparsed emitted
+C** with Z3 before writing output. Generated programs remain ordinary C11 with
+no C-SRD runtime dependency.
 
-This is experimental compiler research on benign programs. Affine encoding is
-established prior art and provides no cryptographic confidentiality guarantee.
-The implementation is differentially tested; the complete transformer is **not
-formally verified**. See [verification](docs/verification.md) and the actual
-[M1 validation record](reports/m1-validation.md).
+This repository implements bounded experimental versions of M0–M5, not full
+C11 support or a formally verified compiler. `proved-under-model` is a
+per-function bit-vector result under the [semantic contract](docs/semantics.md)
+and [trusted components](docs/verification.md). Encodings provide no
+cryptographic confidentiality guarantee. No novelty claim is made.
 
-## Build on Linux
+## Build and test
 
-Ubuntu 24.04, LLVM/Clang 18 development packages:
+Ubuntu 24.04:
 
 ```sh
 sudo apt-get update
-sudo apt-get install -y cmake ninja-build clang-18 llvm-18-dev libclang-18-dev libclang-cpp18-dev libclang-rt-18-dev gcc g++ python3 z3
+sudo apt-get install -y cmake ninja-build clang-18 llvm-18-dev libclang-18-dev libclang-cpp18-dev libclang-rt-18-dev gcc g++ python3 z3 libz3-dev
 cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH=/usr/lib/llvm-18 \
   -DCMAKE_C_COMPILER=clang-18 -DCMAKE_CXX_COMPILER=clang++-18 -DCMAKE_BUILD_TYPE=Debug
-cmake --build build --parallel 2
+cmake --build build --parallel 4
 CSRD_TEST_COMPILERS=clang-18:gcc CSRD_REQUIRE_BOTH_COMPILERS=1 \
   ctest --test-dir build --output-on-failure
 ```
 
-Use the matching LLVM and Clang development libraries, including `clang-cpp`.
-LLVM versions 18 and 23 are the initial validation targets. A compiler binary
-alone does not supply LibTooling headers and libraries. Python tests use only the
-standard library; the optional arithmetic contracts require the Z3 executable.
-
-macOS with Homebrew:
+macOS/Homebrew:
 
 ```sh
 brew install cmake ninja llvm gcc z3
@@ -41,95 +37,107 @@ cmake --build build --parallel 4
 CSRD_REQUIRE_BOTH_COMPILERS=1 ctest --test-dir build --output-on-failure
 ```
 
-Tests identify compiler versions and do not mistake Apple's `gcc` alias for GNU
-GCC. Set `CSRD_TEST_COMPILERS` to a colon-separated list of compiler paths to
-override discovery. Without LibTooling, independently test representations with
-`cmake -S . -B build-rules -DCSRD_BUILD_FRONTEND=OFF` followed by build and CTest.
+Use matching LLVM/Clang libraries, including `clang-cpp`. Z3 headers/library
+are required for the frontend; its executable is used for standalone rule
+contracts. Python tools use the standard library. Tests distinguish real GNU
+GCC from Apple's `gcc` alias. Override compiler discovery with the colon-separated
+`CSRD_TEST_COMPILERS`. The representation library can be built without Clang/Z3
+libraries using `-DCSRD_BUILD_FRONTEND=OFF`.
 
-## Transform actual C
+## Transform, verify and analyze
 
 ```sh
 build/csrd transform benchmarks/arithmetic/calculate.c -o build/calculate.c \
   --seed 42 --report build/calculate.json
+build/csrd transform tests/fixtures/expanded.c -o build/planned.c \
+  --strategy planned --coverage 50 --objective balanced --seed 42 --report build/planned.json
+build/csrd verify tests/fixtures/expanded.c build/planned.c --report build/proof.json
+build/csrd analyze build/planned.c --function mixed_regions
 clang -std=c11 -pedantic-errors -Wall -Wextra -c build/calculate.c -o build/calculate.o
 ```
 
-The input is:
+For `return 3u*(x+y)+11u`, affine mode encodes parameters, performs the three
+operations in one representation and decodes the result. Its formulas are
+`E(x)=a*x+b`, `E(x+y)=E(x)+E(y)-b` and
+`E(k*x)=k*E(x)+(1-k)*b`, modulo 2^32, with odd `a`. Different deterministic
+seeds change parameters. Fresh temporary names avoid source and macro names.
 
-```c
-#include <stdint.h>
-uint32_t calculate(uint32_t x, uint32_t y)
-{
-    uint32_t sum = x + y;
-    return 3u * sum + 11u;
-}
-```
+Implemented options:
 
-The tool parses this function, selects deterministic odd `a` and offset `b`, and
-emits C with `E(x)=a*x+b` modulo 2^32. The output has three encoded operations,
-two entry encodings and one exit decoding. The report records the actual
-parameters, inverse, decisions and operation counts. An omitted seed is `0`.
-There are no runtime libraries, helpers, generated identifiers, or hidden keys.
+| Command/option | Behavior |
+| --- | --- |
+| `transform input.c -o output.c` | Default uniform affine strategy; unsupported operations use legal ordinary representation boundaries |
+| `--strategy identity\|affine\|xor\|independent\|planned` | Identity lowering; uniform supported affine/XOR operations; independent per-operation encoding; or graph planning |
+| `--seed UINT64` | Deterministic representation parameters; default 0 |
+| `--coverage 0..100` | Minimum percentage of live arithmetic/bitwise graph nodes encoded; planned only; default 50 |
+| `--objective balanced\|runtime\|size` | Explicit proxy cost objective; planned only; no promise of actual speed or size improvement |
+| `--algorithm popcount8-serial\|popcount8-swar` | Opt-in low-byte population-count candidate for unary functions; replacement must prove equivalent |
+| `verify original.c candidate.c [--function NAME]` | Per-function equivalence query, including concrete counterexamples; no rewriting |
+| `analyze input.c [--function NAME]` | Clang AST/CFG metrics and supported-subset diagnostics, JSON to stdout |
+| `--report PATH` | JSON decisions, source/header hashes, proof obligations and counters |
+| `--timeout-ms 1..600000` | Solver budget; default 10000; applicable to transform/verify |
+| `--help`, `--version` | Implemented interface/version |
 
-Only these CLI options exist: `transform input.c -o output.c`, `--seed`,
-`--report`, `--help`, `--version`. In-place rewriting is rejected, including
-symlink and hardlink aliases. A parsing error returns 1 and leaves existing
-output untouched; CLI/I/O errors return 2. Successful processing returns 0 even
-if all functions were skipped: inspect diagnostics or the report for coverage.
-The report never upgrades a new input to "verified" just because a rewrite ran.
+Exact planning is attempted on at most 16 choice nodes. Larger graphs or solver
+timeouts use deterministic feasible local search, explicitly marked `heuristic`;
+only certified optima are `optimized`. See [planning](docs/planning.md).
 
-## Supported contract
+Input/output/report aliases are rejected. Exit 0 means processing succeeded,
+**not** that every function transformed: inspect coverage. Parse/translation
+validation failure returns 1 without writing C; CLI/I/O errors return 2;
+standalone verification with any non-proved function returns 3. Reports can
+describe a failed candidate with `output_written: false`. No in-place rewriting.
 
-The first region is a complete pure function: unqualified `uint32_t` parameters,
-return type and automatic locals, initialized single-variable declarations,
-simple assignments, parentheses, addition, subtraction and multiplication by a
-literal, followed by one final return. Equivalent type aliases are accepted
-when their canonical type is `unsigned int`. The frontend requires 32-bit
-`int` and `unsigned int`; operations themselves must be unsigned 32-bit.
-Nonnegative `int` literals may undergo the ordinary conversion to unsigned.
+## Supported subset
 
-Functions with pointers, calls, globals, attributes, volatile/atomic access,
-signed or wider arithmetic, general multiplication, casts, branches, loops,
-macros, or directives are kept unchanged with a located diagnostic. The precise
-whitelist and portability boundaries are in [semantics](docs/semantics.md).
-Invalid C syntax is rejected by Clang before any output is written.
+Pure functions with 32-bit `unsigned int`/`uint32_t` parameters, return and
+locals; initialized declarations, assignment and one final return. Operations:
+unsigned add/subtract, multiplication by literals, bitwise operators, literal
+shifts 0–31, unsigned comparisons and ternary selections. Assignment-only
+`if/else`, canonical loops with literal trip counts 0–32, and local literal
+lookup arrays of 1–16 elements with statically bounded indexes are supported.
 
-Bodies are printed compactly if necessary to preserve physical line counts
-and later `__LINE__` expansions. Comments inside replaced bodies are removed.
-Keep included headers available relative to the output location or use the
-corresponding include search paths when compiling. Transformation-time custom
-compiler flags and compilation databases are not yet supported.
+Pointers, calls, external effects, signed/wider arithmetic, general multiplication,
+volatile/atomics, arbitrary loops, macros/directives within transformed functions,
+and most C constructs remain unsupported. A rejected function stays unchanged
+with a located diagnostic. See the exact [whitelist](docs/semantics.md).
 
-## Reproduce validation
+The host target and 32-bit integer model are part of the contract. Use compatible
+headers and include paths when compiling output. Bodies preserve physical line
+counts; internal comments/formatting are replaced. Output filenames can affect
+untransformed `__FILE__` and include resolution. Compilation databases and custom
+frontend flags are not implemented.
 
-```sh
-python3 tests/differential/run.py --csrd build/csrd --report build/differential.json
-python3 tools/verify_rules.py --report build/rule-contracts.json
-```
-
-The differential runner builds original and transformed code separately, then
-compares them on boundary pairs and seeded random inputs with GCC/Clang at `-O0`
-and `-O2`. Clang also runs ASan/UBSan. It generates additional eligible programs
-from a deterministic grammar, verifies transformation coverage, and includes
-unchanged functions and a line-sensitive fixture. Timings in these reports are
-test costs, **not** comparative runtime benchmarks.
-
-For the Linux container recipe:
+## Reproduce experiments
 
 ```sh
-docker build -f tools/Dockerfile -t csrd-dev:m1 .
-docker run --rm -v "$PWD:/work" csrd-dev:m1 sh -c \
-  'cmake -S . -B build-linux -G Ninja -DCMAKE_PREFIX_PATH=/usr/lib/llvm-18 -DCMAKE_BUILD_TYPE=Debug && cmake --build build-linux --parallel 2 && ctest --test-dir build-linux --output-on-failure'
+python3 tools/verify_rules.py --report build/rules.json
+python3 tools/synthesize_rules.py --output-dir experiments/runs/synthesis
+build/csrd transform benchmarks/algorithms/popcount8.c -o build/popcount8.c \
+  --algorithm popcount8-swar --strategy planned --report build/popcount8.json
+python3 tools/evaluate.py --csrd build/csrd --compiler clang-18 --compiler gcc \
+  --objdump llvm-objdump-18 --output-dir experiments/runs/evaluation
 ```
 
-## Research status
+Experiment output directories must be new. On macOS use `gcc-16` (or the
+installed GNU version) and Homebrew's `llvm-objdump`. The evaluator records
+fingerprints, false matches/misses, Clang AST/CFG metrics, LLVM instruction
+histograms where available, object-code bytes, compiler costs and repeated
+timings against each untransformed baseline at `-O0`/`-O2`. Raw artifacts remain
+in the run directory. A deliberate one-input difference demonstrates that
+fingerprints are not proofs. [Evaluation methodology](docs/evaluation.md).
 
-M0 and the smallest M1 implementation are present. Arithmetic SMT contracts are
-an initial M2 component. End-to-end translation validation, representation
-selection, graph optimization, defensive recognition metrics, performance
-comparisons and expanded C coverage remain future work. The independent
-identity representation is a library baseline, not an additional CLI mode.
+CTest records `build/differential.json`, `expanded-differential.json` and
+`rule-contracts.json`. Both differential suites compile separate original and
+variant objects with GCC/Clang, including Clang ASan/UBSan configurations.
 
-Read the [architecture](docs/architecture.md), [research charter](docs/research-charter.md),
-[prior-art comparison](docs/prior-art.md), [questions](docs/research-questions.md),
-[threat model](docs/threat-model.md), and [roadmap](docs/roadmap.md).
+```sh
+docker build -f tools/Dockerfile -t csrd-dev:roadmap .
+docker run --rm -v "$PWD:/work" csrd-dev:roadmap sh -c \
+  'cmake -S . -B build-linux -G Ninja -DCMAKE_PREFIX_PATH=/usr/lib/llvm-18 -DCMAKE_BUILD_TYPE=Debug && cmake --build build-linux -j4 && ctest --test-dir build-linux --output-on-failure'
+```
+
+See the [current validation record](reports/roadmap-validation.md), historical
+[M1 results](reports/m1-validation.md), [architecture](docs/architecture.md),
+[prior art](docs/prior-art.md), [research questions](docs/research-questions.md),
+[threat model](docs/threat-model.md) and [roadmap](docs/roadmap.md).

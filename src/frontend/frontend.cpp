@@ -1,7 +1,7 @@
 #include "csrd/frontend.hpp"
 #include "csrd/analyzer.hpp"
 #include "csrd/config.hpp"
-#include "csrd/emitter.hpp"
+#include "csrd/algorithms.hpp"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -50,7 +50,7 @@ public:
   void PragmaDirective(clang::SourceLocation loc, clang::PragmaIntroducerKind) override { record(loc); }
   void MacroDefined(const clang::Token &token, const clang::MacroDirective *) override {
     const auto name = token.getIdentifierInfo()->getName();
-    if (name == "unsigned" || name == "int") data.keywordMacro = true;
+    if (name == "unsigned" || name == "int" || name == "void") data.keywordMacro = true;
   }
 };
 class Consumer final : public clang::ASTConsumer {
@@ -74,9 +74,12 @@ public:
     // Raw Clang lexing sees directives even in skipped preprocessor branches.
     clang::Lexer lexer(sm.getLocForStartOfFile(file), ctx.getLangOpts(), buffer.begin(), buffer.begin(), buffer.end());
     clang::Token token;
+    std::set<std::string> reserved;
+    for (const auto &entry : ci.getPreprocessor().getIdentifierTable()) reserved.insert(entry.getKey().str());
     do {
       lexer.LexFromRawLexer(token);
       if (token.is(clang::tok::hash)) pp.hazards.push_back(sm.getFileOffset(token.getLocation()));
+      if (token.is(clang::tok::raw_identifier)) reserved.insert(token.getRawIdentifier().str());
     } while (!token.is(clang::tok::eof));
     clang::Rewriter rewriter(sm, ctx.getLangOpts());
     for (const auto *decl : ctx.getTranslationUnitDecl()->decls()) {
@@ -84,6 +87,8 @@ public:
       if (!f || !f->doesThisDeclarationHaveABody() || !sm.isWrittenInMainFile(sm.getExpansionLoc(f->getLocation()))) continue;
       Decision decision;
       decision.function = f->getNameAsString();
+      decision.parameterCount = f->getNumParams();
+      decision.metrics = measure(ctx, *f);
       auto loc = f->getLocation();
       const auto begin = sm.getExpansionLoc(f->getBeginLoc());
       const auto end = sm.getExpansionLoc(f->getEndLoc());
@@ -96,22 +101,47 @@ public:
         if (!analysis.region) { decision.reason = analysis.reason; loc = analysis.location; }
         else {
           decision.region = std::make_shared<Region>(std::move(*analysis.region));
+          try {
+          decision.graph = std::make_shared<Graph>(lower(*decision.region));
           if (!rewrite) {
             decision.status = "supported";
           } else {
           const auto &region = *decision.region;
+          if (result.options.algorithm != "none")
+            decision.graph = std::make_shared<Graph>(algorithmCandidate(region, result.options.algorithm));
           const auto rep = Affine::fromSeed(seed, region.name);
+          decision.xorMask = rep.a() ^ rep.b();
+          if (!decision.xorMask) decision.xorMask = 1;
+          decision.plan = plan(*decision.graph, result.options);
+          if (decision.plan.status == "inconclusive") throw std::runtime_error(decision.plan.reason);
           const auto range = clang::CharSourceRange::getTokenRange(f->getBody()->getSourceRange());
           const unsigned lines = sm.getSpellingLineNumber(f->getBody()->getEndLoc()) -
                                  sm.getSpellingLineNumber(f->getBody()->getBeginLoc());
-          const auto body = emitBody(region, rep, lines);
-          if (rewriter.ReplaceText(range, body)) { decision.reason = "source range cannot be rewritten safely"; }
+          decision.emission = emitGraph(*decision.graph, decision.plan, result.options, rep, decision.xorMask, lines, reserved);
+          // Dead-region pruning can remove every read of a public parameter.
+          // A discarded pure read preserves warning-clean interfaces
+          // and remains within the same independently checked C subset.
+          for (const auto &parameter : region.parameters) {
+            bool used = false;
+            for (const auto &node : decision.graph->nodes)
+              used |= node.kind == Expr::Kind::Reference && node.parameter == parameter;
+            if (!used) decision.emission.body.insert(1, " (void)" + parameter + ";");
+          }
+          if ((decision.plan.status == "optimized" || decision.plan.status == "heuristic") &&
+              (decision.emission.estimatedOperations != decision.plan.estimatedOperations ||
+               decision.emission.temporaries != decision.plan.statements ||
+               decision.emission.boundaryConversions + decision.emission.internalConversions != decision.plan.conversions))
+            throw std::logic_error("planner and emitter cost accounting disagree");
+          if (rewriter.ReplaceText(range, decision.emission.body)) { decision.reason = "source range cannot be rewritten safely"; }
           else {
             decision.status = "transformed";
-            decision.operations = region.operations;
-            decision.conversions = unsigned(region.parameters.size()) + 1;
+            decision.operations = decision.emission.operations;
+            decision.conversions = decision.emission.boundaryConversions;
             decision.a = rep.a(); decision.b = rep.b(); decision.inverse = rep.inverse();
           }
+          }
+          } catch (const std::exception &e) {
+            decision.reason = e.what(); decision.status = "unchanged"; decision.region.reset(); decision.graph.reset();
           }
         }
       }
@@ -167,10 +197,12 @@ bool parse(const std::string &path, uint64_t seed, TransformResult &result, bool
 bool inspect(const std::string &path, TransformResult &result, const std::string *contents) {
   return parse(path, 0, result, false, contents);
 }
-bool transform(const std::string &path, uint64_t seed, TransformResult &result, unsigned timeoutMs) {
+bool transform(const std::string &path, uint64_t seed, TransformResult &result, const PlanOptions &options) {
+  result.options = options;
   if (!parse(path, seed, result, true, nullptr)) return false;
   TransformResult generated;
   if (!inspect(path, generated, &result.source)) return false;
+  result.candidateDependencies = generated.dependencies;
   if (result.target != generated.target || result.dependencies != generated.dependencies) {
     llvm::errs() << "csrd: verification rejected a target or include-environment change\n"; return false;
   }
@@ -179,7 +211,7 @@ bool transform(const std::string &path, uint64_t seed, TransformResult &result, 
     auto match = std::find_if(generated.decisions.begin(), generated.decisions.end(), [&](const Decision &other) { return other.function == d.function; });
     if (match == generated.decisions.end() || !match->region) {
       d.verification.status = "unsupported"; d.verification.reason = "emitted C was not accepted by the validator";
-    } else d.verification = verify(*d.region, *match->region, timeoutMs);
+    } else d.verification = verify(*d.region, *match->region, options.timeoutMs);
     if (d.verification.status != "proved-under-model") {
       llvm::errs() << "csrd: verification failed for " << d.function << ": " << d.verification.status << " " << d.verification.reason << "\n";
       return false;

@@ -14,6 +14,8 @@ These are open questions, not expected conclusions.
 | **RQ8 — Generalization:** Do observations hold across unrelated algorithms and compilation environments? | Use multiple benign algorithm families, compilers, versions and targets; the M1 arithmetic generator is not sufficient evidence. |
 | **RQ9 — Novelty:** Does cross-region planning improve over established independent variable encoding? | Compare independent-operation, uniform-region and optimized graph assignments on conversion count, cost, verification and diversity; review prior encoding networks and compilers before novelty claims. |
 
-M1 reports only rule tests, transformation coverage and differential correctness
-evidence. There are no empirical answers yet to diversity, performance,
-recognition or novelty questions.
+Version 0.5 provides executable experiments for these questions: three
+representations, graph planning baselines, per-artifact validation, serial/SWAR
+low-byte population count and independent recognition/structure/timing reports.
+The small curated corpus and limited targets are preliminary evidence only.
+Generalization, calibrated planning benefits and novelty remain unresolved.

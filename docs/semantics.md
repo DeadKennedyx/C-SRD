@@ -1,103 +1,120 @@
-# M1 semantic contract
+# Semantic contract: pure-u32-c11-v2
 
-Let `P` be an accepted function with `n` arguments. Its domain is
-`D = {0,...,2^32-1}^n`. The intended contract is
-`T(P,s)(x) = P(x)` for every `x` in `D`, with termination and an empty external
-effect trace on both sides. Functions have no externally visible memory writes,
-calls, I/O, volatile accesses or atomic accesses. Writes to automatic locals and
-by-value parameter objects are private. These restrictions make equal return
-values sufficient **for this subset**, not for arbitrary C programs.
+For each accepted function P with n arguments, D is `{0,...,2^32-1}^n`.
+The required relation is equality of returned values for every input in D,
+termination on both sides, and an empty external effect trace. Automatic local
+writes and by-value parameter writes are private. Equal return values establish
+the relevant behavior only because this subset excludes external memory writes,
+I/O, calls, volatile/atomic accesses and concurrency.
 
-## Exact acceptance rules
+## Acceptance rules
 
-* C11 parsed by Clang with `-std=c11 -pedantic-errors`. Keyword macros are
-  accepted by the parser but conservatively prevent rewriting.
-* A main-file function definition with a written prototype, no variadic
-  arguments and no function attributes (including prior declarations).
-* Return and named parameters have the unqualified canonical type `unsigned
-  int`; `int` and `unsigned int` must both be 32 bits. On validated targets this
-  includes `uint32_t` and its aliases. Targets with `uint32_t` implemented as a
-  different integer type are conservatively unsupported.
-* A single compound body, consisting only of single-variable initialized
-  automatic declarations, simple `local = expression;` assignments, and one
-  final `return expression;`. Explicit auto/register/static/extern storage, attributes and
-  qualified locals or parameters are excluded. `(local)` assignment targets
-  are accepted. Braced initializers, declaration lists and nested scopes are not.
-* Expressions: initialized local/parameter references, nonnegative `int` or
-  `unsigned int` literals, parentheses, unsigned 32-bit `+`, `-`, and `*` with
-  at least one literal operand. Constant expressions such as `(2u+3u)` are not
-  recognized as a literal multiplier. `3 * x` is supported; `3 * 5` is signed
-  arithmetic and is rejected; `3u * 5u` is supported.
-* Implicit lvalue-to-rvalue conversions and safe conversions of a nonnegative
-  `int` literal to unsigned int are accepted. Wider arithmetic, explicit casts,
-  enums, character constants, unary operators, shifts, comparisons, bitwise
-  operations, comma/conditional expressions, compound assignments and calls are
-  rejected. No expression is assumed safe merely because it could be folded.
-* Every read refers to an object already initialized earlier in the region or
-  to a parameter. A local is added to that set after its initializer validates.
-* Macro invocations anywhere in the declaration/body, including empty
-  expansions, prevent transformation. Preprocessor directives and pragmas in
-  the function also prevent it. Raw Clang lexing finds directives in skipped
-  branches. Macro definitions of generated type keywords (`unsigned`, `int`)
-  anywhere in the translation unit conservatively disable rewriting.
+* Clang parses `-std=c11 -pedantic-errors` on the host target. Both `int` and
+  `unsigned int` must be 32 bits; canonical `uint32_t` must be unsigned int.
+* Main-file prototyped definitions, named unqualified uint32 parameters/return,
+  no varargs, parameter storage modifiers or function/parameter attributes.
+  Equivalent typedefs are accepted. Signatures and linkage remain unchanged.
+* Automatic initialized single-variable uint32 declarations at function top
+  level, simple assignments to initialized locals/parameters, one final return.
+  No declarations inside branches/loop bodies, shadowed loop-index names,
+  explicit storage classes, scalar qualifiers or braced scalar initializers.
+* Parentheses; nonnegative int/unsigned-int literals; unsigned 32-bit add,
+  subtract, multiplication with one literal operand; bitwise AND/OR/XOR/NOT;
+  shifts with literal counts 0–31; unsigned comparisons; uint32 ternary results.
+  Literal-to-unsigned and comparison-result-to-unsigned conversions are modeled.
+  General multiplication, division, dynamic shifts, signed/wider arithmetic,
+  enum/character values, explicit value casts and compound assignments are rejected.
+* A `(void)x;` statement may discard a pure initialized uint32 reference. This
+  keeps pruned parameter uses warning-clean. Other cast statements are rejected.
+* `if/else` may contain assignments and supported nested control only. Conditions
+  are supported expressions. Early returns, break/continue and effects are rejected.
+* Loops must be `for(uint32_t fresh=0; fresh<N; ++fresh)` (postincrement also
+  accepted), with literal N in 0–32. The index cannot be assigned in the body.
+  Nested loops need fresh function-wide names; each is exactly unrolled. The
+  graph budget limits total expansion. There are no general loop invariants.
+* Local automatic arrays contain 1–16 uint32 elements with literal initialization;
+  const elements and implicit zero-fill are allowed. No designated initializers,
+  writes, pointer escapes, address operations or sizeof uses are accepted.
+  An index upper bound must be less than the table length. Bounds derive from
+  literals, masks, right shifts, comparisons, selections, table contents, and
+  non-wrapping upper bounds for addition/constant scale. Unknown bounds are MAX.
+  Branch bounds merge by maximum. At loop entry ordinary scalar bounds are
+  invalidated; immutable active induction-variable bounds survive. Zero-trip
+  loops restore incoming bounds. Thus first-iteration facts cannot unsafely
+  justify a later array access.
+* Every scalar read refers to an initialized local or parameter, checked through
+  Clang declaration identity. Global reads, pointers, calls, floats, VLAs,
+  inline assembly, volatile/atomic operations and concurrency are rejected.
+* Macro expansions (including empty macros), directives and pragmas within the
+  function prevent rewriting. Clang raw lexing also sees skipped directives.
+  Macros for generated keywords `unsigned`, `int`, `void` disable rewriting.
+  Generated temporary names avoid all preprocessor identifiers and raw source names.
 
-Declarations from headers and unsupported function bodies are not rewritten.
-If any statement fails, the whole function stays byte-for-byte unchanged, with
-the first detected reason and a source location. The tool is deliberately
-incomplete: rejecting safe programs is preferable to accepting uncertain ones.
-Clang parse errors (including invalid C and prohibited extensions) abort output.
+Rejection leaves the complete function body unchanged, with the first located
+diagnostic. Invalid C aborts the translation unit. Resource-limit rejections
+also remain unchanged; proof failure for a candidate aborts C output entirely.
+Unchanged functions are not thereby verified or repaired.
 
-## Representation rules
+## Representation laws
 
-All equations are in `R = Z/(2^32)`. Let `E(x)=a*x+b`, with odd `a`, and let
-`i*a=1` in `R`. Decoding is `D(z)=i*(z-b)`.
+Affine arithmetic is in R = Z/(2^32). `E(x)=a*x+b`, odd a, inverse i with
+`i*a=1`; `D(z)=i*(z-b)`.
 
-| Operation | Encoded result | Why it is valid |
-| --- | --- | --- |
-| Constant `c` | `a*c+b` | Definition of `E` |
-| `x+y` | `E(x)+E(y)-b` | Expands to `a*(x+y)+b` |
-| `x-y` | `E(x)-E(y)+b` | Expands to `a*(x-y)+b` |
-| `k*x` | `k*E(x)+(1-k)*b` | Expands to `a*k*x+b` |
-| Return | `i*(E(x)-b)` | `i*a*x=x` |
+| Ordinary operation | Encoded implementation |
+| --- | --- |
+| c | a*c+b, evaluated at transformation time |
+| x+y | E(x)+E(y)-b |
+| x-y | E(x)-E(y)+b |
+| k*x | k*E(x)+(1-k)*b |
+| decode | i*(z-b) |
 
-An odd integer is relatively prime to 2^32 and therefore has a unique modular
-inverse. The C++ implementation computes it by five Newton steps starting at
-one: `i := i*(2-a*i)`. Each step squares the current error and doubles the
-number of correct low bits. The implementation is unit tested; the general
-inverse algorithm has not been mechanically proved here.
+Odd a is relatively prime to 2^32. Five Newton updates `i=i*(2-a*i)`, starting
+at 1, double correct low bits from 1 to 32. Solver-checked low-bit lemmas support
+this argument; they are not a mechanized proof of the C++ inversion code.
 
-Generated constants have `u` suffixes and fit in 32 bits. All generated operands
-are unsigned int on the admitted target. C's unsigned wraparound consequently
-implements the ring directly, including subtraction underflow and large
-products. There are no signed overflow assumptions, pointer manipulations or
-extra evaluations of source expressions.
+XOR representation uses `X=x^m`, `Y=y^m`, and is its own inverse:
 
-## Preservation argument and its limits
+| Ordinary operation | XOR-encoded implementation |
+| --- | --- |
+| x^y | X^Y^m |
+| x&y | (X&Y)^((X^Y)&m) |
+| x\|y | (X\|Y)^((X^Y)&m) |
+| ~x | ~X |
+| x<<k | (X<<k)^(m<<k)^m |
+| x>>k | (X>>k)^(m>>k)^m |
 
-The invariant after every statement is: every live transformed local contains
-`E` of its original value. Entry encoding establishes it for parameters. The
-expression rules preserve it by structural induction; declarations and
-assignments preserve it for subsequent statements. Final decoding recovers the
-original return. Both programs terminate because their accepted bodies contain
-only finitely many nontrapping unsigned operations.
+Shifts require k<32 and logical unsigned semantics. XOR arithmetic and affine
+bitwise operations are not falsely treated as native: the graph inserts ordinary
+conversions or chooses another representation. Comparisons and selection
+conditions are ordinary values; selection payloads may share any representation.
+Table payload literals can be encoded at compile time. Cross-representation
+conversion composes decode/encode and is shared per producer/destination.
 
-This is a mathematical argument conditional on faithful AST analysis and C
-emission. It is not an end-to-end mechanized proof of this implementation.
-The independent solver contracts establish the algebraic identities; compiler
-and differential tests exercise their realization. See [verification](verification.md).
+All generated constants are in uint32 range with `u` suffixes; generated
+arithmetic is unsigned int under the admitted model. No signed overflow or
+undefined shift is introduced. Source effects are absent and pure expression
+values are materialized once, so expanded formulas cannot duplicate side effects.
 
-Compile generated C with the same integer data model, compatible headers and
-preprocessing environment. C-SRD currently uses the host Clang target and
-records its triple; it does not accept arbitrary target/compile flags. Function
-signatures, linkage and surrounding source are retained. No helper symbols are
-introduced. Physical newline counts are preserved so later `__LINE__` uses are
-stable, but comments and formatting inside accepted bodies are not preserved.
+## Preservation and scope
 
-The contract covers transformed pure functions and their compatible callers,
-not arbitrary whole-translation-unit environmental behavior. In particular,
-changing the output filename/location can change `__FILE__`, include resolution
-or external build inputs; compile in a controlled environment. Unchanged code
-may itself have undefined behavior; C-SRD neither repairs nor verifies it.
-Timing, object layout of inaccessible locals, debugging information and binary
-identity are not observations in this functional contract. No constant-time or
-side-channel-preservation claim is made.
+Each graph value labeled R represents R(original value). Entry conversion and
+encoded constants establish this invariant; operation laws and compatible
+selection payloads preserve it; the return is converted to identity. Assignment
+versioning and pure branch merging preserve dependencies. Exact finite unrolling
+preserves termination. These are mathematical arguments conditional on correct
+implementation, supplemented by validation of each actual emitted artifact.
+
+The optional algorithms count only the low eight bits of a unary uint32 input.
+Serial extraction and SWAR field aggregation are distinct known algorithms.
+An explicit request selects a candidate; the original need not have a particular
+name or spelling, and replacement is rejected unless the full-input equivalence
+query succeeds. This is not automatic discovery of arbitrary algorithms.
+
+Compile in the same target/data model and compatible preprocessing environment.
+The tool records source and included-buffer SHA256 hashes. Its reparse maps the
+candidate at the original path and checks unchanged dependencies. Output paths
+can change later include resolution or untransformed `__FILE__`; the report is
+not a proof about arbitrary builds. Physical newline counts are preserved for
+later `__LINE__`. Timing, debug information, binary identity, inaccessible local
+layout and side-channel behavior are outside the contract. No constant-time or
+confidentiality claim is made.

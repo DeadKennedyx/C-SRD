@@ -1,4 +1,4 @@
-# Initial prior-art comparison
+# Prior-art comparison
 
 Reviewed from the primary sources linked below on 2026-11-07. This is a focused
 initial review, not a systematic literature survey. Published guarantees belong
@@ -37,3 +37,24 @@ Follow-up review should inspect the original affine/MBA infrastructure papers
 cited by Tigress, verified source-transformation tools, recent representation
 planning/superoptimization work, and reproducible defensive recognition studies.
 No benchmark numbers from those systems are copied into C-SRD's own results.
+
+## Version 0.5 update (2026-11-08)
+
+The table above records the initial M1 comparison. C-SRD now has per-artifact
+bit-vector translation validation, graph planning, defensive evaluation and a
+bounded C extension; none inherits another system's correctness guarantees.
+CBMC, Frama-C and Alive2 remain unintegrated. Local comparisons now include
+independent, uniform and planned strategies, but no head-to-head Tigress study
+or evidence of research novelty has been produced.
+
+The [Z3 bit-vector guide](https://microsoft.github.io/z3guide/docs/theories/Bitvectors/)
+includes population-count validation by comparing bit-field aggregation with
+bit summation. C-SRD's low-byte serial/SWAR candidates are a narrow application
+of known methods, not new algorithms. Its finite coefficient search likewise
+rediscovers known affine laws and is not equality saturation.
+
+[Z3's objective documentation](https://microsoft.github.io/z3guide/docs/optimization/combiningobjectives/)
+distinguishes lexicographic combination from Pareto enumeration. C-SRD exposes
+three explicit proxy scalarizations with lexicographic tie objectives and a
+deterministic local-search fallback. It does not claim a complete Pareto front,
+an optimal scalable optimizer, or cost estimates calibrated to machine cycles.

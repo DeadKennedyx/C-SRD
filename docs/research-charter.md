@@ -5,12 +5,12 @@ whether benign computations can take different internal forms while preserving
 an explicit observable-behavior contract. It separates correctness, diversity,
 cost and defensive recognizability as independent outcomes.
 
-M1's unit of study is a pure unsigned 32-bit arithmetic function. Its treatment
-is an automatically selected affine representation maintained across a complete
-straight-line computation. The baseline is the original source compiled under
-the same compiler, target, flags and environment. The identity representation
-provides a library-level arithmetic baseline. There is no claim of a new
-encoding scheme or a verified whole compiler.
+The unit of study is a pure unsigned 32-bit function within an explicit bounded
+subset. Treatments include affine/XOR representations, graph planning and
+selected known algorithm replacements. The baseline is the original source
+compiled under the same compiler, target, flags and environment. Identity graph
+lowering is an additional baseline. There is no claim of a new encoding scheme
+or a verified whole compiler.
 
 Research integrity requirements:
 
@@ -31,7 +31,8 @@ evasion, anti-debugging, stealth loading, and antivirus/YARA non-detection.
 No encoding here is a secret-storage mechanism. Credentials and cryptographic
 secrets must remain outside this research mechanism.
 
-The first deliverable is executable and reproducible M1 code. Later claims
-about representation planning, algorithm selection, scalability or recognition
-await implementations and experiments. See [questions](research-questions.md)
-and [prior art](prior-art.md).
+Executable M0–M5 prototypes and preliminary experiments are present. Claims
+about scalability, generalization or novelty still require broader experiments
+and comparisons. The rare-input recognition challenge is explicitly curated;
+it is a negative control, not unbiased held-out accuracy evidence. See
+[questions](research-questions.md) and [prior art](prior-art.md).

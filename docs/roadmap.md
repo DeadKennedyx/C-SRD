@@ -1,34 +1,31 @@
-# Milestones and exit criteria
+# Roadmap and implementation status
 
-| Milestone | Status | Exit criterion / remaining work |
+Version 0.5 implements a bounded experimental slice of every M0–M5 milestone.
+This does not close the research questions or imply broad C11 support.
+
+| Milestone | Delivered | Remaining research/engineering |
 | --- | --- | --- |
-| M0 — Foundation | Implemented | CMake, CLI, modular source, charter, semantics, architecture, literature comparison, testing and Linux CI configuration. Hosted CI execution is separate from local validation. |
-| M1 — Automatic transformation | Implemented for the documented subset | Real LibTooling parse, conservative region analysis, deterministic affine computation, preserved function signature, generated C, GCC/Clang differential tests and recorded limitations. |
-| M2 — Verification | Initial arithmetic contracts only | Add per-input translation validation, bind evidence to artifact hashes, report counterexamples, cover inversion implementation, and investigate CBMC/Frama-C/Alive2 in their proper scopes. |
-| M3 — Planning | Not implemented | Versioned data-flow IR, representation labels, compatibility constraints, conversion edges and measured multi-objective selection; compare against M1 uniform encoding. |
-| M4 — Defensive evaluation | Not implemented | Independent fingerprint classifier, confusion matrices with negative controls, normalized structural/CFG/IR/binary measures, controlled timing and size experiments. |
-| M5 — C expansion | Not implemented | Add each operator/control/object feature only with its own contract, proof obligations, rejection tests and cross-compiler validation. |
+| M0 | Repository, CMake, real CLI, charter, semantics, prior-art comparison, CI configuration and local Linux validation | Hosted CI execution requires a remote workflow run |
+| M1 | Clang AST transformation, affine encoded intermediates, unchanged public interface, deterministic parameters and independently compilable C11 | Larger real-world pure-function corpus and more targets |
+| M2 | Mandatory reparsed-artifact translation validation, hashes/header environment, SMT obligations, concrete counterexamples and replay, inverse/XOR contracts | Independently checked certificates; CBMC source-level backend; Frama-C/Alive2 integration where appropriate |
+| M3 | Versioned data-flow graph, compatibility/coverage constraints, conversion sharing, three cost objectives, exact small-graph solving and labeled heuristic fallback | Cost calibration, better scalable optimization, complete Pareto exploration and independent prior-system comparisons |
+| M4 | Independent fingerprints, positive/negative/rare controls, confusion matrices, AST/CFG/LLVM/object metrics, measured compile/verification/runtime/text-size comparisons and raw reports | Held-out applications, more targets, repeated isolated performance studies and stronger defensive semantic analysis |
+| M5 | XOR/bitwise rules, fixed shifts, unsigned comparisons, selections, assignment-only branches, exact finite loops and bounds-checked local literal lookup arrays | Memory contracts, richer control flow and operators, expanded rejection/proof coverage before each addition |
 
-The next engineering task is per-region bit-vector translation validation with
-counterexample reporting and artifact-bound results. This should precede
-expanding the arithmetic whitelist or implementing a representation optimizer.
+Later-module prototypes are also present: compile-time encoding of local lookup
+payloads; pure control-flow lowering; serial versus SWAR low-byte population
+count; graph representation planning; bounded coefficient-template synthesis
+with universal validation. Each has a narrow documented domain. The synthesis
+experiment rediscovers known laws and does not implement equality saturation.
 
-Later modules have distinct semantic prerequisites:
+Strings, character buffers, escaping arrays, mutable/static object layouts,
+pointer aliasing and calls remain outside the model. Runtime string replacement
+must not be added without handling length/encoding, embedded NULs, sizeof,
+storage duration, pointer lifetime and API requirements. Encoding is not secret
+storage. General loops require termination/effect contracts or invariants;
+arbitrary algorithm replacement requires independent specifications and proofs.
 
-* Data representations must preserve object lifetime, layout where observable,
-  string length/encoding, embedded NULs, `sizeof`, array initialization, static
-  storage and API boundaries. Runtime string reconstruction is not a general
-  replacement for string literals. Secrets are not in scope.
-* Control flow needs join-state compatibility, effects, boundedness/termination
-  contracts and eventual loop invariants.
-* Algorithmic variants need independently specified benign algorithms and
-  genuine changes in computational strategy.
-* Cross-region planning needs a baseline comparison and explicit conversion
-  costs, not an assumption that fewer decodings confer secrecy.
-* Synthesis/e-graphs need sound equalities under C/bit-vector semantics and
-  independent validation of extracted programs. Cost estimates need calibration.
-
-Before performance claims, add benchmark harnesses that measure original and
-variant separately under identical optimization, include repetitions and noise
-estimates, prevent dead-code elimination without changing the measured
-computation, record compilation time and text size, and publish raw results.
+The next engineering task is an independent C-level validation backend with
+explicit unwinding assertions, followed by a larger held-out benign corpus and
+calibration of planner cost proxies. No solver timeout, small benchmark result,
+source difference or recovered known rule answers RQ1–RQ9 by itself.

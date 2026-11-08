@@ -114,7 +114,7 @@ def run(args):
             manifest = temp / "manifest.json"
             execute([args.csrd, "transform", original, "-o", variant, "--seed", seed, "--report", manifest])
             decisions = json.loads(manifest.read_text())["functions"]
-            expected = set(names) - {"line_sensitive", "unrelated"}
+            expected = set(names) - {"line_sensitive"}
             actual = {d["function"] for d in decisions if d["status"] == "transformed"}
             if actual != expected:
                 raise AssertionError(f"unexpected transformation coverage: {actual ^ expected}")

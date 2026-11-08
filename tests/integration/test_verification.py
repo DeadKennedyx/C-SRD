@@ -38,6 +38,7 @@ class Verification(unittest.TestCase):
         self.assertEqual(data["source_sha256"], hashlib.sha256(self.original.read_bytes()).hexdigest())
         self.assertEqual(data["candidate_sha256"], hashlib.sha256(self.candidate.read_bytes()).hexdigest())
         self.assertTrue(data["dependencies"])
+        self.assertTrue(data["candidate_dependencies"])
         self.assertEqual(decision["proof"]["obligation_sha256"], hashlib.sha256(decision["proof"]["smtlib"].encode()).hexdigest())
 
     def test_counterexample_replays_in_compiled_c(self):
@@ -70,8 +71,9 @@ candidate({x}u,{y}u)!={proof['candidate_output']}u; }}
 
     def test_selected_function(self):
         source = "uint32_t f(uint32_t x){return x;} int main(void){return 0;}"
-        data = self.compare(source, source, extra=("--function", "f"))
+        data = self.compare(source, source, extra=("--function", "f", "--timeout-ms", "1234"))
         self.assertEqual(len(data["functions"]), 1)
+        self.assertEqual(data["timeout_ms"], 1234)
 
     def test_transform_proves_reparsed_artifact(self):
         self.original.write_text("#include <stdint.h>\nuint32_t f(uint32_t x){uint32_t a=x+1u; a=a*3u; return a-7u;}\n")
@@ -79,6 +81,7 @@ candidate({x}u,{y}u)!={proof['candidate_output']}u; }}
         self.assertEqual(p.returncode, 0, p.stderr)
         data = json.loads(self.report.read_text())
         self.assertEqual(data["functions"][0]["verification"], "proved-under-model")
+        self.assertTrue(data["output_written"])
         self.assertEqual(data["candidate_sha256"], hashlib.sha256(self.candidate.read_bytes()).hexdigest())
 
 

@@ -38,5 +38,19 @@ int main() {
   try { csrd::Affine invalid(2, 1); } catch (const std::invalid_argument &) { rejected = true; }
   require(rejected);
   require(csrd::Affine::fromSeed(42, "f").a() == csrd::Affine::fromSeed(42, "f").a());
+  for (auto mask : edges) {
+    csrd::Xor r(mask);
+    for (auto x : edges) for (auto y : edges) {
+      require(r.decode(r.encode(x)) == x);
+      require(r.bitwise(csrd::Operation::BitXor, r.encode(x), r.encode(y)) == r.encode(x ^ y));
+      require(r.bitwise(csrd::Operation::BitAnd, r.encode(x), r.encode(y)) == r.encode(x & y));
+      require(r.bitwise(csrd::Operation::BitOr, r.encode(x), r.encode(y)) == r.encode(x | y));
+      require(r.bitwise(csrd::Operation::BitNot, r.encode(x)) == r.encode(~x));
+      for (unsigned shift : {0u, 1u, 15u, 31u}) {
+        require(r.bitwise(csrd::Operation::ShiftLeft, r.encode(x), shift) == r.encode(uint32_t(uint64_t(x) << shift)));
+        require(r.bitwise(csrd::Operation::ShiftRight, r.encode(x), shift) == r.encode(x >> shift));
+      }
+    }
+  }
   std::cout << "PASS " << checks << " representation checks (empirical)\n";
 }

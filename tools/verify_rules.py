@@ -30,6 +30,26 @@ def main(args):
     if output != ["unsat"] * 3:
         raise AssertionError(f"rule obligations failed or were inconclusive: {output}")
     print("PASS add, subtract, scale: unsat counterexample queries over all 32-bit symbols")
+    xor_contract = ROOT / "src/verification/xor-rules.smt2"
+    xor_answers = run(args.z3, xor_contract.read_text()).splitlines()
+    if xor_answers != ["unsat"] * 6:
+        raise AssertionError(f"xor obligations failed or were inconclusive: {xor_answers}")
+    print("PASS xor, and, or, not, left shift, right shift: all payloads/masks; shifts in 0..31")
+    newton = []
+    for width in (2, 4, 8, 16, 32):
+        half = width // 2
+        # If a*i is 1 modulo 2^half, write it as 1 + error*2^half.
+        # The Newton update makes the product 1 modulo 2^width.
+        smt = f"""(set-logic QF_BV)
+(declare-const error (_ BitVec {width}))
+(define-fun product () (_ BitVec {width}) (bvadd (_ bv1 {width}) (bvmul error (_ bv{1 << half} {width}))))
+(assert (not (= (bvmul product (bvsub (_ bv2 {width}) product)) (_ bv1 {width}))))
+""" + CHECK
+        answer = run(args.z3, smt)
+        if answer != "unsat":
+            raise AssertionError(f"Newton low-bit step {half}->{width}: {answer}")
+        newton.append({"from_correct_bits": half, "to_correct_bits": width, "result": answer})
+    print("PASS Newton inverse correctness steps: 1 -> 2 -> 4 -> 8 -> 16 -> 32 bits")
     inverses = []
     # These are concrete-parameter proofs, explicitly distinct from all-parameter proofs.
     for a in (1, 3, 5, 0xffffffff, 0x80000001, 1789947473):
@@ -61,6 +81,9 @@ def main(args):
     report = {"solver": subprocess.check_output([args.z3, "-version"], text=True).strip(),
               "contract_sha256": hashlib.sha256(contract.read_bytes()).hexdigest(),
               "generic_rules": dict(zip(("add", "subtract", "scale"), output)),
+              "xor_contract_sha256": hashlib.sha256(xor_contract.read_bytes()).hexdigest(),
+              "xor_rules": dict(zip(("xor", "and", "or", "not", "shl", "lshr"), xor_answers)),
+              "newton_steps": newton,
               "concrete_multiplier_roundtrips": inverses,
               "negative_control": counterexample, "seconds": time.perf_counter() - start,
               "scope": "Solver-checked bit-vector formulas; not a proof of the C-to-C implementation."}

@@ -41,7 +41,7 @@ std::string Affine::exit(const std::string &x) const {
   return "(" + literal(inverse_) + " * ((" + x + ") - " + literal(b_) + "))";
 }
 std::string Affine::binary(Operation op, const std::string &x, const std::string &y) const {
-  if (op == Operation::Scale) throw std::invalid_argument("use times for scaling");
+  if (op != Operation::Add && op != Operation::Subtract) throw std::invalid_argument("unsupported affine binary operation");
   return "(((" + x + (op == Operation::Add ? ") + (" : ") - (") + y +
          (op == Operation::Add ? ")) - " : ")) + ") + literal(b_) + ")";
 }
@@ -52,10 +52,59 @@ uint32_t Identity::add(uint32_t x, uint32_t y) const { return uint32_t(uint64_t(
 uint32_t Identity::subtract(uint32_t x, uint32_t y) const { return uint32_t(uint64_t(x) - y); }
 uint32_t Identity::scale(uint32_t x, uint32_t k) const { return mul(x, k); }
 std::string Identity::binary(Operation op, const std::string &x, const std::string &y) const {
-  if (op == Operation::Scale) throw std::invalid_argument("use times for scaling");
-  return "((" + x + (op == Operation::Add ? ") + (" : ") - (") + y + "))";
+  if (op == Operation::BitNot) return "(~(" + x + "))";
+  const char *symbol = nullptr;
+  switch (op) {
+  case Operation::Add: symbol = "+"; break;
+  case Operation::Subtract: symbol = "-"; break;
+  case Operation::BitAnd: symbol = "&"; break;
+  case Operation::BitOr: symbol = "|"; break;
+  case Operation::BitXor: symbol = "^"; break;
+  case Operation::ShiftLeft: symbol = "<<"; break;
+  case Operation::ShiftRight: symbol = ">>"; break;
+  default: throw std::invalid_argument("use times for scaling");
+  }
+  return "((" + x + ") " + symbol + " (" + y + "))";
 }
 std::string Identity::times(const std::string &x, uint32_t k) const {
   return "(" + literal(k) + " * (" + x + "))";
+}
+uint32_t Xor::add(uint32_t, uint32_t) const { throw std::invalid_argument("xor representation does not support direct addition"); }
+uint32_t Xor::subtract(uint32_t, uint32_t) const { throw std::invalid_argument("xor representation does not support direct subtraction"); }
+uint32_t Xor::scale(uint32_t, uint32_t) const { throw std::invalid_argument("xor representation does not support direct scaling"); }
+std::string Xor::times(const std::string &, uint32_t) const { throw std::invalid_argument("xor representation does not support direct scaling"); }
+uint32_t Xor::bitwise(Operation op, uint32_t x, uint32_t y) const {
+  switch (op) {
+  case Operation::BitAnd: return (x & y) ^ ((x ^ y) & mask_);
+  case Operation::BitOr: return (x | y) ^ ((x ^ y) & mask_);
+  case Operation::BitXor: return x ^ y ^ mask_;
+  case Operation::BitNot: return ~x;
+  case Operation::ShiftLeft:
+    if (y >= 32) throw std::invalid_argument("shift count out of range");
+    return (x << y) ^ (mask_ << y) ^ mask_;
+  case Operation::ShiftRight:
+    if (y >= 32) throw std::invalid_argument("shift count out of range");
+    return (x >> y) ^ (mask_ >> y) ^ mask_;
+  default: throw std::invalid_argument("unsupported xor operation");
+  }
+}
+std::string Xor::entry(const std::string &x) const { return "((" + x + ") ^ " + literal(mask_) + ")"; }
+std::string Xor::binary(Operation op, const std::string &x, const std::string &y) const {
+  if (op == Operation::BitNot) return "(~(" + x + "))";
+  if (op == Operation::BitXor) return "(((" + x + ") ^ (" + y + ")) ^ " + literal(mask_) + ")";
+  if (op == Operation::BitAnd || op == Operation::BitOr)
+    return "(((" + x + (op == Operation::BitAnd ? ") & (" : ") | (") + y + ")) ^ (((" + x + ") ^ (" + y + ")) & " + literal(mask_) + "))";
+  throw std::invalid_argument("unsupported xor binary operation");
+}
+std::string Xor::shift(const std::string &x, unsigned count, bool left) const {
+  if (count >= 32) throw std::invalid_argument("shift count out of range");
+  uint32_t correction = (left ? mask_ << count : mask_ >> count) ^ mask_;
+  return "(((" + x + (left ? ") << " : ") >> ") + literal(count) + ") ^ " + literal(correction) + ")";
+}
+unsigned Xor::cost(Operation op) const {
+  if (op == Operation::BitAnd || op == Operation::BitOr) return 4;
+  if (op == Operation::BitNot) return 1;
+  if (supports(op)) return 2;
+  throw std::invalid_argument("unsupported xor cost");
 }
 } // namespace csrd

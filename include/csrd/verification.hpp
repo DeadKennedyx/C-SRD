@@ -5,7 +5,7 @@
 #include <vector>
 namespace csrd {
 struct Verification {
-  std::string status = "not-verified", reason, obligation;
+  std::string status = "not-verified", reason, obligation, strategy;
   std::vector<uint32_t> inputs;
   uint32_t originalOutput = 0, candidateOutput = 0;
 };

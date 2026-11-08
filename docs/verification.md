@@ -1,76 +1,91 @@
-# Verification status and methodology
+# Verification and evidence
 
-Verification is part of the development gate. Transforming a file does not
-automatically verify that file: its manifest says
-`not-verified-for-this-input`. Status labels must retain their scope.
+`csrd transform` reparses the generated source and verifies every changed
+function before writing C. The original and candidate ordered region trees are
+independently interpreted as 32-bit bit-vector expressions; a mismatch query
+asks whether any input makes their returns differ. Both terminate and have no
+external effects under the accepted contract. This is per-artifact translation
+validation, not a mechanized proof of the entire compiler.
 
-| Status | Evidence required | Current scope |
-| --- | --- | --- |
-| Tested | Listed inputs, seeds, compiler versions, configurations and actual results | Representation C++ implementation, CLI rejection behavior, generated arithmetic corpus and emitted C |
-| Bounded-model checked | Explicit bounds, environmental assumptions and successful model-checker run | None; CBMC has not been integrated or run |
-| Formally proved under assumptions | Precisely stated semantics/assumptions and discharged obligations | Three bit-vector arithmetic identities checked by Z3 for all 32-bit symbols; six concrete-multiplier round-trip identities for all values/offsets, trusting Z3 |
-| Not yet verified | No applicable evidence | Complete AST-to-C implementation, arbitrary new inputs, cross-region optimizer, unsupported C constructs |
+| Status | Meaning |
+| --- | --- |
+| `proved-under-model` | Z3 returned unsat for the full input domain of the stated model, trusting parsing, analysis, symbolic execution and Z3 |
+| `counterexample` | Z3 returned sat; report includes concrete inputs and both modeled outputs |
+| `inconclusive` | Timeout, unknown or solver failure; C output is blocked |
+| `unsupported` | A required function/model is missing or outside the subset; no proof claim |
+| `not-verified` | No applicable query was discharged, including skipped functions |
+| `tested-pass` | Listed compiled executions agreed; finite empirical evidence |
+| Bounded-model checked | Reserved for an actual model-checker run with explicit bounds; no CBMC result is claimed |
 
-The SMT files pose negations of equalities as existential counterexample
-queries. `unsat` means no counterexample exists in the full 32-bit domain of
-that formula; this is not random testing or enumeration at a small width.
-Addition, subtraction and scaling are checked for symbolic `a,b,x,y,k`. Oddness
-is unnecessary for those three identities, but necessary for decoding.
-Round-trip checks explicitly list six multipliers rather than imply coverage of
-every odd multiplier. A missing-offset correction is deliberately checked as a
-negative control and produces a saved `sat` counterexample.
+`csrd verify original.c candidate.c` also checks independent candidate files.
+Arguments are paired by position, not spelling. It checks selected original
+function definitions and ignores extra candidate functions; this is not whole
+translation-unit equivalence. Different arity or unsupported code is not proved.
+Header hashes from both files are recorded; standalone callers must confirm
+compatible environments. Extra external behavior in unsupported code is outside
+the contract.
 
-These obligations are independently written specifications. They do not parse
-or prove the C++ implementation, emitted C, preprocessing behavior, compiler
-backend, or Newton inversion for all multipliers. Z3's simplifier/solver are in
-the trusted computing base; no separately checked proof certificate is emitted.
-Timeouts, `unknown`, malformed output and failed obligations cause a nonzero
-exit. [Z3's bit-vector guide](https://microsoft.github.io/z3guide/docs/theories/Bitvectors/)
-documents the fixed-width theory used here.
+Reports contain source/candidate SHA256, header-buffer hashes, target triple,
+Clang/Z3 versions, seed/options, raw SMT-LIB mismatch obligations and hashes,
+solver strategy, status and counterexamples. `output_written` distinguishes a
+failed generated candidate from a saved artifact. A report is evidence tied to
+bytes, not a signed certificate. Changing either file invalidates that binding.
 
-## Empirical pipeline
+The solver first uses polynomial simplification and direct bit-blasting/SAT,
+with up to min(1000, timeout/4) milliseconds (at least one). If inconclusive,
+remaining budget is assigned to conditional-term lifting, simplification and
+SMT. The second path helps simplify affine decodes around branch selections.
+Solver checks have bounded budgets; frontend parsing/graph construction is not
+a whole-process wall-clock sandbox. Replay a raw query with equivalent tactics
+if plain `check-sat` is slow. No independently checked proof certificate is
+produced. [Z3 bit-vector theory](https://microsoft.github.io/z3guide/docs/theories/Bitvectors/).
 
-1. Run numeric identity and affine rule tests on boundary values and deterministic
-   `mt19937` inputs. Assertions are ordinary checks, so Release builds retain them.
-2. Exercise the actual CLI against unsupported types, operators, effects,
-   macros/directives, initializations, source errors, seed errors and path aliases.
-3. Transform the fixture and 24 deterministic generated straight-line functions
-   at seeds 0, 42 and 18446744073709551615. Check that expected functions really
-   transformed, so a no-op transformer cannot pass the suite accidentally.
-4. Compile original and variant as separate objects under each compiler and
-   optimization setting, using identical flags apart from symbol renaming.
-5. Compare every function on 81 boundary pairs and 20,000 seeded random pairs.
-   A failure reports function name and exact input. Clang sanitizer builds use
-   ASan and UBSan with recovery disabled, covering original and variant.
-6. Save compiler identity, corpus hash, variant hashes, seeds, flags, input
-   count, comparison count and test costs. The harness costs do not establish
-   relative performance of either implementation.
+The trusted computing base includes Clang's C semantics and AST, the subset
+analyzer, the independent region interpreter, Z3's simplifier/tactics/solver,
+and the host runtime. The planner/emitter are deliberately outside the semantic
+interpreter, but parser/analyzer bugs could affect both sides. Concrete
+counterexample replay, cross-compiler differential execution and sanitizers
+exercise this boundary; none removes it completely.
 
-The generated functions share a grammar and are not an independent real-world
-benchmark population. Three seeds are not exhaustive representation coverage.
-Equal results on finite inputs are evidence only. The XOR negative control is
-currently an unchanged-code fixture; no recognition accuracy is reported.
+## Rule contracts and testing
 
-Run commands are in [README](../README.md). Actual checked results, missing tools
-and platform differences belong in [the validation record](../reports/m1-validation.md).
-CI must require both compiler families instead of silently accepting a missing
-GCC installation. Locally, missing families are printed as `SKIP` unless
-`CSRD_REQUIRE_BOTH_COMPILERS=1`. Missing Z3 excludes its CTest test at configure
-time and must be reported; it is installed in CI.
+`tools/verify_rules.py` checks three affine identities, six XOR/bitwise identities,
+five Newton low-bit steps (1→2→4→8→16→32), and six explicitly enumerated
+multiplier round trips. A deliberately incorrect affine addition law must be
+sat and records a real counterexample. Universal formulas range over the full
+bit width; they are not random tests. Newton lemmas describe the mathematical
+update, not the executable's entire implementation.
 
-## Next validation layer
+`tools/synthesize_rules.py` enumerates 27 coefficient triples per add/sub rule,
+uses deterministic samples only for pruning, then submits each survivor to
+universal 32-bit validation. It rediscovers known affine identities. This small
+template search is not an e-graph implementation or evidence of novel encodings.
 
-Implement translation validation of each accepted IR pair against a bit-vector
-specification, with source locations and counterexamples, then connect that
-result to the exact source/configuration hashes. A CBMC harness can separately
-compare generated C to its original with nondeterministic parameters; unwinding
-assumptions must remain explicit when loops eventually appear. CBMC unwinds C
-programs into solver queries, while Frama-C WP discharges ACSL obligations via
-weakest preconditions and selected memory models.
-[CBMC documentation](https://diffblue.github.io/cbmc/cprover_documentation.html),
-[Frama-C WP](https://frama-c.com/fc-plugins/wp.html).
+CTest covers numeric rules and boundary values; rejection/macro/path behavior;
+proofs, mutations and compiled counterexample replay; exhaustive small-graph
+planner optimality; algorithm-candidate rejection and compiled low-byte coverage;
+defensive false matches; and two compiled differential suites. The expanded
+suite exercises all five representation strategies on branches, loops, tables,
+comparisons, wraparound and bitwise operations. Each compiler uses `-O0`/`-O2`;
+selected Clang configurations use ASan/UBSan. Release checks remain active.
 
-Alive2 is relevant after compiling to LLVM IR, where its translation-validation
-scope and UB/refinement model apply. An LLVM-level result cannot by itself prove
-the source preprocessing or AST rewrite. See
-[Alive2: Bounded Translation Validation for LLVM](https://users.cs.utah.edu/~regehr/alive2-pldi21.pdf).
+The arithmetic corpus includes 24 deterministic generated functions, but it is
+not a representative sample of real C software. Finite input/seed/target
+coverage cannot establish universal implementation correctness. Native and
+container results and failures fixed during development are recorded in
+[the validation report](../reports/roadmap-validation.md).
+
+## Other verification tools
+
+CBMC, Frama-C WP and Alive2 are reviewed but not integrated or run in this
+release. There are no placeholder success statuses for unavailable tools.
+
+* [CBMC](https://diffblue.github.io/cbmc/cprover_documentation.html) can provide
+  independent C-level harness checks with nondeterministic inputs and explicit
+  loop-unwinding assertions. This is the next independent validation backend.
+* [Frama-C WP](https://frama-c.com/fc-plugins/wp.html) needs ACSL contracts and
+  discharged memory/arithmetic obligations. It becomes especially relevant when
+  adding memory effects, which the current model excludes.
+* [Alive2](https://users.cs.utah.edu/~regehr/alive2-pldi21.pdf) validates LLVM-level
+  refinement under LLVM semantics and bounds. It cannot establish source-level
+  preprocessing or Clang frontend correctness by itself.

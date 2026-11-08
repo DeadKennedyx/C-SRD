@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "function": "kernel",
+  "arity": 2,
+  "cases": [
+    {"id": "linear", "family": "linear", "source": "arithmetic/linear.c"},
+    {"id": "distributed", "family": "linear", "source": "arithmetic/distributed.c"},
+    {"id": "rare_difference", "family": "rare_difference", "source": "arithmetic/rare_difference.c"},
+    {"id": "difference", "family": "difference", "source": "arithmetic/difference.c"},
+    {"id": "xor", "family": "xor", "source": "bitwise/xor.c"},
+    {"id": "xor_boolean", "family": "xor", "source": "bitwise/xor_boolean.c"},
+    {"id": "minimum", "family": "minimum", "source": "algorithms/minimum.c"},
+    {"id": "minimum_select", "family": "minimum", "source": "algorithms/minimum_select.c"}
+  ]
+}
