@@ -78,6 +78,12 @@ measurements of the selected builds, not a machine-code equivalence proof.
 
 ## Subsequent work
 
+The [O2 algorithm-survival experiment](journal/2026-11-09-algorithm-survival.md)
+compares each encoded candidate with its unencoded algorithm as well as the
+original. Both tested Clang versions erased the SWAR candidate's encoding while
+preserving a difference from the original algorithm. This motivates compiler-aware
+candidate selection and stronger instruction/data-flow measurements (PROT-04).
+
 The next experiments should establish matched encoded coverage and actual
 compiled costs, followed by independently scored functionality reconstruction.
 Dynamic observation needs its own protocol: define the observer's access to

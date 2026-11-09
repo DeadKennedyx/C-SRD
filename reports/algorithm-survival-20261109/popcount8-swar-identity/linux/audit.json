@@ -1,0 +1,1724 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "platform": "Linux-6.8.0-117-generic-aarch64-with-glibc2.39",
+  "commands": [
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "--version"
+      ],
+      "returncode": 0,
+      "stdout": "C-SRD 0.5.0\nUsage: csrd transform input.c -o output.c [--seed UINT64] [--report report.json] [--timeout-ms UINT]\n       [--strategy affine|xor|identity|independent|planned] [--coverage 0..100] [--objective balanced|runtime|size]\n       [--algorithm popcount8-serial|popcount8-swar]\n       csrd verify original.c candidate.c [--function NAME] [--report report.json] [--timeout-ms UINT]\n       csrd analyze input.c [--function NAME] [--report report.json]\nTransformations are checked against reparsed emitted C before output is written.\n",
+      "stderr": "",
+      "elapsed_seconds": 0.006560415029525757,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--version"
+      ],
+      "returncode": 0,
+      "stdout": "Ubuntu LLVM version 18.1.3\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64     - AArch64 (little endian)\n    aarch64_32  - AArch64 (little endian ILP32)\n    aarch64_be  - AArch64 (big endian)\n    amdgcn      - AMD GCN GPUs\n    arm         - ARM\n    arm64       - ARM64 (little endian)\n    arm64_32    - ARM64 (little endian ILP32)\n    armeb       - ARM (big endian)\n    avr         - Atmel AVR Microcontroller\n    bpf         - BPF (host endian)\n    bpfeb       - BPF (big endian)\n    bpfel       - BPF (little endian)\n    hexagon     - Hexagon\n    lanai       - Lanai\n    loongarch32 - 32-bit LoongArch\n    loongarch64 - 64-bit LoongArch\n    m68k        - Motorola 68000 family\n    mips        - MIPS (32-bit big endian)\n    mips64      - MIPS (64-bit big endian)\n    mips64el    - MIPS (64-bit little endian)\n    mipsel      - MIPS (32-bit little endian)\n    msp430      - MSP430 [experimental]\n    nvptx       - NVIDIA PTX 32-bit\n    nvptx64     - NVIDIA PTX 64-bit\n    ppc32       - PowerPC 32\n    ppc32le     - PowerPC 32 LE\n    ppc64       - PowerPC 64\n    ppc64le     - PowerPC 64 LE\n    r600        - AMD GPUs HD2XXX-HD6XXX\n    riscv32     - 32-bit RISC-V\n    riscv64     - 64-bit RISC-V\n    sparc       - Sparc\n    sparcel     - Sparc LE\n    sparcv9     - Sparc V9\n    systemz     - SystemZ\n    thumb       - Thumb\n    thumbeb     - Thumb (big endian)\n    ve          - VE\n    wasm32      - WebAssembly 32-bit\n    wasm64      - WebAssembly 64-bit\n    x86         - 32-bit X86: Pentium-Pro and above\n    x86-64      - 64-bit X86: EM64T and AMD64\n    xcore       - XCore\n    xtensa      - Xtensa 32\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005846400978043675,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "analyze",
+        "/work/benchmarks/algorithms/popcount8.c",
+        "--report",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/original-analysis.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.011686427053064108,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "analyze",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/candidate.c",
+        "--report",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/candidate-analysis.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.012953325873240829,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "verify",
+        "/work/benchmarks/algorithms/popcount8.c",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/candidate.c",
+        "--report",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/verification.json",
+        "--timeout-ms",
+        "10000"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "csrd: popcount8: proved-under-model\n",
+      "elapsed_seconds": 0.02489763218909502,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "--version"
+      ],
+      "returncode": 0,
+      "stdout": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "stderr": "",
+      "elapsed_seconds": 0.006701501086354256,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "-dumpmachine"
+      ],
+      "returncode": 0,
+      "stdout": "aarch64-unknown-linux-gnu\n",
+      "stderr": "",
+      "elapsed_seconds": 0.006921255029737949,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-c",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/model-guard.c",
+        "-o",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/model-guard.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.009929935913532972,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-E",
+        "-P",
+        "/work/benchmarks/algorithms/popcount8.c",
+        "-o",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/original.i"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.008727872045710683,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "analyze",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/original.i",
+        "--report",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/original-preprocessed-analysis.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.011187792988494039,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "verify",
+        "/work/benchmarks/algorithms/popcount8.c",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/original.i",
+        "--report",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/original-build-verification.json",
+        "--timeout-ms",
+        "10000"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "csrd: popcount8: proved-under-model\n",
+      "elapsed_seconds": 0.017801915993914008,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-c",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/original.i",
+        "-o",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.011120457900688052,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--section-headers",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/original.o:\tfile format elf64-littleaarch64\n\nSections:\nIdx Name            Size     VMA              Type\n  0                 00000000 0000000000000000 \n  1 .strtab         00000089 0000000000000000 \n  2 .text           00000044 0000000000000000 TEXT\n  3 .rela.text      00000030 0000000000000000 \n  4 .rodata.cst16   00000010 0000000000000000 DATA\n  5 .comment        00000028 0000000000000000 \n  6 .note.GNU-stack 00000000 0000000000000000 \n  7 .eh_frame       00000028 0000000000000000 DATA\n  8 .rela.eh_frame  00000018 0000000000000000 \n  9 .llvm_addrsig   00000000 0000000000000000 \n 10 .symtab         000000d8 0000000000000000 \n",
+      "stderr": "",
+      "elapsed_seconds": 0.005555728916078806,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--full-contents",
+        "--section=.text",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/original.o:\tfile format elf64-littleaarch64\nContents of section .text:\n 0000 08000090 000c044e 2204004f 0101c03d  .......N\"..O...=\n 0010 08180653 09000012 0a040153 0b1c0753  ...S.......S...S\n 0020 0044a16e 2801080b 08010b0b 001c224e  .D.n(.........\"N\n 0030 00b8b14e 0c00261e 89010a0b 2001080b  ...N..&..... ...\n 0040 c0035fd6                             .._.\n",
+      "stderr": "",
+      "elapsed_seconds": 0.004925924818962812,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/original.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <popcount8>:\n       0:      \tadrp\tx8, 0x0 <popcount8>\n       4:      \tdup\tv0.4s, w0\n       8:      \tmovi\tv2.4s, #0x1\n       c:      \tldr\tq1, [x8]\n      10:      \tubfx\tw8, w0, #6, #1\n      14:      \tand\tw9, w0, #0x1\n      18:      \tubfx\tw10, w0, #1, #1\n      1c:      \tubfx\tw11, w0, #7, #1\n      20:      \tushl\tv0.4s, v0.4s, v1.4s\n      24:      \tadd\tw8, w9, w8\n      28:      \tadd\tw8, w8, w11\n      2c:      \tand\tv0.16b, v0.16b, v2.16b\n      30:      \taddv\ts0, v0.4s\n      34:      \tfmov\tw12, s0\n      38:      \tadd\tw9, w12, w10\n      3c:      \tadd\tw0, w9, w8\n      40:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005032802000641823,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/original.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <popcount8>:\n       0:      \tadrp\tx8, 0x0 <popcount8>\n       4:      \tdup\tv0.4s, w0\n       8:      \tmovi\tv2.4s, #0x1\n       c:      \tldr\tq1, [x8]\n      10:      \tubfx\tw8, w0, #6, #1\n      14:      \tand\tw9, w0, #0x1\n      18:      \tubfx\tw10, w0, #1, #1\n      1c:      \tubfx\tw11, w0, #7, #1\n      20:      \tushl\tv0.4s, v0.4s, v1.4s\n      24:      \tadd\tw8, w9, w8\n      28:      \tadd\tw8, w8, w11\n      2c:      \tand\tv0.16b, v0.16b, v2.16b\n      30:      \taddv\ts0, v0.4s\n      34:      \tfmov\tw12, s0\n      38:      \tadd\tw9, w12, w10\n      3c:      \tadd\tw0, w9, w8\n      40:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.004867841023951769,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--reloc",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/original.o:\tfile format elf64-littleaarch64\n\nRELOCATION RECORDS FOR [.text]:\nOFFSET           TYPE                     VALUE\n0000000000000000 R_AARCH64_ADR_PREL_PG_HI21 .rodata.cst16\n000000000000000c R_AARCH64_LDST128_ABS_LO12_NC .rodata.cst16\n\nRELOCATION RECORDS FOR [.eh_frame]:\nOFFSET           TYPE                     VALUE\n000000000000001c R_AARCH64_PREL32         .text\n",
+      "stderr": "",
+      "elapsed_seconds": 0.004904925124719739,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-E",
+        "-P",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/candidate.c",
+        "-o",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/candidate.i"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.008344531059265137,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "analyze",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/candidate.i",
+        "--report",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/candidate-preprocessed-analysis.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.010351111181080341,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "verify",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/candidate.c",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/candidate.i",
+        "--report",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/candidate-build-verification.json",
+        "--timeout-ms",
+        "10000"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "csrd: popcount8: proved-under-model\n",
+      "elapsed_seconds": 0.017781582893803716,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-c",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/candidate.i",
+        "-o",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.010293151019141078,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--section-headers",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/candidate.o:\tfile format elf64-littleaarch64\n\nSections:\nIdx Name            Size     VMA              Type\n  0                 00000000 0000000000000000 \n  1 .strtab         00000072 0000000000000000 \n  2 .text           0000002c 0000000000000000 TEXT\n  3 .comment        00000028 0000000000000000 \n  4 .note.GNU-stack 00000000 0000000000000000 \n  5 .eh_frame       00000028 0000000000000000 DATA\n  6 .rela.eh_frame  00000018 0000000000000000 \n  7 .llvm_addrsig   00000000 0000000000000000 \n  8 .symtab         000000a8 0000000000000000 \n",
+      "stderr": "",
+      "elapsed_seconds": 0.005739316111430526,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--full-contents",
+        "--section=.text",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/candidate.o:\tfile format elf64-littleaarch64\nContents of section .text:\n 0000 a80a8052 091c0012 0805400a 2801084b  ...R......@.(..K\n 0010 69068052 2a09480a 0801090a 4801080b  i..R*.H.....H...\n 0020 0811480b 000d0012 c0035fd6           ..H......._.\n",
+      "stderr": "",
+      "elapsed_seconds": 0.00540751707740128,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/candidate.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <popcount8>:\n       0:      \tmov\tw8, #0x55               // =85\n       4:      \tand\tw9, w0, #0xff\n       8:      \tand\tw8, w8, w0, lsr #1\n       c:      \tsub\tw8, w9, w8\n      10:      \tmov\tw9, #0x33               // =51\n      14:      \tand\tw10, w9, w8, lsr #2\n      18:      \tand\tw8, w8, w9\n      1c:      \tadd\tw8, w10, w8\n      20:      \tadd\tw8, w8, w8, lsr #4\n      24:      \tand\tw0, w8, #0xf\n      28:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.0052008049096912146,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/candidate.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <popcount8>:\n       0:      \tmov\tw8, #0x55               // =85\n       4:      \tand\tw9, w0, #0xff\n       8:      \tand\tw8, w8, w0, lsr #1\n       c:      \tsub\tw8, w9, w8\n      10:      \tmov\tw9, #0x33               // =51\n      14:      \tand\tw10, w9, w8, lsr #2\n      18:      \tand\tw8, w8, w9\n      1c:      \tadd\tw8, w10, w8\n      20:      \tadd\tw8, w8, w8, lsr #4\n      24:      \tand\tw0, w8, #0xf\n      28:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.0058152328711003065,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--reloc",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-0-O2/candidate.o:\tfile format elf64-littleaarch64\n\nRELOCATION RECORDS FOR [.eh_frame]:\nOFFSET           TYPE                     VALUE\n000000000000001c R_AARCH64_PREL32         .text\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005682440008968115,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "--version"
+      ],
+      "returncode": 0,
+      "stdout": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "stderr": "",
+      "elapsed_seconds": 0.0003753821365535259,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "-dumpmachine"
+      ],
+      "returncode": 0,
+      "stdout": "aarch64-linux-gnu\n",
+      "stderr": "",
+      "elapsed_seconds": 0.00023421295918524265,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-c",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/model-guard.c",
+        "-o",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/model-guard.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.006052946904674172,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-E",
+        "-P",
+        "/work/benchmarks/algorithms/popcount8.c",
+        "-o",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/original.i"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.0036016509402543306,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "analyze",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/original.i",
+        "--report",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/original-preprocessed-analysis.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.011760969879105687,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "verify",
+        "/work/benchmarks/algorithms/popcount8.c",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/original.i",
+        "--report",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/original-build-verification.json",
+        "--timeout-ms",
+        "10000"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "csrd: popcount8: proved-under-model\n",
+      "elapsed_seconds": 0.01733644912019372,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-c",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/original.i",
+        "-o",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.0086535788141191,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--section-headers",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/original.o:\tfile format elf64-littleaarch64\n\nSections:\nIdx Name            Size     VMA              Type\n  0                 00000000 0000000000000000 \n  1 .text           00000028 0000000000000000 TEXT\n  2 .data           00000000 0000000000000000 DATA\n  3 .bss            00000000 0000000000000000 BSS\n  4 .comment        0000002e 0000000000000000 \n  5 .note.GNU-stack 00000000 0000000000000000 \n  6 .eh_frame       00000028 0000000000000000 DATA\n  7 .rela.eh_frame  00000018 0000000000000000 \n  8 .symtab         00000108 0000000000000000 \n  9 .strtab         0000001c 0000000000000000 \n 10 .shstrtab       00000054 0000000000000000 \n",
+      "stderr": "",
+      "elapsed_seconds": 0.007360180141404271,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--full-contents",
+        "--section=.text",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/original.o:\tfile format elf64-littleaarch64\nContents of section .text:\n 0000 011c0012 02018052 00008052 1f2003d5  .......R...R. ..\n 0010 23000012 42040071 0000030b 217c0153  #...B..q....!|.S\n 0020 81ffff54 c0035fd6                    ...T.._.\n",
+      "stderr": "",
+      "elapsed_seconds": 0.007469098083674908,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/original.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <popcount8>:\n       0:      \tand\tw1, w0, #0xff\n       4:      \tmov\tw2, #0x8                // =8\n       8:      \tmov\tw0, #0x0                // =0\n       c:      \tnop\n      10:      \tand\tw3, w1, #0x1\n      14:      \tsubs\tw2, w2, #0x1\n      18:      \tadd\tw0, w0, w3\n      1c:      \tlsr\tw1, w1, #1\n      20:      \tb.ne\t0x10 <popcount8+0x10>\n      24:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.0066061660181730986,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/original.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <popcount8>:\n       0:      \tand\tw1, w0, #0xff\n       4:      \tmov\tw2, #0x8                // =8\n       8:      \tmov\tw0, #0x0                // =0\n       c:      \tnop\n      10:      \tand\tw3, w1, #0x1\n      14:      \tsubs\tw2, w2, #0x1\n      18:      \tadd\tw0, w0, w3\n      1c:      \tlsr\tw1, w1, #1\n      20:      \tb.ne\t0x10 <popcount8+0x10>\n      24:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005249138921499252,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--reloc",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/original.o:\tfile format elf64-littleaarch64\n\nRELOCATION RECORDS FOR [.eh_frame]:\nOFFSET           TYPE                     VALUE\n000000000000001c R_AARCH64_PREL32         .text\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005158887943252921,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-E",
+        "-P",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/candidate.c",
+        "-o",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/candidate.i"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.0036619440652430058,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "analyze",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/candidate.i",
+        "--report",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/candidate-preprocessed-analysis.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.011231335112825036,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "verify",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/candidate.c",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/candidate.i",
+        "--report",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/candidate-build-verification.json",
+        "--timeout-ms",
+        "10000"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "csrd: popcount8: proved-under-model\n",
+      "elapsed_seconds": 0.01757061993703246,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-c",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/candidate.i",
+        "-o",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.007399596972391009,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--section-headers",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/candidate.o:\tfile format elf64-littleaarch64\n\nSections:\nIdx Name            Size     VMA              Type\n  0                 00000000 0000000000000000 \n  1 .text           0000002c 0000000000000000 TEXT\n  2 .data           00000000 0000000000000000 DATA\n  3 .bss            00000000 0000000000000000 BSS\n  4 .comment        0000002e 0000000000000000 \n  5 .note.GNU-stack 00000000 0000000000000000 \n  6 .eh_frame       00000028 0000000000000000 DATA\n  7 .rela.eh_frame  00000018 0000000000000000 \n  8 .symtab         00000108 0000000000000000 \n  9 .strtab         0000001d 0000000000000000 \n 10 .shstrtab       00000054 0000000000000000 \n",
+      "stderr": "",
+      "elapsed_seconds": 0.006299701984971762,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--full-contents",
+        "--section=.text",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/candidate.o:\tfile format elf64-littleaarch64\nContents of section .text:\n 0000 a30a8052 011c0012 6004400a 62068052  ...R....`.@.b..R\n 0010 2000004b 0100020a 4008400a 0000010b   ..K....@.@.....\n 0020 0010400b 000c0012 c0035fd6           ..@......._.\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005349599989131093,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/candidate.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <popcount8>:\n       0:      \tmov\tw3, #0x55               // =85\n       4:      \tand\tw1, w0, #0xff\n       8:      \tand\tw0, w3, w0, lsr #1\n       c:      \tmov\tw2, #0x33               // =51\n      10:      \tsub\tw0, w1, w0\n      14:      \tand\tw1, w0, w2\n      18:      \tand\tw0, w2, w0, lsr #2\n      1c:      \tadd\tw0, w0, w1\n      20:      \tadd\tw0, w0, w0, lsr #4\n      24:      \tand\tw0, w0, #0xf\n      28:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005275849020108581,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/candidate.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <popcount8>:\n       0:      \tmov\tw3, #0x55               // =85\n       4:      \tand\tw1, w0, #0xff\n       8:      \tand\tw0, w3, w0, lsr #1\n       c:      \tmov\tw2, #0x33               // =51\n      10:      \tsub\tw0, w1, w0\n      14:      \tand\tw1, w0, w2\n      18:      \tand\tw0, w2, w0, lsr #2\n      1c:      \tadd\tw0, w0, w1\n      20:      \tadd\tw0, w0, w0, lsr #4\n      24:      \tand\tw0, w0, #0xf\n      28:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005366308847442269,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--reloc",
+        "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/linux/compiler-1-O2/candidate.o:\tfile format elf64-littleaarch64\n\nRELOCATION RECORDS FOR [.eh_frame]:\nOFFSET           TYPE                     VALUE\n000000000000001c R_AARCH64_PREL32         .text\n",
+      "stderr": "",
+      "elapsed_seconds": 0.0050818040035665035,
+      "status": "completed"
+    }
+  ],
+  "configurations": [
+    {
+      "compiler": "/usr/bin/clang-18",
+      "compiler_version": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+      "compiler_sha256": "6d99f6207153b8b2063ace5d2a6177debaf6a6b6f31649e03afac07b98ba0b4d",
+      "compiler_target": "aarch64-unknown-linux-gnu",
+      "flags": [
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2"
+      ],
+      "status": "completed",
+      "objects": {
+        "original": {
+          "path": "compiler-0-O2/original.o",
+          "object_sha256": "963c3a59ff6c8896bb0b3f83b5d87c37c6d7d8efc16aa57cb20db09f41e29aae",
+          "text_bytes": 68,
+          "text_sha256": "e2c3bf3d3f90172b2cb0c7080593e3954aa517812549ee43a86409b235a469cc",
+          "instruction_histogram": {
+            "adrp": 1,
+            "dup": 1,
+            "movi": 1,
+            "ldr": 1,
+            "ubfx": 3,
+            "and": 2,
+            "ushl": 1,
+            "add": 4,
+            "addv": 1,
+            "fmov": 1,
+            "ret": 1
+          },
+          "scope": "whole single-function object code section, including padding; relocations not applied"
+        },
+        "candidate": {
+          "path": "compiler-0-O2/candidate.o",
+          "object_sha256": "ee05b48bb648eda079b8e65a4d4919a1e00b05ee260a5c9706f29afe660baa1a",
+          "text_bytes": 44,
+          "text_sha256": "b9df3711884b22ed89c43b199388d6e0c05e014d9136a916448f151fdfd9c9b8",
+          "instruction_histogram": {
+            "mov": 2,
+            "and": 5,
+            "sub": 1,
+            "add": 2,
+            "ret": 1
+          },
+          "scope": "whole single-function object code section, including padding; relocations not applied"
+        }
+      },
+      "build_validation": {
+        "original": {
+          "preprocessed_path": "compiler-0-O2/original.i",
+          "preprocessed_sha256": "5abb47b9789265b64447577fb90260ab5e344b73473dbae6995563814a900b9e",
+          "verification": "proved-under-model",
+          "proof": {
+            "action": "verify",
+            "candidate_dependencies": [],
+            "candidate_sha256": "5abb47b9789265b64447577fb90260ab5e344b73473dbae6995563814a900b9e",
+            "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+            "coverage_percent": 50,
+            "csrd_version": "0.5.0",
+            "dependencies": [
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/libc-header-start.h",
+                "sha256": "e86638082f9ce98c82e3022018fa5be175473445c824fe17bd32bf9668582368"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/long-double.h",
+                "sha256": "b1866ecbc3dcbaf4341e42c219ee128d90cd364a5a04ad1417d40e351842035c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-intn.h",
+                "sha256": "94286e42e4970304da5cbef69de6695c84132ff8fbd4b6d72d29aeb7406dc5ff"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-least.h",
+                "sha256": "5bf66871bfc18ae6d22c91d03e392c1a4cc5969ca74c5fa31b7510703a496844"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-uintn.h",
+                "sha256": "aeee224a19434556ef4a9a4afad553736789274656ca12463122300b557ce78c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/time64.h",
+                "sha256": "2be9170ce3621ea6062f10edef68bbc2db09bb454ec4397534263dd37b8f1f6a"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/timesize.h",
+                "sha256": "8436245f53a4b30b0dfab4d3ed207f27b5fd696deee9559d099e0d57ffdbcd44"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/types.h",
+                "sha256": "371847ed3adab1c19db392034f6a22407d321b1dc5f2440563f4b0b8b6c5386b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/typesizes.h",
+                "sha256": "dcb8089b342f2f5f1ab9df0a9591ecea20f92f116204f68ae590b831905a3813"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wchar.h",
+                "sha256": "893fa450527ce645f17922788097d5fe331e2a53012bab4e724d8a1f63e21aa2"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wordsize.h",
+                "sha256": "c67aaeab12f39b8685a884b1764c372379640bdc9f07d97ff78a6c74a2522503"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h",
+                "sha256": "4e0206e34726006283e65605b9c74fa55b99a2d3bb02dffaf0b324482167985b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs.h",
+                "sha256": "4fc54fd0190796cad1125563ea8dedc53811c81bce7d79e9396afc15994a35ab"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/sys/cdefs.h",
+                "sha256": "173afb522c6877dda3be1c93742c2061cd6e748ce395d2b3ae833fb49bfbfc4f"
+              },
+              {
+                "path": "/usr/include/features-time64.h",
+                "sha256": "345acb98767d04277e413c4951fbb199b0500be23d43cddf17c6cd9fb319a8da"
+              },
+              {
+                "path": "/usr/include/features.h",
+                "sha256": "940d486d050fc87420d8ffc008e17f31ffb04467534ad1b039ed25abc52382f9"
+              },
+              {
+                "path": "/usr/include/stdc-predef.h",
+                "sha256": "8db4f65e62cade8ae4d9b77960ee6aee093255acc1b637e3fb37d79179733b15"
+              },
+              {
+                "path": "/usr/include/stdint.h",
+                "sha256": "c26c51b07feadd45ca25e9c95e393b6783d580ab318a567c119828191a80bbed"
+              },
+              {
+                "path": "/usr/lib/llvm-18/lib/clang/18/include/stdint.h",
+                "sha256": "7ce5540d5fb6e8da9760928e76cbdd5ebef329d701ad598d30d8e6f9d5d78b34"
+              }
+            ],
+            "functions": [
+              {
+                "column": 10,
+                "function": "popcount8",
+                "line": 3,
+                "parameter_count": 1,
+                "proof": {
+                  "obligation_sha256": "d31f593050e1dc4a1f4598338732c08ffc41d26759a3da0c64cf5c66f7b87f77",
+                  "reason": "",
+                  "smtlib": "; \n(set-info :status unknown)\n(declare-fun input_0 () (_ BitVec 32))\n(assert\n (let ((?x7 (bvand input_0 (_ bv255 32))))\n (let ((?x12 (bvlshr ?x7 (_ bv1 32))))\n (let ((?x15 (bvlshr ?x12 (_ bv1 32))))\n (let ((?x19 (bvlshr ?x15 (_ bv1 32))))\n (let ((?x23 (bvlshr ?x19 (_ bv1 32))))\n (let ((?x27 (bvlshr ?x23 (_ bv1 32))))\n (let ((?x31 (bvlshr ?x27 (_ bv1 32))))\n (let ((?x18 (bvadd (bvadd (bvadd (_ bv0 32) (bvand ?x7 (_ bv1 32))) (bvand ?x12 (_ bv1 32))) (bvand ?x15 (_ bv1 32)))))\n (let ((?x30 (bvadd (bvadd (bvadd ?x18 (bvand ?x19 (_ bv1 32))) (bvand ?x23 (_ bv1 32))) (bvand ?x27 (_ bv1 32)))))\n (let ((?x38 (bvadd (bvadd ?x30 (bvand ?x31 (_ bv1 32))) (bvand (bvlshr ?x31 (_ bv1 32)) (_ bv1 32)))))\n (and (distinct ?x38 ?x38) true))))))))))))\n(check-sat)\n",
+                  "solver_strategy": "simplify/bit-blast/sat",
+                  "status": "proved-under-model"
+                },
+                "source_metrics": {
+                  "ast_nodes": 37,
+                  "ast_shape_sha256": "7f51dd5ca8e4f9c0a076c1f2baa607ece5eea3c02340f6bf2d085d616f86ff35",
+                  "branches": 0,
+                  "cfg_adjacency_sha256": "bb97e3ca26e7bbf596d6922e7fbe1b6abf29c0a76c75a9a3715f043947cf7875",
+                  "cfg_blocks": 7,
+                  "cfg_edges": 7,
+                  "cyclomatic": 2,
+                  "expressions": 30,
+                  "loops": 1,
+                  "operators": {
+                    "&": 2,
+                    "+": 1,
+                    "++": 1,
+                    "<": 1,
+                    "=": 2,
+                    ">>": 1
+                  }
+                },
+                "status": "checked",
+                "verification": "proved-under-model"
+              }
+            ],
+            "model": "pure-u32-c11-v2; identical target, headers and compilation environment required",
+            "objective": "balanced",
+            "output_written": false,
+            "schema_version": 2,
+            "seed": "0",
+            "solver": "4.8.12.0",
+            "source_sha256": "f3f34ac730db32b0dd447f4040560c8da21f913106c958a02c9ef92b54cb860b",
+            "strategy": "affine",
+            "target": "aarch64-unknown-linux-gnu",
+            "timeout_ms": 10000
+          }
+        },
+        "candidate": {
+          "preprocessed_path": "compiler-0-O2/candidate.i",
+          "preprocessed_sha256": "629836c317eb017e7f5a36afc81db66418c67571097979747356c74ead7fffa4",
+          "verification": "proved-under-model",
+          "proof": {
+            "action": "verify",
+            "candidate_dependencies": [],
+            "candidate_sha256": "629836c317eb017e7f5a36afc81db66418c67571097979747356c74ead7fffa4",
+            "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+            "coverage_percent": 50,
+            "csrd_version": "0.5.0",
+            "dependencies": [
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/libc-header-start.h",
+                "sha256": "e86638082f9ce98c82e3022018fa5be175473445c824fe17bd32bf9668582368"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/long-double.h",
+                "sha256": "b1866ecbc3dcbaf4341e42c219ee128d90cd364a5a04ad1417d40e351842035c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-intn.h",
+                "sha256": "94286e42e4970304da5cbef69de6695c84132ff8fbd4b6d72d29aeb7406dc5ff"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-least.h",
+                "sha256": "5bf66871bfc18ae6d22c91d03e392c1a4cc5969ca74c5fa31b7510703a496844"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-uintn.h",
+                "sha256": "aeee224a19434556ef4a9a4afad553736789274656ca12463122300b557ce78c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/time64.h",
+                "sha256": "2be9170ce3621ea6062f10edef68bbc2db09bb454ec4397534263dd37b8f1f6a"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/timesize.h",
+                "sha256": "8436245f53a4b30b0dfab4d3ed207f27b5fd696deee9559d099e0d57ffdbcd44"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/types.h",
+                "sha256": "371847ed3adab1c19db392034f6a22407d321b1dc5f2440563f4b0b8b6c5386b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/typesizes.h",
+                "sha256": "dcb8089b342f2f5f1ab9df0a9591ecea20f92f116204f68ae590b831905a3813"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wchar.h",
+                "sha256": "893fa450527ce645f17922788097d5fe331e2a53012bab4e724d8a1f63e21aa2"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wordsize.h",
+                "sha256": "c67aaeab12f39b8685a884b1764c372379640bdc9f07d97ff78a6c74a2522503"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h",
+                "sha256": "4e0206e34726006283e65605b9c74fa55b99a2d3bb02dffaf0b324482167985b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs.h",
+                "sha256": "4fc54fd0190796cad1125563ea8dedc53811c81bce7d79e9396afc15994a35ab"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/sys/cdefs.h",
+                "sha256": "173afb522c6877dda3be1c93742c2061cd6e748ce395d2b3ae833fb49bfbfc4f"
+              },
+              {
+                "path": "/usr/include/features-time64.h",
+                "sha256": "345acb98767d04277e413c4951fbb199b0500be23d43cddf17c6cd9fb319a8da"
+              },
+              {
+                "path": "/usr/include/features.h",
+                "sha256": "940d486d050fc87420d8ffc008e17f31ffb04467534ad1b039ed25abc52382f9"
+              },
+              {
+                "path": "/usr/include/stdc-predef.h",
+                "sha256": "8db4f65e62cade8ae4d9b77960ee6aee093255acc1b637e3fb37d79179733b15"
+              },
+              {
+                "path": "/usr/include/stdint.h",
+                "sha256": "c26c51b07feadd45ca25e9c95e393b6783d580ab318a567c119828191a80bbed"
+              },
+              {
+                "path": "/usr/lib/llvm-18/lib/clang/18/include/stdint.h",
+                "sha256": "7ce5540d5fb6e8da9760928e76cbdd5ebef329d701ad598d30d8e6f9d5d78b34"
+              }
+            ],
+            "functions": [
+              {
+                "column": 10,
+                "function": "popcount8",
+                "line": 3,
+                "parameter_count": 1,
+                "proof": {
+                  "obligation_sha256": "a5a88472f7d49c1e93afcd0d2d94b4b98ec2a4d464cdf72a226f2d30a272a7b7",
+                  "reason": "",
+                  "smtlib": "; \n(set-info :status unknown)\n(declare-fun input_0 () (_ BitVec 32))\n(assert\n (let ((?x7 (bvand input_0 (_ bv255 32))))\n (let ((?x12 (bvsub ?x7 (bvand (bvlshr ?x7 (_ bv1 32)) (_ bv85 32)))))\n (let ((?x18 (bvadd (bvand ?x12 (_ bv51 32)) (bvand (bvlshr ?x12 (_ bv2 32)) (_ bv51 32)))))\n (let ((?x23 (bvand (bvadd ?x18 (bvlshr ?x18 (_ bv4 32))) (_ bv15 32))))\n (and (distinct ?x23 ?x23) true))))))\n(check-sat)\n",
+                  "solver_strategy": "simplify/bit-blast/sat",
+                  "status": "proved-under-model"
+                },
+                "source_metrics": {
+                  "ast_nodes": 95,
+                  "ast_shape_sha256": "a1b5bad9c2cc96633f2e02904f3d6e4aaaf7d7543678d80cc3c59f27e028154a",
+                  "branches": 0,
+                  "cfg_adjacency_sha256": "0776758444a55607502560b1a00bdb50388c5d7526a7605c1c35b517d91a8d2b",
+                  "cfg_blocks": 3,
+                  "cfg_edges": 2,
+                  "cyclomatic": 1,
+                  "expressions": 82,
+                  "loops": 0,
+                  "operators": {
+                    "&": 5,
+                    "+": 2,
+                    "-": 1,
+                    ">>": 3
+                  }
+                },
+                "status": "checked",
+                "verification": "proved-under-model"
+              }
+            ],
+            "model": "pure-u32-c11-v2; identical target, headers and compilation environment required",
+            "objective": "balanced",
+            "output_written": false,
+            "schema_version": 2,
+            "seed": "0",
+            "solver": "4.8.12.0",
+            "source_sha256": "7bbb28185e23d613a6e270ea4870b19d1aab75f9fd8c06f179d5f3e236e86235",
+            "strategy": "affine",
+            "target": "aarch64-unknown-linux-gnu",
+            "timeout_ms": 10000
+          }
+        }
+      },
+      "code_section_bytes_identical": false,
+      "observation": "code-section-bytes-differ",
+      "text_size_ratio": 0.6470588235294118,
+      "instruction_histograms_identical": false,
+      "reverse_engineering_effort": "not-assessed",
+      "memory_exposure": "not-assessed"
+    },
+    {
+      "compiler": "/usr/bin/gcc",
+      "compiler_version": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+      "compiler_sha256": "a20520ee21543f243d40636a9181a142c45ecd989de31ab86b99a8ea5ada870d",
+      "compiler_target": "aarch64-linux-gnu",
+      "flags": [
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2"
+      ],
+      "status": "completed",
+      "objects": {
+        "original": {
+          "path": "compiler-1-O2/original.o",
+          "object_sha256": "26c222bbefd997d7ccd8ae43e7995d8fb69f860dbada6ff698456a9d0f5a191d",
+          "text_bytes": 40,
+          "text_sha256": "115692da03901834d9d19ea486f91887b10f2021a5592a53c1cb42a27456b801",
+          "instruction_histogram": {
+            "and": 2,
+            "mov": 2,
+            "nop": 1,
+            "subs": 1,
+            "add": 1,
+            "lsr": 1,
+            "b.ne": 1,
+            "ret": 1
+          },
+          "scope": "whole single-function object code section, including padding; relocations not applied"
+        },
+        "candidate": {
+          "path": "compiler-1-O2/candidate.o",
+          "object_sha256": "7924a4ae35d987c79d2e2ba7c2ac488a3ca5ff3309c37b3a04819b6b43fd6801",
+          "text_bytes": 44,
+          "text_sha256": "9b142c05dee850c58f8b32371cf6feb66a1ed3081a7273132278addb54fd87c8",
+          "instruction_histogram": {
+            "mov": 2,
+            "and": 5,
+            "sub": 1,
+            "add": 2,
+            "ret": 1
+          },
+          "scope": "whole single-function object code section, including padding; relocations not applied"
+        }
+      },
+      "build_validation": {
+        "original": {
+          "preprocessed_path": "compiler-1-O2/original.i",
+          "preprocessed_sha256": "bf7745d559f187f2a4d254074fe33a70972d5dc20716d3770273d93d277c6f39",
+          "verification": "proved-under-model",
+          "proof": {
+            "action": "verify",
+            "candidate_dependencies": [],
+            "candidate_sha256": "bf7745d559f187f2a4d254074fe33a70972d5dc20716d3770273d93d277c6f39",
+            "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+            "coverage_percent": 50,
+            "csrd_version": "0.5.0",
+            "dependencies": [
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/libc-header-start.h",
+                "sha256": "e86638082f9ce98c82e3022018fa5be175473445c824fe17bd32bf9668582368"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/long-double.h",
+                "sha256": "b1866ecbc3dcbaf4341e42c219ee128d90cd364a5a04ad1417d40e351842035c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-intn.h",
+                "sha256": "94286e42e4970304da5cbef69de6695c84132ff8fbd4b6d72d29aeb7406dc5ff"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-least.h",
+                "sha256": "5bf66871bfc18ae6d22c91d03e392c1a4cc5969ca74c5fa31b7510703a496844"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-uintn.h",
+                "sha256": "aeee224a19434556ef4a9a4afad553736789274656ca12463122300b557ce78c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/time64.h",
+                "sha256": "2be9170ce3621ea6062f10edef68bbc2db09bb454ec4397534263dd37b8f1f6a"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/timesize.h",
+                "sha256": "8436245f53a4b30b0dfab4d3ed207f27b5fd696deee9559d099e0d57ffdbcd44"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/types.h",
+                "sha256": "371847ed3adab1c19db392034f6a22407d321b1dc5f2440563f4b0b8b6c5386b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/typesizes.h",
+                "sha256": "dcb8089b342f2f5f1ab9df0a9591ecea20f92f116204f68ae590b831905a3813"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wchar.h",
+                "sha256": "893fa450527ce645f17922788097d5fe331e2a53012bab4e724d8a1f63e21aa2"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wordsize.h",
+                "sha256": "c67aaeab12f39b8685a884b1764c372379640bdc9f07d97ff78a6c74a2522503"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h",
+                "sha256": "4e0206e34726006283e65605b9c74fa55b99a2d3bb02dffaf0b324482167985b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs.h",
+                "sha256": "4fc54fd0190796cad1125563ea8dedc53811c81bce7d79e9396afc15994a35ab"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/sys/cdefs.h",
+                "sha256": "173afb522c6877dda3be1c93742c2061cd6e748ce395d2b3ae833fb49bfbfc4f"
+              },
+              {
+                "path": "/usr/include/features-time64.h",
+                "sha256": "345acb98767d04277e413c4951fbb199b0500be23d43cddf17c6cd9fb319a8da"
+              },
+              {
+                "path": "/usr/include/features.h",
+                "sha256": "940d486d050fc87420d8ffc008e17f31ffb04467534ad1b039ed25abc52382f9"
+              },
+              {
+                "path": "/usr/include/stdc-predef.h",
+                "sha256": "8db4f65e62cade8ae4d9b77960ee6aee093255acc1b637e3fb37d79179733b15"
+              },
+              {
+                "path": "/usr/include/stdint.h",
+                "sha256": "c26c51b07feadd45ca25e9c95e393b6783d580ab318a567c119828191a80bbed"
+              },
+              {
+                "path": "/usr/lib/llvm-18/lib/clang/18/include/stdint.h",
+                "sha256": "7ce5540d5fb6e8da9760928e76cbdd5ebef329d701ad598d30d8e6f9d5d78b34"
+              }
+            ],
+            "functions": [
+              {
+                "column": 10,
+                "function": "popcount8",
+                "line": 3,
+                "parameter_count": 1,
+                "proof": {
+                  "obligation_sha256": "d31f593050e1dc4a1f4598338732c08ffc41d26759a3da0c64cf5c66f7b87f77",
+                  "reason": "",
+                  "smtlib": "; \n(set-info :status unknown)\n(declare-fun input_0 () (_ BitVec 32))\n(assert\n (let ((?x7 (bvand input_0 (_ bv255 32))))\n (let ((?x12 (bvlshr ?x7 (_ bv1 32))))\n (let ((?x15 (bvlshr ?x12 (_ bv1 32))))\n (let ((?x19 (bvlshr ?x15 (_ bv1 32))))\n (let ((?x23 (bvlshr ?x19 (_ bv1 32))))\n (let ((?x27 (bvlshr ?x23 (_ bv1 32))))\n (let ((?x31 (bvlshr ?x27 (_ bv1 32))))\n (let ((?x18 (bvadd (bvadd (bvadd (_ bv0 32) (bvand ?x7 (_ bv1 32))) (bvand ?x12 (_ bv1 32))) (bvand ?x15 (_ bv1 32)))))\n (let ((?x30 (bvadd (bvadd (bvadd ?x18 (bvand ?x19 (_ bv1 32))) (bvand ?x23 (_ bv1 32))) (bvand ?x27 (_ bv1 32)))))\n (let ((?x38 (bvadd (bvadd ?x30 (bvand ?x31 (_ bv1 32))) (bvand (bvlshr ?x31 (_ bv1 32)) (_ bv1 32)))))\n (and (distinct ?x38 ?x38) true))))))))))))\n(check-sat)\n",
+                  "solver_strategy": "simplify/bit-blast/sat",
+                  "status": "proved-under-model"
+                },
+                "source_metrics": {
+                  "ast_nodes": 37,
+                  "ast_shape_sha256": "7f51dd5ca8e4f9c0a076c1f2baa607ece5eea3c02340f6bf2d085d616f86ff35",
+                  "branches": 0,
+                  "cfg_adjacency_sha256": "bb97e3ca26e7bbf596d6922e7fbe1b6abf29c0a76c75a9a3715f043947cf7875",
+                  "cfg_blocks": 7,
+                  "cfg_edges": 7,
+                  "cyclomatic": 2,
+                  "expressions": 30,
+                  "loops": 1,
+                  "operators": {
+                    "&": 2,
+                    "+": 1,
+                    "++": 1,
+                    "<": 1,
+                    "=": 2,
+                    ">>": 1
+                  }
+                },
+                "status": "checked",
+                "verification": "proved-under-model"
+              }
+            ],
+            "model": "pure-u32-c11-v2; identical target, headers and compilation environment required",
+            "objective": "balanced",
+            "output_written": false,
+            "schema_version": 2,
+            "seed": "0",
+            "solver": "4.8.12.0",
+            "source_sha256": "f3f34ac730db32b0dd447f4040560c8da21f913106c958a02c9ef92b54cb860b",
+            "strategy": "affine",
+            "target": "aarch64-unknown-linux-gnu",
+            "timeout_ms": 10000
+          }
+        },
+        "candidate": {
+          "preprocessed_path": "compiler-1-O2/candidate.i",
+          "preprocessed_sha256": "6bce214b01fe3f98a4a5de737b58569d776f8d93b404deec874e11b7a98bfdeb",
+          "verification": "proved-under-model",
+          "proof": {
+            "action": "verify",
+            "candidate_dependencies": [],
+            "candidate_sha256": "6bce214b01fe3f98a4a5de737b58569d776f8d93b404deec874e11b7a98bfdeb",
+            "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+            "coverage_percent": 50,
+            "csrd_version": "0.5.0",
+            "dependencies": [
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/libc-header-start.h",
+                "sha256": "e86638082f9ce98c82e3022018fa5be175473445c824fe17bd32bf9668582368"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/long-double.h",
+                "sha256": "b1866ecbc3dcbaf4341e42c219ee128d90cd364a5a04ad1417d40e351842035c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-intn.h",
+                "sha256": "94286e42e4970304da5cbef69de6695c84132ff8fbd4b6d72d29aeb7406dc5ff"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-least.h",
+                "sha256": "5bf66871bfc18ae6d22c91d03e392c1a4cc5969ca74c5fa31b7510703a496844"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-uintn.h",
+                "sha256": "aeee224a19434556ef4a9a4afad553736789274656ca12463122300b557ce78c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/time64.h",
+                "sha256": "2be9170ce3621ea6062f10edef68bbc2db09bb454ec4397534263dd37b8f1f6a"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/timesize.h",
+                "sha256": "8436245f53a4b30b0dfab4d3ed207f27b5fd696deee9559d099e0d57ffdbcd44"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/types.h",
+                "sha256": "371847ed3adab1c19db392034f6a22407d321b1dc5f2440563f4b0b8b6c5386b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/typesizes.h",
+                "sha256": "dcb8089b342f2f5f1ab9df0a9591ecea20f92f116204f68ae590b831905a3813"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wchar.h",
+                "sha256": "893fa450527ce645f17922788097d5fe331e2a53012bab4e724d8a1f63e21aa2"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wordsize.h",
+                "sha256": "c67aaeab12f39b8685a884b1764c372379640bdc9f07d97ff78a6c74a2522503"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h",
+                "sha256": "4e0206e34726006283e65605b9c74fa55b99a2d3bb02dffaf0b324482167985b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs.h",
+                "sha256": "4fc54fd0190796cad1125563ea8dedc53811c81bce7d79e9396afc15994a35ab"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/sys/cdefs.h",
+                "sha256": "173afb522c6877dda3be1c93742c2061cd6e748ce395d2b3ae833fb49bfbfc4f"
+              },
+              {
+                "path": "/usr/include/features-time64.h",
+                "sha256": "345acb98767d04277e413c4951fbb199b0500be23d43cddf17c6cd9fb319a8da"
+              },
+              {
+                "path": "/usr/include/features.h",
+                "sha256": "940d486d050fc87420d8ffc008e17f31ffb04467534ad1b039ed25abc52382f9"
+              },
+              {
+                "path": "/usr/include/stdc-predef.h",
+                "sha256": "8db4f65e62cade8ae4d9b77960ee6aee093255acc1b637e3fb37d79179733b15"
+              },
+              {
+                "path": "/usr/include/stdint.h",
+                "sha256": "c26c51b07feadd45ca25e9c95e393b6783d580ab318a567c119828191a80bbed"
+              },
+              {
+                "path": "/usr/lib/llvm-18/lib/clang/18/include/stdint.h",
+                "sha256": "7ce5540d5fb6e8da9760928e76cbdd5ebef329d701ad598d30d8e6f9d5d78b34"
+              }
+            ],
+            "functions": [
+              {
+                "column": 10,
+                "function": "popcount8",
+                "line": 3,
+                "parameter_count": 1,
+                "proof": {
+                  "obligation_sha256": "a5a88472f7d49c1e93afcd0d2d94b4b98ec2a4d464cdf72a226f2d30a272a7b7",
+                  "reason": "",
+                  "smtlib": "; \n(set-info :status unknown)\n(declare-fun input_0 () (_ BitVec 32))\n(assert\n (let ((?x7 (bvand input_0 (_ bv255 32))))\n (let ((?x12 (bvsub ?x7 (bvand (bvlshr ?x7 (_ bv1 32)) (_ bv85 32)))))\n (let ((?x18 (bvadd (bvand ?x12 (_ bv51 32)) (bvand (bvlshr ?x12 (_ bv2 32)) (_ bv51 32)))))\n (let ((?x23 (bvand (bvadd ?x18 (bvlshr ?x18 (_ bv4 32))) (_ bv15 32))))\n (and (distinct ?x23 ?x23) true))))))\n(check-sat)\n",
+                  "solver_strategy": "simplify/bit-blast/sat",
+                  "status": "proved-under-model"
+                },
+                "source_metrics": {
+                  "ast_nodes": 95,
+                  "ast_shape_sha256": "a1b5bad9c2cc96633f2e02904f3d6e4aaaf7d7543678d80cc3c59f27e028154a",
+                  "branches": 0,
+                  "cfg_adjacency_sha256": "0776758444a55607502560b1a00bdb50388c5d7526a7605c1c35b517d91a8d2b",
+                  "cfg_blocks": 3,
+                  "cfg_edges": 2,
+                  "cyclomatic": 1,
+                  "expressions": 82,
+                  "loops": 0,
+                  "operators": {
+                    "&": 5,
+                    "+": 2,
+                    "-": 1,
+                    ">>": 3
+                  }
+                },
+                "status": "checked",
+                "verification": "proved-under-model"
+              }
+            ],
+            "model": "pure-u32-c11-v2; identical target, headers and compilation environment required",
+            "objective": "balanced",
+            "output_written": false,
+            "schema_version": 2,
+            "seed": "0",
+            "solver": "4.8.12.0",
+            "source_sha256": "7bbb28185e23d613a6e270ea4870b19d1aab75f9fd8c06f179d5f3e236e86235",
+            "strategy": "affine",
+            "target": "aarch64-unknown-linux-gnu",
+            "timeout_ms": 10000
+          }
+        }
+      },
+      "code_section_bytes_identical": false,
+      "observation": "code-section-bytes-differ",
+      "text_size_ratio": 1.1,
+      "instruction_histograms_identical": false,
+      "reverse_engineering_effort": "not-assessed",
+      "memory_exposure": "not-assessed"
+    }
+  ],
+  "claims": {
+    "source_equivalence": "proved-under-model",
+    "machine_code_equivalence": "not-proved",
+    "reverse_engineering_effort": "not-assessed",
+    "memory_exposure": "not-assessed",
+    "confidentiality": "not-established"
+  },
+  "scope": "One admitted pure function per file; native compilers with matching flags. Compares whole .text/__text object-section bytes, including padding. Relocations are not applied; other sections, linking and LTO are not compared. Byte differences and instruction histograms do not establish resistance to analysis. The compiled objects are not executed; no machine-code equivalence proof or memory/debugger observation is performed.",
+  "inputs": {
+    "original": {
+      "path": "/work/benchmarks/algorithms/popcount8.c",
+      "sha256": "f3f34ac730db32b0dd447f4040560c8da21f913106c958a02c9ef92b54cb860b"
+    },
+    "candidate": {
+      "path": "/work/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/candidate.c",
+      "sha256": "7bbb28185e23d613a6e270ea4870b19d1aab75f9fd8c06f179d5f3e236e86235"
+    }
+  },
+  "source_bytes_differ": true,
+  "tools": {
+    "csrd": {
+      "path": "/work/build-linux-release/csrd",
+      "version": "C-SRD 0.5.0",
+      "sha256": "bec77b7fb443aa7b811e2a48d3031c135da5b12bc93610be4fc4a3b6e212ca53"
+    },
+    "objdump": {
+      "path": "/usr/bin/llvm-objdump-18",
+      "version": "Ubuntu LLVM version 18.1.3",
+      "sha256": "32b78ffb3f9f14a19716cb7d3d6a5baa59ea98bc502fb183d3ff429df0f20a21"
+    }
+  },
+  "function": "popcount8",
+  "parameter_count": 1,
+  "analysis_target": "aarch64-unknown-linux-gnu",
+  "header_snapshot": [
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/libc-header-start.h",
+      "sha256": "e86638082f9ce98c82e3022018fa5be175473445c824fe17bd32bf9668582368"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/long-double.h",
+      "sha256": "b1866ecbc3dcbaf4341e42c219ee128d90cd364a5a04ad1417d40e351842035c"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/stdint-intn.h",
+      "sha256": "94286e42e4970304da5cbef69de6695c84132ff8fbd4b6d72d29aeb7406dc5ff"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/stdint-least.h",
+      "sha256": "5bf66871bfc18ae6d22c91d03e392c1a4cc5969ca74c5fa31b7510703a496844"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/stdint-uintn.h",
+      "sha256": "aeee224a19434556ef4a9a4afad553736789274656ca12463122300b557ce78c"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/time64.h",
+      "sha256": "2be9170ce3621ea6062f10edef68bbc2db09bb454ec4397534263dd37b8f1f6a"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/timesize.h",
+      "sha256": "8436245f53a4b30b0dfab4d3ed207f27b5fd696deee9559d099e0d57ffdbcd44"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/types.h",
+      "sha256": "371847ed3adab1c19db392034f6a22407d321b1dc5f2440563f4b0b8b6c5386b"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/typesizes.h",
+      "sha256": "dcb8089b342f2f5f1ab9df0a9591ecea20f92f116204f68ae590b831905a3813"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/wchar.h",
+      "sha256": "893fa450527ce645f17922788097d5fe331e2a53012bab4e724d8a1f63e21aa2"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/wordsize.h",
+      "sha256": "c67aaeab12f39b8685a884b1764c372379640bdc9f07d97ff78a6c74a2522503"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h",
+      "sha256": "4e0206e34726006283e65605b9c74fa55b99a2d3bb02dffaf0b324482167985b"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/gnu/stubs.h",
+      "sha256": "4fc54fd0190796cad1125563ea8dedc53811c81bce7d79e9396afc15994a35ab"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/sys/cdefs.h",
+      "sha256": "173afb522c6877dda3be1c93742c2061cd6e748ce395d2b3ae833fb49bfbfc4f"
+    },
+    {
+      "path": "/usr/include/features-time64.h",
+      "sha256": "345acb98767d04277e413c4951fbb199b0500be23d43cddf17c6cd9fb319a8da"
+    },
+    {
+      "path": "/usr/include/features.h",
+      "sha256": "940d486d050fc87420d8ffc008e17f31ffb04467534ad1b039ed25abc52382f9"
+    },
+    {
+      "path": "/usr/include/stdc-predef.h",
+      "sha256": "8db4f65e62cade8ae4d9b77960ee6aee093255acc1b637e3fb37d79179733b15"
+    },
+    {
+      "path": "/usr/include/stdint.h",
+      "sha256": "c26c51b07feadd45ca25e9c95e393b6783d580ab318a567c119828191a80bbed"
+    },
+    {
+      "path": "/usr/lib/llvm-18/lib/clang/18/include/stdint.h",
+      "sha256": "7ce5540d5fb6e8da9760928e76cbdd5ebef329d701ad598d30d8e6f9d5d78b34"
+    }
+  ],
+  "source_metrics": {
+    "original": {
+      "ast_nodes": 37,
+      "ast_shape_sha256": "7f51dd5ca8e4f9c0a076c1f2baa607ece5eea3c02340f6bf2d085d616f86ff35",
+      "branches": 0,
+      "cfg_adjacency_sha256": "bb97e3ca26e7bbf596d6922e7fbe1b6abf29c0a76c75a9a3715f043947cf7875",
+      "cfg_blocks": 7,
+      "cfg_edges": 7,
+      "cyclomatic": 2,
+      "expressions": 30,
+      "loops": 1,
+      "operators": {
+        "&": 2,
+        "+": 1,
+        "++": 1,
+        "<": 1,
+        "=": 2,
+        ">>": 1
+      }
+    },
+    "candidate": {
+      "ast_nodes": 95,
+      "ast_shape_sha256": "a1b5bad9c2cc96633f2e02904f3d6e4aaaf7d7543678d80cc3c59f27e028154a",
+      "branches": 0,
+      "cfg_adjacency_sha256": "0776758444a55607502560b1a00bdb50388c5d7526a7605c1c35b517d91a8d2b",
+      "cfg_blocks": 3,
+      "cfg_edges": 2,
+      "cyclomatic": 1,
+      "expressions": 82,
+      "loops": 0,
+      "operators": {
+        "&": 5,
+        "+": 2,
+        "-": 1,
+        ">>": 3
+      }
+    }
+  },
+  "verification": {
+    "action": "verify",
+    "candidate_dependencies": [
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/libc-header-start.h",
+        "sha256": "e86638082f9ce98c82e3022018fa5be175473445c824fe17bd32bf9668582368"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/long-double.h",
+        "sha256": "b1866ecbc3dcbaf4341e42c219ee128d90cd364a5a04ad1417d40e351842035c"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/stdint-intn.h",
+        "sha256": "94286e42e4970304da5cbef69de6695c84132ff8fbd4b6d72d29aeb7406dc5ff"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/stdint-least.h",
+        "sha256": "5bf66871bfc18ae6d22c91d03e392c1a4cc5969ca74c5fa31b7510703a496844"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/stdint-uintn.h",
+        "sha256": "aeee224a19434556ef4a9a4afad553736789274656ca12463122300b557ce78c"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/time64.h",
+        "sha256": "2be9170ce3621ea6062f10edef68bbc2db09bb454ec4397534263dd37b8f1f6a"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/timesize.h",
+        "sha256": "8436245f53a4b30b0dfab4d3ed207f27b5fd696deee9559d099e0d57ffdbcd44"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/types.h",
+        "sha256": "371847ed3adab1c19db392034f6a22407d321b1dc5f2440563f4b0b8b6c5386b"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/typesizes.h",
+        "sha256": "dcb8089b342f2f5f1ab9df0a9591ecea20f92f116204f68ae590b831905a3813"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/wchar.h",
+        "sha256": "893fa450527ce645f17922788097d5fe331e2a53012bab4e724d8a1f63e21aa2"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/wordsize.h",
+        "sha256": "c67aaeab12f39b8685a884b1764c372379640bdc9f07d97ff78a6c74a2522503"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h",
+        "sha256": "4e0206e34726006283e65605b9c74fa55b99a2d3bb02dffaf0b324482167985b"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/gnu/stubs.h",
+        "sha256": "4fc54fd0190796cad1125563ea8dedc53811c81bce7d79e9396afc15994a35ab"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/sys/cdefs.h",
+        "sha256": "173afb522c6877dda3be1c93742c2061cd6e748ce395d2b3ae833fb49bfbfc4f"
+      },
+      {
+        "path": "/usr/include/features-time64.h",
+        "sha256": "345acb98767d04277e413c4951fbb199b0500be23d43cddf17c6cd9fb319a8da"
+      },
+      {
+        "path": "/usr/include/features.h",
+        "sha256": "940d486d050fc87420d8ffc008e17f31ffb04467534ad1b039ed25abc52382f9"
+      },
+      {
+        "path": "/usr/include/stdc-predef.h",
+        "sha256": "8db4f65e62cade8ae4d9b77960ee6aee093255acc1b637e3fb37d79179733b15"
+      },
+      {
+        "path": "/usr/include/stdint.h",
+        "sha256": "c26c51b07feadd45ca25e9c95e393b6783d580ab318a567c119828191a80bbed"
+      },
+      {
+        "path": "/usr/lib/llvm-18/lib/clang/18/include/stdint.h",
+        "sha256": "7ce5540d5fb6e8da9760928e76cbdd5ebef329d701ad598d30d8e6f9d5d78b34"
+      }
+    ],
+    "candidate_sha256": "7bbb28185e23d613a6e270ea4870b19d1aab75f9fd8c06f179d5f3e236e86235",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "coverage_percent": 50,
+    "csrd_version": "0.5.0",
+    "dependencies": [
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/libc-header-start.h",
+        "sha256": "e86638082f9ce98c82e3022018fa5be175473445c824fe17bd32bf9668582368"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/long-double.h",
+        "sha256": "b1866ecbc3dcbaf4341e42c219ee128d90cd364a5a04ad1417d40e351842035c"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/stdint-intn.h",
+        "sha256": "94286e42e4970304da5cbef69de6695c84132ff8fbd4b6d72d29aeb7406dc5ff"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/stdint-least.h",
+        "sha256": "5bf66871bfc18ae6d22c91d03e392c1a4cc5969ca74c5fa31b7510703a496844"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/stdint-uintn.h",
+        "sha256": "aeee224a19434556ef4a9a4afad553736789274656ca12463122300b557ce78c"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/time64.h",
+        "sha256": "2be9170ce3621ea6062f10edef68bbc2db09bb454ec4397534263dd37b8f1f6a"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/timesize.h",
+        "sha256": "8436245f53a4b30b0dfab4d3ed207f27b5fd696deee9559d099e0d57ffdbcd44"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/types.h",
+        "sha256": "371847ed3adab1c19db392034f6a22407d321b1dc5f2440563f4b0b8b6c5386b"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/typesizes.h",
+        "sha256": "dcb8089b342f2f5f1ab9df0a9591ecea20f92f116204f68ae590b831905a3813"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/wchar.h",
+        "sha256": "893fa450527ce645f17922788097d5fe331e2a53012bab4e724d8a1f63e21aa2"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/wordsize.h",
+        "sha256": "c67aaeab12f39b8685a884b1764c372379640bdc9f07d97ff78a6c74a2522503"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h",
+        "sha256": "4e0206e34726006283e65605b9c74fa55b99a2d3bb02dffaf0b324482167985b"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/gnu/stubs.h",
+        "sha256": "4fc54fd0190796cad1125563ea8dedc53811c81bce7d79e9396afc15994a35ab"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/sys/cdefs.h",
+        "sha256": "173afb522c6877dda3be1c93742c2061cd6e748ce395d2b3ae833fb49bfbfc4f"
+      },
+      {
+        "path": "/usr/include/features-time64.h",
+        "sha256": "345acb98767d04277e413c4951fbb199b0500be23d43cddf17c6cd9fb319a8da"
+      },
+      {
+        "path": "/usr/include/features.h",
+        "sha256": "940d486d050fc87420d8ffc008e17f31ffb04467534ad1b039ed25abc52382f9"
+      },
+      {
+        "path": "/usr/include/stdc-predef.h",
+        "sha256": "8db4f65e62cade8ae4d9b77960ee6aee093255acc1b637e3fb37d79179733b15"
+      },
+      {
+        "path": "/usr/include/stdint.h",
+        "sha256": "c26c51b07feadd45ca25e9c95e393b6783d580ab318a567c119828191a80bbed"
+      },
+      {
+        "path": "/usr/lib/llvm-18/lib/clang/18/include/stdint.h",
+        "sha256": "7ce5540d5fb6e8da9760928e76cbdd5ebef329d701ad598d30d8e6f9d5d78b34"
+      }
+    ],
+    "functions": [
+      {
+        "column": 10,
+        "function": "popcount8",
+        "line": 3,
+        "parameter_count": 1,
+        "proof": {
+          "obligation_sha256": "9425855bbb6829c4853988c104b6394be0c0749b9f579361854be1726323e0c0",
+          "reason": "",
+          "smtlib": "; \n(set-info :status unknown)\n(declare-fun input_0 () (_ BitVec 32))\n(assert\n (let ((?x7 (bvand input_0 (_ bv255 32))))\n (let ((?x40 (bvsub ?x7 (bvand (bvlshr ?x7 (_ bv1 32)) (_ bv85 32)))))\n (let ((?x45 (bvadd (bvand ?x40 (_ bv51 32)) (bvand (bvlshr ?x40 (_ bv2 32)) (_ bv51 32)))))\n (let ((?x49 (bvand (bvadd ?x45 (bvlshr ?x45 (_ bv4 32))) (_ bv15 32))))\n (let ((?x12 (bvlshr ?x7 (_ bv1 32))))\n (let ((?x15 (bvlshr ?x12 (_ bv1 32))))\n (let ((?x19 (bvlshr ?x15 (_ bv1 32))))\n (let ((?x23 (bvlshr ?x19 (_ bv1 32))))\n (let ((?x27 (bvlshr ?x23 (_ bv1 32))))\n (let ((?x31 (bvlshr ?x27 (_ bv1 32))))\n (let ((?x18 (bvadd (bvadd (bvadd (_ bv0 32) (bvand ?x7 (_ bv1 32))) (bvand ?x12 (_ bv1 32))) (bvand ?x15 (_ bv1 32)))))\n (let ((?x30 (bvadd (bvadd (bvadd ?x18 (bvand ?x19 (_ bv1 32))) (bvand ?x23 (_ bv1 32))) (bvand ?x27 (_ bv1 32)))))\n (let ((?x38 (bvadd (bvadd ?x30 (bvand ?x31 (_ bv1 32))) (bvand (bvlshr ?x31 (_ bv1 32)) (_ bv1 32)))))\n (and (distinct ?x38 ?x49) true)))))))))))))))\n(check-sat)\n",
+          "solver_strategy": "simplify/bit-blast/sat",
+          "status": "proved-under-model"
+        },
+        "source_metrics": {
+          "ast_nodes": 37,
+          "ast_shape_sha256": "7f51dd5ca8e4f9c0a076c1f2baa607ece5eea3c02340f6bf2d085d616f86ff35",
+          "branches": 0,
+          "cfg_adjacency_sha256": "bb97e3ca26e7bbf596d6922e7fbe1b6abf29c0a76c75a9a3715f043947cf7875",
+          "cfg_blocks": 7,
+          "cfg_edges": 7,
+          "cyclomatic": 2,
+          "expressions": 30,
+          "loops": 1,
+          "operators": {
+            "&": 2,
+            "+": 1,
+            "++": 1,
+            "<": 1,
+            "=": 2,
+            ">>": 1
+          }
+        },
+        "status": "checked",
+        "verification": "proved-under-model"
+      }
+    ],
+    "model": "pure-u32-c11-v2; identical target, headers and compilation environment required",
+    "objective": "balanced",
+    "output_written": false,
+    "schema_version": 2,
+    "seed": "0",
+    "solver": "4.8.12.0",
+    "source_sha256": "f3f34ac730db32b0dd447f4040560c8da21f913106c958a02c9ef92b54cb860b",
+    "strategy": "affine",
+    "target": "aarch64-unknown-linux-gnu",
+    "timeout_ms": 10000
+  },
+  "model_guard_sha256": "12d3e48f8196340ef5a8dd0ec935b27b71be5957d13f22d70ca044ebf83bb3e5",
+  "summary": {
+    "configurations": 2,
+    "identical_code_sections": 0,
+    "different_code_sections": 2
+  }
+}

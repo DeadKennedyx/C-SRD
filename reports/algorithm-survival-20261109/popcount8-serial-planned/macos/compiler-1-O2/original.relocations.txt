@@ -1,0 +1,12 @@
+
+/Users/admin/C-SRD/experiments/runs/algorithm-survival-20261109/popcount8-serial-planned/macos/compiler-1-O2/original.o:	file format mach-o arm64
+
+RELOCATION RECORDS FOR [__text]:
+OFFSET           TYPE                     VALUE
+0000000000000014 ARM64_RELOC_PAGEOFF12    lC1
+000000000000000c ARM64_RELOC_PAGE21       lC1
+
+RELOCATION RECORDS FOR [__eh_frame]:
+OFFSET           TYPE                     VALUE
+0000000000000020 ARM64_RELOC_SUBTRACTOR   EH_frame1
+0000000000000020 ARM64_RELOC_UNSIGNED     _popcount8

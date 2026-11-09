@@ -30,6 +30,7 @@ causal explanations and estimates.
 | --- | --- | --- |
 | [2026-11-09 — specification and personal publication](2026-11-09-specification-and-publication.md) | Retrospective analysis, specification and publication preparation | Existing source/reports plus a fresh correctness and command-smoke run; no new compiler functionality or performance study |
 | [2026-11-09 — software-protection scope and compiled-code audit](2026-11-09-protection-audit.md) | Scope clarification, prototype, negative controls and validation | New paired audit; distinguishes compiled differences from unmeasured reconstruction effort and memory exposure |
+| [2026-11-09 — algorithm and encoding survival at O2](2026-11-09-algorithm-survival.md) | Exploratory analysis and next-increment selection | Four existing popcount candidates across four compiler configurations; separates algorithm differences from encoding differences |
 
 Future work is tracked in [the backlog](../backlog.md). External issue numbers
 and review outcomes belong here only after those events actually occur.

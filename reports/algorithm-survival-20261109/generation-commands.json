@@ -1,0 +1,82 @@
+[
+  {
+    "argv": [
+      "build/csrd",
+      "transform",
+      "/Users/admin/C-SRD/benchmarks/algorithms/popcount8.c",
+      "-o",
+      "/Users/admin/C-SRD/experiments/runs/algorithm-survival-20261109/popcount8-serial-identity/candidate.c",
+      "--algorithm",
+      "popcount8-serial",
+      "--strategy",
+      "identity",
+      "--seed",
+      "42",
+      "--report",
+      "/Users/admin/C-SRD/experiments/runs/algorithm-survival-20261109/popcount8-serial-identity/transformation.json"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "/Users/admin/C-SRD/benchmarks/algorithms/popcount8.c:3:10: csrd: transformed popcount8\n"
+  },
+  {
+    "argv": [
+      "build/csrd",
+      "transform",
+      "/Users/admin/C-SRD/benchmarks/algorithms/popcount8.c",
+      "-o",
+      "/Users/admin/C-SRD/experiments/runs/algorithm-survival-20261109/popcount8-serial-planned/candidate.c",
+      "--algorithm",
+      "popcount8-serial",
+      "--strategy",
+      "planned",
+      "--seed",
+      "42",
+      "--report",
+      "/Users/admin/C-SRD/experiments/runs/algorithm-survival-20261109/popcount8-serial-planned/transformation.json"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "/Users/admin/C-SRD/benchmarks/algorithms/popcount8.c:3:10: csrd: transformed popcount8\n"
+  },
+  {
+    "argv": [
+      "build/csrd",
+      "transform",
+      "/Users/admin/C-SRD/benchmarks/algorithms/popcount8.c",
+      "-o",
+      "/Users/admin/C-SRD/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/candidate.c",
+      "--algorithm",
+      "popcount8-swar",
+      "--strategy",
+      "identity",
+      "--seed",
+      "42",
+      "--report",
+      "/Users/admin/C-SRD/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/transformation.json"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "/Users/admin/C-SRD/benchmarks/algorithms/popcount8.c:3:10: csrd: transformed popcount8\n"
+  },
+  {
+    "argv": [
+      "build/csrd",
+      "transform",
+      "/Users/admin/C-SRD/benchmarks/algorithms/popcount8.c",
+      "-o",
+      "/Users/admin/C-SRD/experiments/runs/algorithm-survival-20261109/popcount8-swar-planned/candidate.c",
+      "--algorithm",
+      "popcount8-swar",
+      "--strategy",
+      "planned",
+      "--seed",
+      "42",
+      "--report",
+      "/Users/admin/C-SRD/experiments/runs/algorithm-survival-20261109/popcount8-swar-planned/transformation.json"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "/Users/admin/C-SRD/benchmarks/algorithms/popcount8.c:3:10: csrd: transformed popcount8\n"
+  }
+]
