@@ -1,0 +1,53 @@
+name: Research experiment or bounded feature
+description: Define a specific problem, falsifiable hypothesis and reproducible evidence before implementation.
+title: "[Research] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Specific problem and observations
+      description: State one problem in one sentence, then link observations, source locations or raw reports.
+    validations:
+      required: true
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Current process stage
+      options:
+        - Discovery
+        - Problem definition
+        - Solution research and modeling
+        - Specification
+        - Implementation
+        - Data analysis
+        - Follow-up
+    validations:
+      required: true
+  - type: textarea
+    id: hypothesis
+    attributes:
+      label: Hypothesis and competing explanations
+      description: What evidence would reject the hypothesis or leave it inconclusive?
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Semantic scope and constraints
+      description: Specify types, memory/effects, target assumptions, unsupported cases and verification bounds.
+    validations:
+      required: true
+  - type: textarea
+    id: protocol
+    attributes:
+      label: Experimental design and replication protocol
+      description: Define experimental units, treatments, controls, seeds, versions, commands, data, repetitions, metrics and decision rules. Label retrospective plans explicitly.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance evidence and handoff
+      description: List positive and negative controls, uncertainty/timeout handling, dependencies and journal/specification links. Add actual results only after execution.
+    validations:
+      required: true

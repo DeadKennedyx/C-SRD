@@ -1,0 +1,79 @@
+{
+  "date": "2026-11-09",
+  "scope": "Publication smoke check of documented transform/verify/compile commands; no new performance experiment.",
+  "source_sha256": "5291f929d99a94c0fe1cae0960ef09988ac62a45e9adeef149667844b4f96bf9",
+  "candidate_sha256": "8f21badc98f137c0770a53f1f34e19396db4be7a443a3dfa5d3c442bdf77f9ee",
+  "proof_statuses": [
+    {
+      "function": "calculate",
+      "status": "proved-under-model"
+    }
+  ],
+  "commands": [
+    {
+      "command": [
+        "build/csrd",
+        "transform",
+        "benchmarks/arithmetic/calculate.c",
+        "-o",
+        "build/publication/calculate.c",
+        "--seed",
+        "42",
+        "--report",
+        "build/publication/calculate.json"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "/Users/admin/C-SRD/benchmarks/arithmetic/calculate.c:3:10: csrd: transformed calculate\n"
+    },
+    {
+      "command": [
+        "build/csrd",
+        "verify",
+        "benchmarks/arithmetic/calculate.c",
+        "build/publication/calculate.c",
+        "--report",
+        "build/publication/proof.json"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "csrd: calculate: proved-under-model\n"
+    },
+    {
+      "command": [
+        "/opt/homebrew/opt/llvm/bin/clang",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-c",
+        "build/publication/calculate.c",
+        "-o",
+        "build/publication/clang.o"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "gcc-16",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-c",
+        "build/publication/calculate.c",
+        "-o",
+        "build/publication/gcc-16.o"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}
