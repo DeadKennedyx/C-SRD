@@ -6,10 +6,6 @@ Personal research project maintained by [DeadKennedyx](https://github.com/DeadKe
 Repository: [DeadKennedyx/C-SRD](https://github.com/DeadKennedyx/C-SRD).
 Contact: `juan.dw.ft@gmail.com`. License: [MIT](LICENSE).
 
-> Test ideas by experiments and observations. Build on those ideas that pass the test. Reject the ones that fail.
->
-> — *Cosmos: A Spacetime Odyssey*, excerpt supplied by the project owner
-
 C-SRD is a working C11-to-C11 research compiler built with C++17, Clang
 LibTooling and Z3. It changes computational representations, validates the
 actual emitted functions, and measures correctness, structure, cost and defensive
