@@ -69,6 +69,13 @@ suite exercises all five representation strategies on branches, loops, tables,
 comparisons, wraparound and bitwise operations. Each compiler uses `-O0`/`-O2`;
 selected Clang configurations use ASan/UBSan. Release checks remain active.
 
+The compiled-code audit adds a tenth CTest group. It validates each concrete
+compiler/optimization preprocessed function against the source model, then
+compiles that frozen input. Negative controls include compiler-dependent code,
+changed behavior/headers, compiler failures and empty code sections. Its object
+measurements establish neither machine-code equivalence nor resistance to
+reverse engineering. See [audit evidence](../reports/protection-audit-validation.md).
+
 The arithmetic corpus includes 24 deterministic generated functions, but it is
 not a representative sample of real C software. Finite input/seed/target
 coverage cannot establish universal implementation correctness. Native and

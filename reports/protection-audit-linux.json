@@ -1,0 +1,2916 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "platform": "Linux-6.8.0-117-generic-aarch64-with-glibc2.39",
+  "commands": [
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "--version"
+      ],
+      "returncode": 0,
+      "stdout": "C-SRD 0.5.0\nUsage: csrd transform input.c -o output.c [--seed UINT64] [--report report.json] [--timeout-ms UINT]\n       [--strategy affine|xor|identity|independent|planned] [--coverage 0..100] [--objective balanced|runtime|size]\n       [--algorithm popcount8-serial|popcount8-swar]\n       csrd verify original.c candidate.c [--function NAME] [--report report.json] [--timeout-ms UINT]\n       csrd analyze input.c [--function NAME] [--report report.json]\nTransformations are checked against reparsed emitted C before output is written.\n",
+      "stderr": "",
+      "elapsed_seconds": 0.006856458960101008,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--version"
+      ],
+      "returncode": 0,
+      "stdout": "Ubuntu LLVM version 18.1.3\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64     - AArch64 (little endian)\n    aarch64_32  - AArch64 (little endian ILP32)\n    aarch64_be  - AArch64 (big endian)\n    amdgcn      - AMD GCN GPUs\n    arm         - ARM\n    arm64       - ARM64 (little endian)\n    arm64_32    - ARM64 (little endian ILP32)\n    armeb       - ARM (big endian)\n    avr         - Atmel AVR Microcontroller\n    bpf         - BPF (host endian)\n    bpfeb       - BPF (big endian)\n    bpfel       - BPF (little endian)\n    hexagon     - Hexagon\n    lanai       - Lanai\n    loongarch32 - 32-bit LoongArch\n    loongarch64 - 64-bit LoongArch\n    m68k        - Motorola 68000 family\n    mips        - MIPS (32-bit big endian)\n    mips64      - MIPS (64-bit big endian)\n    mips64el    - MIPS (64-bit little endian)\n    mipsel      - MIPS (32-bit little endian)\n    msp430      - MSP430 [experimental]\n    nvptx       - NVIDIA PTX 32-bit\n    nvptx64     - NVIDIA PTX 64-bit\n    ppc32       - PowerPC 32\n    ppc32le     - PowerPC 32 LE\n    ppc64       - PowerPC 64\n    ppc64le     - PowerPC 64 LE\n    r600        - AMD GPUs HD2XXX-HD6XXX\n    riscv32     - 32-bit RISC-V\n    riscv64     - 64-bit RISC-V\n    sparc       - Sparc\n    sparcel     - Sparc LE\n    sparcv9     - Sparc V9\n    systemz     - SystemZ\n    thumb       - Thumb\n    thumbeb     - Thumb (big endian)\n    ve          - VE\n    wasm32      - WebAssembly 32-bit\n    wasm64      - WebAssembly 64-bit\n    x86         - 32-bit X86: Pentium-Pro and above\n    x86-64      - 64-bit X86: EM64T and AMD64\n    xcore       - XCore\n    xtensa      - Xtensa 32\n",
+      "stderr": "",
+      "elapsed_seconds": 0.008505312027409673,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "analyze",
+        "/work/benchmarks/arithmetic/calculate.c",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/original-analysis.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.013622581958770752,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "analyze",
+        "/work/reports/calculate-v05-seed42.c",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/candidate-analysis.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.012155314907431602,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "verify",
+        "/work/benchmarks/arithmetic/calculate.c",
+        "/work/reports/calculate-v05-seed42.c",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/verification.json",
+        "--timeout-ms",
+        "10000"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "csrd: calculate: proved-under-model\n",
+      "elapsed_seconds": 0.01815726305358112,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "--version"
+      ],
+      "returncode": 0,
+      "stdout": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "stderr": "",
+      "elapsed_seconds": 0.006482411874458194,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "-dumpmachine"
+      ],
+      "returncode": 0,
+      "stdout": "aarch64-unknown-linux-gnu\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005822362843900919,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O0",
+        "-c",
+        "/work/experiments/runs/protection-audit-20261109-linux/model-guard.c",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/model-guard.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.008324183989316225,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O0",
+        "-E",
+        "-P",
+        "/work/benchmarks/arithmetic/calculate.c",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/original.i"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.008135515032336116,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "analyze",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/original.i",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/original-preprocessed-analysis.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.011449889047071338,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "verify",
+        "/work/benchmarks/arithmetic/calculate.c",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/original.i",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/original-build-verification.json",
+        "--timeout-ms",
+        "10000"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "csrd: calculate: proved-under-model\n",
+      "elapsed_seconds": 0.01742625399492681,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O0",
+        "-c",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/original.i",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.010458126896992326,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--section-headers",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/original.o:\tfile format elf64-littleaarch64\n\nSections:\nIdx Name            Size     VMA              Type\n  0                 00000000 0000000000000000 \n  1 .strtab         00000071 0000000000000000 \n  2 .text           00000034 0000000000000000 TEXT\n  3 .comment        00000028 0000000000000000 \n  4 .note.GNU-stack 00000000 0000000000000000 \n  5 .eh_frame       00000030 0000000000000000 DATA\n  6 .rela.eh_frame  00000018 0000000000000000 \n  7 .llvm_addrsig   00000000 0000000000000000 \n  8 .symtab         000000a8 0000000000000000 \n",
+      "stderr": "",
+      "elapsed_seconds": 0.005487857852131128,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--full-contents",
+        "--section=.text",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/original.o:\tfile format elf64-littleaarch64\nContents of section .text:\n 0000 ff4300d1 e00f00b9 e10b00b9 e80f40b9  .C............@.\n 0010 e90b40b9 0801090b e80700b9 e90740b9  ..@...........@.\n 0020 68008052 087d091b 002d0011 ff430091  h..R.}...-...C..\n 0030 c0035fd6                             .._.\n",
+      "stderr": "",
+      "elapsed_seconds": 0.006181824952363968,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/original.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <calculate>:\n       0:      \tsub\tsp, sp, #0x10\n       4:      \tstr\tw0, [sp, #0xc]\n       8:      \tstr\tw1, [sp, #0x8]\n       c:      \tldr\tw8, [sp, #0xc]\n      10:      \tldr\tw9, [sp, #0x8]\n      14:      \tadd\tw8, w8, w9\n      18:      \tstr\tw8, [sp, #0x4]\n      1c:      \tldr\tw9, [sp, #0x4]\n      20:      \tmov\tw8, #0x3                // =3\n      24:      \tmul\tw8, w8, w9\n      28:      \tadd\tw0, w8, #0xb\n      2c:      \tadd\tsp, sp, #0x10\n      30:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005250521935522556,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/original.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <calculate>:\n       0:      \tsub\tsp, sp, #0x10\n       4:      \tstr\tw0, [sp, #0xc]\n       8:      \tstr\tw1, [sp, #0x8]\n       c:      \tldr\tw8, [sp, #0xc]\n      10:      \tldr\tw9, [sp, #0x8]\n      14:      \tadd\tw8, w8, w9\n      18:      \tstr\tw8, [sp, #0x4]\n      1c:      \tldr\tw9, [sp, #0x4]\n      20:      \tmov\tw8, #0x3                // =3\n      24:      \tmul\tw8, w8, w9\n      28:      \tadd\tw0, w8, #0xb\n      2c:      \tadd\tsp, sp, #0x10\n      30:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.006131782196462154,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--reloc",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/original.o:\tfile format elf64-littleaarch64\n\nRELOCATION RECORDS FOR [.eh_frame]:\nOFFSET           TYPE                     VALUE\n000000000000001c R_AARCH64_PREL32         .text\n",
+      "stderr": "",
+      "elapsed_seconds": 0.006811374798417091,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O0",
+        "-E",
+        "-P",
+        "/work/reports/calculate-v05-seed42.c",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/candidate.i"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.008662272011861205,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "analyze",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/candidate.i",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/candidate-preprocessed-analysis.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.010136039927601814,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "verify",
+        "/work/reports/calculate-v05-seed42.c",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/candidate.i",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/candidate-build-verification.json",
+        "--timeout-ms",
+        "10000"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "csrd: calculate: proved-under-model\n",
+      "elapsed_seconds": 0.015744733158499002,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O0",
+        "-c",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/candidate.i",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.00995158008299768,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--section-headers",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/candidate.o:\tfile format elf64-littleaarch64\n\nSections:\nIdx Name            Size     VMA              Type\n  0                 00000000 0000000000000000 \n  1 .strtab         00000072 0000000000000000 \n  2 .text           000000a8 0000000000000000 TEXT\n  3 .comment        00000028 0000000000000000 \n  4 .note.GNU-stack 00000000 0000000000000000 \n  5 .eh_frame       00000030 0000000000000000 DATA\n  6 .rela.eh_frame  00000018 0000000000000000 \n  7 .llvm_addrsig   00000000 0000000000000000 \n  8 .symtab         000000a8 0000000000000000 \n",
+      "stderr": "",
+      "elapsed_seconds": 0.005325231002643704,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--full-contents",
+        "--section=.text",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/candidate.o:\tfile format elf64-littleaarch64\nContents of section .text:\n 0000 ff8300d1 a96f8452 498bab72 e01f00b9  .....o.RI..r....\n 0010 e11b00b9 ea1f40b9 28ca8d52 0856ad72  ......@.(..R.V.r\n 0020 0a7d0a1b 4a01090b ea1700b9 ea1b40b9  .}..J.........@.\n 0030 087d0a1b 0801090b e81300b9 e81740b9  .}............@.\n 0040 ea1340b9 08010a0b 0801096b e80f00b9  ..@........k....\n 0050 ea0f40b9 68008052 087d0a1b ca209752  ..@.h..R.}... .R\n 0060 6ae9a872 08010a0b e80b00b9 e80b40b9  j..r..........@.\n 0070 0a1f9c52 ca3dbe72 08010a0b 0801096b  ...R.=.r.......k\n 0080 e80700b9 e80740b9 0901096b 28569352  ......@....k(V.R\n 0090 e84ea672 087d091b e80300b9 e00340b9  .N.r.}........@.\n 00a0 ff830091 c0035fd6                    ......_.\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005045145051553845,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/candidate.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <calculate>:\n       0:      \tsub\tsp, sp, #0x20\n       4:      \tmov\tw9, #0x237d             // =9085\n       8:      \tmovk\tw9, #0x5c5a, lsl #16\n       c:      \tstr\tw0, [sp, #0x1c]\n      10:      \tstr\tw1, [sp, #0x18]\n      14:      \tldr\tw10, [sp, #0x1c]\n      18:      \tmov\tw8, #0x6e51             // =28241\n      1c:      \tmovk\tw8, #0x6ab0, lsl #16\n      20:      \tmul\tw10, w8, w10\n      24:      \tadd\tw10, w10, w9\n      28:      \tstr\tw10, [sp, #0x14]\n      2c:      \tldr\tw10, [sp, #0x18]\n      30:      \tmul\tw8, w8, w10\n      34:      \tadd\tw8, w8, w9\n      38:      \tstr\tw8, [sp, #0x10]\n      3c:      \tldr\tw8, [sp, #0x14]\n      40:      \tldr\tw10, [sp, #0x10]\n      44:      \tadd\tw8, w8, w10\n      48:      \tsubs\tw8, w8, w9\n      4c:      \tstr\tw8, [sp, #0xc]\n      50:      \tldr\tw10, [sp, #0xc]\n      54:      \tmov\tw8, #0x3                // =3\n      58:      \tmul\tw8, w8, w10\n      5c:      \tmov\tw10, #0xb906            // =47366\n      60:      \tmovk\tw10, #0x474b, lsl #16\n      64:      \tadd\tw8, w8, w10\n      68:      \tstr\tw8, [sp, #0x8]\n      6c:      \tldr\tw8, [sp, #0x8]\n      70:      \tmov\tw10, #0xe0f8            // =57592\n      74:      \tmovk\tw10, #0xf1ee, lsl #16\n      78:      \tadd\tw8, w8, w10\n      7c:      \tsubs\tw8, w8, w9\n      80:      \tstr\tw8, [sp, #0x4]\n      84:      \tldr\tw8, [sp, #0x4]\n      88:      \tsubs\tw9, w8, w9\n      8c:      \tmov\tw8, #0x9ab1             // =39601\n      90:      \tmovk\tw8, #0x3277, lsl #16\n      94:      \tmul\tw8, w8, w9\n      98:      \tstr\tw8, [sp]\n      9c:      \tldr\tw0, [sp]\n      a0:      \tadd\tsp, sp, #0x20\n      a4:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.00503931101411581,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/candidate.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <calculate>:\n       0:      \tsub\tsp, sp, #0x20\n       4:      \tmov\tw9, #0x237d             // =9085\n       8:      \tmovk\tw9, #0x5c5a, lsl #16\n       c:      \tstr\tw0, [sp, #0x1c]\n      10:      \tstr\tw1, [sp, #0x18]\n      14:      \tldr\tw10, [sp, #0x1c]\n      18:      \tmov\tw8, #0x6e51             // =28241\n      1c:      \tmovk\tw8, #0x6ab0, lsl #16\n      20:      \tmul\tw10, w8, w10\n      24:      \tadd\tw10, w10, w9\n      28:      \tstr\tw10, [sp, #0x14]\n      2c:      \tldr\tw10, [sp, #0x18]\n      30:      \tmul\tw8, w8, w10\n      34:      \tadd\tw8, w8, w9\n      38:      \tstr\tw8, [sp, #0x10]\n      3c:      \tldr\tw8, [sp, #0x14]\n      40:      \tldr\tw10, [sp, #0x10]\n      44:      \tadd\tw8, w8, w10\n      48:      \tsubs\tw8, w8, w9\n      4c:      \tstr\tw8, [sp, #0xc]\n      50:      \tldr\tw10, [sp, #0xc]\n      54:      \tmov\tw8, #0x3                // =3\n      58:      \tmul\tw8, w8, w10\n      5c:      \tmov\tw10, #0xb906            // =47366\n      60:      \tmovk\tw10, #0x474b, lsl #16\n      64:      \tadd\tw8, w8, w10\n      68:      \tstr\tw8, [sp, #0x8]\n      6c:      \tldr\tw8, [sp, #0x8]\n      70:      \tmov\tw10, #0xe0f8            // =57592\n      74:      \tmovk\tw10, #0xf1ee, lsl #16\n      78:      \tadd\tw8, w8, w10\n      7c:      \tsubs\tw8, w8, w9\n      80:      \tstr\tw8, [sp, #0x4]\n      84:      \tldr\tw8, [sp, #0x4]\n      88:      \tsubs\tw9, w8, w9\n      8c:      \tmov\tw8, #0x9ab1             // =39601\n      90:      \tmovk\tw8, #0x3277, lsl #16\n      94:      \tmul\tw8, w8, w9\n      98:      \tstr\tw8, [sp]\n      9c:      \tldr\tw0, [sp]\n      a0:      \tadd\tsp, sp, #0x20\n      a4:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005164645845070481,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--reloc",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O0/candidate.o:\tfile format elf64-littleaarch64\n\nRELOCATION RECORDS FOR [.eh_frame]:\nOFFSET           TYPE                     VALUE\n000000000000001c R_AARCH64_PREL32         .text\n",
+      "stderr": "",
+      "elapsed_seconds": 0.0052353551145643,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-c",
+        "/work/experiments/runs/protection-audit-20261109-linux/model-guard.c",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/model-guard.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.009658701019361615,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-E",
+        "-P",
+        "/work/benchmarks/arithmetic/calculate.c",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/original.i"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.007765468908473849,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "analyze",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/original.i",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/original-preprocessed-analysis.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.010324166854843497,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "verify",
+        "/work/benchmarks/arithmetic/calculate.c",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/original.i",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/original-build-verification.json",
+        "--timeout-ms",
+        "10000"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "csrd: calculate: proved-under-model\n",
+      "elapsed_seconds": 0.018930396996438503,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-c",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/original.i",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.010865340009331703,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--section-headers",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/original.o:\tfile format elf64-littleaarch64\n\nSections:\nIdx Name            Size     VMA              Type\n  0                 00000000 0000000000000000 \n  1 .strtab         00000071 0000000000000000 \n  2 .text           00000010 0000000000000000 TEXT\n  3 .comment        00000028 0000000000000000 \n  4 .note.GNU-stack 00000000 0000000000000000 \n  5 .eh_frame       00000028 0000000000000000 DATA\n  6 .rela.eh_frame  00000018 0000000000000000 \n  7 .llvm_addrsig   00000000 0000000000000000 \n  8 .symtab         000000a8 0000000000000000 \n",
+      "stderr": "",
+      "elapsed_seconds": 0.006361244013532996,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--full-contents",
+        "--section=.text",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/original.o:\tfile format elf64-littleaarch64\nContents of section .text:\n 0000 2800000b 0805080b 002d0011 c0035fd6  (........-...._.\n",
+      "stderr": "",
+      "elapsed_seconds": 0.006540538044646382,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/original.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <calculate>:\n       0:      \tadd\tw8, w1, w0\n       4:      \tadd\tw8, w8, w8, lsl #1\n       8:      \tadd\tw0, w8, #0xb\n       c:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.006573288002982736,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/original.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <calculate>:\n       0:      \tadd\tw8, w1, w0\n       4:      \tadd\tw8, w8, w8, lsl #1\n       8:      \tadd\tw0, w8, #0xb\n       c:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005309188971295953,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--reloc",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/original.o:\tfile format elf64-littleaarch64\n\nRELOCATION RECORDS FOR [.eh_frame]:\nOFFSET           TYPE                     VALUE\n000000000000001c R_AARCH64_PREL32         .text\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005144562106579542,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-E",
+        "-P",
+        "/work/reports/calculate-v05-seed42.c",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/candidate.i"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.007521925028413534,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "analyze",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/candidate.i",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/candidate-preprocessed-analysis.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.011016468051820993,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "verify",
+        "/work/reports/calculate-v05-seed42.c",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/candidate.i",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/candidate-build-verification.json",
+        "--timeout-ms",
+        "10000"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "csrd: calculate: proved-under-model\n",
+      "elapsed_seconds": 0.016877121990546584,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/clang-18",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-c",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/candidate.i",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.011040092911571264,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--section-headers",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/candidate.o:\tfile format elf64-littleaarch64\n\nSections:\nIdx Name            Size     VMA              Type\n  0                 00000000 0000000000000000 \n  1 .strtab         00000072 0000000000000000 \n  2 .text           00000010 0000000000000000 TEXT\n  3 .comment        00000028 0000000000000000 \n  4 .note.GNU-stack 00000000 0000000000000000 \n  5 .eh_frame       00000028 0000000000000000 DATA\n  6 .rela.eh_frame  00000018 0000000000000000 \n  7 .llvm_addrsig   00000000 0000000000000000 \n  8 .symtab         000000a8 0000000000000000 \n",
+      "stderr": "",
+      "elapsed_seconds": 0.006687372922897339,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--full-contents",
+        "--section=.text",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/candidate.o:\tfile format elf64-littleaarch64\nContents of section .text:\n 0000 2800000b 0805080b 002d0011 c0035fd6  (........-...._.\n",
+      "stderr": "",
+      "elapsed_seconds": 0.006043573142960668,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/candidate.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <calculate>:\n       0:      \tadd\tw8, w1, w0\n       4:      \tadd\tw8, w8, w8, lsl #1\n       8:      \tadd\tw0, w8, #0xb\n       c:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005601319018751383,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/candidate.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <calculate>:\n       0:      \tadd\tw8, w1, w0\n       4:      \tadd\tw8, w8, w8, lsl #1\n       8:      \tadd\tw0, w8, #0xb\n       c:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005401314934715629,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--reloc",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-0-O2/candidate.o:\tfile format elf64-littleaarch64\n\nRELOCATION RECORDS FOR [.eh_frame]:\nOFFSET           TYPE                     VALUE\n000000000000001c R_AARCH64_PREL32         .text\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005874070804566145,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "--version"
+      ],
+      "returncode": 0,
+      "stdout": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "stderr": "",
+      "elapsed_seconds": 0.0007493419107049704,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "-dumpmachine"
+      ],
+      "returncode": 0,
+      "stdout": "aarch64-linux-gnu\n",
+      "stderr": "",
+      "elapsed_seconds": 0.00023787794634699821,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O0",
+        "-c",
+        "/work/experiments/runs/protection-audit-20261109-linux/model-guard.c",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/model-guard.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.007269588997587562,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O0",
+        "-E",
+        "-P",
+        "/work/benchmarks/arithmetic/calculate.c",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/original.i"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.004563971888273954,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "analyze",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/original.i",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/original-preprocessed-analysis.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.011203760979697108,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "verify",
+        "/work/benchmarks/arithmetic/calculate.c",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/original.i",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/original-build-verification.json",
+        "--timeout-ms",
+        "10000"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "csrd: calculate: proved-under-model\n",
+      "elapsed_seconds": 0.0176162151619792,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O0",
+        "-c",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/original.i",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.006833582883700728,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--section-headers",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/original.o:\tfile format elf64-littleaarch64\n\nSections:\nIdx Name            Size     VMA              Type\n  0                 00000000 0000000000000000 \n  1 .text           00000038 0000000000000000 TEXT\n  2 .data           00000000 0000000000000000 DATA\n  3 .bss            00000000 0000000000000000 BSS\n  4 .comment        0000002e 0000000000000000 \n  5 .note.GNU-stack 00000000 0000000000000000 \n  6 .eh_frame       00000030 0000000000000000 DATA\n  7 .rela.eh_frame  00000018 0000000000000000 \n  8 .symtab         00000108 0000000000000000 \n  9 .strtab         0000001c 0000000000000000 \n 10 .shstrtab       00000054 0000000000000000 \n",
+      "stderr": "",
+      "elapsed_seconds": 0.005654528038576245,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--full-contents",
+        "--section=.text",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/original.o:\tfile format elf64-littleaarch64\nContents of section .text:\n 0000 ff8300d1 e00f00b9 e10b00b9 e10f40b9  ..............@.\n 0010 e00b40b9 2000000b e01f00b9 e11f40b9  ..@. .........@.\n 0020 e003012a 00781f53 0000010b 002c0011  ...*.x.S.....,..\n 0030 ff830091 c0035fd6                    ......_.\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005162396933883429,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/original.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <calculate>:\n       0:      \tsub\tsp, sp, #0x20\n       4:      \tstr\tw0, [sp, #0xc]\n       8:      \tstr\tw1, [sp, #0x8]\n       c:      \tldr\tw1, [sp, #0xc]\n      10:      \tldr\tw0, [sp, #0x8]\n      14:      \tadd\tw0, w1, w0\n      18:      \tstr\tw0, [sp, #0x1c]\n      1c:      \tldr\tw1, [sp, #0x1c]\n      20:      \tmov\tw0, w1\n      24:      \tlsl\tw0, w0, #1\n      28:      \tadd\tw0, w0, w1\n      2c:      \tadd\tw0, w0, #0xb\n      30:      \tadd\tsp, sp, #0x20\n      34:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005678236018866301,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/original.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <calculate>:\n       0:      \tsub\tsp, sp, #0x20\n       4:      \tstr\tw0, [sp, #0xc]\n       8:      \tstr\tw1, [sp, #0x8]\n       c:      \tldr\tw1, [sp, #0xc]\n      10:      \tldr\tw0, [sp, #0x8]\n      14:      \tadd\tw0, w1, w0\n      18:      \tstr\tw0, [sp, #0x1c]\n      1c:      \tldr\tw1, [sp, #0x1c]\n      20:      \tmov\tw0, w1\n      24:      \tlsl\tw0, w0, #1\n      28:      \tadd\tw0, w0, w1\n      2c:      \tadd\tw0, w0, #0xb\n      30:      \tadd\tsp, sp, #0x20\n      34:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.0061209488194435835,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--reloc",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/original.o:\tfile format elf64-littleaarch64\n\nRELOCATION RECORDS FOR [.eh_frame]:\nOFFSET           TYPE                     VALUE\n000000000000001c R_AARCH64_PREL32         .text\n",
+      "stderr": "",
+      "elapsed_seconds": 0.006202407879754901,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O0",
+        "-E",
+        "-P",
+        "/work/reports/calculate-v05-seed42.c",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/candidate.i"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.0040497989393770695,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "analyze",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/candidate.i",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/candidate-preprocessed-analysis.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.012349650962278247,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "verify",
+        "/work/reports/calculate-v05-seed42.c",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/candidate.i",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/candidate-build-verification.json",
+        "--timeout-ms",
+        "10000"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "csrd: calculate: proved-under-model\n",
+      "elapsed_seconds": 0.018660434987396002,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O0",
+        "-c",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/candidate.i",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.007841137005016208,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--section-headers",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/candidate.o:\tfile format elf64-littleaarch64\n\nSections:\nIdx Name            Size     VMA              Type\n  0                 00000000 0000000000000000 \n  1 .text           000000c8 0000000000000000 TEXT\n  2 .data           00000000 0000000000000000 DATA\n  3 .bss            00000000 0000000000000000 BSS\n  4 .comment        0000002e 0000000000000000 \n  5 .note.GNU-stack 00000000 0000000000000000 \n  6 .eh_frame       00000030 0000000000000000 DATA\n  7 .rela.eh_frame  00000018 0000000000000000 \n  8 .symtab         00000108 0000000000000000 \n  9 .strtab         0000001d 0000000000000000 \n 10 .shstrtab       00000054 0000000000000000 \n",
+      "stderr": "",
+      "elapsed_seconds": 0.0066815391182899475,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--full-contents",
+        "--section=.text",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/candidate.o:\tfile format elf64-littleaarch64\nContents of section .text:\n 0000 ffc300d1 e00f00b9 e10b00b9 e10f40b9  ..............@.\n 0010 20ca8d52 0056ad72 217c001b a06f8452   ..R.V.r!|...o.R\n 0020 408bab72 2000000b e01b00b9 e10b40b9  @..r .........@.\n 0030 20ca8d52 0056ad72 217c001b a06f8452   ..R.V.r!|...o.R\n 0040 408bab72 2000000b e01f00b9 e11b40b9  @..r .........@.\n 0050 e01f40b9 2100000b 60909b52 a074b472  ..@.!...`..R.t.r\n 0060 2000000b e02300b9 e12340b9 e003012a   ....#...#@....*\n 0070 00781f53 0100010b c0209752 60e9a872  .x.S..... .R`..r\n 0080 2000000b e02700b9 e12740b9 60af9752   ....'...'@.`..R\n 0090 80b2b272 2000000b e02b00b9 e12b40b9  ...r ....+...+@.\n 00a0 20569352 e04ea672 217c001b 60928852   V.R.N.r!|..`..R\n 00b0 2067a072 2000000b e02f00b9 e02f40b9   g.r ..../.../@.\n 00c0 ffc30091 c0035fd6                    ......_.\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005979073001071811,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/candidate.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <calculate>:\n       0:      \tsub\tsp, sp, #0x30\n       4:      \tstr\tw0, [sp, #0xc]\n       8:      \tstr\tw1, [sp, #0x8]\n       c:      \tldr\tw1, [sp, #0xc]\n      10:      \tmov\tw0, #0x6e51             // =28241\n      14:      \tmovk\tw0, #0x6ab0, lsl #16\n      18:      \tmul\tw1, w1, w0\n      1c:      \tmov\tw0, #0x237d             // =9085\n      20:      \tmovk\tw0, #0x5c5a, lsl #16\n      24:      \tadd\tw0, w1, w0\n      28:      \tstr\tw0, [sp, #0x18]\n      2c:      \tldr\tw1, [sp, #0x8]\n      30:      \tmov\tw0, #0x6e51             // =28241\n      34:      \tmovk\tw0, #0x6ab0, lsl #16\n      38:      \tmul\tw1, w1, w0\n      3c:      \tmov\tw0, #0x237d             // =9085\n      40:      \tmovk\tw0, #0x5c5a, lsl #16\n      44:      \tadd\tw0, w1, w0\n      48:      \tstr\tw0, [sp, #0x1c]\n      4c:      \tldr\tw1, [sp, #0x18]\n      50:      \tldr\tw0, [sp, #0x1c]\n      54:      \tadd\tw1, w1, w0\n      58:      \tmov\tw0, #0xdc83             // =56451\n      5c:      \tmovk\tw0, #0xa3a5, lsl #16\n      60:      \tadd\tw0, w1, w0\n      64:      \tstr\tw0, [sp, #0x20]\n      68:      \tldr\tw1, [sp, #0x20]\n      6c:      \tmov\tw0, w1\n      70:      \tlsl\tw0, w0, #1\n      74:      \tadd\tw1, w0, w1\n      78:      \tmov\tw0, #0xb906             // =47366\n      7c:      \tmovk\tw0, #0x474b, lsl #16\n      80:      \tadd\tw0, w1, w0\n      84:      \tstr\tw0, [sp, #0x24]\n      88:      \tldr\tw1, [sp, #0x24]\n      8c:      \tmov\tw0, #0xbd7b             // =48507\n      90:      \tmovk\tw0, #0x9594, lsl #16\n      94:      \tadd\tw0, w1, w0\n      98:      \tstr\tw0, [sp, #0x28]\n      9c:      \tldr\tw1, [sp, #0x28]\n      a0:      \tmov\tw0, #0x9ab1             // =39601\n      a4:      \tmovk\tw0, #0x3277, lsl #16\n      a8:      \tmul\tw1, w1, w0\n      ac:      \tmov\tw0, #0x4493             // =17555\n      b0:      \tmovk\tw0, #0x339, lsl #16\n      b4:      \tadd\tw0, w1, w0\n      b8:      \tstr\tw0, [sp, #0x2c]\n      bc:      \tldr\tw0, [sp, #0x2c]\n      c0:      \tadd\tsp, sp, #0x30\n      c4:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005695611005648971,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/candidate.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <calculate>:\n       0:      \tsub\tsp, sp, #0x30\n       4:      \tstr\tw0, [sp, #0xc]\n       8:      \tstr\tw1, [sp, #0x8]\n       c:      \tldr\tw1, [sp, #0xc]\n      10:      \tmov\tw0, #0x6e51             // =28241\n      14:      \tmovk\tw0, #0x6ab0, lsl #16\n      18:      \tmul\tw1, w1, w0\n      1c:      \tmov\tw0, #0x237d             // =9085\n      20:      \tmovk\tw0, #0x5c5a, lsl #16\n      24:      \tadd\tw0, w1, w0\n      28:      \tstr\tw0, [sp, #0x18]\n      2c:      \tldr\tw1, [sp, #0x8]\n      30:      \tmov\tw0, #0x6e51             // =28241\n      34:      \tmovk\tw0, #0x6ab0, lsl #16\n      38:      \tmul\tw1, w1, w0\n      3c:      \tmov\tw0, #0x237d             // =9085\n      40:      \tmovk\tw0, #0x5c5a, lsl #16\n      44:      \tadd\tw0, w1, w0\n      48:      \tstr\tw0, [sp, #0x1c]\n      4c:      \tldr\tw1, [sp, #0x18]\n      50:      \tldr\tw0, [sp, #0x1c]\n      54:      \tadd\tw1, w1, w0\n      58:      \tmov\tw0, #0xdc83             // =56451\n      5c:      \tmovk\tw0, #0xa3a5, lsl #16\n      60:      \tadd\tw0, w1, w0\n      64:      \tstr\tw0, [sp, #0x20]\n      68:      \tldr\tw1, [sp, #0x20]\n      6c:      \tmov\tw0, w1\n      70:      \tlsl\tw0, w0, #1\n      74:      \tadd\tw1, w0, w1\n      78:      \tmov\tw0, #0xb906             // =47366\n      7c:      \tmovk\tw0, #0x474b, lsl #16\n      80:      \tadd\tw0, w1, w0\n      84:      \tstr\tw0, [sp, #0x24]\n      88:      \tldr\tw1, [sp, #0x24]\n      8c:      \tmov\tw0, #0xbd7b             // =48507\n      90:      \tmovk\tw0, #0x9594, lsl #16\n      94:      \tadd\tw0, w1, w0\n      98:      \tstr\tw0, [sp, #0x28]\n      9c:      \tldr\tw1, [sp, #0x28]\n      a0:      \tmov\tw0, #0x9ab1             // =39601\n      a4:      \tmovk\tw0, #0x3277, lsl #16\n      a8:      \tmul\tw1, w1, w0\n      ac:      \tmov\tw0, #0x4493             // =17555\n      b0:      \tmovk\tw0, #0x339, lsl #16\n      b4:      \tadd\tw0, w1, w0\n      b8:      \tstr\tw0, [sp, #0x2c]\n      bc:      \tldr\tw0, [sp, #0x2c]\n      c0:      \tadd\tsp, sp, #0x30\n      c4:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.0061300331726670265,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--reloc",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O0/candidate.o:\tfile format elf64-littleaarch64\n\nRELOCATION RECORDS FOR [.eh_frame]:\nOFFSET           TYPE                     VALUE\n000000000000001c R_AARCH64_PREL32         .text\n",
+      "stderr": "",
+      "elapsed_seconds": 0.00539998197928071,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-c",
+        "/work/experiments/runs/protection-audit-20261109-linux/model-guard.c",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/model-guard.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.005661235889419913,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-E",
+        "-P",
+        "/work/benchmarks/arithmetic/calculate.c",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/original.i"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.003312373999506235,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "analyze",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/original.i",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/original-preprocessed-analysis.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.010133956093341112,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "verify",
+        "/work/benchmarks/arithmetic/calculate.c",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/original.i",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/original-build-verification.json",
+        "--timeout-ms",
+        "10000"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "csrd: calculate: proved-under-model\n",
+      "elapsed_seconds": 0.016740619903430343,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-c",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/original.i",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.0066785819362849,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--section-headers",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/original.o:\tfile format elf64-littleaarch64\n\nSections:\nIdx Name            Size     VMA              Type\n  0                 00000000 0000000000000000 \n  1 .text           00000010 0000000000000000 TEXT\n  2 .data           00000000 0000000000000000 DATA\n  3 .bss            00000000 0000000000000000 BSS\n  4 .comment        0000002e 0000000000000000 \n  5 .note.GNU-stack 00000000 0000000000000000 \n  6 .eh_frame       00000028 0000000000000000 DATA\n  7 .rela.eh_frame  00000018 0000000000000000 \n  8 .symtab         00000108 0000000000000000 \n  9 .strtab         0000001c 0000000000000000 \n 10 .shstrtab       00000054 0000000000000000 \n",
+      "stderr": "",
+      "elapsed_seconds": 0.005339564988389611,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--full-contents",
+        "--section=.text",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/original.o:\tfile format elf64-littleaarch64\nContents of section .text:\n 0000 0000010b 0004000b 002c0011 c0035fd6  .........,...._.\n",
+      "stderr": "",
+      "elapsed_seconds": 0.004730307962745428,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/original.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <calculate>:\n       0:      \tadd\tw0, w0, w1\n       4:      \tadd\tw0, w0, w0, lsl #1\n       8:      \tadd\tw0, w0, #0xb\n       c:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.004961018916219473,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/original.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <calculate>:\n       0:      \tadd\tw0, w0, w1\n       4:      \tadd\tw0, w0, w0, lsl #1\n       8:      \tadd\tw0, w0, #0xb\n       c:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005455232923850417,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--reloc",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/original.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/original.o:\tfile format elf64-littleaarch64\n\nRELOCATION RECORDS FOR [.eh_frame]:\nOFFSET           TYPE                     VALUE\n000000000000001c R_AARCH64_PREL32         .text\n",
+      "stderr": "",
+      "elapsed_seconds": 0.004934809869155288,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-E",
+        "-P",
+        "/work/reports/calculate-v05-seed42.c",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/candidate.i"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.003572668880224228,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "analyze",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/candidate.i",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/candidate-preprocessed-analysis.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.010259208036586642,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/work/build-linux-release/csrd",
+        "verify",
+        "/work/reports/calculate-v05-seed42.c",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/candidate.i",
+        "--report",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/candidate-build-verification.json",
+        "--timeout-ms",
+        "10000"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "csrd: calculate: proved-under-model\n",
+      "elapsed_seconds": 0.016995249083265662,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/gcc",
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2",
+        "-c",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/candidate.i",
+        "-o",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.006676248041912913,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--section-headers",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/candidate.o:\tfile format elf64-littleaarch64\n\nSections:\nIdx Name            Size     VMA              Type\n  0                 00000000 0000000000000000 \n  1 .text           00000010 0000000000000000 TEXT\n  2 .data           00000000 0000000000000000 DATA\n  3 .bss            00000000 0000000000000000 BSS\n  4 .comment        0000002e 0000000000000000 \n  5 .note.GNU-stack 00000000 0000000000000000 \n  6 .eh_frame       00000028 0000000000000000 DATA\n  7 .rela.eh_frame  00000018 0000000000000000 \n  8 .symtab         00000108 0000000000000000 \n  9 .strtab         0000001d 0000000000000000 \n 10 .shstrtab       00000054 0000000000000000 \n",
+      "stderr": "",
+      "elapsed_seconds": 0.005254022078588605,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--full-contents",
+        "--section=.text",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/candidate.o:\tfile format elf64-littleaarch64\nContents of section .text:\n 0000 0000010b 0004000b 002c0011 c0035fd6  .........,...._.\n",
+      "stderr": "",
+      "elapsed_seconds": 0.004779850132763386,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/candidate.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <calculate>:\n       0:      \tadd\tw0, w0, w1\n       4:      \tadd\tw0, w0, w0, lsl #1\n       8:      \tadd\tw0, w0, #0xb\n       c:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005823029903694987,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--disassemble",
+        "--no-show-raw-insn",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/candidate.o:\tfile format elf64-littleaarch64\n\nDisassembly of section .text:\n\n0000000000000000 <calculate>:\n       0:      \tadd\tw0, w0, w1\n       4:      \tadd\tw0, w0, w0, lsl #1\n       8:      \tadd\tw0, w0, #0xb\n       c:      \tret\n",
+      "stderr": "",
+      "elapsed_seconds": 0.005432024132460356,
+      "status": "completed"
+    },
+    {
+      "argv": [
+        "/usr/bin/llvm-objdump-18",
+        "--reloc",
+        "/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/candidate.o"
+      ],
+      "returncode": 0,
+      "stdout": "\n/work/experiments/runs/protection-audit-20261109-linux/compiler-1-O2/candidate.o:\tfile format elf64-littleaarch64\n\nRELOCATION RECORDS FOR [.eh_frame]:\nOFFSET           TYPE                     VALUE\n000000000000001c R_AARCH64_PREL32         .text\n",
+      "stderr": "",
+      "elapsed_seconds": 0.004990310873836279,
+      "status": "completed"
+    }
+  ],
+  "configurations": [
+    {
+      "compiler": "/usr/bin/clang-18",
+      "compiler_version": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+      "compiler_sha256": "6d99f6207153b8b2063ace5d2a6177debaf6a6b6f31649e03afac07b98ba0b4d",
+      "compiler_target": "aarch64-unknown-linux-gnu",
+      "flags": [
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O0"
+      ],
+      "status": "completed",
+      "objects": {
+        "original": {
+          "path": "compiler-0-O0/original.o",
+          "object_sha256": "d3fd56211cdb42676123b4910ccafb1638752896e5cf51e4bdddd1545dadf6c3",
+          "text_bytes": 52,
+          "text_sha256": "4e9b1f5395801919f84bc8824c69979a6aabef6672407301d2128260af105e2b",
+          "instruction_histogram": {
+            "sub": 1,
+            "str": 3,
+            "ldr": 3,
+            "add": 3,
+            "mov": 1,
+            "mul": 1,
+            "ret": 1
+          },
+          "scope": "whole single-function object code section, including padding; relocations not applied"
+        },
+        "candidate": {
+          "path": "compiler-0-O0/candidate.o",
+          "object_sha256": "93b550f27ef62f0982d2b2a66f1351689a63cec2c986948d0cbdf43a3bff2873",
+          "text_bytes": 168,
+          "text_sha256": "96b80745a4fa1a0b545d61d47c5e75d0ded7be8e72232c1002581a207065c5b2",
+          "instruction_histogram": {
+            "sub": 1,
+            "mov": 6,
+            "movk": 5,
+            "str": 8,
+            "ldr": 8,
+            "mul": 4,
+            "add": 6,
+            "subs": 3,
+            "ret": 1
+          },
+          "scope": "whole single-function object code section, including padding; relocations not applied"
+        }
+      },
+      "build_validation": {
+        "original": {
+          "preprocessed_path": "compiler-0-O0/original.i",
+          "preprocessed_sha256": "5ce7d8231a40ee86845a09497085071acc584417eb1d7499faa78da9cb0591d8",
+          "verification": "proved-under-model",
+          "proof": {
+            "action": "verify",
+            "candidate_dependencies": [],
+            "candidate_sha256": "5ce7d8231a40ee86845a09497085071acc584417eb1d7499faa78da9cb0591d8",
+            "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+            "coverage_percent": 50,
+            "csrd_version": "0.5.0",
+            "dependencies": [
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/libc-header-start.h",
+                "sha256": "e86638082f9ce98c82e3022018fa5be175473445c824fe17bd32bf9668582368"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/long-double.h",
+                "sha256": "b1866ecbc3dcbaf4341e42c219ee128d90cd364a5a04ad1417d40e351842035c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-intn.h",
+                "sha256": "94286e42e4970304da5cbef69de6695c84132ff8fbd4b6d72d29aeb7406dc5ff"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-least.h",
+                "sha256": "5bf66871bfc18ae6d22c91d03e392c1a4cc5969ca74c5fa31b7510703a496844"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-uintn.h",
+                "sha256": "aeee224a19434556ef4a9a4afad553736789274656ca12463122300b557ce78c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/time64.h",
+                "sha256": "2be9170ce3621ea6062f10edef68bbc2db09bb454ec4397534263dd37b8f1f6a"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/timesize.h",
+                "sha256": "8436245f53a4b30b0dfab4d3ed207f27b5fd696deee9559d099e0d57ffdbcd44"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/types.h",
+                "sha256": "371847ed3adab1c19db392034f6a22407d321b1dc5f2440563f4b0b8b6c5386b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/typesizes.h",
+                "sha256": "dcb8089b342f2f5f1ab9df0a9591ecea20f92f116204f68ae590b831905a3813"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wchar.h",
+                "sha256": "893fa450527ce645f17922788097d5fe331e2a53012bab4e724d8a1f63e21aa2"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wordsize.h",
+                "sha256": "c67aaeab12f39b8685a884b1764c372379640bdc9f07d97ff78a6c74a2522503"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h",
+                "sha256": "4e0206e34726006283e65605b9c74fa55b99a2d3bb02dffaf0b324482167985b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs.h",
+                "sha256": "4fc54fd0190796cad1125563ea8dedc53811c81bce7d79e9396afc15994a35ab"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/sys/cdefs.h",
+                "sha256": "173afb522c6877dda3be1c93742c2061cd6e748ce395d2b3ae833fb49bfbfc4f"
+              },
+              {
+                "path": "/usr/include/features-time64.h",
+                "sha256": "345acb98767d04277e413c4951fbb199b0500be23d43cddf17c6cd9fb319a8da"
+              },
+              {
+                "path": "/usr/include/features.h",
+                "sha256": "940d486d050fc87420d8ffc008e17f31ffb04467534ad1b039ed25abc52382f9"
+              },
+              {
+                "path": "/usr/include/stdc-predef.h",
+                "sha256": "8db4f65e62cade8ae4d9b77960ee6aee093255acc1b637e3fb37d79179733b15"
+              },
+              {
+                "path": "/usr/include/stdint.h",
+                "sha256": "c26c51b07feadd45ca25e9c95e393b6783d580ab318a567c119828191a80bbed"
+              },
+              {
+                "path": "/usr/lib/llvm-18/lib/clang/18/include/stdint.h",
+                "sha256": "7ce5540d5fb6e8da9760928e76cbdd5ebef329d701ad598d30d8e6f9d5d78b34"
+              }
+            ],
+            "functions": [
+              {
+                "column": 10,
+                "function": "calculate",
+                "line": 3,
+                "parameter_count": 2,
+                "proof": {
+                  "obligation_sha256": "060f813b925cc39a5651bee7b20a535c1d1cf089f2bd4dff1a8ffcf57a50ccbd",
+                  "reason": "",
+                  "smtlib": "; \n(set-info :status unknown)\n(declare-fun input_1 () (_ BitVec 32))\n(declare-fun input_0 () (_ BitVec 32))\n(assert\n (let ((?x11 (bvadd (bvmul (bvadd input_0 input_1) (_ bv3 32)) (_ bv11 32))))\n (and (distinct ?x11 ?x11) true)))\n(check-sat)\n",
+                  "solver_strategy": "simplify/bit-blast/sat",
+                  "status": "proved-under-model"
+                },
+                "source_metrics": {
+                  "ast_nodes": 14,
+                  "ast_shape_sha256": "03e40259f4f5833d9025b4e0a461cb50b45c91bc96c9ce5bff2b53558ead4cd7",
+                  "branches": 0,
+                  "cfg_adjacency_sha256": "0776758444a55607502560b1a00bdb50388c5d7526a7605c1c35b517d91a8d2b",
+                  "cfg_blocks": 3,
+                  "cfg_edges": 2,
+                  "cyclomatic": 1,
+                  "expressions": 11,
+                  "loops": 0,
+                  "operators": {
+                    "*": 1,
+                    "+": 2
+                  }
+                },
+                "status": "checked",
+                "verification": "proved-under-model"
+              }
+            ],
+            "model": "pure-u32-c11-v2; identical target, headers and compilation environment required",
+            "objective": "balanced",
+            "output_written": false,
+            "schema_version": 2,
+            "seed": "0",
+            "solver": "4.8.12.0",
+            "source_sha256": "5291f929d99a94c0fe1cae0960ef09988ac62a45e9adeef149667844b4f96bf9",
+            "strategy": "affine",
+            "target": "aarch64-unknown-linux-gnu",
+            "timeout_ms": 10000
+          }
+        },
+        "candidate": {
+          "preprocessed_path": "compiler-0-O0/candidate.i",
+          "preprocessed_sha256": "932177f5b5e3bc4308932974dcd7ecf8d8759eb53e7f407ab56744172319e94f",
+          "verification": "proved-under-model",
+          "proof": {
+            "action": "verify",
+            "candidate_dependencies": [],
+            "candidate_sha256": "932177f5b5e3bc4308932974dcd7ecf8d8759eb53e7f407ab56744172319e94f",
+            "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+            "coverage_percent": 50,
+            "csrd_version": "0.5.0",
+            "dependencies": [
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/libc-header-start.h",
+                "sha256": "e86638082f9ce98c82e3022018fa5be175473445c824fe17bd32bf9668582368"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/long-double.h",
+                "sha256": "b1866ecbc3dcbaf4341e42c219ee128d90cd364a5a04ad1417d40e351842035c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-intn.h",
+                "sha256": "94286e42e4970304da5cbef69de6695c84132ff8fbd4b6d72d29aeb7406dc5ff"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-least.h",
+                "sha256": "5bf66871bfc18ae6d22c91d03e392c1a4cc5969ca74c5fa31b7510703a496844"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-uintn.h",
+                "sha256": "aeee224a19434556ef4a9a4afad553736789274656ca12463122300b557ce78c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/time64.h",
+                "sha256": "2be9170ce3621ea6062f10edef68bbc2db09bb454ec4397534263dd37b8f1f6a"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/timesize.h",
+                "sha256": "8436245f53a4b30b0dfab4d3ed207f27b5fd696deee9559d099e0d57ffdbcd44"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/types.h",
+                "sha256": "371847ed3adab1c19db392034f6a22407d321b1dc5f2440563f4b0b8b6c5386b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/typesizes.h",
+                "sha256": "dcb8089b342f2f5f1ab9df0a9591ecea20f92f116204f68ae590b831905a3813"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wchar.h",
+                "sha256": "893fa450527ce645f17922788097d5fe331e2a53012bab4e724d8a1f63e21aa2"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wordsize.h",
+                "sha256": "c67aaeab12f39b8685a884b1764c372379640bdc9f07d97ff78a6c74a2522503"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h",
+                "sha256": "4e0206e34726006283e65605b9c74fa55b99a2d3bb02dffaf0b324482167985b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs.h",
+                "sha256": "4fc54fd0190796cad1125563ea8dedc53811c81bce7d79e9396afc15994a35ab"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/sys/cdefs.h",
+                "sha256": "173afb522c6877dda3be1c93742c2061cd6e748ce395d2b3ae833fb49bfbfc4f"
+              },
+              {
+                "path": "/usr/include/features-time64.h",
+                "sha256": "345acb98767d04277e413c4951fbb199b0500be23d43cddf17c6cd9fb319a8da"
+              },
+              {
+                "path": "/usr/include/features.h",
+                "sha256": "940d486d050fc87420d8ffc008e17f31ffb04467534ad1b039ed25abc52382f9"
+              },
+              {
+                "path": "/usr/include/stdc-predef.h",
+                "sha256": "8db4f65e62cade8ae4d9b77960ee6aee093255acc1b637e3fb37d79179733b15"
+              },
+              {
+                "path": "/usr/include/stdint.h",
+                "sha256": "c26c51b07feadd45ca25e9c95e393b6783d580ab318a567c119828191a80bbed"
+              },
+              {
+                "path": "/usr/lib/llvm-18/lib/clang/18/include/stdint.h",
+                "sha256": "7ce5540d5fb6e8da9760928e76cbdd5ebef329d701ad598d30d8e6f9d5d78b34"
+              }
+            ],
+            "functions": [
+              {
+                "column": 10,
+                "function": "calculate",
+                "line": 3,
+                "parameter_count": 2,
+                "proof": {
+                  "obligation_sha256": "78099038c8f3f7b829641d310d73ce007dadc381499055db26d18109e668cfa6",
+                  "reason": "",
+                  "smtlib": "; \n(set-info :status unknown)\n(declare-fun input_1 () (_ BitVec 32))\n(declare-fun input_0 () (_ BitVec 32))\n(assert\n (let ((?x13 (bvadd (bvadd (bvmul input_0 (_ bv1789947473 32)) (_ bv1549411197 32)) (bvadd (bvmul input_1 (_ bv1789947473 32)) (_ bv1549411197 32)))))\n (let ((?x22 (bvsub (bvsub (bvadd (bvadd (bvmul (bvsub ?x13 (_ bv1549411197 32)) (_ bv3 32)) (_ bv1196144902 32)) (_ bv4058964216 32)) (_ bv1549411197 32)) (_ bv1549411197 32))))\n (let ((?x24 (bvmul ?x22 (_ bv846699185 32))))\n (and (distinct ?x24 ?x24) true)))))\n(check-sat)\n",
+                  "solver_strategy": "simplify/bit-blast/sat",
+                  "status": "proved-under-model"
+                },
+                "source_metrics": {
+                  "ast_nodes": 67,
+                  "ast_shape_sha256": "7af900cb33d4a11f7e62f9870053b0fdcfb485d0106ca26668f5cfb48df3b84c",
+                  "branches": 0,
+                  "cfg_adjacency_sha256": "0776758444a55607502560b1a00bdb50388c5d7526a7605c1c35b517d91a8d2b",
+                  "cfg_blocks": 3,
+                  "cfg_edges": 2,
+                  "cyclomatic": 1,
+                  "expressions": 59,
+                  "loops": 0,
+                  "operators": {
+                    "*": 4,
+                    "+": 5,
+                    "-": 3
+                  }
+                },
+                "status": "checked",
+                "verification": "proved-under-model"
+              }
+            ],
+            "model": "pure-u32-c11-v2; identical target, headers and compilation environment required",
+            "objective": "balanced",
+            "output_written": false,
+            "schema_version": 2,
+            "seed": "0",
+            "solver": "4.8.12.0",
+            "source_sha256": "8f21badc98f137c0770a53f1f34e19396db4be7a443a3dfa5d3c442bdf77f9ee",
+            "strategy": "affine",
+            "target": "aarch64-unknown-linux-gnu",
+            "timeout_ms": 10000
+          }
+        }
+      },
+      "code_section_bytes_identical": false,
+      "observation": "code-section-bytes-differ",
+      "text_size_ratio": 3.230769230769231,
+      "instruction_histograms_identical": false,
+      "reverse_engineering_effort": "not-assessed",
+      "memory_exposure": "not-assessed"
+    },
+    {
+      "compiler": "/usr/bin/clang-18",
+      "compiler_version": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+      "compiler_sha256": "6d99f6207153b8b2063ace5d2a6177debaf6a6b6f31649e03afac07b98ba0b4d",
+      "compiler_target": "aarch64-unknown-linux-gnu",
+      "flags": [
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2"
+      ],
+      "status": "completed",
+      "objects": {
+        "original": {
+          "path": "compiler-0-O2/original.o",
+          "object_sha256": "7670f6062bffd7cb7e74b9112ad333febbd81d5edd953adbd0491a86bdd5ff20",
+          "text_bytes": 16,
+          "text_sha256": "8a59931a9fa0f4ac296493585a195e646f6e5344da69a253d7ea8659c013a3fe",
+          "instruction_histogram": {
+            "add": 3,
+            "ret": 1
+          },
+          "scope": "whole single-function object code section, including padding; relocations not applied"
+        },
+        "candidate": {
+          "path": "compiler-0-O2/candidate.o",
+          "object_sha256": "e146bf1a6fa7bf4aa9e45c81bac834aa7ee448621298dafc04796128b87ccf71",
+          "text_bytes": 16,
+          "text_sha256": "8a59931a9fa0f4ac296493585a195e646f6e5344da69a253d7ea8659c013a3fe",
+          "instruction_histogram": {
+            "add": 3,
+            "ret": 1
+          },
+          "scope": "whole single-function object code section, including padding; relocations not applied"
+        }
+      },
+      "build_validation": {
+        "original": {
+          "preprocessed_path": "compiler-0-O2/original.i",
+          "preprocessed_sha256": "5ce7d8231a40ee86845a09497085071acc584417eb1d7499faa78da9cb0591d8",
+          "verification": "proved-under-model",
+          "proof": {
+            "action": "verify",
+            "candidate_dependencies": [],
+            "candidate_sha256": "5ce7d8231a40ee86845a09497085071acc584417eb1d7499faa78da9cb0591d8",
+            "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+            "coverage_percent": 50,
+            "csrd_version": "0.5.0",
+            "dependencies": [
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/libc-header-start.h",
+                "sha256": "e86638082f9ce98c82e3022018fa5be175473445c824fe17bd32bf9668582368"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/long-double.h",
+                "sha256": "b1866ecbc3dcbaf4341e42c219ee128d90cd364a5a04ad1417d40e351842035c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-intn.h",
+                "sha256": "94286e42e4970304da5cbef69de6695c84132ff8fbd4b6d72d29aeb7406dc5ff"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-least.h",
+                "sha256": "5bf66871bfc18ae6d22c91d03e392c1a4cc5969ca74c5fa31b7510703a496844"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-uintn.h",
+                "sha256": "aeee224a19434556ef4a9a4afad553736789274656ca12463122300b557ce78c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/time64.h",
+                "sha256": "2be9170ce3621ea6062f10edef68bbc2db09bb454ec4397534263dd37b8f1f6a"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/timesize.h",
+                "sha256": "8436245f53a4b30b0dfab4d3ed207f27b5fd696deee9559d099e0d57ffdbcd44"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/types.h",
+                "sha256": "371847ed3adab1c19db392034f6a22407d321b1dc5f2440563f4b0b8b6c5386b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/typesizes.h",
+                "sha256": "dcb8089b342f2f5f1ab9df0a9591ecea20f92f116204f68ae590b831905a3813"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wchar.h",
+                "sha256": "893fa450527ce645f17922788097d5fe331e2a53012bab4e724d8a1f63e21aa2"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wordsize.h",
+                "sha256": "c67aaeab12f39b8685a884b1764c372379640bdc9f07d97ff78a6c74a2522503"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h",
+                "sha256": "4e0206e34726006283e65605b9c74fa55b99a2d3bb02dffaf0b324482167985b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs.h",
+                "sha256": "4fc54fd0190796cad1125563ea8dedc53811c81bce7d79e9396afc15994a35ab"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/sys/cdefs.h",
+                "sha256": "173afb522c6877dda3be1c93742c2061cd6e748ce395d2b3ae833fb49bfbfc4f"
+              },
+              {
+                "path": "/usr/include/features-time64.h",
+                "sha256": "345acb98767d04277e413c4951fbb199b0500be23d43cddf17c6cd9fb319a8da"
+              },
+              {
+                "path": "/usr/include/features.h",
+                "sha256": "940d486d050fc87420d8ffc008e17f31ffb04467534ad1b039ed25abc52382f9"
+              },
+              {
+                "path": "/usr/include/stdc-predef.h",
+                "sha256": "8db4f65e62cade8ae4d9b77960ee6aee093255acc1b637e3fb37d79179733b15"
+              },
+              {
+                "path": "/usr/include/stdint.h",
+                "sha256": "c26c51b07feadd45ca25e9c95e393b6783d580ab318a567c119828191a80bbed"
+              },
+              {
+                "path": "/usr/lib/llvm-18/lib/clang/18/include/stdint.h",
+                "sha256": "7ce5540d5fb6e8da9760928e76cbdd5ebef329d701ad598d30d8e6f9d5d78b34"
+              }
+            ],
+            "functions": [
+              {
+                "column": 10,
+                "function": "calculate",
+                "line": 3,
+                "parameter_count": 2,
+                "proof": {
+                  "obligation_sha256": "060f813b925cc39a5651bee7b20a535c1d1cf089f2bd4dff1a8ffcf57a50ccbd",
+                  "reason": "",
+                  "smtlib": "; \n(set-info :status unknown)\n(declare-fun input_1 () (_ BitVec 32))\n(declare-fun input_0 () (_ BitVec 32))\n(assert\n (let ((?x11 (bvadd (bvmul (bvadd input_0 input_1) (_ bv3 32)) (_ bv11 32))))\n (and (distinct ?x11 ?x11) true)))\n(check-sat)\n",
+                  "solver_strategy": "simplify/bit-blast/sat",
+                  "status": "proved-under-model"
+                },
+                "source_metrics": {
+                  "ast_nodes": 14,
+                  "ast_shape_sha256": "03e40259f4f5833d9025b4e0a461cb50b45c91bc96c9ce5bff2b53558ead4cd7",
+                  "branches": 0,
+                  "cfg_adjacency_sha256": "0776758444a55607502560b1a00bdb50388c5d7526a7605c1c35b517d91a8d2b",
+                  "cfg_blocks": 3,
+                  "cfg_edges": 2,
+                  "cyclomatic": 1,
+                  "expressions": 11,
+                  "loops": 0,
+                  "operators": {
+                    "*": 1,
+                    "+": 2
+                  }
+                },
+                "status": "checked",
+                "verification": "proved-under-model"
+              }
+            ],
+            "model": "pure-u32-c11-v2; identical target, headers and compilation environment required",
+            "objective": "balanced",
+            "output_written": false,
+            "schema_version": 2,
+            "seed": "0",
+            "solver": "4.8.12.0",
+            "source_sha256": "5291f929d99a94c0fe1cae0960ef09988ac62a45e9adeef149667844b4f96bf9",
+            "strategy": "affine",
+            "target": "aarch64-unknown-linux-gnu",
+            "timeout_ms": 10000
+          }
+        },
+        "candidate": {
+          "preprocessed_path": "compiler-0-O2/candidate.i",
+          "preprocessed_sha256": "932177f5b5e3bc4308932974dcd7ecf8d8759eb53e7f407ab56744172319e94f",
+          "verification": "proved-under-model",
+          "proof": {
+            "action": "verify",
+            "candidate_dependencies": [],
+            "candidate_sha256": "932177f5b5e3bc4308932974dcd7ecf8d8759eb53e7f407ab56744172319e94f",
+            "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+            "coverage_percent": 50,
+            "csrd_version": "0.5.0",
+            "dependencies": [
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/libc-header-start.h",
+                "sha256": "e86638082f9ce98c82e3022018fa5be175473445c824fe17bd32bf9668582368"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/long-double.h",
+                "sha256": "b1866ecbc3dcbaf4341e42c219ee128d90cd364a5a04ad1417d40e351842035c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-intn.h",
+                "sha256": "94286e42e4970304da5cbef69de6695c84132ff8fbd4b6d72d29aeb7406dc5ff"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-least.h",
+                "sha256": "5bf66871bfc18ae6d22c91d03e392c1a4cc5969ca74c5fa31b7510703a496844"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-uintn.h",
+                "sha256": "aeee224a19434556ef4a9a4afad553736789274656ca12463122300b557ce78c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/time64.h",
+                "sha256": "2be9170ce3621ea6062f10edef68bbc2db09bb454ec4397534263dd37b8f1f6a"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/timesize.h",
+                "sha256": "8436245f53a4b30b0dfab4d3ed207f27b5fd696deee9559d099e0d57ffdbcd44"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/types.h",
+                "sha256": "371847ed3adab1c19db392034f6a22407d321b1dc5f2440563f4b0b8b6c5386b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/typesizes.h",
+                "sha256": "dcb8089b342f2f5f1ab9df0a9591ecea20f92f116204f68ae590b831905a3813"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wchar.h",
+                "sha256": "893fa450527ce645f17922788097d5fe331e2a53012bab4e724d8a1f63e21aa2"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wordsize.h",
+                "sha256": "c67aaeab12f39b8685a884b1764c372379640bdc9f07d97ff78a6c74a2522503"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h",
+                "sha256": "4e0206e34726006283e65605b9c74fa55b99a2d3bb02dffaf0b324482167985b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs.h",
+                "sha256": "4fc54fd0190796cad1125563ea8dedc53811c81bce7d79e9396afc15994a35ab"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/sys/cdefs.h",
+                "sha256": "173afb522c6877dda3be1c93742c2061cd6e748ce395d2b3ae833fb49bfbfc4f"
+              },
+              {
+                "path": "/usr/include/features-time64.h",
+                "sha256": "345acb98767d04277e413c4951fbb199b0500be23d43cddf17c6cd9fb319a8da"
+              },
+              {
+                "path": "/usr/include/features.h",
+                "sha256": "940d486d050fc87420d8ffc008e17f31ffb04467534ad1b039ed25abc52382f9"
+              },
+              {
+                "path": "/usr/include/stdc-predef.h",
+                "sha256": "8db4f65e62cade8ae4d9b77960ee6aee093255acc1b637e3fb37d79179733b15"
+              },
+              {
+                "path": "/usr/include/stdint.h",
+                "sha256": "c26c51b07feadd45ca25e9c95e393b6783d580ab318a567c119828191a80bbed"
+              },
+              {
+                "path": "/usr/lib/llvm-18/lib/clang/18/include/stdint.h",
+                "sha256": "7ce5540d5fb6e8da9760928e76cbdd5ebef329d701ad598d30d8e6f9d5d78b34"
+              }
+            ],
+            "functions": [
+              {
+                "column": 10,
+                "function": "calculate",
+                "line": 3,
+                "parameter_count": 2,
+                "proof": {
+                  "obligation_sha256": "78099038c8f3f7b829641d310d73ce007dadc381499055db26d18109e668cfa6",
+                  "reason": "",
+                  "smtlib": "; \n(set-info :status unknown)\n(declare-fun input_1 () (_ BitVec 32))\n(declare-fun input_0 () (_ BitVec 32))\n(assert\n (let ((?x13 (bvadd (bvadd (bvmul input_0 (_ bv1789947473 32)) (_ bv1549411197 32)) (bvadd (bvmul input_1 (_ bv1789947473 32)) (_ bv1549411197 32)))))\n (let ((?x22 (bvsub (bvsub (bvadd (bvadd (bvmul (bvsub ?x13 (_ bv1549411197 32)) (_ bv3 32)) (_ bv1196144902 32)) (_ bv4058964216 32)) (_ bv1549411197 32)) (_ bv1549411197 32))))\n (let ((?x24 (bvmul ?x22 (_ bv846699185 32))))\n (and (distinct ?x24 ?x24) true)))))\n(check-sat)\n",
+                  "solver_strategy": "simplify/bit-blast/sat",
+                  "status": "proved-under-model"
+                },
+                "source_metrics": {
+                  "ast_nodes": 67,
+                  "ast_shape_sha256": "7af900cb33d4a11f7e62f9870053b0fdcfb485d0106ca26668f5cfb48df3b84c",
+                  "branches": 0,
+                  "cfg_adjacency_sha256": "0776758444a55607502560b1a00bdb50388c5d7526a7605c1c35b517d91a8d2b",
+                  "cfg_blocks": 3,
+                  "cfg_edges": 2,
+                  "cyclomatic": 1,
+                  "expressions": 59,
+                  "loops": 0,
+                  "operators": {
+                    "*": 4,
+                    "+": 5,
+                    "-": 3
+                  }
+                },
+                "status": "checked",
+                "verification": "proved-under-model"
+              }
+            ],
+            "model": "pure-u32-c11-v2; identical target, headers and compilation environment required",
+            "objective": "balanced",
+            "output_written": false,
+            "schema_version": 2,
+            "seed": "0",
+            "solver": "4.8.12.0",
+            "source_sha256": "8f21badc98f137c0770a53f1f34e19396db4be7a443a3dfa5d3c442bdf77f9ee",
+            "strategy": "affine",
+            "target": "aarch64-unknown-linux-gnu",
+            "timeout_ms": 10000
+          }
+        }
+      },
+      "code_section_bytes_identical": true,
+      "observation": "no-code-section-byte-difference",
+      "text_size_ratio": 1.0,
+      "instruction_histograms_identical": true,
+      "reverse_engineering_effort": "not-assessed",
+      "memory_exposure": "not-assessed"
+    },
+    {
+      "compiler": "/usr/bin/gcc",
+      "compiler_version": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+      "compiler_sha256": "a20520ee21543f243d40636a9181a142c45ecd989de31ab86b99a8ea5ada870d",
+      "compiler_target": "aarch64-linux-gnu",
+      "flags": [
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O0"
+      ],
+      "status": "completed",
+      "objects": {
+        "original": {
+          "path": "compiler-1-O0/original.o",
+          "object_sha256": "b94104c4013b405684b52afcbeb1b1ca83ac784e189a804ac500dda7c8bd1ef8",
+          "text_bytes": 56,
+          "text_sha256": "70012821ba8c06f7a5e96c374607f19f037d00e289ad287833b6d1ca245cf4d4",
+          "instruction_histogram": {
+            "sub": 1,
+            "str": 3,
+            "ldr": 3,
+            "add": 4,
+            "mov": 1,
+            "lsl": 1,
+            "ret": 1
+          },
+          "scope": "whole single-function object code section, including padding; relocations not applied"
+        },
+        "candidate": {
+          "path": "compiler-1-O0/candidate.o",
+          "object_sha256": "8e7a9f507352ea2daab6f6376075b09ac3ea61387e25132e325d36eca65020c8",
+          "text_bytes": 200,
+          "text_sha256": "1d01188a4218e826de58803581d7cb9ede36095309030040dc96dc80ad50ee68",
+          "instruction_histogram": {
+            "sub": 1,
+            "str": 8,
+            "ldr": 8,
+            "mov": 10,
+            "movk": 9,
+            "mul": 3,
+            "add": 9,
+            "lsl": 1,
+            "ret": 1
+          },
+          "scope": "whole single-function object code section, including padding; relocations not applied"
+        }
+      },
+      "build_validation": {
+        "original": {
+          "preprocessed_path": "compiler-1-O0/original.i",
+          "preprocessed_sha256": "176375c9c8daeadb0f34199034a8f4ac5cc7edd16cf2b8198d54c54cb10f019e",
+          "verification": "proved-under-model",
+          "proof": {
+            "action": "verify",
+            "candidate_dependencies": [],
+            "candidate_sha256": "176375c9c8daeadb0f34199034a8f4ac5cc7edd16cf2b8198d54c54cb10f019e",
+            "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+            "coverage_percent": 50,
+            "csrd_version": "0.5.0",
+            "dependencies": [
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/libc-header-start.h",
+                "sha256": "e86638082f9ce98c82e3022018fa5be175473445c824fe17bd32bf9668582368"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/long-double.h",
+                "sha256": "b1866ecbc3dcbaf4341e42c219ee128d90cd364a5a04ad1417d40e351842035c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-intn.h",
+                "sha256": "94286e42e4970304da5cbef69de6695c84132ff8fbd4b6d72d29aeb7406dc5ff"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-least.h",
+                "sha256": "5bf66871bfc18ae6d22c91d03e392c1a4cc5969ca74c5fa31b7510703a496844"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-uintn.h",
+                "sha256": "aeee224a19434556ef4a9a4afad553736789274656ca12463122300b557ce78c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/time64.h",
+                "sha256": "2be9170ce3621ea6062f10edef68bbc2db09bb454ec4397534263dd37b8f1f6a"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/timesize.h",
+                "sha256": "8436245f53a4b30b0dfab4d3ed207f27b5fd696deee9559d099e0d57ffdbcd44"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/types.h",
+                "sha256": "371847ed3adab1c19db392034f6a22407d321b1dc5f2440563f4b0b8b6c5386b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/typesizes.h",
+                "sha256": "dcb8089b342f2f5f1ab9df0a9591ecea20f92f116204f68ae590b831905a3813"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wchar.h",
+                "sha256": "893fa450527ce645f17922788097d5fe331e2a53012bab4e724d8a1f63e21aa2"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wordsize.h",
+                "sha256": "c67aaeab12f39b8685a884b1764c372379640bdc9f07d97ff78a6c74a2522503"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h",
+                "sha256": "4e0206e34726006283e65605b9c74fa55b99a2d3bb02dffaf0b324482167985b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs.h",
+                "sha256": "4fc54fd0190796cad1125563ea8dedc53811c81bce7d79e9396afc15994a35ab"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/sys/cdefs.h",
+                "sha256": "173afb522c6877dda3be1c93742c2061cd6e748ce395d2b3ae833fb49bfbfc4f"
+              },
+              {
+                "path": "/usr/include/features-time64.h",
+                "sha256": "345acb98767d04277e413c4951fbb199b0500be23d43cddf17c6cd9fb319a8da"
+              },
+              {
+                "path": "/usr/include/features.h",
+                "sha256": "940d486d050fc87420d8ffc008e17f31ffb04467534ad1b039ed25abc52382f9"
+              },
+              {
+                "path": "/usr/include/stdc-predef.h",
+                "sha256": "8db4f65e62cade8ae4d9b77960ee6aee093255acc1b637e3fb37d79179733b15"
+              },
+              {
+                "path": "/usr/include/stdint.h",
+                "sha256": "c26c51b07feadd45ca25e9c95e393b6783d580ab318a567c119828191a80bbed"
+              },
+              {
+                "path": "/usr/lib/llvm-18/lib/clang/18/include/stdint.h",
+                "sha256": "7ce5540d5fb6e8da9760928e76cbdd5ebef329d701ad598d30d8e6f9d5d78b34"
+              }
+            ],
+            "functions": [
+              {
+                "column": 10,
+                "function": "calculate",
+                "line": 3,
+                "parameter_count": 2,
+                "proof": {
+                  "obligation_sha256": "060f813b925cc39a5651bee7b20a535c1d1cf089f2bd4dff1a8ffcf57a50ccbd",
+                  "reason": "",
+                  "smtlib": "; \n(set-info :status unknown)\n(declare-fun input_1 () (_ BitVec 32))\n(declare-fun input_0 () (_ BitVec 32))\n(assert\n (let ((?x11 (bvadd (bvmul (bvadd input_0 input_1) (_ bv3 32)) (_ bv11 32))))\n (and (distinct ?x11 ?x11) true)))\n(check-sat)\n",
+                  "solver_strategy": "simplify/bit-blast/sat",
+                  "status": "proved-under-model"
+                },
+                "source_metrics": {
+                  "ast_nodes": 14,
+                  "ast_shape_sha256": "03e40259f4f5833d9025b4e0a461cb50b45c91bc96c9ce5bff2b53558ead4cd7",
+                  "branches": 0,
+                  "cfg_adjacency_sha256": "0776758444a55607502560b1a00bdb50388c5d7526a7605c1c35b517d91a8d2b",
+                  "cfg_blocks": 3,
+                  "cfg_edges": 2,
+                  "cyclomatic": 1,
+                  "expressions": 11,
+                  "loops": 0,
+                  "operators": {
+                    "*": 1,
+                    "+": 2
+                  }
+                },
+                "status": "checked",
+                "verification": "proved-under-model"
+              }
+            ],
+            "model": "pure-u32-c11-v2; identical target, headers and compilation environment required",
+            "objective": "balanced",
+            "output_written": false,
+            "schema_version": 2,
+            "seed": "0",
+            "solver": "4.8.12.0",
+            "source_sha256": "5291f929d99a94c0fe1cae0960ef09988ac62a45e9adeef149667844b4f96bf9",
+            "strategy": "affine",
+            "target": "aarch64-unknown-linux-gnu",
+            "timeout_ms": 10000
+          }
+        },
+        "candidate": {
+          "preprocessed_path": "compiler-1-O0/candidate.i",
+          "preprocessed_sha256": "63d67f7e509ee70ed6eecfa97a1402b52cd56c2c376f97db1eb06af363e69bda",
+          "verification": "proved-under-model",
+          "proof": {
+            "action": "verify",
+            "candidate_dependencies": [],
+            "candidate_sha256": "63d67f7e509ee70ed6eecfa97a1402b52cd56c2c376f97db1eb06af363e69bda",
+            "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+            "coverage_percent": 50,
+            "csrd_version": "0.5.0",
+            "dependencies": [
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/libc-header-start.h",
+                "sha256": "e86638082f9ce98c82e3022018fa5be175473445c824fe17bd32bf9668582368"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/long-double.h",
+                "sha256": "b1866ecbc3dcbaf4341e42c219ee128d90cd364a5a04ad1417d40e351842035c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-intn.h",
+                "sha256": "94286e42e4970304da5cbef69de6695c84132ff8fbd4b6d72d29aeb7406dc5ff"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-least.h",
+                "sha256": "5bf66871bfc18ae6d22c91d03e392c1a4cc5969ca74c5fa31b7510703a496844"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-uintn.h",
+                "sha256": "aeee224a19434556ef4a9a4afad553736789274656ca12463122300b557ce78c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/time64.h",
+                "sha256": "2be9170ce3621ea6062f10edef68bbc2db09bb454ec4397534263dd37b8f1f6a"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/timesize.h",
+                "sha256": "8436245f53a4b30b0dfab4d3ed207f27b5fd696deee9559d099e0d57ffdbcd44"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/types.h",
+                "sha256": "371847ed3adab1c19db392034f6a22407d321b1dc5f2440563f4b0b8b6c5386b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/typesizes.h",
+                "sha256": "dcb8089b342f2f5f1ab9df0a9591ecea20f92f116204f68ae590b831905a3813"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wchar.h",
+                "sha256": "893fa450527ce645f17922788097d5fe331e2a53012bab4e724d8a1f63e21aa2"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wordsize.h",
+                "sha256": "c67aaeab12f39b8685a884b1764c372379640bdc9f07d97ff78a6c74a2522503"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h",
+                "sha256": "4e0206e34726006283e65605b9c74fa55b99a2d3bb02dffaf0b324482167985b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs.h",
+                "sha256": "4fc54fd0190796cad1125563ea8dedc53811c81bce7d79e9396afc15994a35ab"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/sys/cdefs.h",
+                "sha256": "173afb522c6877dda3be1c93742c2061cd6e748ce395d2b3ae833fb49bfbfc4f"
+              },
+              {
+                "path": "/usr/include/features-time64.h",
+                "sha256": "345acb98767d04277e413c4951fbb199b0500be23d43cddf17c6cd9fb319a8da"
+              },
+              {
+                "path": "/usr/include/features.h",
+                "sha256": "940d486d050fc87420d8ffc008e17f31ffb04467534ad1b039ed25abc52382f9"
+              },
+              {
+                "path": "/usr/include/stdc-predef.h",
+                "sha256": "8db4f65e62cade8ae4d9b77960ee6aee093255acc1b637e3fb37d79179733b15"
+              },
+              {
+                "path": "/usr/include/stdint.h",
+                "sha256": "c26c51b07feadd45ca25e9c95e393b6783d580ab318a567c119828191a80bbed"
+              },
+              {
+                "path": "/usr/lib/llvm-18/lib/clang/18/include/stdint.h",
+                "sha256": "7ce5540d5fb6e8da9760928e76cbdd5ebef329d701ad598d30d8e6f9d5d78b34"
+              }
+            ],
+            "functions": [
+              {
+                "column": 10,
+                "function": "calculate",
+                "line": 3,
+                "parameter_count": 2,
+                "proof": {
+                  "obligation_sha256": "78099038c8f3f7b829641d310d73ce007dadc381499055db26d18109e668cfa6",
+                  "reason": "",
+                  "smtlib": "; \n(set-info :status unknown)\n(declare-fun input_1 () (_ BitVec 32))\n(declare-fun input_0 () (_ BitVec 32))\n(assert\n (let ((?x13 (bvadd (bvadd (bvmul input_0 (_ bv1789947473 32)) (_ bv1549411197 32)) (bvadd (bvmul input_1 (_ bv1789947473 32)) (_ bv1549411197 32)))))\n (let ((?x22 (bvsub (bvsub (bvadd (bvadd (bvmul (bvsub ?x13 (_ bv1549411197 32)) (_ bv3 32)) (_ bv1196144902 32)) (_ bv4058964216 32)) (_ bv1549411197 32)) (_ bv1549411197 32))))\n (let ((?x24 (bvmul ?x22 (_ bv846699185 32))))\n (and (distinct ?x24 ?x24) true)))))\n(check-sat)\n",
+                  "solver_strategy": "simplify/bit-blast/sat",
+                  "status": "proved-under-model"
+                },
+                "source_metrics": {
+                  "ast_nodes": 67,
+                  "ast_shape_sha256": "7af900cb33d4a11f7e62f9870053b0fdcfb485d0106ca26668f5cfb48df3b84c",
+                  "branches": 0,
+                  "cfg_adjacency_sha256": "0776758444a55607502560b1a00bdb50388c5d7526a7605c1c35b517d91a8d2b",
+                  "cfg_blocks": 3,
+                  "cfg_edges": 2,
+                  "cyclomatic": 1,
+                  "expressions": 59,
+                  "loops": 0,
+                  "operators": {
+                    "*": 4,
+                    "+": 5,
+                    "-": 3
+                  }
+                },
+                "status": "checked",
+                "verification": "proved-under-model"
+              }
+            ],
+            "model": "pure-u32-c11-v2; identical target, headers and compilation environment required",
+            "objective": "balanced",
+            "output_written": false,
+            "schema_version": 2,
+            "seed": "0",
+            "solver": "4.8.12.0",
+            "source_sha256": "8f21badc98f137c0770a53f1f34e19396db4be7a443a3dfa5d3c442bdf77f9ee",
+            "strategy": "affine",
+            "target": "aarch64-unknown-linux-gnu",
+            "timeout_ms": 10000
+          }
+        }
+      },
+      "code_section_bytes_identical": false,
+      "observation": "code-section-bytes-differ",
+      "text_size_ratio": 3.5714285714285716,
+      "instruction_histograms_identical": false,
+      "reverse_engineering_effort": "not-assessed",
+      "memory_exposure": "not-assessed"
+    },
+    {
+      "compiler": "/usr/bin/gcc",
+      "compiler_version": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+      "compiler_sha256": "a20520ee21543f243d40636a9181a142c45ecd989de31ab86b99a8ea5ada870d",
+      "compiler_target": "aarch64-linux-gnu",
+      "flags": [
+        "-std=c11",
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O2"
+      ],
+      "status": "completed",
+      "objects": {
+        "original": {
+          "path": "compiler-1-O2/original.o",
+          "object_sha256": "656c27f7595fd290ec05666b6de08960c1d546b38589eac8479d5ce987c4127a",
+          "text_bytes": 16,
+          "text_sha256": "59bebb2020c16f87d283110db94b524e7fc69e084b3ccb74c35c72b058bec33e",
+          "instruction_histogram": {
+            "add": 3,
+            "ret": 1
+          },
+          "scope": "whole single-function object code section, including padding; relocations not applied"
+        },
+        "candidate": {
+          "path": "compiler-1-O2/candidate.o",
+          "object_sha256": "6c340c5357f1f2eff06137fa4a3691d6652d7b523437d2012557f560f3c465bd",
+          "text_bytes": 16,
+          "text_sha256": "59bebb2020c16f87d283110db94b524e7fc69e084b3ccb74c35c72b058bec33e",
+          "instruction_histogram": {
+            "add": 3,
+            "ret": 1
+          },
+          "scope": "whole single-function object code section, including padding; relocations not applied"
+        }
+      },
+      "build_validation": {
+        "original": {
+          "preprocessed_path": "compiler-1-O2/original.i",
+          "preprocessed_sha256": "176375c9c8daeadb0f34199034a8f4ac5cc7edd16cf2b8198d54c54cb10f019e",
+          "verification": "proved-under-model",
+          "proof": {
+            "action": "verify",
+            "candidate_dependencies": [],
+            "candidate_sha256": "176375c9c8daeadb0f34199034a8f4ac5cc7edd16cf2b8198d54c54cb10f019e",
+            "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+            "coverage_percent": 50,
+            "csrd_version": "0.5.0",
+            "dependencies": [
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/libc-header-start.h",
+                "sha256": "e86638082f9ce98c82e3022018fa5be175473445c824fe17bd32bf9668582368"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/long-double.h",
+                "sha256": "b1866ecbc3dcbaf4341e42c219ee128d90cd364a5a04ad1417d40e351842035c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-intn.h",
+                "sha256": "94286e42e4970304da5cbef69de6695c84132ff8fbd4b6d72d29aeb7406dc5ff"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-least.h",
+                "sha256": "5bf66871bfc18ae6d22c91d03e392c1a4cc5969ca74c5fa31b7510703a496844"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-uintn.h",
+                "sha256": "aeee224a19434556ef4a9a4afad553736789274656ca12463122300b557ce78c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/time64.h",
+                "sha256": "2be9170ce3621ea6062f10edef68bbc2db09bb454ec4397534263dd37b8f1f6a"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/timesize.h",
+                "sha256": "8436245f53a4b30b0dfab4d3ed207f27b5fd696deee9559d099e0d57ffdbcd44"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/types.h",
+                "sha256": "371847ed3adab1c19db392034f6a22407d321b1dc5f2440563f4b0b8b6c5386b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/typesizes.h",
+                "sha256": "dcb8089b342f2f5f1ab9df0a9591ecea20f92f116204f68ae590b831905a3813"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wchar.h",
+                "sha256": "893fa450527ce645f17922788097d5fe331e2a53012bab4e724d8a1f63e21aa2"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wordsize.h",
+                "sha256": "c67aaeab12f39b8685a884b1764c372379640bdc9f07d97ff78a6c74a2522503"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h",
+                "sha256": "4e0206e34726006283e65605b9c74fa55b99a2d3bb02dffaf0b324482167985b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs.h",
+                "sha256": "4fc54fd0190796cad1125563ea8dedc53811c81bce7d79e9396afc15994a35ab"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/sys/cdefs.h",
+                "sha256": "173afb522c6877dda3be1c93742c2061cd6e748ce395d2b3ae833fb49bfbfc4f"
+              },
+              {
+                "path": "/usr/include/features-time64.h",
+                "sha256": "345acb98767d04277e413c4951fbb199b0500be23d43cddf17c6cd9fb319a8da"
+              },
+              {
+                "path": "/usr/include/features.h",
+                "sha256": "940d486d050fc87420d8ffc008e17f31ffb04467534ad1b039ed25abc52382f9"
+              },
+              {
+                "path": "/usr/include/stdc-predef.h",
+                "sha256": "8db4f65e62cade8ae4d9b77960ee6aee093255acc1b637e3fb37d79179733b15"
+              },
+              {
+                "path": "/usr/include/stdint.h",
+                "sha256": "c26c51b07feadd45ca25e9c95e393b6783d580ab318a567c119828191a80bbed"
+              },
+              {
+                "path": "/usr/lib/llvm-18/lib/clang/18/include/stdint.h",
+                "sha256": "7ce5540d5fb6e8da9760928e76cbdd5ebef329d701ad598d30d8e6f9d5d78b34"
+              }
+            ],
+            "functions": [
+              {
+                "column": 10,
+                "function": "calculate",
+                "line": 3,
+                "parameter_count": 2,
+                "proof": {
+                  "obligation_sha256": "060f813b925cc39a5651bee7b20a535c1d1cf089f2bd4dff1a8ffcf57a50ccbd",
+                  "reason": "",
+                  "smtlib": "; \n(set-info :status unknown)\n(declare-fun input_1 () (_ BitVec 32))\n(declare-fun input_0 () (_ BitVec 32))\n(assert\n (let ((?x11 (bvadd (bvmul (bvadd input_0 input_1) (_ bv3 32)) (_ bv11 32))))\n (and (distinct ?x11 ?x11) true)))\n(check-sat)\n",
+                  "solver_strategy": "simplify/bit-blast/sat",
+                  "status": "proved-under-model"
+                },
+                "source_metrics": {
+                  "ast_nodes": 14,
+                  "ast_shape_sha256": "03e40259f4f5833d9025b4e0a461cb50b45c91bc96c9ce5bff2b53558ead4cd7",
+                  "branches": 0,
+                  "cfg_adjacency_sha256": "0776758444a55607502560b1a00bdb50388c5d7526a7605c1c35b517d91a8d2b",
+                  "cfg_blocks": 3,
+                  "cfg_edges": 2,
+                  "cyclomatic": 1,
+                  "expressions": 11,
+                  "loops": 0,
+                  "operators": {
+                    "*": 1,
+                    "+": 2
+                  }
+                },
+                "status": "checked",
+                "verification": "proved-under-model"
+              }
+            ],
+            "model": "pure-u32-c11-v2; identical target, headers and compilation environment required",
+            "objective": "balanced",
+            "output_written": false,
+            "schema_version": 2,
+            "seed": "0",
+            "solver": "4.8.12.0",
+            "source_sha256": "5291f929d99a94c0fe1cae0960ef09988ac62a45e9adeef149667844b4f96bf9",
+            "strategy": "affine",
+            "target": "aarch64-unknown-linux-gnu",
+            "timeout_ms": 10000
+          }
+        },
+        "candidate": {
+          "preprocessed_path": "compiler-1-O2/candidate.i",
+          "preprocessed_sha256": "63d67f7e509ee70ed6eecfa97a1402b52cd56c2c376f97db1eb06af363e69bda",
+          "verification": "proved-under-model",
+          "proof": {
+            "action": "verify",
+            "candidate_dependencies": [],
+            "candidate_sha256": "63d67f7e509ee70ed6eecfa97a1402b52cd56c2c376f97db1eb06af363e69bda",
+            "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+            "coverage_percent": 50,
+            "csrd_version": "0.5.0",
+            "dependencies": [
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/libc-header-start.h",
+                "sha256": "e86638082f9ce98c82e3022018fa5be175473445c824fe17bd32bf9668582368"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/long-double.h",
+                "sha256": "b1866ecbc3dcbaf4341e42c219ee128d90cd364a5a04ad1417d40e351842035c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-intn.h",
+                "sha256": "94286e42e4970304da5cbef69de6695c84132ff8fbd4b6d72d29aeb7406dc5ff"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-least.h",
+                "sha256": "5bf66871bfc18ae6d22c91d03e392c1a4cc5969ca74c5fa31b7510703a496844"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/stdint-uintn.h",
+                "sha256": "aeee224a19434556ef4a9a4afad553736789274656ca12463122300b557ce78c"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/time64.h",
+                "sha256": "2be9170ce3621ea6062f10edef68bbc2db09bb454ec4397534263dd37b8f1f6a"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/timesize.h",
+                "sha256": "8436245f53a4b30b0dfab4d3ed207f27b5fd696deee9559d099e0d57ffdbcd44"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/types.h",
+                "sha256": "371847ed3adab1c19db392034f6a22407d321b1dc5f2440563f4b0b8b6c5386b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/typesizes.h",
+                "sha256": "dcb8089b342f2f5f1ab9df0a9591ecea20f92f116204f68ae590b831905a3813"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wchar.h",
+                "sha256": "893fa450527ce645f17922788097d5fe331e2a53012bab4e724d8a1f63e21aa2"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/bits/wordsize.h",
+                "sha256": "c67aaeab12f39b8685a884b1764c372379640bdc9f07d97ff78a6c74a2522503"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h",
+                "sha256": "4e0206e34726006283e65605b9c74fa55b99a2d3bb02dffaf0b324482167985b"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/gnu/stubs.h",
+                "sha256": "4fc54fd0190796cad1125563ea8dedc53811c81bce7d79e9396afc15994a35ab"
+              },
+              {
+                "path": "/usr/include/aarch64-linux-gnu/sys/cdefs.h",
+                "sha256": "173afb522c6877dda3be1c93742c2061cd6e748ce395d2b3ae833fb49bfbfc4f"
+              },
+              {
+                "path": "/usr/include/features-time64.h",
+                "sha256": "345acb98767d04277e413c4951fbb199b0500be23d43cddf17c6cd9fb319a8da"
+              },
+              {
+                "path": "/usr/include/features.h",
+                "sha256": "940d486d050fc87420d8ffc008e17f31ffb04467534ad1b039ed25abc52382f9"
+              },
+              {
+                "path": "/usr/include/stdc-predef.h",
+                "sha256": "8db4f65e62cade8ae4d9b77960ee6aee093255acc1b637e3fb37d79179733b15"
+              },
+              {
+                "path": "/usr/include/stdint.h",
+                "sha256": "c26c51b07feadd45ca25e9c95e393b6783d580ab318a567c119828191a80bbed"
+              },
+              {
+                "path": "/usr/lib/llvm-18/lib/clang/18/include/stdint.h",
+                "sha256": "7ce5540d5fb6e8da9760928e76cbdd5ebef329d701ad598d30d8e6f9d5d78b34"
+              }
+            ],
+            "functions": [
+              {
+                "column": 10,
+                "function": "calculate",
+                "line": 3,
+                "parameter_count": 2,
+                "proof": {
+                  "obligation_sha256": "78099038c8f3f7b829641d310d73ce007dadc381499055db26d18109e668cfa6",
+                  "reason": "",
+                  "smtlib": "; \n(set-info :status unknown)\n(declare-fun input_1 () (_ BitVec 32))\n(declare-fun input_0 () (_ BitVec 32))\n(assert\n (let ((?x13 (bvadd (bvadd (bvmul input_0 (_ bv1789947473 32)) (_ bv1549411197 32)) (bvadd (bvmul input_1 (_ bv1789947473 32)) (_ bv1549411197 32)))))\n (let ((?x22 (bvsub (bvsub (bvadd (bvadd (bvmul (bvsub ?x13 (_ bv1549411197 32)) (_ bv3 32)) (_ bv1196144902 32)) (_ bv4058964216 32)) (_ bv1549411197 32)) (_ bv1549411197 32))))\n (let ((?x24 (bvmul ?x22 (_ bv846699185 32))))\n (and (distinct ?x24 ?x24) true)))))\n(check-sat)\n",
+                  "solver_strategy": "simplify/bit-blast/sat",
+                  "status": "proved-under-model"
+                },
+                "source_metrics": {
+                  "ast_nodes": 67,
+                  "ast_shape_sha256": "7af900cb33d4a11f7e62f9870053b0fdcfb485d0106ca26668f5cfb48df3b84c",
+                  "branches": 0,
+                  "cfg_adjacency_sha256": "0776758444a55607502560b1a00bdb50388c5d7526a7605c1c35b517d91a8d2b",
+                  "cfg_blocks": 3,
+                  "cfg_edges": 2,
+                  "cyclomatic": 1,
+                  "expressions": 59,
+                  "loops": 0,
+                  "operators": {
+                    "*": 4,
+                    "+": 5,
+                    "-": 3
+                  }
+                },
+                "status": "checked",
+                "verification": "proved-under-model"
+              }
+            ],
+            "model": "pure-u32-c11-v2; identical target, headers and compilation environment required",
+            "objective": "balanced",
+            "output_written": false,
+            "schema_version": 2,
+            "seed": "0",
+            "solver": "4.8.12.0",
+            "source_sha256": "8f21badc98f137c0770a53f1f34e19396db4be7a443a3dfa5d3c442bdf77f9ee",
+            "strategy": "affine",
+            "target": "aarch64-unknown-linux-gnu",
+            "timeout_ms": 10000
+          }
+        }
+      },
+      "code_section_bytes_identical": true,
+      "observation": "no-code-section-byte-difference",
+      "text_size_ratio": 1.0,
+      "instruction_histograms_identical": true,
+      "reverse_engineering_effort": "not-assessed",
+      "memory_exposure": "not-assessed"
+    }
+  ],
+  "claims": {
+    "source_equivalence": "proved-under-model",
+    "machine_code_equivalence": "not-proved",
+    "reverse_engineering_effort": "not-assessed",
+    "memory_exposure": "not-assessed",
+    "confidentiality": "not-established"
+  },
+  "scope": "One admitted pure function per file; native compilers with matching flags. Compares whole .text/__text object-section bytes, including padding. Relocations are not applied; other sections, linking and LTO are not compared. Byte differences and instruction histograms do not establish resistance to analysis. The compiled objects are not executed; no machine-code equivalence proof or memory/debugger observation is performed.",
+  "inputs": {
+    "original": {
+      "path": "/work/benchmarks/arithmetic/calculate.c",
+      "sha256": "5291f929d99a94c0fe1cae0960ef09988ac62a45e9adeef149667844b4f96bf9"
+    },
+    "candidate": {
+      "path": "/work/reports/calculate-v05-seed42.c",
+      "sha256": "8f21badc98f137c0770a53f1f34e19396db4be7a443a3dfa5d3c442bdf77f9ee"
+    }
+  },
+  "source_bytes_differ": true,
+  "tools": {
+    "csrd": {
+      "path": "/work/build-linux-release/csrd",
+      "version": "C-SRD 0.5.0",
+      "sha256": "bec77b7fb443aa7b811e2a48d3031c135da5b12bc93610be4fc4a3b6e212ca53"
+    },
+    "objdump": {
+      "path": "/usr/bin/llvm-objdump-18",
+      "version": "Ubuntu LLVM version 18.1.3",
+      "sha256": "32b78ffb3f9f14a19716cb7d3d6a5baa59ea98bc502fb183d3ff429df0f20a21"
+    }
+  },
+  "function": "calculate",
+  "parameter_count": 2,
+  "analysis_target": "aarch64-unknown-linux-gnu",
+  "header_snapshot": [
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/libc-header-start.h",
+      "sha256": "e86638082f9ce98c82e3022018fa5be175473445c824fe17bd32bf9668582368"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/long-double.h",
+      "sha256": "b1866ecbc3dcbaf4341e42c219ee128d90cd364a5a04ad1417d40e351842035c"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/stdint-intn.h",
+      "sha256": "94286e42e4970304da5cbef69de6695c84132ff8fbd4b6d72d29aeb7406dc5ff"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/stdint-least.h",
+      "sha256": "5bf66871bfc18ae6d22c91d03e392c1a4cc5969ca74c5fa31b7510703a496844"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/stdint-uintn.h",
+      "sha256": "aeee224a19434556ef4a9a4afad553736789274656ca12463122300b557ce78c"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/time64.h",
+      "sha256": "2be9170ce3621ea6062f10edef68bbc2db09bb454ec4397534263dd37b8f1f6a"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/timesize.h",
+      "sha256": "8436245f53a4b30b0dfab4d3ed207f27b5fd696deee9559d099e0d57ffdbcd44"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/types.h",
+      "sha256": "371847ed3adab1c19db392034f6a22407d321b1dc5f2440563f4b0b8b6c5386b"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/typesizes.h",
+      "sha256": "dcb8089b342f2f5f1ab9df0a9591ecea20f92f116204f68ae590b831905a3813"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/wchar.h",
+      "sha256": "893fa450527ce645f17922788097d5fe331e2a53012bab4e724d8a1f63e21aa2"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/bits/wordsize.h",
+      "sha256": "c67aaeab12f39b8685a884b1764c372379640bdc9f07d97ff78a6c74a2522503"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h",
+      "sha256": "4e0206e34726006283e65605b9c74fa55b99a2d3bb02dffaf0b324482167985b"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/gnu/stubs.h",
+      "sha256": "4fc54fd0190796cad1125563ea8dedc53811c81bce7d79e9396afc15994a35ab"
+    },
+    {
+      "path": "/usr/include/aarch64-linux-gnu/sys/cdefs.h",
+      "sha256": "173afb522c6877dda3be1c93742c2061cd6e748ce395d2b3ae833fb49bfbfc4f"
+    },
+    {
+      "path": "/usr/include/features-time64.h",
+      "sha256": "345acb98767d04277e413c4951fbb199b0500be23d43cddf17c6cd9fb319a8da"
+    },
+    {
+      "path": "/usr/include/features.h",
+      "sha256": "940d486d050fc87420d8ffc008e17f31ffb04467534ad1b039ed25abc52382f9"
+    },
+    {
+      "path": "/usr/include/stdc-predef.h",
+      "sha256": "8db4f65e62cade8ae4d9b77960ee6aee093255acc1b637e3fb37d79179733b15"
+    },
+    {
+      "path": "/usr/include/stdint.h",
+      "sha256": "c26c51b07feadd45ca25e9c95e393b6783d580ab318a567c119828191a80bbed"
+    },
+    {
+      "path": "/usr/lib/llvm-18/lib/clang/18/include/stdint.h",
+      "sha256": "7ce5540d5fb6e8da9760928e76cbdd5ebef329d701ad598d30d8e6f9d5d78b34"
+    }
+  ],
+  "source_metrics": {
+    "original": {
+      "ast_nodes": 14,
+      "ast_shape_sha256": "03e40259f4f5833d9025b4e0a461cb50b45c91bc96c9ce5bff2b53558ead4cd7",
+      "branches": 0,
+      "cfg_adjacency_sha256": "0776758444a55607502560b1a00bdb50388c5d7526a7605c1c35b517d91a8d2b",
+      "cfg_blocks": 3,
+      "cfg_edges": 2,
+      "cyclomatic": 1,
+      "expressions": 11,
+      "loops": 0,
+      "operators": {
+        "*": 1,
+        "+": 2
+      }
+    },
+    "candidate": {
+      "ast_nodes": 67,
+      "ast_shape_sha256": "7af900cb33d4a11f7e62f9870053b0fdcfb485d0106ca26668f5cfb48df3b84c",
+      "branches": 0,
+      "cfg_adjacency_sha256": "0776758444a55607502560b1a00bdb50388c5d7526a7605c1c35b517d91a8d2b",
+      "cfg_blocks": 3,
+      "cfg_edges": 2,
+      "cyclomatic": 1,
+      "expressions": 59,
+      "loops": 0,
+      "operators": {
+        "*": 4,
+        "+": 5,
+        "-": 3
+      }
+    }
+  },
+  "verification": {
+    "action": "verify",
+    "candidate_dependencies": [
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/libc-header-start.h",
+        "sha256": "e86638082f9ce98c82e3022018fa5be175473445c824fe17bd32bf9668582368"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/long-double.h",
+        "sha256": "b1866ecbc3dcbaf4341e42c219ee128d90cd364a5a04ad1417d40e351842035c"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/stdint-intn.h",
+        "sha256": "94286e42e4970304da5cbef69de6695c84132ff8fbd4b6d72d29aeb7406dc5ff"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/stdint-least.h",
+        "sha256": "5bf66871bfc18ae6d22c91d03e392c1a4cc5969ca74c5fa31b7510703a496844"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/stdint-uintn.h",
+        "sha256": "aeee224a19434556ef4a9a4afad553736789274656ca12463122300b557ce78c"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/time64.h",
+        "sha256": "2be9170ce3621ea6062f10edef68bbc2db09bb454ec4397534263dd37b8f1f6a"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/timesize.h",
+        "sha256": "8436245f53a4b30b0dfab4d3ed207f27b5fd696deee9559d099e0d57ffdbcd44"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/types.h",
+        "sha256": "371847ed3adab1c19db392034f6a22407d321b1dc5f2440563f4b0b8b6c5386b"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/typesizes.h",
+        "sha256": "dcb8089b342f2f5f1ab9df0a9591ecea20f92f116204f68ae590b831905a3813"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/wchar.h",
+        "sha256": "893fa450527ce645f17922788097d5fe331e2a53012bab4e724d8a1f63e21aa2"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/wordsize.h",
+        "sha256": "c67aaeab12f39b8685a884b1764c372379640bdc9f07d97ff78a6c74a2522503"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h",
+        "sha256": "4e0206e34726006283e65605b9c74fa55b99a2d3bb02dffaf0b324482167985b"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/gnu/stubs.h",
+        "sha256": "4fc54fd0190796cad1125563ea8dedc53811c81bce7d79e9396afc15994a35ab"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/sys/cdefs.h",
+        "sha256": "173afb522c6877dda3be1c93742c2061cd6e748ce395d2b3ae833fb49bfbfc4f"
+      },
+      {
+        "path": "/usr/include/features-time64.h",
+        "sha256": "345acb98767d04277e413c4951fbb199b0500be23d43cddf17c6cd9fb319a8da"
+      },
+      {
+        "path": "/usr/include/features.h",
+        "sha256": "940d486d050fc87420d8ffc008e17f31ffb04467534ad1b039ed25abc52382f9"
+      },
+      {
+        "path": "/usr/include/stdc-predef.h",
+        "sha256": "8db4f65e62cade8ae4d9b77960ee6aee093255acc1b637e3fb37d79179733b15"
+      },
+      {
+        "path": "/usr/include/stdint.h",
+        "sha256": "c26c51b07feadd45ca25e9c95e393b6783d580ab318a567c119828191a80bbed"
+      },
+      {
+        "path": "/usr/lib/llvm-18/lib/clang/18/include/stdint.h",
+        "sha256": "7ce5540d5fb6e8da9760928e76cbdd5ebef329d701ad598d30d8e6f9d5d78b34"
+      }
+    ],
+    "candidate_sha256": "8f21badc98f137c0770a53f1f34e19396db4be7a443a3dfa5d3c442bdf77f9ee",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "coverage_percent": 50,
+    "csrd_version": "0.5.0",
+    "dependencies": [
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/libc-header-start.h",
+        "sha256": "e86638082f9ce98c82e3022018fa5be175473445c824fe17bd32bf9668582368"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/long-double.h",
+        "sha256": "b1866ecbc3dcbaf4341e42c219ee128d90cd364a5a04ad1417d40e351842035c"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/stdint-intn.h",
+        "sha256": "94286e42e4970304da5cbef69de6695c84132ff8fbd4b6d72d29aeb7406dc5ff"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/stdint-least.h",
+        "sha256": "5bf66871bfc18ae6d22c91d03e392c1a4cc5969ca74c5fa31b7510703a496844"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/stdint-uintn.h",
+        "sha256": "aeee224a19434556ef4a9a4afad553736789274656ca12463122300b557ce78c"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/time64.h",
+        "sha256": "2be9170ce3621ea6062f10edef68bbc2db09bb454ec4397534263dd37b8f1f6a"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/timesize.h",
+        "sha256": "8436245f53a4b30b0dfab4d3ed207f27b5fd696deee9559d099e0d57ffdbcd44"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/types.h",
+        "sha256": "371847ed3adab1c19db392034f6a22407d321b1dc5f2440563f4b0b8b6c5386b"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/typesizes.h",
+        "sha256": "dcb8089b342f2f5f1ab9df0a9591ecea20f92f116204f68ae590b831905a3813"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/wchar.h",
+        "sha256": "893fa450527ce645f17922788097d5fe331e2a53012bab4e724d8a1f63e21aa2"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/bits/wordsize.h",
+        "sha256": "c67aaeab12f39b8685a884b1764c372379640bdc9f07d97ff78a6c74a2522503"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h",
+        "sha256": "4e0206e34726006283e65605b9c74fa55b99a2d3bb02dffaf0b324482167985b"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/gnu/stubs.h",
+        "sha256": "4fc54fd0190796cad1125563ea8dedc53811c81bce7d79e9396afc15994a35ab"
+      },
+      {
+        "path": "/usr/include/aarch64-linux-gnu/sys/cdefs.h",
+        "sha256": "173afb522c6877dda3be1c93742c2061cd6e748ce395d2b3ae833fb49bfbfc4f"
+      },
+      {
+        "path": "/usr/include/features-time64.h",
+        "sha256": "345acb98767d04277e413c4951fbb199b0500be23d43cddf17c6cd9fb319a8da"
+      },
+      {
+        "path": "/usr/include/features.h",
+        "sha256": "940d486d050fc87420d8ffc008e17f31ffb04467534ad1b039ed25abc52382f9"
+      },
+      {
+        "path": "/usr/include/stdc-predef.h",
+        "sha256": "8db4f65e62cade8ae4d9b77960ee6aee093255acc1b637e3fb37d79179733b15"
+      },
+      {
+        "path": "/usr/include/stdint.h",
+        "sha256": "c26c51b07feadd45ca25e9c95e393b6783d580ab318a567c119828191a80bbed"
+      },
+      {
+        "path": "/usr/lib/llvm-18/lib/clang/18/include/stdint.h",
+        "sha256": "7ce5540d5fb6e8da9760928e76cbdd5ebef329d701ad598d30d8e6f9d5d78b34"
+      }
+    ],
+    "functions": [
+      {
+        "column": 10,
+        "function": "calculate",
+        "line": 3,
+        "parameter_count": 2,
+        "proof": {
+          "obligation_sha256": "5fc688909b40e6cb4d77e7005d6b152b53750314362603d31618441992c4689d",
+          "reason": "",
+          "smtlib": "; \n(set-info :status unknown)\n(declare-fun input_1 () (_ BitVec 32))\n(declare-fun input_0 () (_ BitVec 32))\n(assert\n (let ((?x18 (bvadd (bvadd (bvmul input_0 (_ bv1789947473 32)) (_ bv1549411197 32)) (bvadd (bvmul input_1 (_ bv1789947473 32)) (_ bv1549411197 32)))))\n (let ((?x26 (bvsub (bvsub (bvadd (bvadd (bvmul (bvsub ?x18 (_ bv1549411197 32)) (_ bv3 32)) (_ bv1196144902 32)) (_ bv4058964216 32)) (_ bv1549411197 32)) (_ bv1549411197 32))))\n (let ((?x28 (bvmul ?x26 (_ bv846699185 32))))\n (let ((?x11 (bvadd (bvmul (bvadd input_0 input_1) (_ bv3 32)) (_ bv11 32))))\n (and (distinct ?x11 ?x28) true))))))\n(check-sat)\n",
+          "solver_strategy": "simplify/bit-blast/sat",
+          "status": "proved-under-model"
+        },
+        "source_metrics": {
+          "ast_nodes": 14,
+          "ast_shape_sha256": "03e40259f4f5833d9025b4e0a461cb50b45c91bc96c9ce5bff2b53558ead4cd7",
+          "branches": 0,
+          "cfg_adjacency_sha256": "0776758444a55607502560b1a00bdb50388c5d7526a7605c1c35b517d91a8d2b",
+          "cfg_blocks": 3,
+          "cfg_edges": 2,
+          "cyclomatic": 1,
+          "expressions": 11,
+          "loops": 0,
+          "operators": {
+            "*": 1,
+            "+": 2
+          }
+        },
+        "status": "checked",
+        "verification": "proved-under-model"
+      }
+    ],
+    "model": "pure-u32-c11-v2; identical target, headers and compilation environment required",
+    "objective": "balanced",
+    "output_written": false,
+    "schema_version": 2,
+    "seed": "0",
+    "solver": "4.8.12.0",
+    "source_sha256": "5291f929d99a94c0fe1cae0960ef09988ac62a45e9adeef149667844b4f96bf9",
+    "strategy": "affine",
+    "target": "aarch64-unknown-linux-gnu",
+    "timeout_ms": 10000
+  },
+  "model_guard_sha256": "12d3e48f8196340ef5a8dd0ec935b27b71be5957d13f22d70ca044ebf83bb3e5",
+  "summary": {
+    "configurations": 4,
+    "identical_code_sections": 2,
+    "different_code_sections": 2
+  }
+}

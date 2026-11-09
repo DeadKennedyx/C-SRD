@@ -99,6 +99,21 @@ frontend flags are not implemented.
 
 ## Reproduce experiments
 
+For a paired compiled-code audit of any single admitted function, use:
+
+```sh
+python3 tools/audit_protection.py benchmarks/arithmetic/calculate.c build/calculate.c \
+  --csrd build/csrd --compiler clang --compiler gcc \
+  --objdump llvm-objdump --output-dir experiments/runs/calculate-audit
+```
+
+The audit verifies both sources, validates the compiler-specific preprocessed
+inputs and compares code sections at `-O0` and `-O2`. It retains raw artifacts
+and labels reconstruction effort and memory exposure as unmeasured. See
+[the protection contract](protection.md) for scope, exact options and platform
+tool names. The audit requires `llvm-objdump`; set `CSRD_OBJDUMP` to its path
+when test discovery cannot locate it. Existing evaluation commands follow.
+
 ```sh
 python3 tools/verify_rules.py --report build/rules.json
 python3 tools/synthesize_rules.py --output-dir experiments/runs/synthesis

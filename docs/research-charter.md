@@ -5,6 +5,19 @@ whether benign computations can take different internal forms while preserving
 an explicit observable-behavior contract. It separates correctness, diversity,
 cost and defensive recognizability as independent outcomes.
 
+The software-protection objective, clarified on 2026-11-09, is to automate
+diversification of legitimate software and investigate whether it increases
+the effort required to reconstruct its implementation. The current C-SRD
+repository remains the implementation target. Other projects are examples,
+not targets for modification. Correctness validation supports this objective;
+passing validation alone does not establish protection.
+
+Protection claims require a stated observer, assets, access and measurement.
+Encoded source intermediates are not evidence that ordinary values never appear
+in optimized registers or memory. A debugger controlling the process can inspect
+the executable and its conversion operations. Neither the seed nor affine
+parameters are secret keys. See the [protection contract](protection.md).
+
 The unit of study is a pure unsigned 32-bit function within an explicit bounded
 subset. Treatments include affine/XOR representations, graph planning and
 selected known algorithm replacements. The baseline is the original source

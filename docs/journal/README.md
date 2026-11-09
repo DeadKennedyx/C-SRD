@@ -2,6 +2,9 @@
 
 The journal records the reasoning and evidence behind specifications and changes.
 It complements executable tests and raw reports; it does not replace them.
+Record meaningful hypotheses, prototypes, decisions, failures and findings.
+Routine edits and mechanical fixes do not each need a journal entry; group them
+under the substantial experiment or change they support.
 
 Use a new dated entry for a research question, experiment or material deviation.
 State whether observations are contemporaneous, retrospective or proposed. Link
@@ -26,6 +29,7 @@ causal explanations and estimates.
 | Entry | Stage | Evidence scope |
 | --- | --- | --- |
 | [2026-11-09 — specification and personal publication](2026-11-09-specification-and-publication.md) | Retrospective analysis, specification and publication preparation | Existing source/reports plus a fresh correctness and command-smoke run; no new compiler functionality or performance study |
+| [2026-11-09 — software-protection scope and compiled-code audit](2026-11-09-protection-audit.md) | Scope clarification, prototype, negative controls and validation | New paired audit; distinguishes compiled differences from unmeasured reconstruction effort and memory exposure |
 
 Future work is tracked in [the backlog](../backlog.md). External issue numbers
 and review outcomes belong here only after those events actually occur.

@@ -7,8 +7,9 @@ Do not use it to store credentials or cryptographic secrets.
 A transformation that changes defined behavior is a correctness defect. Report
 a minimal benign input, seed, tool/Clang versions, target, command lines,
 original/generated outputs, and a failing input or counterexample. Please omit
-private source, credentials and unrelated data. No remote issue tracker or
-private disclosure address has been configured for this local repository.
+private source, credentials and unrelated data. Non-sensitive reports may use
+the [personal project's issue tracker](https://github.com/DeadKennedyx/C-SRD/issues).
+No private disclosure channel is configured by this repository.
 
 The project excludes malware-specific features, antivirus/EDR evasion,
 anti-debugging and stealth loaders. Defensive experiments use functional and

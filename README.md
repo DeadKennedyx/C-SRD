@@ -21,11 +21,19 @@ effectiveness. Failed experiments and inconclusive proofs remain evidence.
 verified compiler, cryptographic confidentiality and research novelty are not
 claimed. The current unit of transformation is an entire admitted pure function.
 
+**Software-protection objective:** automate diversification of legitimate
+software and measure the effort needed to reconstruct its implementation.
+Correctness, compiled-code differences, analysis effort and memory exposure are
+separate claims. The [protection contract](docs/protection.md) defines the scope
+and compiled-code audit. AV/security-detection evasion and anti-debugging remain
+excluded; encoded source values do not imply debugger-resistant confidentiality.
+
 | Start here | Purpose |
 | --- | --- |
 | [Build and usage](docs/getting-started.md) | Dependencies, all implemented CLI options and reproducible commands |
 | [Semantic contract](docs/semantics.md) | Exact accepted language and observations preserved |
 | [Validation record](reports/roadmap-validation.md) | Historical commands, results, raw data and limitations |
+| [Compiled-code audit](reports/protection-audit-validation.md) | Current paired audit, preprocessing controls and observed optimization effects |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |
@@ -405,6 +413,7 @@ affected assumption and the evidence needed to reconsider it.
 | AC-06 | Compile and compare admitted expansions under available GCC/Clang configurations | [expanded differential suite](tests/differential/expanded.py) |
 | AC-07 | Report false matches and separate empirical/formal evidence | [evaluation controls](tests/integration/test_evaluation.py), [evaluation protocol](docs/evaluation.md) |
 | AC-08 | Preserve reproducibility inputs and report resource limitations | [source snapshot](reports/roadmap-source-snapshot.json), [validation record](reports/roadmap-validation.md) |
+| AC-09 | Audit actual compiled differences without inferring analysis resistance | [audit tests](tests/integration/test_protection_audit.py), [audit evidence](reports/protection-audit-validation.md) |
 
 New implementation work uses the [contribution workflow](CONTRIBUTING.md),
 [experiment issue template](.github/ISSUE_TEMPLATE/research-experiment.yml) and

@@ -34,6 +34,7 @@ flowchart LR
 | Translation validation | `src/verification/translation.cpp` | Independent execution of original/reparsed region trees into bit vectors, solver portfolio, concrete counterexamples |
 | Source metrics | `src/frontend/metrics.cpp` | Clang AST traversal and reachable CFG, independent of graph planner |
 | Defensive evaluation | `tools/evaluate.py` | Output-only classifier, curated controls, separate compiler/structure/timing measurements |
+| Compiled-code audit | `tools/audit_protection.py` | Pairwise source and build-specific validation, frozen preprocessed compilation, code-section comparison and explicit unmeasured protection claims |
 | Bounded rule synthesis | `tools/synthesize_rules.py` | Enumerate a finite algebraic template, prune by samples, require universal SMT validation |
 
 The analyzer resolves reads through Clang `ValueDecl` identities before using

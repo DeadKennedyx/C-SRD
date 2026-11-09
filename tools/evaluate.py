@@ -100,8 +100,8 @@ def histogram_distance(a, b):
     return sum(abs(a.get(k, 0)-b.get(k, 0)) for k in keys)/denominator if denominator else 0.0
 
 
-def object_metrics(objdump, path):
-    headers, _ = command([objdump, "--section-headers", path])
+def object_metrics(objdump, path, run_command=command):
+    headers, _ = run_command([objdump, "--section-headers", path])
     sections = []
     for line in headers.splitlines():
         fields = line.split()
@@ -110,7 +110,7 @@ def object_metrics(objdump, path):
     if len(sections) != 1:
         raise RuntimeError(f"expected one code section in {path}: {sections}")
     section, size = sections[0]
-    contents, _ = command([objdump, "--full-contents", "--section=" + section, path])
+    contents, _ = run_command([objdump, "--full-contents", "--section=" + section, path])
     raw = bytearray()
     for line in contents.splitlines():
         match = re.match(r"\s*[0-9a-fA-F]+\s+((?:[0-9a-fA-F]{2,8}(?:\s|$)){1,4})", line)
@@ -118,7 +118,7 @@ def object_metrics(objdump, path):
             raw.extend(bytes.fromhex(match[1]))
     if len(raw) != size:
         raise RuntimeError(f"text extraction mismatch: {len(raw)} != {size}")
-    assembly, _ = command([objdump, "--disassemble", "--no-show-raw-insn", path])
+    assembly, _ = run_command([objdump, "--disassemble", "--no-show-raw-insn", path])
     opcodes = Counter()
     for line in assembly.splitlines():
         match = re.match(r"\s*[0-9a-fA-F]+:\s+([a-zA-Z][a-zA-Z0-9.]*)", line)
