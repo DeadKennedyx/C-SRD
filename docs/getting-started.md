@@ -43,6 +43,8 @@ build/csrd transform tests/fixtures/expanded.c -o build/planned.c \
 build/csrd verify tests/fixtures/expanded.c build/planned.c --report build/proof.json
 build/csrd analyze build/planned.c --function mixed_regions
 clang -std=c11 -pedantic-errors -Wall -Wextra -c build/calculate.c -o build/calculate.o
+build/csrd transform benchmarks/arithmetic/buffer_update.c -o build/buffer-update.c \
+  --seed 42 --report build/buffer-update.json
 ```
 
 For `return 3u*(x+y)+11u`, affine mode encodes parameters, performs the three
@@ -87,10 +89,33 @@ shifts 0–31, unsigned comparisons and ternary selections. Assignment-only
 `if/else`, canonical loops with literal trip counts 0–32, and local literal
 lookup arrays of 1–16 elements with statically bounded indexes are supported.
 
-Pointers, calls, external effects, signed/wider arithmetic, general multiplication,
+The separate [buffer contract](buffer-contract.md) admits `uint32_t*` and
+`const uint32_t*` parameters, loads/stores at literal indexes 0–15 (or `*p`),
+straight-line scalar add/subtract/literal scale and a final return. Identity and
+affine strategies work on this path. Each pointer's minimum initialized valid
+prefix is reported; aliases are allowed and caller memory remains ordinary.
+These are caller preconditions, not inserted bounds checks. Return and whole
+memory equivalence are checked against actual emitted C.
+
+General pointers, calls, other external effects, signed/wider arithmetic, general multiplication,
 volatile/atomics, arbitrary loops, macros/directives within transformed functions,
 and most C constructs remain unsupported. A rejected function stays unchanged
 with a located diagnostic. See the exact [whitelist](semantics.md).
+
+For supplemental independent C-level checks, install CBMC (`brew install cbmc`
+on the validated macOS setup) and select a concrete object/layout:
+
+```sh
+python3 tools/verify_buffers_cbmc.py benchmarks/arithmetic/buffer_update.c build/buffer-update.c \
+  --csrd build/csrd --function buffer_update --offsets 0,0 --words 4 \
+  --solver z3 --timeout 30 --output-dir build/buffer-cbmc
+```
+
+The adapter supports `--solver sat|z3`, `--cbmc PATH`, explicit pointer offsets,
+object size and wall timeout. Z3 mode needs its executable on PATH. Output
+directories must be new. A successful `bounded-checked` report covers all word
+values for that finite layout; it does not replace the transformer's all-alias
+model check. Missing CBMC is reported as unavailable and its optional tests skip.
 
 The host target and 32-bit integer model are part of the contract. Use compatible
 headers and include paths when compiling output. Bodies preserve physical line
@@ -118,6 +143,24 @@ and labels reconstruction effort and memory exposure as unmeasured. See
 [the protection contract](protection.md) for scope, exact options and platform
 tool names. The audit requires `llvm-objdump`; set `CSRD_OBJDUMP` to its path
 when test discovery cannot locate it. Existing evaluation commands follow.
+
+The static compiled-code audit also accepts the fixed-index buffer model.
+Scalar-only fingerprint/reconstruction runners explicitly reject buffer
+interfaces. A dedicated correctness matrix and fixed-workload cost pilot run as:
+
+```sh
+python3 tests/differential/buffers.py --csrd build/csrd \
+  --report build/buffer-differential.json --output-dir build/buffer-evidence
+python3 tools/measure_buffer_costs.py --csrd build/csrd \
+  --compiler clang --compiler gcc-16 --iterations 10000000 --repetitions 7 \
+  --output-dir build/buffer-costs
+```
+
+Use GNU `gcc` on Linux. Run cost measurement after builds/tests, without competing
+jobs. The cost pilot is specifically for the repository's `buffer_update`
+interface and retains raw paired wall/CPU/RSS samples, build times, sizes and
+identical-byte controls. Input generation and harness costs are included; RSS
+includes the loader. PGO and cross-target buffer executions remain matrix gaps.
 
 ```sh
 python3 tools/verify_rules.py --report build/rules.json

@@ -118,7 +118,7 @@ class ProtectionAudit(unittest.TestCase):
         ]):
             self.candidate.write_text(source)
             report = self.audit(name=f"rejected-{index}", expected=1)
-            self.assertIn("exactly one supported pure function", report["error"])
+            self.assertIn("exactly one supported function", report["error"])
             self.assertEqual(report["configurations"], [])
 
     def test_existing_evidence_is_never_overwritten(self):
@@ -128,6 +128,22 @@ class ProtectionAudit(unittest.TestCase):
         sentinel.write_text('{"sentinel":true}')
         self.audit(expected=2)
         self.assertEqual(sentinel.read_text(), '{"sentinel":true}')
+
+    def test_buffer_audit_and_memory_only_mutation(self):
+        self.original.write_bytes((ROOT / "benchmarks/arithmetic/buffer_update.c").read_bytes())
+        subprocess.run([TOOL, "transform", str(self.original), "-o", str(self.candidate), "--seed", "42"],
+                       capture_output=True, check=True)
+        report = self.audit(name="memory", extra=["--optimization", "O2"])
+        self.assertEqual(report["status"], "completed")
+        self.assertEqual(report["verification"]["functions"][0]["semantic_model"], "buffers-u32-c11-v1")
+        source = "#include <stdint.h>\nuint32_t f(uint32_t*p,uint32_t x){p[0]=x+1u;return 7u;}\n"
+        self.original.write_text(source)
+        self.candidate.write_text(source.replace("x+1u", "x+2u"))
+        report = self.audit(name="memory-negative", expected=1)
+        self.assertEqual(report["claims"]["source_equivalence"], "counterexample")
+        proof = report["verification"]["functions"][0]["proof"]
+        self.assertEqual(proof["original_output"], proof["candidate_output"])
+        self.assertTrue(any(c["original"] != c["candidate"] for c in proof["memory_cells"]))
 
     def test_compile_failure_is_not_a_successful_audit(self):
         # A common unused parameter is accepted by the source model but rejected by

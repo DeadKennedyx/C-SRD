@@ -19,6 +19,8 @@ class Analyzer {
   std::unordered_set<std::string> names;
   std::unordered_map<const clang::ValueDecl *, std::vector<uint32_t>> arrays;
   std::unordered_map<std::string, uint32_t> loopBounds;
+  std::unordered_set<const clang::ValueDecl *> pointers;
+  unsigned memoryExpressions = 0;
 
   bool fail(clang::SourceLocation loc, const std::string &why) {
     if (result.reason.empty()) { result.reason = why; result.location = loc; }
@@ -30,6 +32,36 @@ class Analyzer {
   bool boolean(const clang::Expr *e) const {
     const auto *b = llvm::dyn_cast<clang::BinaryOperator>(e->IgnoreParens());
     return b && b->isComparisonOp();
+  }
+  std::unique_ptr<Expr> access(const clang::Expr *e, bool write = false) {
+    e = e->IgnoreParens();
+    const clang::Expr *base = nullptr;
+    uint32_t index = 0;
+    if (const auto *subscript = llvm::dyn_cast<clang::ArraySubscriptExpr>(e)) {
+      base = subscript->getBase();
+      const auto *literal = llvm::dyn_cast<clang::IntegerLiteral>(subscript->getIdx()->IgnoreParens());
+      if (!literal || (!u32(literal->getType()) && !ctx.hasSameType(literal->getType(), ctx.IntTy)) ||
+          literal->getValue().getLimitedValue(16) >= 16) {
+        fail(e->getExprLoc(), "buffer index must be an integer literal in 0..15"); return nullptr;
+      }
+      index = uint32_t(literal->getValue().getZExtValue());
+    } else if (const auto *unary = llvm::dyn_cast<clang::UnaryOperator>(e)) {
+      if (unary->getOpcode() == clang::UO_Deref) base = unary->getSubExpr();
+    }
+    const auto *ref = base ? llvm::dyn_cast<clang::DeclRefExpr>(base->IgnoreParenImpCasts()) : nullptr;
+    if (!ref || !pointers.count(ref->getDecl())) {
+      fail(e->getExprLoc(), "memory access requires a direct buffer parameter with a fixed index"); return nullptr;
+    }
+    const auto name = ref->getDecl()->getNameAsString();
+    auto &buffer = region.buffers.at(name);
+    if (write && buffer.readOnly) {
+      fail(e->getExprLoc(), "cannot store through a const buffer parameter"); return nullptr;
+    }
+    buffer.minimumElements = std::max(buffer.minimumElements, unsigned(index + 1));
+    if (write) ++buffer.stores; else ++buffer.loads;
+    auto out = std::make_unique<Expr>(Expr::Kind::Load);
+    out->name = name; out->value = index;
+    return out;
   }
   uint32_t upperBound(const Expr &e) const {
     if (e.kind == Expr::Kind::Constant) return e.value;
@@ -49,6 +81,9 @@ class Analyzer {
     return UINT32_MAX;
   }
   std::unique_ptr<Expr> expression(const clang::Expr *e) {
+    if (!region.buffers.empty() && ++memoryExpressions > 4096) {
+      fail(e->getExprLoc(), "buffer region exceeds 4096 expression visits"); return nullptr;
+    }
     if (e->getBeginLoc().isMacroID() || e->getEndLoc().isMacroID()) {
       fail(e->getExprLoc(), "macro expansions are not transformed"); return nullptr;
     }
@@ -62,10 +97,15 @@ class Analyzer {
       if (c->getCastKind() == clang::CK_LValueToRValue && u32(c->getType()) &&
           llvm::isa<clang::ArraySubscriptExpr>(c->getSubExpr()->IgnoreParens()) &&
           u32(c->getSubExpr()->getType().getUnqualifiedType()) && !c->getSubExpr()->getType().isVolatileQualified()) allowed = true;
+      if (!region.buffers.empty() && c->getCastKind() == clang::CK_LValueToRValue && u32(c->getType()) &&
+          u32(c->getSubExpr()->getType().getUnqualifiedType()) &&
+          !c->getSubExpr()->getType().isVolatileQualified() &&
+          llvm::isa<clang::UnaryOperator>(c->getSubExpr()->IgnoreParens())) allowed = true;
       if (!allowed) { fail(e->getExprLoc(), "unsupported integer conversion or promotion"); return nullptr; }
       return expression(c->getSubExpr());
     }
     if (auto *table = llvm::dyn_cast<clang::ArraySubscriptExpr>(e)) {
+      if (!region.buffers.empty()) return access(table);
       const auto *reference = llvm::dyn_cast<clang::DeclRefExpr>(table->getBase()->IgnoreParenImpCasts());
       if (!reference || !arrays.count(reference->getDecl())) {
         fail(e->getExprLoc(), "only nonescaping initialized local lookup arrays can be indexed"); return nullptr;
@@ -80,6 +120,10 @@ class Analyzer {
       out->table = values; out->left = std::move(index); ++region.operations; return out;
     }
     if (auto *unary = llvm::dyn_cast<clang::UnaryOperator>(e)) {
+      if (!region.buffers.empty()) {
+        if (unary->getOpcode() == clang::UO_Deref) return access(unary);
+        fail(e->getExprLoc(), "buffer regions support only dereference as a unary expression"); return nullptr;
+      }
       if (unary->getOpcode() != clang::UO_Not || !u32(unary->getType())) {
         fail(e->getExprLoc(), "only unsigned bitwise complement is supported as a unary expression"); return nullptr;
       }
@@ -89,6 +133,7 @@ class Analyzer {
       ++region.operations; return out;
     }
     if (auto *conditional = llvm::dyn_cast<clang::ConditionalOperator>(e)) {
+      if (!region.buffers.empty()) { fail(e->getExprLoc(), "buffer regions require straight-line arithmetic without selections"); return nullptr; }
       if (!u32(e->getType())) { fail(e->getExprLoc(), "conditional values must have unsigned 32-bit type"); return nullptr; }
       auto out = std::make_unique<Expr>(Expr::Kind::Select);
       out->left = expression(conditional->getCond());
@@ -114,6 +159,10 @@ class Analyzer {
       return out;
     }
     if (auto *b = llvm::dyn_cast<clang::BinaryOperator>(e)) {
+      if (!region.buffers.empty() && b->getOpcode() != clang::BO_Add &&
+          b->getOpcode() != clang::BO_Sub && b->getOpcode() != clang::BO_Mul) {
+        fail(e->getExprLoc(), "buffer regions support only addition, subtraction and literal multiplication"); return nullptr;
+      }
       if ((!b->isComparisonOp() && !u32(b->getType())) ||
           (b->isComparisonOp() && (!u32(b->getLHS()->getType()) || !u32(b->getRHS()->getType())))) {
         fail(e->getExprLoc(), "operations require unsigned 32-bit operands and semantics"); return nullptr;
@@ -171,12 +220,15 @@ class Analyzer {
   }
   bool statement(const clang::Stmt *s, bool final, std::vector<Statement> &output, bool nested = false) {
     if (const auto *discard = llvm::dyn_cast<clang::CStyleCastExpr>(s)) {
+      const auto *ref = llvm::dyn_cast<clang::DeclRefExpr>(discard->getSubExpr()->IgnoreParenImpCasts());
+      if (discard->getCastKind() == clang::CK_ToVoid && ref && pointers.count(ref->getDecl())) return true;
       if (discard->getCastKind() == clang::CK_ToVoid &&
           llvm::isa<clang::DeclRefExpr>(discard->getSubExpr()->IgnoreParenImpCasts()) &&
           expression(discard->getSubExpr())) return true;
       return fail(s->getBeginLoc(), "only a discarded pure uint32_t reference is accepted as a void cast statement");
     }
     if (auto *branch = llvm::dyn_cast<clang::IfStmt>(s)) {
+      if (!region.buffers.empty()) return fail(s->getBeginLoc(), "buffer regions currently require straight-line statements");
       auto condition = expression(branch->getCond());
       if (!condition) return false;
       const auto before = loopBounds;
@@ -188,6 +240,7 @@ class Analyzer {
       output.push_back(std::move(out)); return true;
     }
     if (auto *loop = llvm::dyn_cast<clang::ForStmt>(s)) {
+      if (!region.buffers.empty()) return fail(s->getBeginLoc(), "buffer regions currently require straight-line statements");
       const auto *decl = llvm::dyn_cast_or_null<clang::DeclStmt>(loop->getInit());
       const auto *index = decl && decl->isSingleDecl() ? llvm::dyn_cast<clang::VarDecl>(decl->getSingleDecl()) : nullptr;
       if (!index || !u32(index->getType()) || !index->hasInit() || index->hasAttrs() || index->getStorageClass() != clang::SC_None)
@@ -227,6 +280,7 @@ class Analyzer {
       if (!d->isSingleDecl()) return fail(s->getBeginLoc(), "use a single initialized variable per declaration");
       auto *v = llvm::dyn_cast<clang::VarDecl>(d->getSingleDecl());
       if (v && ctx.getAsConstantArrayType(v->getType())) {
+        if (!region.buffers.empty()) return fail(s->getBeginLoc(), "local arrays are not supported inside buffer regions");
         const auto *type = ctx.getAsConstantArrayType(v->getType());
         const auto count = type->getSize().getLimitedValue(17);
         const auto *init = llvm::dyn_cast_or_null<clang::InitListExpr>(v->getInit());
@@ -261,6 +315,13 @@ class Analyzer {
     }
     if (auto *a = llvm::dyn_cast<clang::BinaryOperator>(s)) {
       if (a->getOpcode() != clang::BO_Assign) return fail(a->getExprLoc(), "only simple assignment statements are supported");
+      if (!region.buffers.empty() && !llvm::isa<clang::DeclRefExpr>(a->getLHS()->IgnoreParens())) {
+        auto location = access(a->getLHS(), true);
+        auto value = expression(a->getRHS());
+        if (!location || !value) return false;
+        Statement store(Statement::Kind::Store, location->name, std::move(value));
+        store.index = location->value; output.push_back(std::move(store)); return true;
+      }
       auto *ref = llvm::dyn_cast<clang::DeclRefExpr>(a->getLHS()->IgnoreParens());
       if (!ref || !u32(ref->getType()) || !initialized.count(ref->getDecl()))
         return fail(a->getExprLoc(), "assignment must target an initialized local uint32_t object or parameter");
@@ -293,6 +354,19 @@ public:
       if (decl->hasAttrs()) { fail(f.getLocation(), "function attributes are unsupported"); return std::move(result); }
     }
     for (const auto *p : f.parameters()) {
+      if (p->getType()->isPointerType()) {
+        const auto element = p->getType()->getPointeeType();
+        if (p->getType().hasQualifiers() || !u32(element.getUnqualifiedType()) ||
+            (element.hasQualifiers() && element.getQualifiers() != clang::Qualifiers::fromCVRMask(clang::Qualifiers::Const)) ||
+            p->getOriginalType()->isArrayType() || p->hasAttrs() || p->getName().empty() || p->getStorageClass() != clang::SC_None) {
+          fail(p->getLocation(), "buffer parameters require unqualified pointers to uint32_t or const uint32_t; array declarators are unsupported");
+          return std::move(result);
+        }
+        const auto name = p->getNameAsString();
+        pointers.insert(p); names.insert(name); region.parameters.push_back(name);
+        Region::Buffer buffer; buffer.readOnly = element.isConstQualified();
+        region.buffers.emplace(name, buffer); continue;
+      }
       if (!u32(p->getType()) || p->hasAttrs() || p->getName().empty() || p->getStorageClass() != clang::SC_None) {
         fail(p->getLocation(), "parameters must be named, unqualified uint32_t objects without attributes"); return std::move(result);
       }

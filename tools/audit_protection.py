@@ -74,10 +74,12 @@ class Runner:
         return result.stdout
 
 
-def require_one_function(analysis):
+def require_one_function(analysis, *, allow_memory=False):
     functions = analysis.get("functions", [])
     if len(functions) != 1 or functions[0].get("status") != "supported":
-        raise AuditError("each input must contain exactly one supported pure function")
+        raise AuditError("each input must contain exactly one supported function")
+    if not allow_memory and functions[0].get("semantic_model", "pure-u32-c11-v2") != "pure-u32-c11-v2":
+        raise AuditError("this observer requires pure scalar functions; buffer interfaces are unsupported")
     return functions[0]
 
 
@@ -160,11 +162,11 @@ def run(args, root):
             path = root / f"{label}-analysis.json"
             command([csrd, "analyze", source, "--report", path])
             analysis = json.loads(path.read_text())
-            require_one_function(analysis)
+            require_one_function(analysis, allow_memory=True)
             if analysis["source_sha256"] != snapshot[str(source)]:
                 raise AuditError("analyzed source does not match the input snapshot")
             analyses.append(analysis)
-        left, right = (require_one_function(a) for a in analyses)
+        left, right = (require_one_function(a, allow_memory=True) for a in analyses)
         if (left["function"], left["parameter_count"]) != (right["function"], right["parameter_count"]):
             raise AuditError("original and candidate must have the same function name and arity")
         if analyses[0]["target"] != analyses[1]["target"] or analyses[0]["dependencies"] != analyses[1]["dependencies"]:
@@ -233,7 +235,7 @@ def run(args, root):
                     preprocessed_analysis = directory / f"{label}-preprocessed-analysis.json"
                     command([csrd, "analyze", preprocessed, "--report", preprocessed_analysis])
                     frozen_analysis = json.loads(preprocessed_analysis.read_text())
-                    frozen_function = require_one_function(frozen_analysis)
+                    frozen_function = require_one_function(frozen_analysis, allow_memory=True)
                     if frozen_analysis["source_sha256"] != preprocessed_hash:
                         raise AuditError("preprocessed analysis changed the frozen input")
                     if (frozen_function["function"], frozen_function["parameter_count"]) != (left["function"], left["parameter_count"]):

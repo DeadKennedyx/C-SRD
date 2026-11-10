@@ -112,7 +112,7 @@ class CLI(unittest.TestCase):
 
     def test_function_contracts(self):
         signatures = ["int f(int x)", "uint32_t f(const uint32_t x)",
-                      "uint32_t f(uint32_t *x)", "uint32_t f(uint32_t x,...)",
+                      "uint32_t f(uint32_t **x)", "uint32_t f(uint32_t x,...)",
                       "uint32_t __attribute__((noinline)) f(uint32_t x)"]
         for signature in signatures:
             with self.subTest(signature=signature):

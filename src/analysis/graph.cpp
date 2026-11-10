@@ -44,6 +44,7 @@ class Lowerer {
   }
 public:
   Graph run(const Region &r) {
+    if (!r.buffers.empty()) throw std::invalid_argument("memory effects cannot be lowered through the pure graph");
     Environment env;
     for (const auto &name : r.parameters) { Node n; n.kind = Expr::Kind::Reference; n.parameter = name; env[name] = add(std::move(n)); }
     statements(r.statements, env);
@@ -66,7 +67,7 @@ bool isArithmetic(Expr::Kind k) { return k == Expr::Kind::Add || k == Expr::Kind
 bool isBitwise(Expr::Kind k) { return k >= Expr::Kind::BitAnd && k <= Expr::Kind::ShiftRight; }
 bool isComparison(Expr::Kind k) { return k >= Expr::Kind::Equal && k <= Expr::Kind::GreaterEqual; }
 const char *operationName(Expr::Kind k) {
-  static const char *names[] = {"constant", "parameter", "add", "subtract", "scale", "and", "or", "xor", "not", "shl", "lshr", "eq", "ne", "ult", "ule", "ugt", "uge", "select", "table"};
+  static const char *names[] = {"constant", "parameter", "add", "subtract", "scale", "and", "or", "xor", "not", "shl", "lshr", "eq", "ne", "ult", "ule", "ugt", "uge", "select", "table", "load"};
   return names[unsigned(k)];
 }
 }

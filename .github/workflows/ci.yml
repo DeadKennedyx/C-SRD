@@ -45,6 +45,7 @@ jobs:
             build/positional-rule-contracts.json
             build/differential.json
             build/expanded-differential.json
+            build/buffer-differential.json
             build/protection-audit/
       - name: Core linked validation matrix
         if: matrix.build_type == 'Release'

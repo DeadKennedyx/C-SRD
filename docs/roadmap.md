@@ -18,8 +18,13 @@ count; graph representation planning; bounded coefficient-template synthesis
 with universal validation. Each has a narrow documented domain. The synthesis
 experiment rediscovers known laws and does not implement equality saturation.
 
-Strings, character buffers, escaping arrays, mutable/static object layouts,
-pointer aliasing and calls remain outside the model. Runtime string replacement
+The first C1 extension admits fixed-index uint32 buffer loads/stores, arbitrary
+aliases and ordinary caller-visible memory. Its separate [contract](buffer-contract.md)
+and [evidence](../reports/buffers-validation.md) do not expand the pure-function
+reconstruction observer interface.
+
+Strings, character buffers, escaping arrays, general object layouts,
+pointer arithmetic and calls remain outside the model. Runtime string replacement
 must not be added without handling length/encoding, embedded NULs, sizeof,
 storage duration, pointer lifetime and API requirements. Encoding is not secret
 storage. General loops require state/effect and progress-preservation contracts;
@@ -33,9 +38,9 @@ transformations, then known calls/I/O boundaries, selected allocation patterns,
 input-dependent loops and recursion, signed operations, exact floating point
 and concurrency. Each increment has its own contract and includes validation,
 compiled-code audits and applicable reconstruction measurements. These are
-proposed extensions; the implemented v0.5 scope above has not expanded.
+proposed extensions beyond the first fixed-index C1 slice.
 
-The first deliverable combines MEM-01/02, COV-06 and the VER-01 investigation:
+The implemented first slice combines MEM-01/02, COV-06 and bounded VER-01 checks:
 ordinary caller-visible memory around encoded computation, memory/effect-aware
 region analysis, and validation of both return and observable memory. See the
 [backlog](backlog.md) for acceptance criteria and dependencies.
@@ -70,6 +75,6 @@ inconclusive despite passing finite execution checks. The
 reconstruction-grading timeouts. A separate [checked-circuit replay](../reports/circuit-grading.md)
 resolved all ten saved limb answers: they were correctly reconstructed under the
 source model. This closes that grading gap without demonstrating a protection benefit.
-Independent C-level validation with unwinding assertions and planner cost calibration remain
-open backend tasks. No solver timeout, small benchmark result,
+Independent C-level validation covers declared buffer layouts; broader contracts
+and planner cost calibration remain open. No solver timeout, small benchmark result,
 source difference or recovered known rule answers RQ1–RQ9 by itself.

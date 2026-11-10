@@ -18,8 +18,11 @@ in optimized registers or memory. A debugger controlling the process can inspect
 the executable and its conversion operations. Neither the seed nor affine
 parameters are secret keys. See the [protection contract](protection.md).
 
-The unit of study is a pure unsigned 32-bit function within an explicit bounded
-subset. Treatments include affine/XOR representations, graph planning and
+The original unit of study is a pure unsigned 32-bit function within an explicit
+bounded subset. A separate [buffer contract](buffer-contract.md) now admits
+straight-line fixed-index uint32 memory operations, with return and whole-memory
+validation. Existing pure-function reconstruction studies do not establish
+results for this new interface. Treatments include affine/XOR representations, graph planning and
 selected known algorithm replacements. The baseline is the original source
 compiled under the same compiler, target, flags and environment. Identity graph
 lowering is an additional baseline. There is no claim of a new encoding scheme

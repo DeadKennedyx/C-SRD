@@ -10,16 +10,22 @@ inductive value/range invariant. Both terminate and have no external effects
 under the accepted contract. This is per-artifact translation validation, not a
 mechanized proof of the entire compiler.
 
+The separate [buffer path](buffer-contract.md) interprets ordered loads/stores
+over one shared symbolic array with unconstrained pointer bases, then compares
+both returns and whole final memory. Matching pointer types and no larger
+candidate access footprint are prerequisites. This covers aliases under the
+declared valid-object/initialization contract, not general C pointer semantics.
+
 | Status | Meaning |
 | --- | --- |
 | `proved-under-model` | Z3 returned unsat for the full input domain of the stated model, trusting parsing, analysis, symbolic execution and Z3 |
-| `counterexample` | Z3 returned sat; report includes concrete inputs and both modeled outputs |
+| `counterexample` | A mismatch was found; memory reports also include abstract pointer bases and initial/final cells, even when returns are equal |
 | `local-counterexample` | A compositional step failed; abstract operand values need not be reachable from function inputs, and no whole-function inequivalence is claimed |
 | `inconclusive` | Timeout, unknown or solver failure; C output is blocked |
 | `unsupported` | A required function/model is missing or outside the subset; no proof claim |
 | `not-verified` | No applicable query was discharged, including skipped functions |
 | `tested-pass` | Listed compiled executions agreed; finite empirical evidence |
-| Bounded-model checked | Reserved for an actual model-checker run with explicit bounds; no CBMC result is claimed |
+| `bounded-checked` | Supplemental CBMC run succeeded for its exact finite object/layout harness; not universal C coverage |
 
 `csrd verify original.c candidate.c` also checks independent candidate files.
 Arguments are paired by position, not spelling. It checks selected original
@@ -100,15 +106,21 @@ decision engine, not independent C modeling or machine-code validation. It is no
 called by `csrd transform`; its `sat` result does not yet reconstruct public C
 counterexample inputs.
 
-CBMC, Frama-C WP and Alive2 are reviewed but not integrated or run in this
-release. There are no placeholder success statuses for unavailable tools.
+An optional CBMC adapter now checks bounded buffer layouts. Frama-C WP and
+Alive2 remain unintegrated. Unavailable tools never produce success statuses.
 
-* [CBMC](https://diffblue.github.io/cbmc/cprover_documentation.html) can provide
-  independent C-level harness checks with nondeterministic inputs and explicit
-  loop-unwinding assertions. This is the next independent validation backend.
+* [CBMC](https://diffblue.github.io/cbmc/cprover_documentation.html) is invoked by
+  `tools/verify_buffers_cbmc.py`. It parses the original and emitted C itself,
+  compares returns and every cell of a finite shared object, and checks bounds,
+  pointer safety and unwinding assertions. Pointer offsets are explicitly
+  selected; each result covers only that layout with arbitrary initial words
+  and scalar inputs. Actual affine artifacts and negative controls were checked
+  with CBMC 6.11.0; see the [buffer evidence](../reports/buffers-validation.md).
+  This optional check is independent of C-SRD's C interpreter and does not
+  replace the mandatory all-alias symbolic-memory gate.
 * [Frama-C WP](https://frama-c.com/fc-plugins/wp.html) needs ACSL contracts and
   discharged memory/arithmetic obligations. It becomes especially relevant when
-  adding memory effects, which the current model excludes.
+  expanding beyond the current fixed-index memory contract.
 * [Alive2](https://users.cs.utah.edu/~regehr/alive2-pldi21.pdf) validates LLVM-level
   refinement under LLVM semantics and bounds. It cannot establish source-level
   preprocessing or Clang frontend correctness by itself.

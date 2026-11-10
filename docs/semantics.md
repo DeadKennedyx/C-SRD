@@ -1,5 +1,11 @@
 # Semantic contract: pure-u32-c11-v2
 
+This document defines the existing pure path. Functions with admitted pointer
+parameters use the separate [buffers-u32-c11-v1 contract](buffer-contract.md):
+fixed-index loads/stores, straight-line affine arithmetic and equality of return
+plus entire final memory. Each function's report identifies its semantic model.
+The restrictions below remain unchanged for the pure path.
+
 For each accepted function P with n arguments, D is `{0,...,2^32-1}^n`.
 The required relation is equality of returned values for every input in D,
 termination on both sides, and an empty external effect trace. Automatic local

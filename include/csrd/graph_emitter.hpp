@@ -13,6 +13,8 @@ struct Emission {
 Emission emitGraph(const Graph &graph, const Plan &plan, const PlanOptions &options,
                    const Affine &affine, uint32_t xorMask, unsigned originalNewlines,
                    const std::set<std::string> &reserved);
+Emission emitMemory(const Region &region, const Representation &representation,
+                    unsigned originalNewlines, const std::set<std::string> &reserved);
 Emission emitLimbs16(const Graph &graph, unsigned originalNewlines, const std::set<std::string> &reserved);
 Emission emitPositional(const Graph &graph, unsigned pieceBits, unsigned originalNewlines,
                         const std::set<std::string> &reserved);

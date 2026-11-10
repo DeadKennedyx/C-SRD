@@ -102,6 +102,17 @@ llvm::json::Object proof(const csrd::Verification &v) {
     result["inputs"] = std::move(inputs);
     result["original_output"] = v.originalOutput;
     result["candidate_output"] = v.candidateOutput;
+    if (!v.pointerBases.empty()) {
+      llvm::json::Object bases;
+      llvm::json::Array cells;
+      for (const auto &entry : v.pointerBases) bases[entry.first] = entry.second;
+      for (const auto &cell : v.memoryCells) cells.push_back(llvm::json::Object{
+        {"word_address", cell.address}, {"initial", cell.initial},
+        {"original", cell.original}, {"candidate", cell.candidate}});
+      result["pointer_word_bases"] = std::move(bases);
+      result["memory_cells"] = std::move(cells);
+      result["input_layout"] = "inputs contains scalar parameters only, in signature order; pointer bases are abstract word addresses";
+    }
   }
   return result;
 }
@@ -117,6 +128,19 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
     llvm::json::Object operators;
     for (const auto &entry : d.metrics.operators) operators[entry.first] = entry.second;
     f["parameter_count"] = d.parameterCount;
+    if (d.region) {
+      const auto &region = *d.region;
+      f["semantic_model"] = region.buffers.empty() ? "pure-u32-c11-v2" : "buffers-u32-c11-v1";
+      llvm::json::Array parameters;
+      for (const auto &name : region.parameters) {
+        const auto buffer = region.buffers.find(name);
+        if (buffer == region.buffers.end()) parameters.push_back(llvm::json::Object{{"name", name}, {"kind", "uint32"}});
+        else parameters.push_back(llvm::json::Object{{"name", name}, {"kind", "uint32-buffer"},
+          {"read_only", buffer->second.readOnly}, {"minimum_elements", buffer->second.minimumElements},
+          {"loads", buffer->second.loads}, {"stores", buffer->second.stores}});
+      }
+      f["parameters"] = std::move(parameters);
+    }
     f["source_metrics"] = llvm::json::Object{{"ast_nodes", d.metrics.astNodes}, {"expressions", d.metrics.expressions},
       {"branches", d.metrics.branches}, {"loops", d.metrics.loops}, {"cfg_blocks", d.metrics.cfgBlocks},
       {"cfg_edges", d.metrics.cfgEdges}, {"cyclomatic", d.metrics.cyclomatic}, {"ast_shape_sha256", d.metrics.astShape},
@@ -160,7 +184,7 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
     {"target", result.target}, {"source_sha256", result.inputHash}, {"candidate_sha256", result.outputHash},
     {"clang", clang::getClangFullVersion()}, {"solver", csrd::solverVersion()}, {"dependencies", std::move(dependencies)},
     {"candidate_dependencies", std::move(candidateDependencies)},
-    {"model", "pure-u32-c11-v2; identical target, headers and compilation environment required"}, {"functions", std::move(functions)}};
+    {"model", "per-function semantic_model; identical target, headers and compilation environment required"}, {"functions", std::move(functions)}};
   root["strategy"] = result.options.strategy;
   root["control_flow"] = result.options.controlFlow;
   root["objective"] = result.options.objective;

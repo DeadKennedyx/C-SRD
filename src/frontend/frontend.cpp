@@ -102,26 +102,38 @@ public:
         else {
           decision.region = std::make_shared<Region>(std::move(*analysis.region));
           try {
-          decision.graph = std::make_shared<Graph>(lower(*decision.region));
+          const bool memory = !decision.region->buffers.empty();
+          if (!memory) decision.graph = std::make_shared<Graph>(lower(*decision.region));
           if (!rewrite) {
             decision.status = "supported";
           } else {
           const auto &region = *decision.region;
+          if (memory && ((result.options.strategy != "affine" && result.options.strategy != "identity") ||
+                         result.options.algorithm != "none" || result.options.controlFlow != "none"))
+            throw std::invalid_argument("buffer regions support only affine/identity with no algorithm or control-flow candidate");
           if (result.options.algorithm != "none")
             decision.graph = std::make_shared<Graph>(algorithmCandidate(region, result.options.algorithm));
           const auto rep = Affine::fromSeed(seed, region.name);
           decision.xorMask = rep.a() ^ rep.b();
           if (!decision.xorMask) decision.xorMask = 1;
-          decision.plan = plan(*decision.graph, result.options);
+          if (memory) {
+            decision.plan.status = "ordered-memory";
+            decision.plan.reason = "fixed-index loads/stores; encoded scalars; no pure-graph pruning";
+          } else decision.plan = plan(*decision.graph, result.options);
           if (decision.plan.status == "inconclusive") throw std::runtime_error(decision.plan.reason);
           const auto range = clang::CharSourceRange::getTokenRange(f->getBody()->getSourceRange());
           const unsigned lines = sm.getSpellingLineNumber(f->getBody()->getEndLoc()) -
                                  sm.getSpellingLineNumber(f->getBody()->getBeginLoc());
-          decision.emission = emitGraph(*decision.graph, decision.plan, result.options, rep, decision.xorMask, lines, reserved);
+          if (memory) {
+            Identity identity;
+            const Representation &representation = result.options.strategy == "identity" ?
+              static_cast<const Representation &>(identity) : static_cast<const Representation &>(rep);
+            decision.emission = emitMemory(region, representation, lines, reserved);
+          } else decision.emission = emitGraph(*decision.graph, decision.plan, result.options, rep, decision.xorMask, lines, reserved);
           // Dead-region pruning can remove every read of a public parameter.
           // A discarded pure read preserves warning-clean interfaces
           // and remains within the same independently checked C subset.
-          for (const auto &parameter : region.parameters) {
+          if (!memory) for (const auto &parameter : region.parameters) {
             bool used = false;
             for (const auto &node : decision.graph->nodes)
               used |= node.kind == Expr::Kind::Reference && node.parameter == parameter;

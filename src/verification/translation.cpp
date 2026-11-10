@@ -8,6 +8,7 @@ z3::expr expression(z3::context &ctx, const Expr &e, const Environment &values) 
   switch (e.kind) {
   case Expr::Kind::Constant: return ctx.bv_val(e.value, 32);
   case Expr::Kind::Reference: return values.at(e.name);
+  case Expr::Kind::Load: throw std::invalid_argument("memory load reached pure verification");
   case Expr::Kind::Add: return expression(ctx, *e.left, values) + expression(ctx, *e.right, values);
   case Expr::Kind::Subtract: return expression(ctx, *e.left, values) - expression(ctx, *e.right, values);
   case Expr::Kind::Scale: return expression(ctx, *e.left, values) * ctx.bv_val(e.value, 32);

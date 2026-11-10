@@ -17,7 +17,7 @@ debugging or provide an isolated execution environment.
 
 | Claim | Required evidence | Current status |
 | --- | --- | --- |
-| Defined behavior preserved | Explicit semantic contract, emitted-C validation, compiled differential tests | Implemented for the bounded pure-u32 subset |
+| Defined behavior preserved | Explicit semantic contract, emitted-C validation, compiled differential tests | Implemented for the pure-u32 and separate fixed-index buffer subsets |
 | Source representation changed | Source hashes and AST-aware measurements | Implemented |
 | Compiled representation differs | Paired compiler/flags, raw objects, extracted code-section hashes and disassembly | Initial audit below; byte difference alone is insufficient |
 | Reconstruction requires more effort | Prespecified observer/tools/budget, correctness-scored reconstruction tasks, controls, held-out corpus | Initial fixed black-box observer implemented; no human-effort or general resistance claim |
@@ -32,7 +32,10 @@ does not establish what registers or memory contain after optimization.
 ## Initial compiled-code audit
 
 `tools/audit_protection.py` compares an original and a candidate file, each
-containing one admitted pure function with the same name and parameter count.
+containing one admitted pure or fixed-index buffer function with the same name
+and compatible parameter kinds. The verifier checks the applicable contract;
+buffer comparisons include final memory. Scalar-only reconstruction runners
+continue to reject buffer interfaces explicitly.
 There is no special function name or fixed arity. It uses Clang through C-SRD
 for analysis, reparses and verifies the candidate, then preprocesses both files
 with identical flags for every selected compiler and optimization setting.

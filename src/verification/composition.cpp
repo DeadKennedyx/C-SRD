@@ -21,6 +21,7 @@ unsigned arity(Expr::Kind kind) {
   using K = Expr::Kind;
   switch (kind) {
   case K::Constant: case K::Reference: return 0;
+  case K::Load: throw std::invalid_argument("memory load is not a pure graph operation");
   case K::Scale: case K::BitNot: case K::ShiftLeft: case K::ShiftRight: case K::Table: return 1;
   case K::Select: return 3;
   case K::Add: case K::Subtract: case K::BitAnd: case K::BitOr: case K::BitXor:
@@ -324,6 +325,7 @@ Verification verifyLimbsComposition(const Region &original, const Region &candid
 }
 
 Verification verify(const Region &original, const Region &candidate, unsigned timeoutMs) {
+  if (!original.buffers.empty() || !candidate.buffers.empty()) return verifyMemory(original, candidate, timeoutMs);
   const auto deadline = Clock::now() + std::chrono::milliseconds(timeoutMs);
   std::vector<Verification> attempts;
   try {

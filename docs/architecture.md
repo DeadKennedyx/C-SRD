@@ -8,9 +8,11 @@ the frontend executable links Clang/LLVM and Z3.
 ```mermaid
 flowchart LR
     A[C11 source] --> B[Clang AST and preprocessing events]
-    B --> C[Conservative pure-region analysis]
+    B --> C[Contract-specific region analysis]
     C --> D[Ordered region IR]
-    D --> E[Versioned value graph]
+    D -->|Pure| E[Versioned value graph]
+    D -->|Fixed-index buffers| M[Ordered memory emitter]
+    M --> H
     E --> F[Representation planner]
     F --> G[Graph emitter and source replacement]
     G --> H[Reparse actual emitted C]
@@ -25,12 +27,14 @@ flowchart LR
 | --- | --- | --- |
 | Frontend | `src/frontend/frontend.cpp` | Macro/pragma/raw-directive boundaries, header hashes, original source, collision-free name reservation, line-preserving replacement and reparse gate |
 | Semantic analysis | `src/analysis/analyzer.cpp` | Type/initialization/effect whitelist; local array bounds and finite loop checks; whole-function rejection |
-| Region IR | `include/csrd/ir.hpp` | Pure expression trees and ordered declare/assign/if/repeat/return statements |
+| Region IR | `include/csrd/ir.hpp` | Scalar expressions, fixed loads, buffer footprints and ordered statements; pure control and memory stores have separate contracts |
 | Graph lowering | `src/analysis/graph.cpp` | Assignment versions, data dependencies, conditional merges, exact loop unrolling, dead-node pruning |
 | Representations | `src/representation/` | Numeric and C rules for identity, affine and XOR; legality, conversions, explicit cost proxies |
 | Planning | `src/transforms/planner.cpp` | Coverage constraints, shared conversion costs, exact small-graph optimization and labeled heuristic fallback |
 | Algorithm candidates | `src/transforms/algorithms.cpp` | Explicit serial/SWAR low-byte population-count graphs; no name-based equivalence assumption |
 | Emission | `src/codegen/graph_emitter.cpp` | Materialize each operation once, cache conversions per producer/destination, encode constants, decode boundaries |
+| Memory emission | `src/codegen/memory_emitter.cpp` | Preserve ordered loads/stores and encode scalar computations between ordinary memory boundaries; no pure-graph pruning |
+| Memory validation | `src/verification/memory.cpp` | Shared symbolic memory with arbitrary aliases; compare return and entire final memory after reparsing actual C |
 | Translation validation | `src/verification/translation.cpp` | Independent execution of original/reparsed region trees into bit vectors, solver portfolio, concrete counterexamples |
 | Compositional validation | `src/verification/composition.cpp` | Independently validate source-to-graph lowering and every reparsed limb fragment under explicit value/range invariants; proposal hints are untrusted |
 | Source metrics | `src/frontend/metrics.cpp` | Clang AST traversal and reachable CFG, independent of graph planner |
@@ -39,10 +43,12 @@ flowchart LR
 | Bounded rule synthesis | `tools/synthesize_rules.py` | Enumerate a finite algebraic template, prune by samples, require universal SMT validation |
 
 The analyzer resolves reads through Clang `ValueDecl` identities before using
-names in IR. Unsupported pointers/calls/external state establish the initial
-alias/effect boundary; this is not a general alias analysis. Definitions and
-uses become explicit graph edges. Each assignment creates a new version, so
-conversions can be reused across all consumers of that version.
+names in IR. Pure definitions and uses become graph edges with assignment
+versions and shared conversions. The separate [buffer path](buffer-contract.md)
+tracks parameter kinds, constant access footprints and ordered stores; all
+pointer parameters may alias. It never caches a memory load across a store or
+passes effects through pure liveness analysis. Calls, escaping pointers and
+unmodeled effects remain excluded. This is not general C alias analysis.
 
 Pure, total branch computations can be eagerly materialized and selected at
 joins. This would be invalid for arbitrary effects or trapping operations, which
@@ -72,5 +78,5 @@ version and timeout outcome. Heuristic moves use deterministic iteration order.
 New operations require analysis, region interpretation, graph lowering,
 representation legality, C emission, rule tests and differential/rejection
 cases. New effects require a richer observable-state model before any rewrite
-can be admitted. The current single-function pure contract cannot simply be
-reused for pointers, strings, APIs or mutable memory.
+can be admitted. The first buffer model covers fixed-index uint32 memory; it
+does not establish contracts for strings, APIs, allocation or concurrency.

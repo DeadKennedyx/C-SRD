@@ -1,8 +1,9 @@
 # Broader C-SRD support informed by published designs
 
-Status: single development direction selected; milestones proposed and new
-language coverage not yet implemented. Recorded 2026-11-10. This is a milestone
-plan, not an experimental result or a replacement for the existing M0–M5 record.
+Status: single development sequence; first bounded C1 slice implemented under
+[buffers-u32-c11-v1](buffer-contract.md). Later stages remain proposed. Recorded
+2026-11-10; [buffer evidence](../reports/buffers-validation.md) records actual
+results. This plan does not replace the existing M0–M5 evidence record.
 
 ## Objective and scope
 
@@ -30,7 +31,8 @@ parsing a larger input file.
 | C6 — Floating-point operations | A separately specified exact floating-point model and supported transformations | Rounding, exceptional values, signed zero and relevant environment effects accounted for; no substitution of approximate arithmetic under an exact contract | COV-04 |
 | C7 — Concurrency | First explicit thread-local/shared distinction, then admitted shared-memory transformations | Atomicity, synchronization, memory ordering, reentrancy and observable-execution constraints, with concurrency-specific controls | COV-05 |
 
-C1 is the next implementation milestone. Each later stage starts from a bounded
+C1's first fixed-index, straight-line slice is implemented; dynamic indexes and
+general region selection remain outside it. Each later stage starts from a bounded
 contract and prototype; a row does not imply support for every use of that
 feature. C4's loop and recursion additions are separate increments, and C3/C5
 have independent acceptance evidence. No delivery dates, staffing commitments
@@ -57,12 +59,11 @@ ordinary memory boundaries around transformed computations. Every exclusion
 must remain visible. Unsupported calls are not admitted by this first memory
 increment merely because some arithmetic around them looks pure.
 
-Investigate an independent C-level verifier such as CBMC for the bounded memory
-contract, with explicit assumptions, unwinding assertions and negative controls.
-Preserve the current pure-function validation gate. A new memory path requires
-its own documented acceptance policy and evidence level before becoming a
-supported transform; passing finite tests does not become a universal proof.
-This investigation is part of C1's correctness work, not a separate product.
+The first implementation reparses emitted C and requires a shared-memory SMT
+post-state check. An optional CBMC adapter supplies independent C-level evidence
+for explicitly selected finite layouts, with bounds checks, unwinding assertions
+and negative controls. Further coverage requires its own acceptance policy;
+finite tests remain finite tests. This validation is part of C1.
 
 ## C2–C5: calls, lifetimes, control and integer semantics
 

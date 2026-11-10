@@ -18,8 +18,13 @@ struct Verification {
   std::shared_ptr<LimbEvidence> composition;
   std::vector<uint32_t> inputs;
   uint32_t originalOutput = 0, candidateOutput = 0;
+  // Memory counterexamples use mathematical word addresses, not host pointers.
+  std::vector<std::pair<std::string, std::string>> pointerBases;
+  struct MemoryCell { std::string address; uint32_t initial, original, candidate; };
+  std::vector<MemoryCell> memoryCells;
 };
 Verification verify(const Region &original, const Region &candidate, unsigned timeoutMs = 10000);
+Verification verifyMemory(const Region &original, const Region &candidate, unsigned timeoutMs);
 // Graph and witness are untrusted proposals; all actual C fragments and the
 // original-to-graph relationship must be checked before success is returned.
 Verification verifyLimbsComposition(const Region &original, const Region &candidate,

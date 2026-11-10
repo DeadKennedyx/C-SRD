@@ -103,3 +103,14 @@ and memory boundaries, but its float-to-fixed conversion is approximate and
 range-limited. It is not a solution for exact floating-point equivalence.
 These are design references; this update adds no external Tigress backend or
 comparison experiment and reports no new protection or novelty finding.
+
+## First buffer implementation (2026-11-10)
+
+The [bounded buffer implementation](buffer-contract.md) now keeps caller memory
+ordinary and scalar arithmetic encoded between loads/stores. It uses one shared
+symbolic memory to include aliases, and an independent CBMC adapter checks
+declared finite object/layout harnesses. The [validation record](../reports/buffers-validation.md)
+includes actual emitted C, negative controls and failed harness prototypes.
+These are applications of established representation and verification methods,
+not a new alias-analysis algorithm or a demonstrated reconstruction advantage.
+The earlier unintegrated-CBMC statements above describe their dated baseline.

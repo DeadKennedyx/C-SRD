@@ -152,8 +152,10 @@ def analyze(csrd, source):
     output, _ = command([csrd, "analyze", source, "--function", "kernel"])
     report = json.loads(output)
     functions = report["functions"]
-    if len(functions) != 1 or functions[0]["parameter_count"] != 2:
-        raise RuntimeError("evaluation corpus requires one two-argument kernel")
+    if len(functions) != 1 or functions[0]["parameter_count"] != 2 or functions[0].get("status") != "supported":
+        raise RuntimeError("evaluation corpus requires one supported two-argument kernel")
+    if functions[0].get("semantic_model", "pure-u32-c11-v2") != "pure-u32-c11-v2":
+        raise RuntimeError("evaluation requires pure scalar functions; buffer interfaces are unsupported")
     return functions[0]["source_metrics"]
 
 

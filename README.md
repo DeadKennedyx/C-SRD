@@ -19,7 +19,8 @@ effectiveness. Failed experiments and inconclusive proofs remain evidence.
 
 **Status:** bounded prototypes of M0–M5 exist. Full C11 coverage, a formally
 verified compiler, cryptographic confidentiality and research novelty are not
-claimed. The current unit of transformation is an entire admitted pure function.
+claimed. Transformation covers admitted pure functions and the first bounded
+[pointer/buffer extension](docs/buffer-contract.md), with separate contracts.
 
 **Software-protection objective:** automate diversification of legitimate
 software and measure the effort needed to reconstruct its implementation.
@@ -54,7 +55,9 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Wide-value observer follow-up](reports/pcode-wide-values.md) | All 200 measured reconstructions proved after separate grading; 2,011 arithmetic/vector obligations per host, hardware controls, CPU/RSS trade-offs and retained failed pilots; input-C coverage stays unchanged |
 | [Persistent reconstruction sessions](docs/persistent-sessions.md) | Separate native-decompiler, JVM/export and adapter costs; cached-session controls, request-bound evidence and independent source grading |
 | [Persistent-session results](reports/persistent-sessions.md) | 120 sessions, all 33 answer contracts recovered under model; nibble native CPU grows 2.7–39.9× per request, with application costs and unresolved JVM warmup effects |
-| [Broader C-SRD support](docs/broader-c-support.md) | Planned coverage sequence informed by published designs: pointers and memory first, with validation inside every extension |
+| [Broader C-SRD support](docs/broader-c-support.md) | One coverage sequence informed by published designs, with validation inside every extension |
+| [Bounded buffers](docs/buffer-contract.md) | Fixed-index pointer loads/stores, arbitrary aliases, encoded scalar regions and explicit caller preconditions |
+| [Buffer validation](reports/buffers-validation.md) | Actual-C memory proofs, compiled differential checks, independent CBMC controls and compiled-code audit |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |
@@ -100,15 +103,18 @@ No one metric, such as conversion count or source size, answers all of them.
 
 ## 2. Problem definition and constraints
 
-**Generate alternative C11 implementations of admitted pure `uint32_t`
+**Generate alternative C11 implementations of admitted `uint32_t`
 functions, with artifact-bound evidence that each emitted implementation
 preserves the specified behavior.**
 
 Let P be an admitted function and T(P,s) its candidate under configuration s.
-For n arguments, the contract requires identical returns for every input in
+For n scalar arguments in the pure model, the contract requires identical returns for every input in
 `D = {0,...,2^32−1}^n`, termination on both sides and an empty external-effect
 trace. Private writes to automatic locals and by-value parameters are allowed.
 This is why return equality suffices here; it would not suffice for arbitrary C.
+The buffer contract instead requires equal returns and entire final memory
+for every admitted initial state and alias arrangement, under its explicit
+object, bounds, initialization and lifetime preconditions.
 
 | Constraint | Current boundary |
 | --- | --- |
@@ -120,12 +126,15 @@ This is why return equality suffices here; it would not suffice for arbitrary C.
 | Objects | Local literal lookup arrays of 1–16 elements; indexes must have proved static bounds; no writes or escapes |
 | Resource limits | At most 4096 graph nodes before pruning; planned mode at most 512 live nodes; exact optimization at most 16 choice nodes |
 | Preprocessing | Functions containing macros/directives are excluded; generated keyword macros are rejected conservatively |
-| Unsupported | Pointers, dynamic allocation, external calls/I/O, signed/wider arithmetic, floating point, recursion, arbitrary loops, volatile/atomics and concurrency |
+| Buffer path | `uint32_t*`/`const uint32_t*` parameters; literal indexes 0–15 or dereference; straight-line add/subtract/literal scale; identity or affine; ordinary external memory |
+| Unsupported | General pointer operations, dynamic indexes/allocation, external calls/I/O, signed/wider arithmetic, floating point, recursion, arbitrary loops, volatile/atomics and concurrency |
 | Environment | Compatible target, headers and preprocessing; output location may change include resolution or untransformed `__FILE__` |
 | Research boundary | Benign programs and defensive analysis; no evasion objectives or confidentiality guarantee |
 
 The complete whitelist, including qualifiers, casts, storage classes, loop-index
 rules and array-bound reasoning, is normative in [semantics](docs/semantics.md).
+Pointer functions use [the separate buffer whitelist](docs/buffer-contract.md),
+which does not yet admit the pure path's branches, loops or bitwise operations.
 An excluded function MUST stay unchanged with a reason. Invalid C MUST prevent
 output. Any candidate that fails translation validation MUST prevent C output.
 
@@ -188,7 +197,7 @@ encoding networks and software diversification. Maintaining encoded
 intermediates and composing compatible encodings are established ideas.
 No head-to-head prior-system experiment or novelty result is claimed.
 
-The working prototype is deliberately simplified around pure functions. Known
+The original prototype was deliberately simplified around pure functions. Known
 prototype failures—including solver timeouts and warning-producing emission—
 and their corrections are recorded in the [validation record](reports/roadmap-validation.md).
 A prototype's successful run is evidence within its domain, not permission to
@@ -201,6 +210,9 @@ versioned value graph, chooses legal representations, emits ordinary C11 and
 reparses that output. An independent region interpreter creates a bit-vector
 equivalence obligation for the original and actual candidate. Only successful
 validation permits writing transformed C.
+For buffer functions, an ordered emitter keeps memory effects outside the pure
+graph and a shared-memory interpreter checks the complete post-state. Caller
+storage stays ordinary; scalar intermediates remain encoded across operations.
 
 ### Black box
 
@@ -215,10 +227,11 @@ flowchart LR
 | Module | Receives | Produces |
 | --- | --- | --- |
 | Frontend | C source, includes, host target | Typed AST, source ranges, preprocessing events and input hashes |
-| Analysis | Function AST | Admitted pure region or located rejection |
+| Analysis | Function AST | Admitted pure/buffer region with its contract, or located rejection |
 | Graph lowering | Ordered region | Versioned values, dependencies and return node |
 | Representation planning | Graph, strategy, coverage/objective | Legal node labels, conversions, costs and planning status |
 | Code generation | Graph, labels, seed parameters, reserved identifiers | Candidate C body and counters |
+| Ordered memory generation | Buffer region, representation, reserved identifiers | Candidate with ordered effects and encoded scalars |
 | Translation validation | Original region and reparsed candidate region | Proof under the model, counterexample, unsupported or inconclusive |
 | Defensive evaluator | Original/generated files and independent input protocols | Fingerprints, confusion counts, structural measures and cost samples |
 
@@ -230,7 +243,7 @@ flowchart TD
     B -->|No| X["Return failure; write no C"]
     B -->|Yes| C{"Function is in the admitted subset?"}
     C -->|No| D["Keep function unchanged; explain why"]
-    C -->|Yes| E["Lower graph, plan and emit candidate"]
+    C -->|Yes| E["Emit through pure-graph or ordered-memory path"]
     D --> F["Assemble candidate translation unit"]
     E --> F
     F --> G["Reparse emitted C; check environment"]
@@ -277,8 +290,8 @@ Proof states are `proved-under-model`, `counterexample`, `inconclusive`,
 `unsupported` and `not-verified`. Empirical reports separately use `tested-pass`.
 An individual compositional step can report `local-counterexample`; its abstract
 operand values are not necessarily reachable function inputs.
-`bounded-model checked` is reserved for an actual backend result with bounds;
-CBMC has not been integrated into this baseline. Planning states `optimized`
+The supplemental CBMC adapter reports `bounded-checked` only after an actual
+successful run for its declared finite buffer layout. Planning states `optimized`
 and `heuristic` describe cost selection, not semantic proof strength.
 
 ## 7. Technical specification
@@ -321,6 +334,11 @@ enters parameter selection. Solver versions/resource outcomes remain relevant
 to reproducibility of planned code.
 
 ### Analysis, graph and emission algorithms
+
+The following graph algorithm applies to pure functions. The buffer path
+preserves statement order, emits each load once, and uses the same affine rules
+for locals between memory boundaries. It bypasses graph pruning and validates
+shared-memory post-states; see [its specification](docs/buffer-contract.md).
 
 1. Resolve object identities and canonical types through Clang. Track initialized
    definitions, reject unmodeled effects and check preprocessing boundaries.
@@ -379,7 +397,9 @@ records inputs and both outputs; unknown never becomes success.
 
 JSON schema version 2 records `csrd_version`, `action`, decimal-string `seed`,
 `target`, source/candidate SHA256, dependencies and candidate dependencies,
-Clang/Z3 versions, model `pure-u32-c11-v2`, options and `output_written`.
+Clang/Z3 versions, per-function `semantic_model`, options and `output_written`.
+The models are `pure-u32-c11-v2` and `buffers-u32-c11-v1`; buffer parameters
+include constness, minimum required element counts and load/store counts.
 Each function records decision/location, source metrics, proof status/reason,
 available SMT-LIB and its hash, solver strategy, concrete counterexample if any,
 and transformation/graph counters where applicable. A failed candidate can be
@@ -497,21 +517,20 @@ No new performance study was conducted for publication.
 
 ## 10. Planning for the future
 
-The active research track compares richer benign kernels and new representation
-prototypes using reconstruction effort, runtime and size, without fixed cost
-cutoffs. Reserved families remain closed until the candidate/observer protocol
-is frozen. Independent C-level validation is the next language-coverage backend
-task; caller-provided buffers and observable memory modifications need a separate
-memory contract.
+The active sequence broadens C-SRD using published designs and explicit
+contracts. The first fixed-index buffer slice is implemented. Every further
+extension includes correctness, compiled-code and applicable reconstruction
+measurements, with runtime/size tradeoffs explored before choosing cost limits.
+Reserved families stay closed until the relevant observer/protocol is frozen.
 
 | Order | Proposed work | Evidence required before acceptance |
 | --- | --- | --- |
-| 1 | Independent CBMC backend for the current subset | Positive/negative harnesses, explicit unwinding assertions, precise unavailable/unknown states |
-| 2 | Memory model and bounded typed buffer access | Object identity/lifetime, aliasing policy, bounds, equal observable writes and preservation of untouched memory |
-| 3 | Known calls, I/O boundaries and input-dependent loops | Effect contracts, call-order preservation, bounds/invariants and termination obligations |
-| 4 | Signed arithmetic, allocation and recursion | Defined-input conditions, allocation failure/lifetime behavior and scoped recursive reasoning |
-| 5 | Floating-point and shared-memory transformations | Separate rounding/environment and C11 concurrency contracts with independent validation |
-| Parallel research | Held-out benign corpus and planner-cost calibration | Prespecified comparisons, raw samples, uncertainty and prior-system baselines |
+| C1 | Extend the implemented bounded buffer slice when its contract supports it | Bounds, aliases, effects and entire memory validation; independent controls |
+| C2 | Known direct calls and I/O boundaries | Call/environment summaries, argument and event-order preservation |
+| C3 | Selected dynamic allocation | Allocation failure, object identity, lifetime and release behavior |
+| C4 | Input-dependent loops, then recursion | State/effect relations, progress and explicit bound/depth controls |
+| C5 | Selected signed arithmetic | Promotions, conversions and defined overflow/shift conditions |
+| C6–C7 | Floating point, then concurrency | Separate numerical/environment and C11 memory-order contracts |
 
 No completion dates or resource estimates are invented. Dependencies, task
 states and exit criteria are maintained in [backlog](docs/backlog.md); broader
