@@ -58,6 +58,9 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Broader C-SRD support](docs/broader-c-support.md) | One coverage sequence informed by published designs, with validation inside every extension |
 | [Bounded buffers](docs/buffer-contract.md) | Fixed-index pointer loads/stores, arbitrary aliases, encoded scalar regions and explicit caller preconditions |
 | [Buffer validation](reports/buffers-validation.md) | Actual-C memory proofs, compiled differential checks, independent CBMC controls and compiled-code audit |
+| [Buffer reconstruction and runtime observation](docs/buffer-reconstruction.md) | Ordered binary recovery, memory-aware grading, resource counters and bounded register/stack/caller-memory observation |
+| [Buffer observer results](reports/buffer-reconstruction.md) | Reconstruction results, retained measurement failures and explicitly scoped runtime evidence |
+| [Fourteen coverage increments](docs/coverage-increments.md) | Authorized development sequence, current status and acceptance gates |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |

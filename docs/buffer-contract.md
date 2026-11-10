@@ -79,8 +79,10 @@ pointer arithmetic, escapes, calls, control flow and unsupported qualifiers.
 An independent CBMC harness investigation is supplemental evidence, with exact
 object sizes, pointer configurations and unwinding checks reported explicitly.
 It does not replace the mandatory SMT post-state check or imply arbitrary C
-coverage. Existing pure-function reconstruction observers do not yet accept
-this memory interface; their coverage gap is not a protection result.
+coverage. Existing pure-function reconstruction observers do not accept
+this memory interface. A [separate buffer observer](buffer-reconstruction.md)
+now reconstructs ordered loads/stores and validates final memory; its admitted
+binary operations and runtime sampling scope are explicit.
 
 Published reference: [Tigress EncodeData](https://tigress.wtf/encodeData.html)
 motivates explicit handling of aliases and representation boundaries. This

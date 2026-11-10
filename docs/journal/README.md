@@ -45,6 +45,7 @@ causal explanations and estimates.
 | [2026-11-10 — persistent observer costs](2026-11-10-persistent-observer.md) | Measurement hypothesis, persistent-session prototype and controls | Separate JVM/native/adapter accounting, frozen semantic observer, retained pilots and independent correctness grading |
 | [2026-11-10 — broader C-SRD support](2026-11-10-broader-c-support.md) | Scope correction, published-design review and milestone planning | One C-SRD development sequence; bounded memory first, validation within each extension; no new implementation or experimental result |
 | [2026-11-10 — bounded buffers](2026-11-10-bounded-buffers.md) | Memory contract, ordered emitter and independent validation | Alias-aware post-state obligations, whole-buffer tests, CBMC harness correction, compiler audit and cost pilot |
+| [2026-11-10 — buffer reconstruction](2026-11-10-buffer-reconstruction.md) | Memory-aware observer and protection measurements | In progress; ordered loads/stores and independent grading, with scalar experiments preserved |
 
 Future work is tracked in [the backlog](../backlog.md). External issue numbers
 and review outcomes belong here only after those events actually occur.
