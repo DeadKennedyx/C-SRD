@@ -32,7 +32,10 @@ constant logical shifts, byte/halfword truncation and extension, and unsigned
 comparisons. It materializes unsigned C locals and never parses C with regexes.
 P-code graph budgets are 2,048 operations, 4,096 varnodes and recursion depth 128.
 Control flow, phi nodes, effects, unresolved inputs, general multiplication and
-wide values are conservatively unsupported. SIMD/popcount intrinsics may therefore
+wide data values are conservatively unsupported. Constant shift/subpiece counts
+may occupy 1/2/4/8-byte fields independently of payload width; they are checked
+without truncating their value. Oversized logical shifts yield zero as specified
+by P-code, never an invalid C shift. SIMD/popcount intrinsics may therefore
 be unsupported even when a person can easily understand the decompiled C.
 
 The reference is consulted only after reconstruction, for a full-input-domain

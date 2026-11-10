@@ -79,7 +79,7 @@ def generated_corpus():
     return "\n".join(functions) + "\n", names
 
 
-def harness(names):
+def harness(names, edges=EDGES):
     declarations = "\n".join(f"uint32_t {prefix}_{name}(uint32_t,uint32_t);" for name in names for prefix in ("original", "variant"))
     tests = "\n".join(f'''if (original_{n}(x,y) != variant_{n}(x,y)) {{
         fprintf(stderr,"mismatch {n} x=%" PRIu32 " y=%" PRIu32 "\\n", x, y); return 1;
@@ -92,8 +92,8 @@ static int compare(uint32_t x,uint32_t y) {{ {tests} return 0; }}
 static uint32_t state=0x43535244u;
 static uint32_t next(void) {{state^=state<<13; state^=state>>17; state^=state<<5; return state;}}
 int main(void) {{
-    const uint32_t edges[]={{{','.join(str(e)+'u' for e in EDGES)}}};
-    for(unsigned i=0;i<9;i++) for(unsigned j=0;j<9;j++) if(compare(edges[i],edges[j])) return 1;
+    const uint32_t edges[]={{{','.join(str(e)+'u' for e in edges)}}};
+    for(unsigned i=0;i<{len(edges)};i++) for(unsigned j=0;j<{len(edges)};j++) if(compare(edges[i],edges[j])) return 1;
     for(unsigned i=0;i<{RANDOM_INPUTS};i++) {{uint32_t x=next(); uint32_t y=next(); if(compare(x,y)) return 1;}}
     puts("PASS differential"); return 0;
 }}

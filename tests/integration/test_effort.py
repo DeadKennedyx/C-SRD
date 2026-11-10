@@ -69,6 +69,18 @@ class Resources(unittest.TestCase):
 
 
 class Statistics(unittest.TestCase):
+    def test_identical_binary_control_flags_even_large_measured_cost_differences(self):
+        base = {"case": "f", "profile": "p", "budget_id": 0, "warmup": False, "repetition": 0,
+                "status": "recovered-under-source-model", "binary_sha256": "same-artifact",
+                "resources": {"cpu_seconds": 1}}
+        rows = [{**base, "variant": "original"}, {**base, "variant": "encoded", "resources": {"cpu_seconds": 4}}]
+        group = next(g for g in summarize(rows)["groups"] if g["variant"] == "encoded")
+        self.assertTrue(group["binary_identity_control"]["all_paired_binaries_identical"])
+        self.assertEqual(group["paired_successful_ratios"]["cpu_seconds"]["median"], 4)
+        rows[1].pop("binary_sha256")
+        group = next(g for g in summarize(rows)["groups"] if g["variant"] == "encoded")
+        self.assertIsNone(group["binary_identity_control"]["all_paired_binaries_identical"])
+
     def test_only_paired_successes_have_cost_ratios_and_gaps_stay_visible(self):
         base = {"case": "f", "profile": "p", "budget_id": 0, "warmup": False,
                 "status": "recovered-under-source-model", "resources": {"wall_seconds": 2, "cpu_seconds": 1}}

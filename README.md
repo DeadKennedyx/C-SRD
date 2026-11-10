@@ -42,6 +42,8 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Reconstruction effort results](reports/reconstruction-effort.md) | 540 measured attempts, paired cost intervals, false reconstructions, observed coverage gaps and raw evidence |
 | [Richer benchmark corpus](docs/rich-benchmarks.md) | Eight functional contracts, reserved families, independent oracles and controls |
 | [Rich corpus validation](reports/rich-benchmarks.md) | 156 compiled runs, proof controls, a retained timeout and deliberate false fingerprints |
+| [Positional representation prototype](docs/limb-representation.md) | Two-piece arithmetic, bitwise operations, explicit correctness rules and limitations |
+| [Broad candidate comparison](reports/limb-exploration.md) | Compiler survival, application costs, reconstruction measurements and retained failures |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |

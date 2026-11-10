@@ -70,6 +70,12 @@ class Decompiler(unittest.TestCase):
                  (graph("INT_SUB", 5), "x-5u"), (graph("INT_AND", 255), "x&255u"),
                  (graph("INT_OR", 255), "x|255u"), (graph("INT_XOR", 255), "x^255u"),
                  (graph("INT_RIGHT", 32), "0u"), (graph("INT_LEFT", 31), "x<<31u")]
+        for opcode, count, expected in (("INT_RIGHT", 8, "x>>8u"), ("INT_LEFT", 31, "x<<31u"),
+                                        ("INT_RIGHT", 32, "0u"), ("INT_LEFT", 0x100000001, "0u"),
+                                        ("INT_RIGHT", 0xffffffffffffffff, "0u")):
+            wide_count = graph(opcode, count)
+            wide_count["nodes"][1]["size"] = 8
+            cases.append((wide_count, expected))
         for code, symbol in (("INT_LESS", "<"), ("INT_LESSEQUAL", "<="),
                              ("INT_EQUAL", "=="), ("INT_NOTEQUAL", "!=")):
             comparison = graph(code, 5)
@@ -83,6 +89,7 @@ class Decompiler(unittest.TestCase):
             cases.append((unary, expected))
         for extension, expected in (("INT_ZEXT", "x&255u"), ("INT_SEXT", "((x&255u)^128u)-128u")):
             narrow = graph("SUBPIECE", 0)
+            narrow["nodes"][1]["size"] = 8
             narrow["nodes"][2]["size"] = 1
             narrow["nodes"].append({"size": 4})
             narrow["operations"].insert(1, {"opcode": extension, "inputs": [2], "output": 4})
@@ -108,6 +115,13 @@ class Decompiler(unittest.TestCase):
                                      "--report", root / "proof.json"], capture_output=True)
             self.assertEqual(result.returncode, 3)
             self.assertEqual(json.loads((root / "proof.json").read_text())["functions"][0]["verification"], "counterexample")
+            wrong_count = graph("INT_RIGHT", 9); wrong_count["nodes"][1]["size"] = 8
+            (root / "recovered.c").write_text(reconstruct(wrong_count))
+            (root / "reference.c").write_text("unsigned int f(unsigned int x){return x>>8u;}\n")
+            result = subprocess.run([TOOL, "verify", root / "reference.c", root / "recovered.c",
+                                     "--report", root / "wrong-count.json"], capture_output=True)
+            self.assertEqual(result.returncode, 3)
+            self.assertEqual(json.loads((root / "wrong-count.json").read_text())["functions"][0]["verification"], "counterexample")
 
     def test_unsupported_is_never_reported_as_recovered(self):
         cases = []
@@ -115,6 +129,9 @@ class Decompiler(unittest.TestCase):
             cases.append(graph(opcode))
         cycle = graph(); cycle["operations"][0]["inputs"][0] = 2; cases.append(cycle)
         wide = graph(); wide["nodes"][0]["size"] = 8; cases.append(wide)
+        for amount, size in ((-1, 8), (1 << 64, 8), (256, 1), (1, 16)):
+            count = graph("INT_RIGHT", amount); count["nodes"][1]["size"] = size; cases.append(count)
+        dynamic = graph("INT_RIGHT"); dynamic["operations"][0]["inputs"][1] = 0; cases.append(dynamic)
         side_effect = graph(); side_effect["operations"].append({"opcode": "STORE", "inputs": []}); cases.append(side_effect)
         for export in cases:
             with self.subTest(export=export), self.assertRaises(Unsupported):

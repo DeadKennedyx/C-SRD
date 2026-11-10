@@ -1,0 +1,903 @@
+{
+  "application_costs_from_matrix": [
+    {
+      "binary_bytes": 70896,
+      "binary_size_ratio": 1.0,
+      "case": "crc32_byte",
+      "profile": "clang-O2",
+      "timing": {
+        "checksums": [
+          2146931916032529,
+          2145654147434115,
+          2145194225329564,
+          2146641419867340,
+          2146806841621095,
+          2147476209484291,
+          2148385898380680
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.0,
+        "median_paired_ratio": 1.0,
+        "median_seconds": 0.00340937,
+        "min_paired_ratio": 1.0,
+        "paired_ratios": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "samples_seconds": [
+          0.003434954,
+          0.00340937,
+          0.003406411,
+          0.003405495,
+          0.003419786,
+          0.003400745,
+          0.003440995
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "original"
+    },
+    {
+      "binary_bytes": 70896,
+      "binary_size_ratio": 1.0,
+      "case": "crc32_byte",
+      "profile": "clang-O2",
+      "timing": {
+        "checksums": [
+          2146931916032529,
+          2145654147434115,
+          2145194225329564,
+          2146641419867340,
+          2146806841621095,
+          2147476209484291,
+          2148385898380680
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.0075349099095794,
+        "median_paired_ratio": 0.9969187360296528,
+        "median_seconds": 0.00342437,
+        "min_paired_ratio": 0.9893562763096139,
+        "paired_ratios": [
+          0.9969187360296528,
+          0.9967859164596391,
+          1.0075349099095794,
+          1.0055425129092834,
+          0.9955652195780671,
+          1.0074983569776623,
+          0.9893562763096139
+        ],
+        "samples_seconds": [
+          0.00342437,
+          0.003398412,
+          0.003432078,
+          0.00342437,
+          0.00340462,
+          0.003426245,
+          0.00340437
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "identity"
+    },
+    {
+      "binary_bytes": 70880,
+      "binary_size_ratio": 0.9997743173098623,
+      "case": "crc32_byte",
+      "profile": "clang-O2",
+      "timing": {
+        "checksums": [
+          2146931916032529,
+          2145654147434115,
+          2145194225329564,
+          2146641419867340,
+          2146806841621095,
+          2147476209484291,
+          2148385898380680
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.5989068846947714,
+        "median_paired_ratio": 1.5914835021840548,
+        "median_seconds": 0.005429992,
+        "min_paired_ratio": 1.5751112686882718,
+        "paired_ratios": [
+          1.5899511318055497,
+          1.5815091937806691,
+          1.5989068846947714,
+          1.5917389395667885,
+          1.5914835021840548,
+          1.5967066039941247,
+          1.5751112686882718
+        ],
+        "samples_seconds": [
+          0.005461409,
+          0.00539195,
+          0.005446534,
+          0.005420659,
+          0.005442533,
+          0.005429992,
+          0.00541995
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "limbs16"
+    },
+    {
+      "binary_bytes": 70712,
+      "binary_size_ratio": 1.0,
+      "case": "crc32_byte",
+      "profile": "gcc-O2",
+      "timing": {
+        "checksums": [
+          2146931916032529,
+          2145654147434115,
+          2145194225329564,
+          2146641419867340,
+          2146806841621095,
+          2147476209484291,
+          2148385898380680
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.0,
+        "median_paired_ratio": 1.0,
+        "median_seconds": 0.003993328,
+        "min_paired_ratio": 1.0,
+        "paired_ratios": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "samples_seconds": [
+          0.003993328,
+          0.003957702,
+          0.003988869,
+          0.004030327,
+          0.003968286,
+          0.004002453,
+          0.004069203
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "original"
+    },
+    {
+      "binary_bytes": 70712,
+      "binary_size_ratio": 1.0,
+      "case": "crc32_byte",
+      "profile": "gcc-O2",
+      "timing": {
+        "checksums": [
+          2146931916032529,
+          2145654147434115,
+          2145194225329564,
+          2146641419867340,
+          2146806841621095,
+          2147476209484291,
+          2148385898380680
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.2012163069770665,
+        "median_paired_ratio": 0.9070569972964081,
+        "median_seconds": 0.003617953,
+        "min_paired_ratio": 0.8984869261928897,
+        "paired_ratios": [
+          0.8984869261928897,
+          0.9141549818556325,
+          0.9040562625646518,
+          0.9000703913106801,
+          0.9110553019616027,
+          0.9070569972964081,
+          1.2012163069770665
+        ],
+        "samples_seconds": [
+          0.003587953,
+          0.003617953,
+          0.003606162,
+          0.003627578,
+          0.003615328,
+          0.003630453,
+          0.004887993
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "identity"
+    },
+    {
+      "binary_bytes": 70712,
+      "binary_size_ratio": 1.0,
+      "case": "crc32_byte",
+      "profile": "gcc-O2",
+      "timing": {
+        "checksums": [
+          2146931916032529,
+          2145654147434115,
+          2145194225329564,
+          2146641419867340,
+          2146806841621095,
+          2147476209484291,
+          2148385898380680
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.6693374084253945,
+        "median_paired_ratio": 1.6604829589540293,
+        "median_seconds": 0.006618157,
+        "min_paired_ratio": 1.6307267068470264,
+        "paired_ratios": [
+          1.6425500234390966,
+          1.6693374084253945,
+          1.6604829589540293,
+          1.6524587210913655,
+          1.6677621018243143,
+          1.6307267068470264,
+          1.6677177324404802
+        ],
+        "samples_seconds": [
+          0.006559241,
+          0.00660674,
+          0.006623449,
+          0.006659949,
+          0.006618157,
+          0.006526907,
+          0.006786282
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "limbs16"
+    },
+    {
+      "binary_bytes": 70896,
+      "binary_size_ratio": 1.0,
+      "case": "morton16",
+      "profile": "clang-O2",
+      "timing": {
+        "checksums": [
+          2146260901224563,
+          2145963425464936,
+          2144756812335357,
+          2147606804944276,
+          2148723420514343,
+          2146403531823318,
+          2147787096176689
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.0,
+        "median_paired_ratio": 1.0,
+        "median_seconds": 0.0031845,
+        "min_paired_ratio": 1.0,
+        "paired_ratios": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "samples_seconds": [
+          0.003023874,
+          0.003175833,
+          0.003184667,
+          0.0031845,
+          0.003191042,
+          0.003191416,
+          0.002982917
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "original"
+    },
+    {
+      "binary_bytes": 70896,
+      "binary_size_ratio": 1.0,
+      "case": "morton16",
+      "profile": "clang-O2",
+      "timing": {
+        "checksums": [
+          2146260901224563,
+          2145963425464936,
+          2144756812335357,
+          2147606804944276,
+          2148723420514343,
+          2146403531823318,
+          2147787096176689
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.0555523335044188,
+        "median_paired_ratio": 1.000300816380488,
+        "median_seconds": 0.003172416,
+        "min_paired_ratio": 0.9645416862929818,
+        "paired_ratios": [
+          1.0530223812235562,
+          1.009538284916115,
+          1.000300816380488,
+          0.9645416862929818,
+          0.9941630351465133,
+          0.9916576215698613,
+          1.0555523335044188
+        ],
+        "samples_seconds": [
+          0.003184207,
+          0.003206125,
+          0.003185625,
+          0.003071583,
+          0.003172416,
+          0.003164792,
+          0.003148625
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "identity"
+    },
+    {
+      "binary_bytes": 70896,
+      "binary_size_ratio": 1.0,
+      "case": "morton16",
+      "profile": "clang-O2",
+      "timing": {
+        "checksums": [
+          2146260901224563,
+          2145963425464936,
+          2144756812335357,
+          2147606804944276,
+          2148723420514343,
+          2146403531823318,
+          2147787096176689
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.1062158283317975,
+        "median_paired_ratio": 1.0492387351601926,
+        "median_seconds": 0.003314583,
+        "min_paired_ratio": 1.0273848327837967,
+        "paired_ratios": [
+          1.0961379343186917,
+          1.0492387351601926,
+          1.0554871200034415,
+          1.0273848327837967,
+          1.0324997289286697,
+          1.0411391056509087,
+          1.1062158283317975
+        ],
+        "samples_seconds": [
+          0.003314583,
+          0.003332207,
+          0.003361375,
+          0.003271707,
+          0.00329475,
+          0.003322708,
+          0.00329975
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "limbs16"
+    },
+    {
+      "binary_bytes": 70712,
+      "binary_size_ratio": 1.0,
+      "case": "morton16",
+      "profile": "gcc-O2",
+      "timing": {
+        "checksums": [
+          2146260901224563,
+          2145963425464936,
+          2144756812335357,
+          2147606804944276,
+          2148723420514343,
+          2146403531823318,
+          2147787096176689
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.0,
+        "median_paired_ratio": 1.0,
+        "median_seconds": 0.003122416,
+        "min_paired_ratio": 1.0,
+        "paired_ratios": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "samples_seconds": [
+          0.003379999,
+          0.003122792,
+          0.003113957,
+          0.003076833,
+          0.003152458,
+          0.003122416,
+          0.003075874
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "original"
+    },
+    {
+      "binary_bytes": 70712,
+      "binary_size_ratio": 1.0,
+      "case": "morton16",
+      "profile": "gcc-O2",
+      "timing": {
+        "checksums": [
+          2146260901224563,
+          2145963425464936,
+          2144756812335357,
+          2147606804944276,
+          2148723420514343,
+          2146403531823318,
+          2147787096176689
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.029340410760627,
+        "median_paired_ratio": 1.002939652274443,
+        "median_seconds": 0.003115916,
+        "min_paired_ratio": 0.9783420915086266,
+        "paired_ratios": [
+          1.0042775160584367,
+          1.029340410760627,
+          1.0097814452800729,
+          1.0018551543096423,
+          0.9884084101992794,
+          0.9783420915086266,
+          1.002939652274443
+        ],
+        "samples_seconds": [
+          0.003394457,
+          0.003214416,
+          0.003144416,
+          0.003082541,
+          0.003115916,
+          0.003054791,
+          0.003084916
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "identity"
+    },
+    {
+      "binary_bytes": 70712,
+      "binary_size_ratio": 1.0,
+      "case": "morton16",
+      "profile": "gcc-O2",
+      "timing": {
+        "checksums": [
+          2146260901224563,
+          2145963425464936,
+          2144756812335357,
+          2147606804944276,
+          2148723420514343,
+          2146403531823318,
+          2147787096176689
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.0986293675659473,
+        "median_paired_ratio": 1.0896086770784499,
+        "median_seconds": 0.003369666,
+        "min_paired_ratio": 1.0551290453354176,
+        "paired_ratios": [
+          1.0915559442473208,
+          1.0986293675659473,
+          1.0812740831039092,
+          1.0951735112045404,
+          1.0551290453354176,
+          1.0810539018503622,
+          1.0896086770784499
+        ],
+        "samples_seconds": [
+          0.003689458,
+          0.003430791,
+          0.003367041,
+          0.003369666,
+          0.00332625,
+          0.0033755,
+          0.003351499
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "limbs16"
+    },
+    {
+      "binary_bytes": 70880,
+      "binary_size_ratio": 1.0,
+      "case": "rgb_luma8",
+      "profile": "clang-O2",
+      "timing": {
+        "checksums": [
+          126986554,
+          126933822,
+          126978146,
+          126987477,
+          127083305,
+          126974903,
+          127027718
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.0,
+        "median_paired_ratio": 1.0,
+        "median_seconds": 0.001555583,
+        "min_paired_ratio": 1.0,
+        "paired_ratios": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "samples_seconds": [
+          0.001561875,
+          0.001555208,
+          0.001560126,
+          0.001555583,
+          0.001540834,
+          0.001551042,
+          0.001558334
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "original"
+    },
+    {
+      "binary_bytes": 70880,
+      "binary_size_ratio": 1.0,
+      "case": "rgb_luma8",
+      "profile": "clang-O2",
+      "timing": {
+        "checksums": [
+          126986554,
+          126933822,
+          126978146,
+          126987477,
+          127083305,
+          126974903,
+          127027718
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.0187671092408397,
+        "median_paired_ratio": 0.9996785028113357,
+        "median_seconds": 0.001557833,
+        "min_paired_ratio": 0.9920236894757903,
+        "paired_ratios": [
+          0.9920236894757903,
+          0.9985268851497677,
+          0.9975694270847354,
+          1.005116409731914,
+          1.0187671092408397,
+          1.0052648477604087,
+          0.9996785028113357
+        ],
+        "samples_seconds": [
+          0.001549417,
+          0.001552917,
+          0.001556334,
+          0.001563542,
+          0.001569751,
+          0.001559208,
+          0.001557833
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "identity"
+    },
+    {
+      "binary_bytes": 70880,
+      "binary_size_ratio": 1.0,
+      "case": "rgb_luma8",
+      "profile": "clang-O2",
+      "timing": {
+        "checksums": [
+          126986554,
+          126933822,
+          126978146,
+          126987477,
+          127083305,
+          126974903,
+          127027718
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.027041199765841,
+        "median_paired_ratio": 1.003628331332533,
+        "median_seconds": 0.001567542,
+        "min_paired_ratio": 1.001098623474286,
+        "paired_ratios": [
+          1.003628331332533,
+          1.011949527008606,
+          1.002510053675152,
+          1.001098623474286,
+          1.027041199765841,
+          1.019261245021089,
+          1.0032618167863887
+        ],
+        "samples_seconds": [
+          0.001567542,
+          0.001573792,
+          0.001564042,
+          0.001557292,
+          0.0015825,
+          0.001580917,
+          0.001563417
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "limbs16"
+    },
+    {
+      "binary_bytes": 70712,
+      "binary_size_ratio": 1.0,
+      "case": "rgb_luma8",
+      "profile": "gcc-O2",
+      "timing": {
+        "checksums": [
+          126986554,
+          126933822,
+          126978146,
+          126987477,
+          127083305,
+          126974903,
+          127027718
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.0,
+        "median_paired_ratio": 1.0,
+        "median_seconds": 0.001661,
+        "min_paired_ratio": 1.0,
+        "paired_ratios": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "samples_seconds": [
+          0.001651834,
+          0.001663376,
+          0.001683584,
+          0.001548917,
+          0.001550042,
+          0.001661,
+          0.001676292
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "original"
+    },
+    {
+      "binary_bytes": 70712,
+      "binary_size_ratio": 1.0,
+      "case": "rgb_luma8",
+      "profile": "gcc-O2",
+      "timing": {
+        "checksums": [
+          126986554,
+          126933822,
+          126978146,
+          126987477,
+          127083305,
+          126974903,
+          127027718
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.08852959842264,
+        "median_paired_ratio": 1.007415999428514,
+        "median_seconds": 0.001674792,
+        "min_paired_ratio": 0.9966090198053676,
+        "paired_ratios": [
+          1.007415999428514,
+          1.0055357297448082,
+          0.9966090198053676,
+          1.08852959842264,
+          1.0708045330384597,
+          1.0129692956050573,
+          0.9991051678347209
+        ],
+        "samples_seconds": [
+          0.001664084,
+          0.001672584,
+          0.001677875,
+          0.001686042,
+          0.001659792,
+          0.001682542,
+          0.001674792
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "identity"
+    },
+    {
+      "binary_bytes": 70712,
+      "binary_size_ratio": 1.0,
+      "case": "rgb_luma8",
+      "profile": "gcc-O2",
+      "timing": {
+        "checksums": [
+          126986554,
+          126933822,
+          126978146,
+          126987477,
+          127083305,
+          126974903,
+          127027718
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.0714225808074878,
+        "median_paired_ratio": 1.0044836525235423,
+        "median_seconds": 0.001666125,
+        "min_paired_ratio": 0.9939348275837384,
+        "paired_ratios": [
+          1.0125115477705386,
+          1.0044836525235423,
+          1.0029698547859804,
+          1.0592078206901985,
+          1.0714225808074878,
+          1.001680313064419,
+          0.9939348275837384
+        ],
+        "samples_seconds": [
+          0.001672501,
+          0.001670834,
+          0.001688584,
+          0.001640625,
+          0.00166075,
+          0.001663791,
+          0.001666125
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "limbs16"
+    }
+  ],
+  "artifact_bindings": {
+    "/work/build-linux-release/csrd": "08c5e2db22670ae5e008c3e61d4db66ca014632d6f54fe8519b8c985fa30f19e",
+    "/work/experiments/runs/dependencies/ghidra_12.2_PUBLIC/Ghidra/Features/Decompiler/lib/Decompiler.jar": "74d7333e0461921b2abf4aaa5a40653540664589357469a17ef0d0fbb5c713c4",
+    "/work/experiments/runs/dependencies/ghidra_12.2_PUBLIC/Ghidra/Features/Decompiler/os/linux_arm_64/decompile": "93aa5633f31acc33fc8adb4e71c4ff9a4f0e8b3a0f3c1a1b6724bc6e3f0d3cda",
+    "/work/experiments/runs/dependencies/ghidra_12.2_PUBLIC/Ghidra/Features/Decompiler/os/linux_x86_64/decompile": "c1494df3503ad3567313ef23b6f69fea2ef679758514939541e28dc6b273105c",
+    "/work/experiments/runs/dependencies/ghidra_12.2_PUBLIC/support/analyzeHeadless": "a59a302c3bf61767fc142bcb594db226529787a15623e72197a4305c789b9970",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/crc32_byte/build-clang-O2-identity/program": "e39166405a61246cf93ffad67c0e241bc5056822de5f89b9d5ca0326e87ace1b",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/crc32_byte/build-clang-O2-limbs16/program": "1cb6b3a9c7585819af6c17ba85b28150fd2740ee6358f79504de987b7b580220",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/crc32_byte/build-clang-O2-original/function.i": "23083b99697050d3861c96130285475cafe40ede47a97c5a341ba027ed1547e7",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/crc32_byte/build-clang-O2-original/program": "e39166405a61246cf93ffad67c0e241bc5056822de5f89b9d5ca0326e87ace1b",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/crc32_byte/build-gcc-O2-identity/program": "7852947ba6af837b0abd521726c95ae1dad9f0446eb836513a6f0a24909fa658",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/crc32_byte/build-gcc-O2-limbs16/program": "946efca8d2364a83bfad441f957abe0be79ec1f6245839e2e0d1481e35a1bef0",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/crc32_byte/build-gcc-O2-original/function.i": "23083b99697050d3861c96130285475cafe40ede47a97c5a341ba027ed1547e7",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/crc32_byte/build-gcc-O2-original/program": "3bec1bfb7a3299301bb5e42577a7d4a236b7d0b7a7e9a19946a9fe9fe691b26d",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/matrix.json": "25fe241a27c081c9e7de951192e4bd9f0390c378515591d4be18777365dc56db",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/morton16/build-clang-O2-identity/program": "e4f7db51bf80cb9d306250e0734517594bcc61d233adf368cf5ad523ab5e0579",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/morton16/build-clang-O2-limbs16/program": "617a3118a3ded0a12f8361e070c4a5ef46ac184788b342ff57a054748fddaa7b",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/morton16/build-clang-O2-original/function.i": "dacb28a6f9a8e7d184126b832071afe16cdf7a58e7304fcd8f27d964e5f85a34",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/morton16/build-clang-O2-original/program": "e4f7db51bf80cb9d306250e0734517594bcc61d233adf368cf5ad523ab5e0579",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/morton16/build-gcc-O2-identity/program": "e76dc19d317f9ed435f51acbf15746578212c389ab823b721ce24306cd0f0e67",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/morton16/build-gcc-O2-limbs16/program": "655f2888f86bbb7114d272c6a2287cc8aa666c38d91e4d16f003ff5318c4b115",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/morton16/build-gcc-O2-original/function.i": "dacb28a6f9a8e7d184126b832071afe16cdf7a58e7304fcd8f27d964e5f85a34",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/morton16/build-gcc-O2-original/program": "e76dc19d317f9ed435f51acbf15746578212c389ab823b721ce24306cd0f0e67",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/rgb_luma8/build-clang-O2-identity/program": "397ac2195c60254271f5dada6406e3db05560cd3de342f0d509a82a7fd7866b5",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/rgb_luma8/build-clang-O2-limbs16/program": "397ac2195c60254271f5dada6406e3db05560cd3de342f0d509a82a7fd7866b5",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/rgb_luma8/build-clang-O2-original/function.i": "7edc535f46526d1fb861421277e91a03f3f59f7a303f6c0626cbc277c6f02c4a",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/rgb_luma8/build-clang-O2-original/program": "397ac2195c60254271f5dada6406e3db05560cd3de342f0d509a82a7fd7866b5",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/rgb_luma8/build-gcc-O2-identity/program": "acd0701cbfd31137595890aabba1da09c593a1ad832a06ac40de6eb82d23323f",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/rgb_luma8/build-gcc-O2-limbs16/program": "982cd75a01406d33171e0700bfc8c1c4055a1e49c70ff654f22a45b282b90815",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/rgb_luma8/build-gcc-O2-original/function.i": "7edc535f46526d1fb861421277e91a03f3f59f7a303f6c0626cbc277c6f02c4a",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/rgb_luma8/build-gcc-O2-original/program": "acd0701cbfd31137595890aabba1da09c593a1ad832a06ac40de6eb82d23323f",
+    "/work/tools/effort_resources.py": "e36e8cdb5f26678875cde7fa735b4e45393d8d12dff5fe9289414a45f0f934bd",
+    "/work/tools/effort_statistics.py": "26124c43505b78b16412cc07c1a8d460d63f1b89f38ae1b0b3da08096790ac9b",
+    "/work/tools/effort_worker.py": "72226538b02afce1e2c75467dd0cc29fdfd03d12a689c2a93bfa4ac19f9512c0",
+    "/work/tools/experiment_support.py": "83b24410449ca528c9e997482a3a8d7385de6af53c53d7137d527ac1fc36eecf",
+    "/work/tools/gdb_trace.py": "0403d246a7d9eb0181b255ada76737e1f6b58cc996262be59b82e836029b16c6",
+    "/work/tools/ghidra/ExportCSRD.java": "6e41eb76c4f25f83f59afca84104b403b39818e6f74aa2acbfecc52ee325e443",
+    "/work/tools/measure_effort.py": "a6e0e70fe77794d27f657f49c36f6b2c9ec95307d1574af5707114365d805f22",
+    "/work/tools/observe_runtime.py": "304e1da02b07b31415d23ef019bf6250757023a233e79d3f138167bc4a21c240",
+    "/work/tools/pcode_reconstruct.py": "41c3fbb03c6c50566d110c329eca465e1437429455cab59127ffbaba06e216ca"
+  },
+  "environment_start": {
+    "affinity": [
+      0,
+      1
+    ],
+    "clock": {
+      "adjustable": false,
+      "implementation": "clock_gettime(CLOCK_MONOTONIC)",
+      "monotonic": true,
+      "resolution": 1e-09
+    },
+    "load_average": [
+      0.97802734375,
+      0.78125,
+      0.49755859375
+    ],
+    "logical_cpus": 2,
+    "machine": "aarch64",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "system": "Linux-6.8.0-117-generic-aarch64-with-glibc2.39"
+  },
+  "matrix_status": "failed",
+  "matrix_summary": {
+    "completed": 525,
+    "failed": 75,
+    "unavailable_profiles": 1
+  },
+  "observer": "ghidra",
+  "protocol": {
+    "allow_partial_matrix": true,
+    "analysis_seconds": 30,
+    "binary_lifting_proved": false,
+    "budgets": [
+      {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      }
+    ],
+    "cache": "fresh observer process and Ghidra project; filesystem caches not flushed",
+    "case": [
+      "crc32_byte",
+      "morton16",
+      "rgb_luma8"
+    ],
+    "cpu_budgets": null,
+    "csrd": "/work/build-linux-release/csrd",
+    "decompile_seconds": 15,
+    "gdb": "gdb",
+    "grading": "reference withheld from fixed observer; frozen answer; grader resources separate",
+    "grading_seconds": 120,
+    "headless": "/work/experiments/runs/dependencies/ghidra_12.2_PUBLIC/support/analyzeHeadless",
+    "human_effort": "unassessed",
+    "input_seed": 19011,
+    "lock_scope": "cooperating effort runs in this checkout only; shared-host noise remains",
+    "matrix_report": "experiments/runs/rich-limbs-matrix-linux-20261109/matrix.json",
+    "memory_budgets_mib": null,
+    "observer": "ghidra",
+    "order": "serialized randomized complete blocks",
+    "order_seed": 20261109,
+    "output_dir": "experiments/runs/rich-ghidra-linux-20261109",
+    "profile": [
+      "clang-O2",
+      "gcc-O2"
+    ],
+    "query_budgets": [
+      3,
+      8,
+      32
+    ],
+    "repetitions": 5,
+    "step_budgets": [
+      4,
+      16,
+      64
+    ],
+    "timeout_ms": 30000,
+    "variant": [
+      "original",
+      "identity",
+      "limbs16"
+    ],
+    "wall_budgets": [
+      60.0
+    ],
+    "warmups": 1
+  },
+  "schema_version": 1,
+  "status": "running",
+  "tools": {
+    "csrd": {
+      "path": "/work/build-linux-release/csrd",
+      "sha256": "08c5e2db22670ae5e008c3e61d4db66ca014632d6f54fe8519b8c985fa30f19e"
+    },
+    "ghidra": {
+      "path": "/work/experiments/runs/dependencies/ghidra_12.2_PUBLIC/support/analyzeHeadless",
+      "properties": "#Fri Oct 16 12:20:39 UTC 2026\napplication.build.date=2026-Oct-16 1220 UTC\napplication.build.date.short=20261016\napplication.gradle.max=\napplication.gradle.min=9.1\napplication.java.compiler=25\napplication.java.max=\napplication.java.min=25\napplication.layout.version=3\napplication.name=Ghidra\napplication.python.supported=3.15, 3.14, 3.13, 3.12, 3.11, 3.10, 3.9\napplication.release.marking=\napplication.release.name=PUBLIC\napplication.revision.ghidra=8ca9077040cc43cd790babcfccf19475622a3e9a\napplication.revision.ghidra.bin=f8282ebbe9ea7a680df9c32c70f844e38f175eb1\napplication.revision.ghidra.ext-u=ab6d49a83769bb210e93abee2e4439fbfd1c9414\napplication.version=12.2\n",
+      "sha256": "a59a302c3bf61767fc142bcb594db226529787a15623e72197a4305c789b9970"
+    }
+  }
+}

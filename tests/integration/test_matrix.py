@@ -61,6 +61,19 @@ class Matrix(unittest.TestCase):
             self.assertEqual(record["llvm_ir"]["status"], "measured")
             binding = json.loads(Path(record["validation"]).read_text())
             self.assertEqual(len(binding["configurations"][0]["build_validation"]), 2)
+        command = [sys.executable, str(ROOT / "tools/measure_code_size.py"),
+                   "--matrix-report", str(self.root / "run/matrix.json")]
+        result = subprocess.run([*command, "--output-dir", str(self.root / "sizes")],
+                                text=True, capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        sizes = json.loads((self.root / "sizes/sizes.json").read_text())
+        self.assertTrue(all(r["text_bytes"] > 0 for r in sizes["records"]))
+        self.assertEqual(sizes["records"][0]["text_ratio_to_original"], 1)
+        Path(original["binary"]).write_bytes(b"invalidated artifact")
+        result = subprocess.run([*command, "--output-dir", str(self.root / "invalid-sizes")],
+                                text=True, capture_output=True, timeout=30)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("changed binary", result.stderr)
 
     def test_report_only_retains_all_variants_without_screening(self):
         report = self.execute_matrix(extra=("--no-select", "--max-runtime-ratio", "1", "--max-size-ratio", "1"))

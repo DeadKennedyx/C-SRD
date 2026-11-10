@@ -1,0 +1,6 @@
+{
+  "source_base_commit": "2eac664",
+  "candidate_binary_sha256": "08c5e2db22670ae5e008c3e61d4db66ca014632d6f54fe8519b8c985fa30f19e",
+  "docker_image_id": "sha256:880358a74512e1deac327db13818f10e5b0cf8538f3490996952b8d379541f00",
+  "scope": "ARM64 Ubuntu image used for recorded runs; tools and binaries are hash bound. Recipe does not guarantee future package downloads are byte-identical."
+}

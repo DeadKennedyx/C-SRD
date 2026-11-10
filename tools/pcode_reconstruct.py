@@ -66,7 +66,11 @@ def reconstruct(export, result_offset=0):
             raise Unsupported(f"unsupported P-code operation: {code}")
         if len(inputs) != (1 if code in unary else 2):
             raise Unsupported("unexpected operation arity")
-        args = [expression(v) for v in inputs]
+        # Shift/subpiece count storage has its own width in P-code. Ghidra can
+        # use an 8-byte constant count with a 4-byte payload. Interpret that
+        # metadata exactly, without admitting/truncating a wide data value.
+        counted = code in ("INT_LEFT", "INT_RIGHT", "SUBPIECE")
+        args = [expression(v) for v in (inputs[:1] if counted else inputs)]
         a = args[0]
         if code in binary:
             if width(inputs[0]) != width(inputs[1]):
@@ -100,7 +104,13 @@ def reconstruct(export, result_offset=0):
         else:
             if "constant" not in nodes[inputs[1]]:
                 raise Unsupported("nonconstant shift or subpiece offset")
-            shift = int(nodes[inputs[1]]["constant"]) * (8 if code == "SUBPIECE" else 1)
+            count = nodes[inputs[1]]
+            if count["size"] not in (1, 2, 4, 8):
+                raise Unsupported("unsupported constant count width")
+            amount = int(count["constant"])
+            if not 0 <= amount < (1 << (8 * count["size"])):
+                raise Unsupported("constant count does not fit its storage width")
+            shift = amount * (8 if code == "SUBPIECE" else 1)
             source_bits = width(inputs[0])
             if shift < 0:
                 raise Unsupported("negative shift")

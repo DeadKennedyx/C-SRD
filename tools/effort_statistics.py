@@ -55,6 +55,15 @@ def summarize(trials):
                    "correct_fraction_decidable_submissions": success / (success + wrong) if success + wrong else None,
                    "resource_cost_all_attempts": {}, "paired_successful_ratios": {},
                    "paired_successful_differences": {}}
+        identity_checks = []
+        for t in rows:
+            b = baselines.get((case, profile, budget, t["repetition"]))
+            if b and t.get("binary_sha256") and b.get("binary_sha256"):
+                identity_checks.append(t["binary_sha256"] == b["binary_sha256"])
+        summary["binary_identity_control"] = {
+            "paired_artifacts_checked": len(identity_checks), "identical_pairs": sum(identity_checks),
+            "all_paired_binaries_identical": all(identity_checks) if identity_checks else None,
+            "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection."}
         for metric in METRICS:
             summary["resource_cost_all_attempts"][metric] = distribution(
                 [t["resources"][metric] for t in rows if t.get("resources", {}).get(metric) is not None])

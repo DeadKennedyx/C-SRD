@@ -12,6 +12,18 @@ optimization, LTO, profiling, instrumentation, CPU and target constraints.
 Executable overrides select installed versions. Reports record tool hashes,
 versions, targets and commands; link probes print linker versions.
 
+The [richer corpus](rich-benchmarks.md) reuses this profile catalog with eight
+separate algorithm families. `--no-select` enables report-only exploration without
+cost cutoffs. Failed candidate preparations remain explicit cells and do not stop
+other variants from being measured; the overall matrix still reports failure.
+
+`tools/measure_code_size.py --matrix-report MATRIX --output-dir NEW_DIRECTORY`
+adds a read-only linked-section audit to a finished matrix. It checks tool/binary
+hashes, retains invalid cells as omissions, and compares `.text`/`__text` sizes
+against the original. Whole linked text includes the harness, runtime support and
+padding. It complements total executable bytes, which may hide code growth through
+alignment; it is not an isolated function-size or runtime-RSS measurement.
+
 * **Core:** GCC/Clang O0, O2, and O2 with full LTO. O0 is diagnostic; both O2
   and both O2-LTO profiles are mandatory for candidate selection.
 * **Extended:** core plus O1/O3/Os/Oz/Og, Clang ThinLTO, GCC O3 LTO, instrumented

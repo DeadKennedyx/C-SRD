@@ -1,0 +1,386 @@
+{
+  "application_costs_from_matrix": [
+    {
+      "binary_bytes": 70880,
+      "binary_size_ratio": 1.0,
+      "case": "jenkins_word",
+      "profile": "clang-O2",
+      "timing": {
+        "checksums": [
+          2148067296977424,
+          2147883472951163,
+          2149666367695712,
+          2148218762122675,
+          2147861343336991,
+          2146047382316630,
+          2146999872344104
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.0,
+        "median_paired_ratio": 1.0,
+        "median_seconds": 0.003459916,
+        "min_paired_ratio": 1.0,
+        "paired_ratios": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "samples_seconds": [
+          0.003370415,
+          0.003656041,
+          0.003481165,
+          0.003459916,
+          0.003444707,
+          0.00345129,
+          0.003469374
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "original"
+    },
+    {
+      "binary_bytes": 70880,
+      "binary_size_ratio": 1.0,
+      "case": "jenkins_word",
+      "profile": "clang-O2",
+      "timing": {
+        "checksums": [
+          2148067296977424,
+          2147883472951163,
+          2149666367695712,
+          2148218762122675,
+          2147861343336991,
+          2146047382316630,
+          2146999872344104
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.0649062460174405,
+        "median_paired_ratio": 1.0099600439256047,
+        "median_seconds": 0.003485665,
+        "min_paired_ratio": 0.9753487447214076,
+        "paired_ratios": [
+          1.0191741966493741,
+          0.9753487447214076,
+          1.0127951418562464,
+          0.9861990869142487,
+          1.0649062460174405,
+          1.0099600439256047,
+          0.9964451800238314
+        ],
+        "samples_seconds": [
+          0.00343504,
+          0.003565915,
+          0.003525707,
+          0.003412166,
+          0.00366829,
+          0.003485665,
+          0.003457041
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "identity"
+    },
+    {
+      "binary_bytes": 70880,
+      "binary_size_ratio": 1.0,
+      "case": "jenkins_word",
+      "profile": "clang-O2",
+      "timing": {
+        "checksums": [
+          2148067296977424,
+          2147883472951163,
+          2149666367695712,
+          2148218762122675,
+          2147861343336991,
+          2146047382316630,
+          2146999872344104
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.0431218097794674,
+        "median_paired_ratio": 0.9984583440754052,
+        "median_seconds": 0.003454582,
+        "min_paired_ratio": 0.9533987720597226,
+        "paired_ratios": [
+          1.0247373097971615,
+          0.9533987720597226,
+          1.0036866968385583,
+          0.9984583440754052,
+          1.0431218097794674,
+          0.9864546300079101,
+          0.9921334511643888
+        ],
+        "samples_seconds": [
+          0.00345379,
+          0.003485665,
+          0.003493999,
+          0.003454582,
+          0.003593249,
+          0.003404541,
+          0.003442082
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "affine-42"
+    },
+    {
+      "binary_bytes": 70712,
+      "binary_size_ratio": 1.0,
+      "case": "jenkins_word",
+      "profile": "gcc-O2",
+      "timing": {
+        "checksums": [
+          2148067296977424,
+          2147883472951163,
+          2149666367695712,
+          2148218762122675,
+          2147861343336991,
+          2146047382316630,
+          2146999872344104
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.0,
+        "median_paired_ratio": 1.0,
+        "median_seconds": 0.00323604,
+        "min_paired_ratio": 1.0,
+        "paired_ratios": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "samples_seconds": [
+          0.003211749,
+          0.003207624,
+          0.00320579,
+          0.003266707,
+          0.003240499,
+          0.00323604,
+          0.004160124
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "original"
+    },
+    {
+      "binary_bytes": 70712,
+      "binary_size_ratio": 1.0,
+      "case": "jenkins_word",
+      "profile": "gcc-O2",
+      "timing": {
+        "checksums": [
+          2148067296977424,
+          2147883472951163,
+          2149666367695712,
+          2148218762122675,
+          2147861343336991,
+          2146047382316630,
+          2146999872344104
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.0102607653944655,
+        "median_paired_ratio": 0.9869638996939911,
+        "median_seconds": 0.003238915,
+        "min_paired_ratio": 0.778562129398066,
+        "paired_ratios": [
+          0.9792296969657343,
+          0.970486877514322,
+          0.9869638996939911,
+          0.9920152006286453,
+          1.0102607653944655,
+          1.0102106278043534,
+          0.778562129398066
+        ],
+        "samples_seconds": [
+          0.00314504,
+          0.003112957,
+          0.003163999,
+          0.003240623,
+          0.003273749,
+          0.003269082,
+          0.003238915
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "identity"
+    },
+    {
+      "binary_bytes": 70712,
+      "binary_size_ratio": 1.0,
+      "case": "jenkins_word",
+      "profile": "gcc-O2",
+      "timing": {
+        "checksums": [
+          2148067296977424,
+          2147883472951163,
+          2149666367695712,
+          2148218762122675,
+          2147861343336991,
+          2146047382316630,
+          2146999872344104
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.2285972979320403,
+        "median_paired_ratio": 0.9762073561788297,
+        "median_seconds": 0.003152915,
+        "min_paired_ratio": 0.7578896686733376,
+        "paired_ratios": [
+          0.9762073561788297,
+          0.9810607477684417,
+          0.9795036480867431,
+          0.9671813235775354,
+          0.9754278584872268,
+          1.2285972979320403,
+          0.7578896686733376
+        ],
+        "samples_seconds": [
+          0.003135333,
+          0.003146874,
+          0.003140083,
+          0.003159498,
+          0.003160873,
+          0.00397579,
+          0.003152915
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "affine-42"
+    }
+  ],
+  "artifact_bindings": {
+    "/work/build-linux-release/csrd": "08c5e2db22670ae5e008c3e61d4db66ca014632d6f54fe8519b8c985fa30f19e",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/jenkins_word/build-clang-O2-affine-42/program": "ebb341de77a9d76563a396b72e10fb8d369e67b3742c33f34e9c9a55e63909a0",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/jenkins_word/build-clang-O2-identity/program": "ebb341de77a9d76563a396b72e10fb8d369e67b3742c33f34e9c9a55e63909a0",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/jenkins_word/build-clang-O2-original/function.i": "0539bca1f8a057c5974838374e29ca9e67e7c28b966ac7f256fbba5d2fea60fd",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/jenkins_word/build-clang-O2-original/program": "ebb341de77a9d76563a396b72e10fb8d369e67b3742c33f34e9c9a55e63909a0",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/jenkins_word/build-gcc-O2-affine-42/program": "6ea12bae0272a776607e4d3e8bac1e10788dd2db1dc5478cbf5cc3434f19d366",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/jenkins_word/build-gcc-O2-identity/program": "6ea12bae0272a776607e4d3e8bac1e10788dd2db1dc5478cbf5cc3434f19d366",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/jenkins_word/build-gcc-O2-original/function.i": "0539bca1f8a057c5974838374e29ca9e67e7c28b966ac7f256fbba5d2fea60fd",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/jenkins_word/build-gcc-O2-original/program": "efe9ce2da86b3548a9b559d9e67e8e935866adf2f805fab5636b24c0e9b50712",
+    "/work/experiments/runs/rich-limbs-matrix-linux-20261109/matrix.json": "25fe241a27c081c9e7de951192e4bd9f0390c378515591d4be18777365dc56db",
+    "/work/tools/effort_resources.py": "e36e8cdb5f26678875cde7fa735b4e45393d8d12dff5fe9289414a45f0f934bd",
+    "/work/tools/effort_statistics.py": "26124c43505b78b16412cc07c1a8d460d63f1b89f38ae1b0b3da08096790ac9b",
+    "/work/tools/effort_worker.py": "72226538b02afce1e2c75467dd0cc29fdfd03d12a689c2a93bfa4ac19f9512c0",
+    "/work/tools/experiment_support.py": "83b24410449ca528c9e997482a3a8d7385de6af53c53d7137d527ac1fc36eecf",
+    "/work/tools/gdb_trace.py": "0403d246a7d9eb0181b255ada76737e1f6b58cc996262be59b82e836029b16c6",
+    "/work/tools/ghidra/ExportCSRD.java": "6e41eb76c4f25f83f59afca84104b403b39818e6f74aa2acbfecc52ee325e443",
+    "/work/tools/measure_effort.py": "a6e0e70fe77794d27f657f49c36f6b2c9ec95307d1574af5707114365d805f22",
+    "/work/tools/observe_runtime.py": "304e1da02b07b31415d23ef019bf6250757023a233e79d3f138167bc4a21c240",
+    "/work/tools/pcode_reconstruct.py": "41c3fbb03c6c50566d110c329eca465e1437429455cab59127ffbaba06e216ca"
+  },
+  "environment_start": {
+    "affinity": [
+      0,
+      1
+    ],
+    "clock": {
+      "adjustable": false,
+      "implementation": "clock_gettime(CLOCK_MONOTONIC)",
+      "monotonic": true,
+      "resolution": 1e-09
+    },
+    "load_average": [
+      1.07568359375,
+      0.787109375,
+      0.49462890625
+    ],
+    "logical_cpus": 2,
+    "machine": "aarch64",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "system": "Linux-6.8.0-117-generic-aarch64-with-glibc2.39"
+  },
+  "matrix_status": "failed",
+  "matrix_summary": {
+    "completed": 525,
+    "failed": 75,
+    "unavailable_profiles": 1
+  },
+  "observer": "bitlinear",
+  "protocol": {
+    "allow_partial_matrix": true,
+    "analysis_seconds": 30,
+    "binary_lifting_proved": false,
+    "budgets": [
+      {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 32,
+        "step_budget": 0,
+        "wall_seconds": 5.0
+      },
+      {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 65,
+        "step_budget": 0,
+        "wall_seconds": 5.0
+      },
+      {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 128,
+        "step_budget": 0,
+        "wall_seconds": 5.0
+      }
+    ],
+    "cache": "fresh observer process and Ghidra project; filesystem caches not flushed",
+    "case": [
+      "jenkins_word"
+    ],
+    "cpu_budgets": null,
+    "csrd": "/work/build-linux-release/csrd",
+    "decompile_seconds": 15,
+    "gdb": "gdb",
+    "grading": "reference withheld from fixed observer; frozen answer; grader resources separate",
+    "grading_seconds": 120,
+    "headless": "analyzeHeadless",
+    "human_effort": "unassessed",
+    "input_seed": 19011,
+    "lock_scope": "cooperating effort runs in this checkout only; shared-host noise remains",
+    "matrix_report": "experiments/runs/rich-limbs-matrix-linux-20261109/matrix.json",
+    "memory_budgets_mib": null,
+    "observer": "bitlinear",
+    "order": "serialized randomized complete blocks",
+    "order_seed": 20261109,
+    "output_dir": "experiments/runs/rich-bitlinear-jenkins-linux-20261109",
+    "profile": [
+      "clang-O2",
+      "gcc-O2"
+    ],
+    "query_budgets": [
+      32,
+      65,
+      128
+    ],
+    "repetitions": 5,
+    "step_budgets": [
+      4,
+      16,
+      64
+    ],
+    "timeout_ms": 30000,
+    "variant": [
+      "original",
+      "identity",
+      "affine-42"
+    ],
+    "wall_budgets": [
+      5.0
+    ],
+    "warmups": 1
+  },
+  "schema_version": 1,
+  "status": "running",
+  "tools": {
+    "csrd": {
+      "path": "/work/build-linux-release/csrd",
+      "sha256": "08c5e2db22670ae5e008c3e61d4db66ca014632d6f54fe8519b8c985fa30f19e"
+    }
+  }
+}

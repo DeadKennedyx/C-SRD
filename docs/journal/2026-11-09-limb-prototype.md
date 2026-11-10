@@ -59,3 +59,32 @@ The Jenkins proof timeouts persisted after input reparameterization; no generate
 output was accepted for those attempts. The full development protocol and hashes
 were frozen in [limbs-exploration.json](../../experiments/limbs-exploration.json)
 before starting performance measurements.
+
+## First matrix observations and measurement deviation
+
+The extended Linux matrix completed 525 cells and blocked 75 Jenkins cells on
+the three preparation proof timeouts; one x86 profile was unavailable. CRC and
+Morton limb mnemonic sequences differed from identity controls across all 25
+available profiles. RGB matched in eight profiles. Costs remain visible; no
+runtime or size cutoff was applied. Exact results are in
+[the report](../../reports/limb-exploration.md).
+
+Post hoc observation: whole executable sizes sometimes matched because alignment
+hid growth in linked code. Added a separate hash-bound section-size collector,
+with real-build and changed-binary tests on both systems. This measures existing
+artifacts without recompilation or candidate changes; it is explicitly separate
+from the prespecified reconstruction runs. The current published machine-code
+metric is mnemonic structure, so matching it alone is not a proof that every
+operand/data-flow relationship is identical.
+
+## Outcome after the observer correction (November 10)
+
+The query observer recovered every valid CRC/Morton variant at the same tested
+65-query minimum. Jenkins basis fits were false models and extra probes rejected
+them; RGB was outside that model class. Corrected Ghidra comparisons also did not
+establish increased reconstruction effort. Keep the positional representation as
+a correctness/measurement baseline, with overhead and failures visible. No winner
+was selected. Continue with observer coverage and compositional proof limits,
+then further candidates; the reserved families remain unopened. The count-field
+correction and identical-binary timing control merit their own
+[journal entry](2026-11-10-pcode-counts.md).

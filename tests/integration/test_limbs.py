@@ -9,7 +9,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 TOOL = str(Path(sys.argv.pop(1)).resolve())
 sys.path.insert(0, str(ROOT / "tests/differential"))
-from run import execute, compilers, harness
+from run import execute, compilers, harness, EDGES
 
 
 class Limbs(unittest.TestCase):
@@ -43,7 +43,8 @@ class Limbs(unittest.TestCase):
             self.assertFalse(f["seed_affects_representation"])
             self.assertNotIn("a", f)
             self.assertTrue(all(n["representation"] == "limbs16-u32" for n in f["graph"]))
-        driver = self.root / "driver.c"; driver.write_text(harness(names))
+        driver = self.root / "driver.c"
+        driver.write_text(harness(names, EDGES + [65534, 65535, 65536, 65537]))
         for compiler, _, _ in compilers():
             for options in (["-O0"], ["-O2"], ["-O1", "-fsanitize=address,undefined", "-fno-sanitize-recover=all"]):
                 flags = ["-std=c11", "-Wall", "-Wextra", "-Wpedantic", "-Wconversion", "-Werror", *options]

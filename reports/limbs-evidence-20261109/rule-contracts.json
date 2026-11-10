@@ -1,0 +1,793 @@
+{
+  "solver": "Z3 version 4.8.12 - 64 bit",
+  "contract_sha256": "569c33cc7d37b4d45be3c6ef75dd525361d0a2442c7ec5647c679211cac8e334",
+  "generic_rules": {
+    "add": "unsat",
+    "subtract": "unsat",
+    "scale": "unsat"
+  },
+  "xor_contract_sha256": "11b1192c72e69c52d5cd281c0a63466720eb680b1e42f95cc21923f61397e53b",
+  "xor_rules": {
+    "xor": "unsat",
+    "and": "unsat",
+    "or": "unsat",
+    "not": "unsat",
+    "shl": "unsat",
+    "lshr": "unsat"
+  },
+  "newton_steps": [
+    {
+      "from_correct_bits": 1,
+      "to_correct_bits": 2,
+      "result": "unsat"
+    },
+    {
+      "from_correct_bits": 2,
+      "to_correct_bits": 4,
+      "result": "unsat"
+    },
+    {
+      "from_correct_bits": 4,
+      "to_correct_bits": 8,
+      "result": "unsat"
+    },
+    {
+      "from_correct_bits": 8,
+      "to_correct_bits": 16,
+      "result": "unsat"
+    },
+    {
+      "from_correct_bits": 16,
+      "to_correct_bits": 32,
+      "result": "unsat"
+    }
+  ],
+  "unsigned_shift_scale_normalization": [
+    {
+      "count": 0,
+      "result": "unsat"
+    },
+    {
+      "count": 1,
+      "result": "unsat"
+    },
+    {
+      "count": 2,
+      "result": "unsat"
+    },
+    {
+      "count": 3,
+      "result": "unsat"
+    },
+    {
+      "count": 4,
+      "result": "unsat"
+    },
+    {
+      "count": 5,
+      "result": "unsat"
+    },
+    {
+      "count": 6,
+      "result": "unsat"
+    },
+    {
+      "count": 7,
+      "result": "unsat"
+    },
+    {
+      "count": 8,
+      "result": "unsat"
+    },
+    {
+      "count": 9,
+      "result": "unsat"
+    },
+    {
+      "count": 10,
+      "result": "unsat"
+    },
+    {
+      "count": 11,
+      "result": "unsat"
+    },
+    {
+      "count": 12,
+      "result": "unsat"
+    },
+    {
+      "count": 13,
+      "result": "unsat"
+    },
+    {
+      "count": 14,
+      "result": "unsat"
+    },
+    {
+      "count": 15,
+      "result": "unsat"
+    },
+    {
+      "count": 16,
+      "result": "unsat"
+    },
+    {
+      "count": 17,
+      "result": "unsat"
+    },
+    {
+      "count": 18,
+      "result": "unsat"
+    },
+    {
+      "count": 19,
+      "result": "unsat"
+    },
+    {
+      "count": 20,
+      "result": "unsat"
+    },
+    {
+      "count": 21,
+      "result": "unsat"
+    },
+    {
+      "count": 22,
+      "result": "unsat"
+    },
+    {
+      "count": 23,
+      "result": "unsat"
+    },
+    {
+      "count": 24,
+      "result": "unsat"
+    },
+    {
+      "count": 25,
+      "result": "unsat"
+    },
+    {
+      "count": 26,
+      "result": "unsat"
+    },
+    {
+      "count": 27,
+      "result": "unsat"
+    },
+    {
+      "count": 28,
+      "result": "unsat"
+    },
+    {
+      "count": 29,
+      "result": "unsat"
+    },
+    {
+      "count": 30,
+      "result": "unsat"
+    },
+    {
+      "count": 31,
+      "result": "unsat"
+    }
+  ],
+  "limbs16": {
+    "scope": "universal rule formulas with compositional scale proof; not proof of emitted C or secrecy",
+    "obligations": [
+      {
+        "name": "roundtrip",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvand x (_ bv65535 32)) (_ bv65535 32)) (bvshl (bvand (bvlshr x (_ bv16 32)) (_ bv65535 32)) (_ bv16 32))) x)))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "0b8ff8d22025ae08d479e8a2f14fec1ce9877cc39b77a2074d96a321d83ac541"
+      },
+      {
+        "name": "join-is-place-value-sum",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvand x (_ bv65535 32)) (_ bv65535 32)) (bvshl (bvand (bvlshr x (_ bv16 32)) (_ bv65535 32)) (_ bv16 32))) (bvadd (bvand x (_ bv65535 32)) (bvmul (bvlshr x (_ bv16 32)) (_ bv65536 32))))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "57813f2639f785fb2cb6233f413d188b9d52c5fb3b1101ea294cd9c08801ea1c"
+      },
+      {
+        "name": "add",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvadd (bvand x (_ bv65535 32)) (bvand y (_ bv65535 32))) (_ bv65535 32)) (bvshl (bvand (bvadd (bvlshr x (_ bv16 32)) (bvlshr y (_ bv16 32)) (bvlshr (bvadd (bvand x (_ bv65535 32)) (bvand y (_ bv65535 32))) (_ bv16 32))) (_ bv65535 32)) (_ bv16 32))) (bvadd x y))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "c9ad03117f898447ec58c1d77b5fd9d5fd18f4525a4909de7a98353ded4fb954"
+      },
+      {
+        "name": "subtract",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvsub (bvand x (_ bv65535 32)) (bvand y (_ bv65535 32))) (_ bv65535 32)) (bvshl (bvand (bvsub (bvsub (bvlshr x (_ bv16 32)) (bvlshr y (_ bv16 32))) (ite (bvult (bvand x (_ bv65535 32)) (bvand y (_ bv65535 32))) (_ bv1 32) (_ bv0 32))) (_ bv65535 32)) (_ bv16 32))) (bvsub x y))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "7cda58c239c55cd35e3468b39fc83a15affafc5e18ae0a6e8945989b5d8036b4"
+      },
+      {
+        "name": "scale-partial-products",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand x (_ bv65535 32)) (bvshl (bvand (bvadd y (bvlshr x (_ bv16 32))) (_ bv65535 32)) (_ bv16 32))) (bvadd x (bvmul y (_ bv65536 32))))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "accfd2d4ff7fd1bedd51e2f16c6b57e08d8b8688f81547068bf5c3041b80c5f5"
+      },
+      {
+        "name": "scale-distributivity",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvmul (bvadd x (bvmul y (_ bv65536 32))) k) (bvadd (bvmul x k) (bvmul y k (_ bv65536 32))))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "b3daaf78bf1e6d09551087d19f5e89c7d0354e7554e6c22fa999e1cf8d2f2f6c"
+      },
+      {
+        "name": "bvand",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvand (bvand x (_ bv65535 32)) (bvand y (_ bv65535 32))) (_ bv65535 32)) (bvshl (bvand (bvand (bvlshr x (_ bv16 32)) (bvlshr y (_ bv16 32))) (_ bv65535 32)) (_ bv16 32))) (bvand x y))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "b72d052108b9848d966981d72bfcd0e47e0cf338f612e895b09fcd54769eebc9"
+      },
+      {
+        "name": "bvor",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvor (bvand x (_ bv65535 32)) (bvand y (_ bv65535 32))) (_ bv65535 32)) (bvshl (bvand (bvor (bvlshr x (_ bv16 32)) (bvlshr y (_ bv16 32))) (_ bv65535 32)) (_ bv16 32))) (bvor x y))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "9586fd5e7c9d4a8adcec3413de6cdc55978d2488b812899461c89442e3a93a81"
+      },
+      {
+        "name": "bvxor",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvxor (bvand x (_ bv65535 32)) (bvand y (_ bv65535 32))) (_ bv65535 32)) (bvshl (bvand (bvxor (bvlshr x (_ bv16 32)) (bvlshr y (_ bv16 32))) (_ bv65535 32)) (_ bv16 32))) (bvxor x y))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "dd9089a6134ac5ab132fa2b50f5c6809e39e4ae4fd9037237c01157aef90be1b"
+      },
+      {
+        "name": "not",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvxor (bvand x (_ bv65535 32)) (_ bv65535 32)) (_ bv65535 32)) (bvshl (bvand (bvxor (bvlshr x (_ bv16 32)) (_ bv65535 32)) (_ bv65535 32)) (_ bv16 32))) (bvnot x))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "a93d0832a9ad8fb88242c7c70ec86dec97f4fc41d6b73ff622010e5a913b5f3a"
+      },
+      {
+        "name": "left-0",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvand x (_ bv65535 32)) (_ bv65535 32)) (bvshl (bvand (bvlshr x (_ bv16 32)) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv0 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "36d641a90e3a39c8936dded2e8635eb5246e7763a031a38ad0aab4f7f4dbad21"
+      },
+      {
+        "name": "right-0",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvand x (_ bv65535 32)) (_ bv65535 32)) (bvshl (bvand (bvlshr x (_ bv16 32)) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv0 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "e43875a5b594a8f10c91fa6b292dd51332b9a5e218ccd7722d165c47b8635c33"
+      },
+      {
+        "name": "left-1",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv1 32)) (_ bv65535 32)) (bvshl (bvand (bvor (bvshl (bvlshr x (_ bv16 32)) (_ bv1 32)) (bvlshr (bvand x (_ bv65535 32)) (_ bv15 32))) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv1 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "67235efe7e5fcc34d0001f63c6fd62275f6893f0c5bb082e8f90059ae75a150a"
+      },
+      {
+        "name": "right-1",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvor (bvlshr (bvand x (_ bv65535 32)) (_ bv1 32)) (bvshl (bvlshr x (_ bv16 32)) (_ bv15 32))) (_ bv65535 32)) (bvshl (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv1 32)) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv1 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "869bcac5b40976877e27a429da91842af99a225386b210b53cded15b38f158f2"
+      },
+      {
+        "name": "left-2",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv2 32)) (_ bv65535 32)) (bvshl (bvand (bvor (bvshl (bvlshr x (_ bv16 32)) (_ bv2 32)) (bvlshr (bvand x (_ bv65535 32)) (_ bv14 32))) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv2 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "0eedcc05011aa4d0afe3519aa66f55da74a2a504efe8f84a418a8f5decbd3f7f"
+      },
+      {
+        "name": "right-2",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvor (bvlshr (bvand x (_ bv65535 32)) (_ bv2 32)) (bvshl (bvlshr x (_ bv16 32)) (_ bv14 32))) (_ bv65535 32)) (bvshl (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv2 32)) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv2 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "87a497279753c4ad142afbb2d4aa1139cb3645b22d11ad1d7cc87d8bf05a8c5c"
+      },
+      {
+        "name": "left-3",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv3 32)) (_ bv65535 32)) (bvshl (bvand (bvor (bvshl (bvlshr x (_ bv16 32)) (_ bv3 32)) (bvlshr (bvand x (_ bv65535 32)) (_ bv13 32))) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv3 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "82c5b1761614a506fd0114544ab79388473d151153b607256e4511c1a710f51e"
+      },
+      {
+        "name": "right-3",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvor (bvlshr (bvand x (_ bv65535 32)) (_ bv3 32)) (bvshl (bvlshr x (_ bv16 32)) (_ bv13 32))) (_ bv65535 32)) (bvshl (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv3 32)) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv3 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "5e80b652114cce3a3cd962045d054cde3ba50b0b993cca6fa8436d57c504b7cd"
+      },
+      {
+        "name": "left-4",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv4 32)) (_ bv65535 32)) (bvshl (bvand (bvor (bvshl (bvlshr x (_ bv16 32)) (_ bv4 32)) (bvlshr (bvand x (_ bv65535 32)) (_ bv12 32))) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv4 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "b8cf40003596b9dc20232fc21edddcafb70700bd3bf853fa1cd6286cacdf971e"
+      },
+      {
+        "name": "right-4",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvor (bvlshr (bvand x (_ bv65535 32)) (_ bv4 32)) (bvshl (bvlshr x (_ bv16 32)) (_ bv12 32))) (_ bv65535 32)) (bvshl (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv4 32)) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv4 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "aecda94c3d42cace28913eec628b747b1be8a34331634524e3107a875cc38a66"
+      },
+      {
+        "name": "left-5",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv5 32)) (_ bv65535 32)) (bvshl (bvand (bvor (bvshl (bvlshr x (_ bv16 32)) (_ bv5 32)) (bvlshr (bvand x (_ bv65535 32)) (_ bv11 32))) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv5 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "f4172b8094ef51a73a8cd2c1ce78e7d511970ecc0508b27772e7ebc883795b4c"
+      },
+      {
+        "name": "right-5",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvor (bvlshr (bvand x (_ bv65535 32)) (_ bv5 32)) (bvshl (bvlshr x (_ bv16 32)) (_ bv11 32))) (_ bv65535 32)) (bvshl (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv5 32)) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv5 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "ce1ef9541bd45387f76b00a53565b5c6d525f18ad8cbfe3e49f2a65db83dc6a4"
+      },
+      {
+        "name": "left-6",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv6 32)) (_ bv65535 32)) (bvshl (bvand (bvor (bvshl (bvlshr x (_ bv16 32)) (_ bv6 32)) (bvlshr (bvand x (_ bv65535 32)) (_ bv10 32))) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv6 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "79124c3c304d0e52e63d461abd5ae4d8122e5123ba1b26c805eac84d6acb513b"
+      },
+      {
+        "name": "right-6",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvor (bvlshr (bvand x (_ bv65535 32)) (_ bv6 32)) (bvshl (bvlshr x (_ bv16 32)) (_ bv10 32))) (_ bv65535 32)) (bvshl (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv6 32)) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv6 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "ecf857492c0248315a586c7fb4b331baab8b6453cd08050300cf1e1defca10b2"
+      },
+      {
+        "name": "left-7",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv7 32)) (_ bv65535 32)) (bvshl (bvand (bvor (bvshl (bvlshr x (_ bv16 32)) (_ bv7 32)) (bvlshr (bvand x (_ bv65535 32)) (_ bv9 32))) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv7 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "af97f2fcca89515810534611d58f59c8cd349b3b84047279f267446fd3f1c776"
+      },
+      {
+        "name": "right-7",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvor (bvlshr (bvand x (_ bv65535 32)) (_ bv7 32)) (bvshl (bvlshr x (_ bv16 32)) (_ bv9 32))) (_ bv65535 32)) (bvshl (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv7 32)) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv7 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "c100c16eba399207134127f8e8873f1dc40cdbd0f62bb85babcbb2c5fe375044"
+      },
+      {
+        "name": "left-8",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv8 32)) (_ bv65535 32)) (bvshl (bvand (bvor (bvshl (bvlshr x (_ bv16 32)) (_ bv8 32)) (bvlshr (bvand x (_ bv65535 32)) (_ bv8 32))) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv8 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "87757e5c0387a87b1d6d00989366a867424051b6bad85b99b669c4a8498569f9"
+      },
+      {
+        "name": "right-8",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvor (bvlshr (bvand x (_ bv65535 32)) (_ bv8 32)) (bvshl (bvlshr x (_ bv16 32)) (_ bv8 32))) (_ bv65535 32)) (bvshl (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv8 32)) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv8 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "8ecdf2c1d10095990997bbfa346a7e671a3401ce8f7d6b79c6188c2a16df7d12"
+      },
+      {
+        "name": "left-9",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv9 32)) (_ bv65535 32)) (bvshl (bvand (bvor (bvshl (bvlshr x (_ bv16 32)) (_ bv9 32)) (bvlshr (bvand x (_ bv65535 32)) (_ bv7 32))) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv9 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "d06b2c03c7805ea688821b568516f6517056561ae2a0c3171c52e3b8aeb811f0"
+      },
+      {
+        "name": "right-9",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvor (bvlshr (bvand x (_ bv65535 32)) (_ bv9 32)) (bvshl (bvlshr x (_ bv16 32)) (_ bv7 32))) (_ bv65535 32)) (bvshl (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv9 32)) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv9 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "d98bb649da8344387f9a2c0c88731589a8971fc7fbce358d2e8a82c93ca8512d"
+      },
+      {
+        "name": "left-10",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv10 32)) (_ bv65535 32)) (bvshl (bvand (bvor (bvshl (bvlshr x (_ bv16 32)) (_ bv10 32)) (bvlshr (bvand x (_ bv65535 32)) (_ bv6 32))) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv10 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "30113189b7ed18485ce034baf40348d6fee95f32e477a998d7b5eccf6c1c8ec1"
+      },
+      {
+        "name": "right-10",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvor (bvlshr (bvand x (_ bv65535 32)) (_ bv10 32)) (bvshl (bvlshr x (_ bv16 32)) (_ bv6 32))) (_ bv65535 32)) (bvshl (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv10 32)) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv10 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "36704c39162169b4155cefc3f1574c64a171e267f02021105e00b186796d0ffa"
+      },
+      {
+        "name": "left-11",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv11 32)) (_ bv65535 32)) (bvshl (bvand (bvor (bvshl (bvlshr x (_ bv16 32)) (_ bv11 32)) (bvlshr (bvand x (_ bv65535 32)) (_ bv5 32))) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv11 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "52b77d111fe232f287afd438314a600f10b3b8c5533ef9740d6199d744ccc947"
+      },
+      {
+        "name": "right-11",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvor (bvlshr (bvand x (_ bv65535 32)) (_ bv11 32)) (bvshl (bvlshr x (_ bv16 32)) (_ bv5 32))) (_ bv65535 32)) (bvshl (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv11 32)) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv11 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "5355ad0f643ea3a5ae7f8a451b8a5444d19a759e1f1379db9fe8b5f198d5affd"
+      },
+      {
+        "name": "left-12",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv12 32)) (_ bv65535 32)) (bvshl (bvand (bvor (bvshl (bvlshr x (_ bv16 32)) (_ bv12 32)) (bvlshr (bvand x (_ bv65535 32)) (_ bv4 32))) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv12 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "ded5187312f03a1a2b1ebc3c65df50dfd6aa2d14c7d19bc80d86ad4e9c268d1e"
+      },
+      {
+        "name": "right-12",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvor (bvlshr (bvand x (_ bv65535 32)) (_ bv12 32)) (bvshl (bvlshr x (_ bv16 32)) (_ bv4 32))) (_ bv65535 32)) (bvshl (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv12 32)) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv12 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "00f7d45429188b6d0a064aa906771cc89ec5b813c16ba870e042a3b9a1d14367"
+      },
+      {
+        "name": "left-13",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv13 32)) (_ bv65535 32)) (bvshl (bvand (bvor (bvshl (bvlshr x (_ bv16 32)) (_ bv13 32)) (bvlshr (bvand x (_ bv65535 32)) (_ bv3 32))) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv13 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "945fdedf30115a36f1e146903c4e73ef9c5aeac1753c4e5f67a927d8c078c866"
+      },
+      {
+        "name": "right-13",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvor (bvlshr (bvand x (_ bv65535 32)) (_ bv13 32)) (bvshl (bvlshr x (_ bv16 32)) (_ bv3 32))) (_ bv65535 32)) (bvshl (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv13 32)) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv13 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "e52dae38b5704deb558b61abc3c7c9445df6d4b6aa52dc4d37d0ce729be366a4"
+      },
+      {
+        "name": "left-14",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv14 32)) (_ bv65535 32)) (bvshl (bvand (bvor (bvshl (bvlshr x (_ bv16 32)) (_ bv14 32)) (bvlshr (bvand x (_ bv65535 32)) (_ bv2 32))) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv14 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "6b522b4739be104f1dc785cf518b59bc99ab3e562cce7f42aaeb537ff42e2667"
+      },
+      {
+        "name": "right-14",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvor (bvlshr (bvand x (_ bv65535 32)) (_ bv14 32)) (bvshl (bvlshr x (_ bv16 32)) (_ bv2 32))) (_ bv65535 32)) (bvshl (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv14 32)) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv14 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "53f4f0015e25692babdd54b7663f359f02159eb7e4d5c05c648d648aac14422c"
+      },
+      {
+        "name": "left-15",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv15 32)) (_ bv65535 32)) (bvshl (bvand (bvor (bvshl (bvlshr x (_ bv16 32)) (_ bv15 32)) (bvlshr (bvand x (_ bv65535 32)) (_ bv1 32))) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv15 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "d519fb262290aad20ae009596bc04f1bc34f982c064b727af82be3c90ff6080b"
+      },
+      {
+        "name": "right-15",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvor (bvlshr (bvand x (_ bv65535 32)) (_ bv15 32)) (bvshl (bvlshr x (_ bv16 32)) (_ bv1 32))) (_ bv65535 32)) (bvshl (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv15 32)) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv15 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "907d7a56479b028b69f3c728e7a6a2198d55685dee0ea200530fcd54d3903f6b"
+      },
+      {
+        "name": "left-16",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (_ bv0 32) (_ bv65535 32)) (bvshl (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv0 32)) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv16 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "bc4ed5f9c8cb9a8978a857deaae4429af8e1a31eccc4b0597ea7ea3864647e96"
+      },
+      {
+        "name": "right-16",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv0 32)) (_ bv65535 32)) (bvshl (bvand (_ bv0 32) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv16 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "854c21729783bc781c1c33f607c15a55fe5ba7005c964b6ceda0aa88c166f30d"
+      },
+      {
+        "name": "left-17",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (_ bv0 32) (_ bv65535 32)) (bvshl (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv1 32)) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv17 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "0cde9e1e4b3758dd5959e4cb2c47f06ea3d5837eef3f510df9348c57a26c9327"
+      },
+      {
+        "name": "right-17",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv1 32)) (_ bv65535 32)) (bvshl (bvand (_ bv0 32) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv17 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "2cf0e685a037c037885c44ee51ff5003dd44c81f1bd8964595aa013ba571475f"
+      },
+      {
+        "name": "left-18",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (_ bv0 32) (_ bv65535 32)) (bvshl (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv2 32)) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv18 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "4c3e9cc23a7523dd98c00c5bd3928724a187c62b076fc2ced5c5c6e43eccb116"
+      },
+      {
+        "name": "right-18",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv2 32)) (_ bv65535 32)) (bvshl (bvand (_ bv0 32) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv18 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "69d6c933760f43ca8a9963bfdb74314693d4668c68a716cfffcceb7c427916b3"
+      },
+      {
+        "name": "left-19",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (_ bv0 32) (_ bv65535 32)) (bvshl (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv3 32)) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv19 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "20aa462ef8caf1cf76de0e7c260507df4229a829eecfa1eff8ec697b1979682e"
+      },
+      {
+        "name": "right-19",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv3 32)) (_ bv65535 32)) (bvshl (bvand (_ bv0 32) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv19 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "aa8552f3d5598b6c0e6c4750d1d0de5970daa0d59a0bd33c3d55a648df71269d"
+      },
+      {
+        "name": "left-20",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (_ bv0 32) (_ bv65535 32)) (bvshl (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv4 32)) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv20 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "a8f5d92e480c27448a43691136549eedad32c3e845404bd88704b7f7ac8ad7d5"
+      },
+      {
+        "name": "right-20",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv4 32)) (_ bv65535 32)) (bvshl (bvand (_ bv0 32) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv20 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "a1707a14868da0b9f16cff6b23a749dd3769d136713c9798d5b29ccdcf26b911"
+      },
+      {
+        "name": "left-21",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (_ bv0 32) (_ bv65535 32)) (bvshl (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv5 32)) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv21 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "6c9b442e62021ba16a59f26c7bd1a42962690fe6d25acf17f2cb82051769bf2e"
+      },
+      {
+        "name": "right-21",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv5 32)) (_ bv65535 32)) (bvshl (bvand (_ bv0 32) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv21 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "5d7377fe0d70cf914747a06a124ce7c64b7ad7a3c69887ccaff59f17627f6e41"
+      },
+      {
+        "name": "left-22",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (_ bv0 32) (_ bv65535 32)) (bvshl (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv6 32)) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv22 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "dfe5432bf1138aef49f0ce877748f433cdf24c190c35b347303ac05a0b796522"
+      },
+      {
+        "name": "right-22",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv6 32)) (_ bv65535 32)) (bvshl (bvand (_ bv0 32) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv22 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "06fa21ff4279ba05f7c1662ff342239b0928ea413fb477cc5f99b8ab5ef24762"
+      },
+      {
+        "name": "left-23",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (_ bv0 32) (_ bv65535 32)) (bvshl (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv7 32)) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv23 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "edbaea7d4da0e68b70284d94c17eee5571890e8611c02e6945fd78ff58bbe421"
+      },
+      {
+        "name": "right-23",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv7 32)) (_ bv65535 32)) (bvshl (bvand (_ bv0 32) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv23 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "eabf6424951ea239fd9049e0da71fb1298017ece65eb48c8c33d89609e004752"
+      },
+      {
+        "name": "left-24",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (_ bv0 32) (_ bv65535 32)) (bvshl (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv8 32)) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv24 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "6841dc277b147736a8ba09a0cec7573861cffff3ef01433941c74c6ed55aed9a"
+      },
+      {
+        "name": "right-24",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv8 32)) (_ bv65535 32)) (bvshl (bvand (_ bv0 32) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv24 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "886a4c8836dc7dec42f41b418b9de669bada6a72244479a6248f1c572b8cc3f4"
+      },
+      {
+        "name": "left-25",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (_ bv0 32) (_ bv65535 32)) (bvshl (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv9 32)) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv25 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "ba7ab9236dca0ddac43cef8422d60be89ea3ee7bd5c4f836dbcb90e22f89035c"
+      },
+      {
+        "name": "right-25",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv9 32)) (_ bv65535 32)) (bvshl (bvand (_ bv0 32) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv25 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "80866f93aaae79aad46eaf2988a813250b72f7a8685cb69239b4c765f7d9eb12"
+      },
+      {
+        "name": "left-26",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (_ bv0 32) (_ bv65535 32)) (bvshl (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv10 32)) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv26 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "691b1382dac07ab739657a21b4adefda6a293a8ae81954b2ef6c9b583f101a54"
+      },
+      {
+        "name": "right-26",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv10 32)) (_ bv65535 32)) (bvshl (bvand (_ bv0 32) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv26 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "e74646cf57a27222805f7120801c6f0b419f72a7ec8162dbdd8208d19836c8ed"
+      },
+      {
+        "name": "left-27",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (_ bv0 32) (_ bv65535 32)) (bvshl (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv11 32)) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv27 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "a42cd55bc57d0342768ee7249067a5dcf033b24a986e36028a79ae65a8534cef"
+      },
+      {
+        "name": "right-27",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv11 32)) (_ bv65535 32)) (bvshl (bvand (_ bv0 32) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv27 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "7215cb071e155bb00268f861534726372e4b0a74c3cedc9bdf50d403a89c981a"
+      },
+      {
+        "name": "left-28",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (_ bv0 32) (_ bv65535 32)) (bvshl (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv12 32)) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv28 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "62436c564104f4b5c58b744e5dfce02d02bd70cf3cc717622b116a5299a69fe8"
+      },
+      {
+        "name": "right-28",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv12 32)) (_ bv65535 32)) (bvshl (bvand (_ bv0 32) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv28 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "6b744f07ba5ccec726907d8732f351c2c567135c863e6f104ba2f78b596a3364"
+      },
+      {
+        "name": "left-29",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (_ bv0 32) (_ bv65535 32)) (bvshl (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv13 32)) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv29 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "367786494640c3eb41de99fd3e3d6370931605919580232b0c203efac51f992a"
+      },
+      {
+        "name": "right-29",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv13 32)) (_ bv65535 32)) (bvshl (bvand (_ bv0 32) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv29 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "1d99c003f3ee1cf7b232f7e3e1c69b2138ff502ce16becee422a5772f7269b81"
+      },
+      {
+        "name": "left-30",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (_ bv0 32) (_ bv65535 32)) (bvshl (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv14 32)) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv30 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "cab9acd2f0c1496c5511dbc5a1aaf4262a52ac65f15e2ee946f48e2cea8ec4d6"
+      },
+      {
+        "name": "right-30",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv14 32)) (_ bv65535 32)) (bvshl (bvand (_ bv0 32) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv30 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "69b77e0f85a14a471d6b187a1787be99281f230757a386e5e054541fbbda9b72"
+      },
+      {
+        "name": "left-31",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (_ bv0 32) (_ bv65535 32)) (bvshl (bvand (bvshl (bvand x (_ bv65535 32)) (_ bv15 32)) (_ bv65535 32)) (_ bv16 32))) (bvshl x (_ bv31 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "19dc94a2d150785cbb8af428481a51d1021457ef520c8de4f007d430029c3613"
+      },
+      {
+        "name": "right-31",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvlshr (bvlshr x (_ bv16 32)) (_ bv15 32)) (_ bv65535 32)) (bvshl (bvand (_ bv0 32) (_ bv65535 32)) (_ bv16 32))) (bvlshr x (_ bv31 32)))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "4f0e59f2ec92dbf6db082929d7a1b72608f714ce92356765e633e80eac2c0ef4"
+      },
+      {
+        "name": "compare-=",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (ite (= (bvlshr x (_ bv16 32)) (bvlshr y (_ bv16 32))) (= (bvand x (_ bv65535 32)) (bvand y (_ bv65535 32))) false) (= x y))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "fc3af18f304c0931a19a7649792f51409f05a80ea1e012cb9c56c5735e692c3f"
+      },
+      {
+        "name": "compare-distinct",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (ite (= (bvlshr x (_ bv16 32)) (bvlshr y (_ bv16 32))) (distinct (bvand x (_ bv65535 32)) (bvand y (_ bv65535 32))) true) (distinct x y))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "049fbcd4a5dc9fed3f175796f311ecb8f66933d751ce37397a159406b81604c1"
+      },
+      {
+        "name": "compare-bvult",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (ite (= (bvlshr x (_ bv16 32)) (bvlshr y (_ bv16 32))) (bvult (bvand x (_ bv65535 32)) (bvand y (_ bv65535 32))) (bvult (bvlshr x (_ bv16 32)) (bvlshr y (_ bv16 32)))) (bvult x y))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "499d51564b3d433fbbbe4d87525b0cfea21700a561ae03067630f3b336da6cfb"
+      },
+      {
+        "name": "compare-bvule",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (ite (= (bvlshr x (_ bv16 32)) (bvlshr y (_ bv16 32))) (bvule (bvand x (_ bv65535 32)) (bvand y (_ bv65535 32))) (bvule (bvlshr x (_ bv16 32)) (bvlshr y (_ bv16 32)))) (bvule x y))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "cc081f68514080d2188cd2dd9805d1853002a4123f76fd15bd78f06edf3abda1"
+      },
+      {
+        "name": "compare-bvugt",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (ite (= (bvlshr x (_ bv16 32)) (bvlshr y (_ bv16 32))) (bvugt (bvand x (_ bv65535 32)) (bvand y (_ bv65535 32))) (bvugt (bvlshr x (_ bv16 32)) (bvlshr y (_ bv16 32)))) (bvugt x y))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "d9bf8d31223009059ce3ca479c4636c05450e9a7e8c64cc04934ea072e49335c"
+      },
+      {
+        "name": "compare-bvuge",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (ite (= (bvlshr x (_ bv16 32)) (bvlshr y (_ bv16 32))) (bvuge (bvand x (_ bv65535 32)) (bvand y (_ bv65535 32))) (bvuge (bvlshr x (_ bv16 32)) (bvlshr y (_ bv16 32)))) (bvuge x y))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "ca558c0af12f0993a618bd07ba0cd163e81d378fc95aab85ca40f32375364e5c"
+      },
+      {
+        "name": "select",
+        "result": "unsat",
+        "answer": "unsat",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (ite (distinct (bvor (bvand x (_ bv65535 32)) (bvlshr x (_ bv16 32))) (_ bv0 32)) (bvand y (_ bv65535 32)) (bvand k (_ bv65535 32))) (_ bv65535 32)) (bvshl (bvand (ite (distinct (bvor (bvand x (_ bv65535 32)) (bvlshr x (_ bv16 32))) (_ bv0 32)) (bvlshr y (_ bv16 32)) (bvlshr k (_ bv16 32))) (_ bv65535 32)) (_ bv16 32))) (ite (distinct x (_ bv0 32)) y k))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n",
+        "sha256": "e63b52092f059e5ca8d0d9ac1c96879fdf6e779fc3f5553e368a6c1f28da9a0a"
+      },
+      {
+        "name": "wrong-no-borrow",
+        "result": "sat",
+        "answer": "sat\n((x #x00180000)\n (y #x30000001)\n (k #x00000000))",
+        "smt2": "(set-logic QF_BV)\n(set-option :timeout 10000)\n(declare-const x (_ BitVec 32))\n(declare-const y (_ BitVec 32))\n(declare-const k (_ BitVec 32))\n(assert (not (= (bvor (bvand (bvsub (bvand x (_ bv65535 32)) (bvand y (_ bv65535 32))) (_ bv65535 32)) (bvshl (bvand (bvsub (bvlshr x (_ bv16 32)) (bvlshr y (_ bv16 32))) (_ bv65535 32)) (_ bv16 32))) (bvsub x y))))\n(check-sat-using (then (using-params simplify :som true) bit-blast sat))\n(get-value (x y k))\n",
+        "sha256": "19834a3f02530ccb8ed8f54edc84f1ba4da56c3ccc7a56c5ba910bb41bcd9e5d"
+      }
+    ]
+  },
+  "split_scale": {
+    "sha256": "eba8c9343dc7e56b9fbd6349f152e0e49e487c23178b9b737e72c18b3e0a2f5b",
+    "result": "unsat"
+  },
+  "concrete_multiplier_roundtrips": [
+    {
+      "a": 1,
+      "inverse": 1,
+      "result": "unsat"
+    },
+    {
+      "a": 3,
+      "inverse": 2863311531,
+      "result": "unsat"
+    },
+    {
+      "a": 5,
+      "inverse": 3435973837,
+      "result": "unsat"
+    },
+    {
+      "a": 4294967295,
+      "inverse": 4294967295,
+      "result": "unsat"
+    },
+    {
+      "a": 2147483649,
+      "inverse": 2147483649,
+      "result": "unsat"
+    },
+    {
+      "a": 1789947473,
+      "inverse": 846699185,
+      "result": "unsat"
+    }
+  ],
+  "negative_control": "sat\n((a #x00000003)\n (b #x00000001)\n (x #x00000000)\n (y #x00000000))",
+  "seconds": 0.883096433011815,
+  "scope": "Solver-checked bit-vector formulas; not a proof of the C-to-C implementation."
+}

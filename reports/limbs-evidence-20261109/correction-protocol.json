@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-10",
+  "preceding_protocol": "experiments/limbs-exploration.json",
+  "change": "Interpret constant shift/subpiece counts separately from data widths; data arithmetic remains <=32 bits.",
+  "binaries": "unchanged frozen matrix, same csrd model",
+  "corpus": "same development cases; reserved families unopened",
+  "ghidra": "same filters, 5 measured repeats, 1 warmup, 60s wall, 30s analysis, 15s decompile; no selection cutoffs",
+  "old_adapter_sha256": "41c3fbb03c6c50566d110c329eca465e1437429455cab59127ffbaba06e216ca",
+  "new_adapter_sha256": "8fcbef0388e3b09390073866ebe41da5417a909315c3e9185cbc876bc97e6a80"
+}

@@ -35,6 +35,7 @@ binary-size and application-runtime measurements remain separate dimensions.
 | Negative controls | Candidate result +1 must yield a counterexample; runtime fits to permuted training targets are scored separately. XOR with three basis probes deliberately tests a false affine fit. |
 | Success under budget | Actual wall/CPU/RSS/query/step budget combinations, all attempts retained. CLI accepts Cartesian grids. Timeouts mean no recovery within that measured budget, not unlimited resistance. |
 | Relative cost | Per-case/profile/budget paired ratios and differences against original **when both attempts succeed**; outcome counts show the conditioning. No ratio is invented for unsupported cases or timeouts. |
+| Identical-binary control | Paired executable SHA-256 comparisons flag byte-identical artifacts. Resource differences between them cannot establish a cost caused by transformed instructions, even if an exploratory interval excludes 1. Missing hashes remain unassessed. |
 | Variation | Raw repetitions, median/min/max, deterministic bootstrap 95% intervals for medians with at least five pairs; exploratory Wilson intervals for success fractions. Repeats on one artifact are not independent program samples. |
 | Human effort | Separate task preparation, active/wall timers, pauses, attempt counts, frozen submissions, correctness grading and time to first correct in-budget submission. Actual human data remains unassessed until a study occurs. |
 
