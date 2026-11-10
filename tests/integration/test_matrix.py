@@ -35,7 +35,7 @@ class Matrix(unittest.TestCase):
             "profiles": [{"id": "clang-O2", "compiler": "clang", "optimization": "O2",
                           "tiers": ["core"], "selection_required": True}]}
 
-    def execute_matrix(self, name="run", expected=0):
+    def execute_matrix(self, name="run", expected=0, extra=()):
         manifest = self.root / (name + ".json")
         manifest.write_text(json.dumps(self.manifest))
         out = self.root / name
@@ -44,7 +44,7 @@ class Matrix(unittest.TestCase):
                                  "--compiler", "clang=" + self.compiler, "--objdump", self.objdump,
                                  "--strategies", "identity", "affine", "--inputs", "8",
                                  "--iterations", "10000", "--repetitions", "3",
-                                 "--output-dir", str(out)], text=True, capture_output=True, timeout=150)
+                                 "--output-dir", str(out), *extra], text=True, capture_output=True, timeout=150)
         self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
         return json.loads((out / "matrix.json").read_text())
 
@@ -61,6 +61,28 @@ class Matrix(unittest.TestCase):
             self.assertEqual(record["llvm_ir"]["status"], "measured")
             binding = json.loads(Path(record["validation"]).read_text())
             self.assertEqual(len(binding["configurations"][0]["build_validation"]), 2)
+
+    def test_control_flow_selection_requires_its_own_contribution(self):
+        # Different instructions from the original are insufficient when the same
+        # encoding without the branch already gives that difference.
+        record = {"case": "f", "split": "development", "variant": "identity-split-scale",
+                  "profile": "p", "status": "completed", "strategy": "identity",
+                  "control_flow": "split-scale", "split_scales": 1,
+                  "comparison": {"instruction_sequences_differ_from_original": True,
+                                 "instruction_sequences_differ_from_control_flow_control": False},
+                  "timing": {"max_paired_ratio": 1.0}, "binary_size_ratio": 1.0}
+        result = select_candidates([record], ["p"], 2.0, 2.0)
+        self.assertFalse(result["decisions"][0]["eligible"])
+        self.assertIn("control-flow-contribution-absent-or-unassessed", result["decisions"][0]["reasons"])
+
+    def test_control_flow_matrix_has_matching_encoding_and_flow_controls(self):
+        report = self.execute_matrix(extra=("--control-flows", "none", "split-scale"))
+        self.assertEqual(len(report["records"]), 5)
+        variant = next(r for r in report["records"] if r["variant"] == "affine-42-split-scale")
+        self.assertEqual(variant["control"], "identity-split-scale")
+        self.assertEqual(variant["control_flow_control"], "affine-42")
+        self.assertEqual(variant["split_scales"], 1)
+        self.assertIn("instruction_sequences_differ_from_control_flow_control", variant["comparison"])
 
     def test_preprocessor_counterexample_blocks_linking(self):
         source = self.root / "conditional.c"

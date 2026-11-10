@@ -14,6 +14,8 @@ Score evaluate(const Graph &g, const PlanOptions &options, Plan &p) {
   for (unsigned id = 0; id < g.nodes.size(); ++id) {
     const auto &n = g.nodes[id]; const auto label = p.labels[id];
     p.estimatedOperations += operationCost(n, label);
+    if (options.controlFlow == "split-scale" && n.kind == Expr::Kind::Scale && n.value > 1)
+      p.estimatedOperations += 4;
     tie += (id + 1) * unsigned(label);
     if (n.kind != Expr::Kind::Reference && n.kind != Expr::Kind::Constant) {
       ++p.statements; ordinary += label == Encoding::Identity;
@@ -105,6 +107,8 @@ Plan plan(const Graph &g, const PlanOptions &options) {
     for (auto e : choices) {
       arithmetic = arithmetic + z3::ite(labels.back() == int(e), ctx.int_val(operationCost(node, e)), ctx.int_val(0));
     }
+    if (options.controlFlow == "split-scale" && node.kind == Expr::Kind::Scale && node.value > 1)
+      arithmetic = arithmetic + 4;
     if (node.kind != Expr::Kind::Reference && node.kind != Expr::Kind::Constant) {
       materialized = materialized + 1;
       ordinary = ordinary + z3::ite(labels.back() == 0, ctx.int_val(1), ctx.int_val(0));

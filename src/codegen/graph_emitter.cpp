@@ -95,7 +95,20 @@ public:
       }
       std::vector<std::string> args;
       for (unsigned i = 0; i < node.inputs.size(); ++i) args.push_back(input(node.inputs[i], inputEncoding(node, i, compute)));
-      values[id] = temporary(operation(node, compute, args));
+      if (options.controlFlow == "split-scale" && node.kind == Expr::Kind::Scale && node.value > 1) {
+        // Partition the stored operand, without decoding it. For either supported
+        // arithmetic representation, F(u) = k*u+c, hence F(u-1)+k = F(u)
+        // in Z/(2^32). Both branches stay in the selected representation.
+        values[id] = temporary("0u");
+        const auto odd = representation(compute).times("(" + args[0] + " - 1u)", node.value);
+        lines.push_back("if ((" + args[0] + " & 1u) != 0u) { " + values[id] + " = " +
+                        odd + " + " + literal(node.value) + "; } else { " + values[id] +
+                        " = " + operation(node, compute, args) + "; }");
+        ++result.splitScales;
+        result.estimatedOperations += 4; // Worst branch: mask, test, decrement, correction.
+      } else {
+        values[id] = temporary(operation(node, compute, args));
+      }
       ++result.operations;
       result.estimatedOperations += operationCost(node, compute);
       if (compute != Encoding::Identity) ++result.encodedOperations;

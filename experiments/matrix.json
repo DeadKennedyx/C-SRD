@@ -8,6 +8,12 @@
     {"id": "xor", "source": "benchmarks/bitwise/xor.c", "family": "xor", "split": "development"},
     {"id": "popcount8", "source": "benchmarks/algorithms/popcount8.c", "family": "popcount8", "split": "development",
      "algorithms": ["popcount8-serial", "popcount8-swar"]},
+    {"id": "rotate_mix", "source": "benchmarks/bitwise/rotate_mix.c", "family": "rotate-mix", "split": "development"},
+    {"id": "parity", "source": "benchmarks/bitwise/parity.c", "family": "parity", "split": "development"},
+    {"id": "bounded_arithmetic", "source": "benchmarks/arithmetic/bounded_arithmetic.c", "family": "bounded-arithmetic", "split": "development"},
+    {"id": "rotate_mix_heldout", "source": "benchmarks/bitwise/rotate_mix_heldout.c", "family": "rotate-mix-13", "split": "heldout"},
+    {"id": "bounded_arithmetic_heldout", "source": "benchmarks/arithmetic/bounded_arithmetic_heldout.c", "family": "bounded-arithmetic-3", "split": "heldout"},
+    {"id": "byte_sum_heldout", "source": "benchmarks/bitwise/byte_sum_heldout.c", "family": "byte-sum", "split": "heldout"},
     {"id": "difference", "source": "benchmarks/arithmetic/difference.c", "family": "difference", "split": "heldout"},
     {"id": "minimum", "source": "benchmarks/algorithms/minimum.c", "family": "minimum", "split": "heldout"}
   ],
@@ -41,7 +47,7 @@
   ],
   "deferred": [
     {"dimension": "Windows/MSVC", "status": "not-implemented", "reason": "Requires matching frontend/ABI and execution environment"},
-    {"dimension": "Independent decompiler", "status": "not-implemented", "reason": "Current independent observer is executable I/O reconstruction; no decompiler result is claimed"},
+    {"dimension": "General decompiler reconstruction", "status": "partially-implemented", "reason": "Separate Ghidra observer admits bounded high P-code expression DAGs with a known u32 ABI and symbol; unsupported cases are inconclusive"},
     {"dimension": "Human reconstruction effort", "status": "not-assessed", "reason": "Requires prespecified tasks, participants and independent scoring"},
     {"dimension": "Exhaustive flag combinations", "status": "not-assessed", "reason": "Finite declared matrix only; add deployment-specific profiles"}
   ]

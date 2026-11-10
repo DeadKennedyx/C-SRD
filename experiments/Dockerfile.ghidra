@@ -1,0 +1,19 @@
+# Build the validation image first; override BASE for a registry-pinned equivalent.
+ARG BASE=csrd-dev:validation
+FROM ${BASE}
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    openjdk-25-jdk-headless curl unzip make g++ ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+RUN curl --fail --location --output /tmp/ghidra.zip \
+      https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_12.2_build/ghidra_12.2_PUBLIC_20261016.zip \
+    && echo '2c2cd776db3c1f6a097ba418922378ac3649cadd5e844a6f5f088ae628a7be67  /tmp/ghidra.zip' | sha256sum -c - \
+    && unzip -q /tmp/ghidra.zip -d /opt && rm /tmp/ghidra.zip
+# The shipped standalone Makefile assumes x86; clear ARCH_TYPE for native ARM64.
+# Only the headless decompiler needed for this protocol is built here.
+RUN if [ "$(uname -m)" = aarch64 ]; then \
+      cd /opt/ghidra_12.2_PUBLIC/Ghidra/Features/Decompiler && \
+      make -C src/decompile/cpp -j2 ARCH_TYPE= ghidra_opt && \
+      mkdir -p os/linux_arm_64 && cp src/decompile/cpp/ghidra_opt os/linux_arm_64/decompile; \
+    fi
+ENV CSRD_GHIDRA_HEADLESS=/opt/ghidra_12.2_PUBLIC/support/analyzeHeadless
+WORKDIR /work

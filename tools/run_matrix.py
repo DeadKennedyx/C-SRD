@@ -77,15 +77,20 @@ def prepare_variants(args, case, directory, command):
     algorithms = ["none", *case.get("algorithms", [])]
     for algorithm in algorithms:
         for strategy in args.strategies:
-            for seed in ([0] if strategy == "identity" else args.seeds):
+            for seed, flow in [(seed, flow) for seed in ([0] if strategy == "identity" else args.seeds)
+                               for flow in args.control_flows]:
                 stem = ("" if algorithm == "none" else algorithm + "-") + strategy
                 if strategy != "identity":
                     stem += "-" + str(seed)
+                flow_control = stem
+                if flow != "none":
+                    stem += "-" + flow
                 out = directory / stem
                 out.mkdir()
                 candidate, report = out / "candidate.c", out / "transformation.json"
                 argv = [args.csrd, "transform", source, "-o", candidate,
-                        "--strategy", strategy, "--seed", seed, "--report", report]
+                        "--strategy", strategy, "--seed", seed, "--report", report, "--control-flow", flow,
+                        "--timeout-ms", args.timeout_ms]
                 if algorithm != "none":
                     argv += ["--algorithm", algorithm]
                 command(argv)
@@ -94,8 +99,12 @@ def prepare_variants(args, case, directory, command):
                        for f in manifest["functions"]):
                     raise ValueError("candidate was not transformed and verified")
                 control = "identity" if algorithm == "none" else algorithm + "-identity"
+                if flow != "none":
+                    control += "-" + flow
                 variants.append({"id": stem, "path": str(candidate), "sha256": audit.file_hash(candidate),
                                  "control": control, "algorithm": algorithm, "strategy": strategy, "seed": seed,
+                                 "control_flow": flow, "control_flow_control": flow_control,
+                                 "split_scales": sum(f.get("split_scales", 0) for f in manifest["functions"]),
                                  "manifest": str(report), "manifest_sha256": audit.file_hash(report)})
     return function, variants, analysis["target"]
 
@@ -215,6 +224,7 @@ def run(args, root):
         args.csrd, args.objdump = find_tool(args.csrd), find_tool(args.objdump)
         report["tools"] = {k: tool_identity(command, getattr(args, k)) for k in ["csrd", "objdump"]}
         report["settings"] = {"tier": args.tier, "seeds": args.seeds, "strategies": args.strategies,
+                              "control_flows": args.control_flows,
                               "case_filter": args.case, "profile_filter": args.profile,
                               "inputs": args.inputs, "iterations": args.iterations, "repetitions": args.repetitions}
         frozen = None
@@ -224,8 +234,9 @@ def run(args, root):
             frozen = json.loads(Path(args.selection).read_text())
             if frozen.get("status") not in ("completed", "completed-with-gaps") or frozen["settings"]["tier"] == "holdout":
                 raise ValueError("holdout requires a completed development experiment")
-            if (frozen["settings"]["seeds"] != args.seeds or frozen["settings"]["strategies"] != args.strategies):
-                raise ValueError("holdout must use the frozen development seeds and strategies")
+            if (frozen["settings"]["seeds"] != args.seeds or frozen["settings"]["strategies"] != args.strategies
+                    or frozen["settings"].get("control_flows", ["none"]) != args.control_flows):
+                raise ValueError("holdout must use the frozen development seeds, strategies and control-flow candidates")
             report["development_sha256"] = audit.file_hash(args.selection)
         selected_profiles = [p for p in manifest["profiles"] if args.tier in p["tiers"]]
         if args.profile:
@@ -287,6 +298,9 @@ def run(args, root):
                     cell = {"case": case["id"], "family": case["family"], "split": case["split"],
                             "variant": variant["id"], "control": variant["control"],
                             "strategy": variant.get("strategy", "original"),
+                            "control_flow": variant.get("control_flow", "none"),
+                            "control_flow_control": variant.get("control_flow_control", "original"),
+                            "split_scales": variant.get("split_scales", 0),
                             "profile": profile["id"], "status": "failed"}
                     report["records"].append(cell)
                     build_dir = directory / ("build-" + profile["id"] + "-" + variant["id"])
@@ -322,7 +336,9 @@ def run(args, root):
                         base = by_id["original"]
                         for cell in cells:
                             control = by_id.get(cell["control"])
+                            flow_control = by_id.get(cell["control_flow_control"])
                             cell["comparison"] = {
+                                "instruction_sequences_differ_from_control_flow_control": None if not flow_control else cell["linked"]["opcode_sha256"] != flow_control["linked"]["opcode_sha256"],
                                 "instruction_sequences_differ_from_original": cell["linked"]["opcode_sha256"] != base["linked"]["opcode_sha256"],
                                 "instruction_sequences_differ_from_algorithm_control": None if not control else cell["linked"]["opcode_sha256"] != control["linked"]["opcode_sha256"],
                                 "prelink_ssa_differs_from_original": None if cell["llvm_ir"]["status"] != "measured" else cell["llvm_ir"]["ssa_sha256"] != base["llvm_ir"]["ssa_sha256"]}
@@ -393,6 +409,7 @@ def main():
     p.add_argument("--profile", action="append")
     p.add_argument("--strategies", nargs="+", choices=["identity", "affine", "xor", "planned"], default=["identity", "affine", "planned"])
     p.add_argument("--seeds", nargs="+", type=int, default=[42])
+    p.add_argument("--control-flows", nargs="+", choices=["none", "split-scale"], default=["none"])
     p.add_argument("--inputs", type=int, default=128)
     p.add_argument("--iterations", type=int, default=200000)
     p.add_argument("--repetitions", type=int, default=5)
@@ -410,6 +427,8 @@ def main():
         p.error("seeds must be unique uint64 values")
     if "identity" not in args.strategies or len(set(args.strategies)) != len(args.strategies):
         p.error("unique strategies including identity are required for controls")
+    if "none" not in args.control_flows or len(set(args.control_flows)) != len(args.control_flows):
+        p.error("unique control-flow modes including none are required for paired controls")
     if not all(math.isfinite(v) and v >= 1 for v in (args.max_runtime_ratio, args.max_size_ratio)):
         p.error("cost ratios must be >= 1")
     root = Path(args.output_dir).resolve()

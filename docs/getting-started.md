@@ -61,6 +61,7 @@ Implemented options:
 | `--coverage 0..100` | Minimum percentage of live arithmetic/bitwise graph nodes encoded; planned only; default 50 |
 | `--objective balanced\|runtime\|size` | Explicit proxy cost objective; planned only; no promise of actual speed or size improvement |
 | `--algorithm popcount8-serial\|popcount8-swar` | Opt-in low-byte population-count candidate for unary functions; replacement must prove equivalent |
+| `--control-flow none\|split-scale` | Default none; experimental bounded parity split of constant-scale nodes with k>1, without decoding |
 | `verify original.c candidate.c [--function NAME]` | Per-function equivalence query, including concrete counterexamples; no rewriting |
 | `analyze input.c [--function NAME]` | Clang AST/CFG metrics and supported-subset diagnostics, JSON to stdout |
 | `--report PATH` | JSON decisions, source/header hashes, proof obligations and counters |
@@ -98,6 +99,10 @@ untransformed `__FILE__` and include resolution. Compilation databases and custo
 frontend flags are not implemented.
 
 ## Reproduce experiments
+
+The [Ghidra observer protocol](decompiler-audit.md) describes the optional pinned
+container, actual-binary reconstruction, explicit capability gaps and paired
+`--control-flows none split-scale` matrix. It does not expand the C input subset.
 
 For a paired compiled-code audit of any single admitted function, use:
 

@@ -17,6 +17,7 @@ void usage() {
     "Usage: csrd transform input.c -o output.c [--seed UINT64] [--report report.json] [--timeout-ms UINT]\n"
     "       [--strategy affine|xor|identity|independent|planned] [--coverage 0..100] [--objective balanced|runtime|size]\n"
     "       [--algorithm popcount8-serial|popcount8-swar]\n"
+    "       [--control-flow none|split-scale] (experimental)\n"
     "       csrd verify original.c candidate.c [--function NAME] [--report report.json] [--timeout-ms UINT]\n"
     "       csrd analyze input.c [--function NAME] [--report report.json]\n"
     "Transformations are checked against reparsed emitted C before output is written.\n";
@@ -69,6 +70,8 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
     if (d.status == "transformed") {
       f["strategy"] = result.options.strategy;
       f["algorithm_candidate"] = result.options.algorithm;
+      f["control_flow"] = result.options.controlFlow;
+      f["split_scales"] = d.emission.splitScales;
       f["a"] = d.a; f["b"] = d.b; f["inverse"] = d.inverse;
       f["operations_transformed"] = d.operations;
       f["xor_mask"] = d.xorMask;
@@ -102,6 +105,7 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
     {"candidate_dependencies", std::move(candidateDependencies)},
     {"model", "pure-u32-c11-v2; identical target, headers and compilation environment required"}, {"functions", std::move(functions)}};
   root["strategy"] = result.options.strategy;
+  root["control_flow"] = result.options.controlFlow;
   root["objective"] = result.options.objective;
   root["coverage_percent"] = result.options.coverage;
   root["timeout_ms"] = result.options.timeoutMs;
@@ -124,7 +128,7 @@ int main(int argc, char **argv) {
     unsigned timeout = 10000;
     bool seedSet = false, timeoutSet = false;
     csrd::PlanOptions options;
-    bool strategySet = false, coverageSet = false, objectiveSet = false, algorithmSet = false;
+    bool strategySet = false, coverageSet = false, objectiveSet = false, algorithmSet = false, controlFlowSet = false;
     if (action == "verify") output = argv[3];
     for (int i = action == "verify" ? 4 : 3; i < argc; ++i) {
       const std::string key = argv[i];
@@ -134,6 +138,10 @@ int main(int argc, char **argv) {
       else if (key == "--report" && reportPath.empty()) reportPath = value;
       else if (key == "--function" && action != "transform" && function.empty()) function = value;
       else if (key == "--seed" && action == "transform" && !seedSet) { seed = number(value); seedSet = true; }
+      else if (key == "--control-flow" && action == "transform" && !controlFlowSet) {
+        if (value != "none" && value != "split-scale") throw std::runtime_error("unknown control-flow candidate");
+        options.controlFlow = value; controlFlowSet = true;
+      }
       else if (key == "--algorithm" && action == "transform" && !algorithmSet) {
         if (value != "popcount8-serial" && value != "popcount8-swar") throw std::runtime_error("unknown candidate algorithm");
         options.algorithm = value; algorithmSet = true;

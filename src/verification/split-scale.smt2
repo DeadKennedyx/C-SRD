@@ -1,0 +1,12 @@
+; Arbitrary stored u, scale k and affine correction c, all modulo 2^32.
+(set-logic QF_BV)
+(declare-const u (_ BitVec 32))
+(declare-const k (_ BitVec 32))
+(declare-const c (_ BitVec 32))
+(define-fun baseline () (_ BitVec 32) (bvadd (bvmul k u) c))
+(define-fun split () (_ BitVec 32)
+  (ite (= (bvand u (_ bv1 32)) (_ bv1 32))
+       (bvadd (bvadd (bvmul k (bvsub u (_ bv1 32))) c) k)
+       baseline))
+(assert (not (= split baseline)))
+(check-sat-using (then (using-params simplify :som true) smt))

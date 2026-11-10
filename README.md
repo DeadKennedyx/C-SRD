@@ -36,6 +36,7 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Compiled-code audit](reports/protection-audit-validation.md) | Current paired audit, preprocessing controls and observed optimization effects |
 | [Linked validation matrix and observers](docs/validation-matrix.md) | Declared build profiles, compiled candidate selection, independent recovery and bounded runtime observation |
 | [Matrix and recovery results](reports/validation-matrix.md) | Actual linked-build, held-out and runtime results, commands, limitations and archived evidence |
+| [Decompiler reconstruction protocol](docs/decompiler-audit.md) | Known-interface Ghidra observer, verified reconstruction and opt-in parity-split experiment |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |
@@ -236,6 +237,7 @@ functions may be copied unchanged successfully.
 | `--coverage 0..100` | Planned-only minimum encoded percentage of eligible live arithmetic/bitwise nodes; default 50 |
 | `--objective balanced\|runtime\|size` | Planned-only cost proxy; default balanced |
 | `--algorithm popcount8-serial\|popcount8-swar` | Propose a known low-byte population-count algorithm for admitted unary functions; equivalence is checked, not inferred from names |
+| `--control-flow none\|split-scale` | Experimental parity split of constant multiplication; actual emitted C must validate; reports how many eligible nodes split |
 | `csrd verify original.c candidate.c [--function NAME]` | Validate selected original functions against candidate definitions; no rewriting |
 | `csrd analyze input.c [--function NAME]` | Report source AST/CFG metrics and subset support; JSON to stdout unless a report is requested |
 | `--report PATH` | Write JSON decisions, hashes, metrics and available proof evidence |

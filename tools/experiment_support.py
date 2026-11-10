@@ -240,6 +240,11 @@ def select_candidates(records, required_profiles, max_runtime_ratio, max_size_ra
                    r["comparison"].get("instruction_sequences_differ_from_algorithm_control") is not True
                    for r in completed):
                 reasons.append("encoding-contribution-absent-or-unassessed")
+            if any(r.get("control_flow", "none") != "none" and
+                   (not r.get("split_scales") or
+                    r["comparison"].get("instruction_sequences_differ_from_control_flow_control") is not True)
+                   for r in completed):
+                reasons.append("control-flow-contribution-absent-or-unassessed")
             if any(r["timing"]["max_paired_ratio"] > max_runtime_ratio for r in completed):
                 reasons.append("runtime-budget-exceeded")
             if any(r["binary_size_ratio"] > max_size_ratio for r in completed):

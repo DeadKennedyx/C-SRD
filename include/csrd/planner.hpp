@@ -6,6 +6,7 @@ enum class Encoding : unsigned { Identity = 0, Affine = 1, Xor = 2 };
 struct PlanOptions {
   std::string strategy = "affine", objective = "balanced";
   std::string algorithm = "none";
+  std::string controlFlow = "none";
   unsigned coverage = 50, timeoutMs = 10000;
 };
 struct Plan {

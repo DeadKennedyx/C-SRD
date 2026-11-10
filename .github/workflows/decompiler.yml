@@ -1,0 +1,76 @@
+name: C-SRD decompiler reconstruction
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/**'
+      - 'include/**'
+      - 'tools/**'
+      - 'tests/**'
+      - 'benchmarks/**'
+      - 'experiments/matrix.json'
+      - '.github/workflows/decompiler.yml'
+permissions:
+  contents: read
+jobs:
+  linux-x64:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CSRD_TEST_COMPILERS: clang-18:gcc
+      CSRD_REQUIRE_BOTH_COMPILERS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build clang-18 llvm-18-dev libclang-18-dev libclang-cpp18-dev libclang-rt-18-dev lld-18 gcc g++ python3 z3 libz3-dev gdb
+          curl --fail --location --output /tmp/ghidra.zip https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_12.2_build/ghidra_12.2_PUBLIC_20261016.zip
+          echo '2c2cd776db3c1f6a097ba418922378ac3649cadd5e844a6f5f088ae628a7be67  /tmp/ghidra.zip' | sha256sum -c -
+          unzip -q /tmp/ghidra.zip -d "$RUNNER_TEMP"
+          echo "CSRD_GHIDRA_HEADLESS=$RUNNER_TEMP/ghidra_12.2_PUBLIC/support/analyzeHeadless" >> "$GITHUB_ENV"
+      - name: Build and test including real Ghidra
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH=/usr/lib/llvm-18 -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --parallel 2
+          ctest --test-dir build --output-on-failure
+      - name: Development matrix
+        run: >-
+          python3 tools/run_matrix.py --csrd build/csrd --compiler clang=clang-18 --compiler gcc=gcc
+          --objdump llvm-objdump-18 --profdata llvm-profdata-18
+          --case calculate --case rotate_mix --case parity --case bounded_arithmetic
+          --control-flows none split-scale --require-selected-profiles --output-dir build/development
+      - name: Development reconstruction
+        run: >-
+          python3 tools/audit_decompiler.py --csrd build/csrd --headless "$CSRD_GHIDRA_HEADLESS"
+          --matrix-report build/development/matrix.json --profile clang-O2 --profile gcc-O2
+          --variant original --variant affine-42 --variant affine-42-split-scale
+          --output-dir build/reconstruction
+      - name: Frozen held-out matrix
+        run: >-
+          python3 tools/run_matrix.py --csrd build/csrd --compiler clang=clang-18 --compiler gcc=gcc
+          --objdump llvm-objdump-18 --profdata llvm-profdata-18 --tier holdout
+          --case rotate_mix_heldout --case bounded_arithmetic_heldout --case byte_sum_heldout
+          --control-flows none split-scale --selection build/development/matrix.json
+          --require-selected-profiles --output-dir build/heldout
+      - name: Held-out reconstruction
+        run: >-
+          python3 tools/audit_decompiler.py --csrd build/csrd --headless "$CSRD_GHIDRA_HEADLESS"
+          --matrix-report build/heldout/matrix.json --profile clang-O3 --profile gcc-O3
+          --variant original --variant affine-42 --variant affine-42-split-scale
+          --output-dir build/reconstruction-heldout
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: decompiler-and-control-flow-evidence
+          retention-days: 14
+          path: |
+            build/Testing/Temporary/LastTest.log
+            build/development/
+            build/heldout/
+            build/reconstruction/
+            build/reconstruction-heldout/

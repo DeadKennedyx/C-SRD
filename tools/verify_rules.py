@@ -35,6 +35,11 @@ def main(args):
     if xor_answers != ["unsat"] * 6:
         raise AssertionError(f"xor obligations failed or were inconclusive: {xor_answers}")
     print("PASS xor, and, or, not, left shift, right shift: all payloads/masks; shifts in 0..31")
+    split_contract = ROOT / "src/verification/split-scale.smt2"
+    split_answer = run(args.z3, split_contract.read_text())
+    if split_answer != "unsat":
+        raise AssertionError(f"split-scale obligation failed or inconclusive: {split_answer}")
+    print("PASS parity split: all stored operands, scale factors and corrections")
     newton = []
     for width in (2, 4, 8, 16, 32):
         half = width // 2
@@ -84,6 +89,7 @@ def main(args):
               "xor_contract_sha256": hashlib.sha256(xor_contract.read_bytes()).hexdigest(),
               "xor_rules": dict(zip(("xor", "and", "or", "not", "shl", "lshr"), xor_answers)),
               "newton_steps": newton,
+              "split_scale": {"sha256": hashlib.sha256(split_contract.read_bytes()).hexdigest(), "result": split_answer},
               "concrete_multiplier_roundtrips": inverses,
               "negative_control": counterexample, "seconds": time.perf_counter() - start,
               "scope": "Solver-checked bit-vector formulas; not a proof of the C-to-C implementation."}
