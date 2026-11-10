@@ -1,0 +1,440 @@
+{
+  "circuit_followup": {
+    "control_statuses": {
+      "sat": 5,
+      "unsat": 2
+    },
+    "controls_passed": true,
+    "distinct_saved_queries": 2,
+    "saved_answer_statuses": {
+      "inconclusive": 4
+    }
+  },
+  "finite_checks": {
+    "all_checks_passed": true,
+    "answer_builds": 80,
+    "correct_answer_comparisons": 168960,
+    "inputs_per_build": 2112,
+    "wrong_output_builds": 80,
+    "wrong_output_comparisons": 168960,
+    "wrong_output_matches": 0
+  },
+  "jenkins_recovery": {
+    "adapter": {
+      "block_expansions": 6,
+      "constant_branches": 4,
+      "emitted_statements": 28,
+      "evaluated_operations": 38,
+      "export_schema": 2,
+      "generated_bytes": 1098,
+      "max_path_block_entries": 6,
+      "mode": "cfg",
+      "symbolic_branches": 0,
+      "terminal_paths": 1
+    },
+    "binary_sha256": "efe9ce2da86b3548a9b559d9e67e8e935866adf2f805fab5636b24c0e9b50712",
+    "distinct_answer_artifacts": 1,
+    "grade_wall_seconds": {
+      "maximum": 0.0216136509552598,
+      "median": 0.021401613019406796,
+      "minimum": 0.021306904032826424,
+      "n": 5
+    },
+    "negative_control_statuses": {
+      "counterexample": 5
+    },
+    "new_measured_statuses": {
+      "recovered-under-source-model": 5
+    },
+    "new_warmup_statuses": {
+      "recovered-under-source-model": 1
+    },
+    "prior_measured_statuses": {
+      "unsupported-reconstruction": 5
+    },
+    "resources": {
+      "cpu_seconds": {
+        "maximum": 6.007743,
+        "median": 5.979323,
+        "minimum": 5.771554,
+        "n": 5
+      },
+      "peak_process_rss_bytes": {
+        "maximum": 447569920,
+        "median": 440946688,
+        "minimum": 398884864,
+        "n": 5
+      },
+      "peak_sampled_tree_rss_bytes": {
+        "maximum": 695738368,
+        "median": 474701824,
+        "minimum": 425099264,
+        "n": 5
+      },
+      "wall_seconds": {
+        "maximum": 5.367399784037843,
+        "median": 5.089853954967111,
+        "minimum": 5.086360610090196,
+        "n": 5
+      }
+    },
+    "stages": {
+      "headless_seconds": {
+        "maximum": 5.331889275927097,
+        "median": 5.058811996132135,
+        "minimum": 5.050934774801135,
+        "n": 5
+      },
+      "reconstruction_seconds": {
+        "maximum": 0.0010609528981149197,
+        "median": 0.0008437461219727993,
+        "minimum": 0.0006311230827122927,
+        "n": 5
+      }
+    }
+  },
+  "schema_version": 1,
+  "scope": "observer coverage; no candidate selection or protection gain; old grades retained",
+  "source_bindings": {
+    "/Users/admin/C-SRD/experiments/summarize_pcode_cfg.py": "061d24519ddf95e7d720739463e0b548e1103c4c862a21d64c3b380324bf3b83",
+    "experiments/runs/jenkins-composition-ghidra-linux-20261110/effort.json": "74eca2f163af98a8030ca6171a7ae8d70e2649adc209893dd4a6049611bcce7a",
+    "experiments/runs/pcode-cfg-compiled-answers-20261110/checks.json": "e636ce6e494a77cd03a8a0c0a7be2e238e016337e3fb3c109fd7c33efb962567",
+    "experiments/runs/pcode-cfg-jenkins-repeat-20261110/effort.json": "242a34785e6e4eb0a2575d749ba403406eb5bc37211cf2f4acb893518934946a",
+    "experiments/runs/pcode-cfg-observer-validation-20261110/effort.json": "e5e491ef33aecc685512303e514c7753adc81bcb22dd0a730d13e6d95e6be421",
+    "experiments/runs/pcode-cfg-validation-circuit-grades-20261110/completion.json": "a6aab4b420485076e2041c86bc652ddbb7950e688fd9f9910166c0cba41057a9",
+    "experiments/runs/pcode-cfg-validation-circuit-grades-20261110/protocol.json": "a16eba897681e9307d3398dd2bf1c7cd24e668af8ce1ab9df44233c0bc36d9ed",
+    "experiments/runs/pcode-cfg-validation-circuit-grades-20261110/summary.json": "cccb92a140bca153154b5a437154e6d53fb231417b69a57e0aceb818f71924f0"
+  },
+  "validation": {
+    "distinct_answer_artifacts": 5,
+    "negative_control_statuses": {
+      "counterexample": 16
+    },
+    "rows": [
+      {
+        "adapter": {
+          "block_expansions": 1,
+          "constant_branches": 0,
+          "emitted_statements": 30,
+          "evaluated_operations": 31,
+          "export_schema": 2,
+          "generated_bytes": 1209,
+          "max_path_block_entries": 1,
+          "mode": "cfg",
+          "symbolic_branches": 0,
+          "terminal_paths": 1
+        },
+        "candidate_sha256": "3a7e3df1fa661e3aff327607a44d9056d47aab16fac3b14e9ffe7c2b734b5310",
+        "case": "recurrence5",
+        "id": 0,
+        "profile": "clang-O1",
+        "status": "inconclusive",
+        "variant": "identity"
+      },
+      {
+        "adapter": {
+          "block_expansions": 7,
+          "constant_branches": 5,
+          "emitted_statements": 30,
+          "evaluated_operations": 42,
+          "export_schema": 2,
+          "generated_bytes": 1209,
+          "max_path_block_entries": 7,
+          "mode": "cfg",
+          "symbolic_branches": 0,
+          "terminal_paths": 1
+        },
+        "candidate_sha256": "3a7e3df1fa661e3aff327607a44d9056d47aab16fac3b14e9ffe7c2b734b5310",
+        "case": "recurrence5",
+        "id": 1,
+        "profile": "clang-O1",
+        "status": "inconclusive",
+        "variant": "original"
+      },
+      {
+        "adapter": {
+          "block_expansions": 1,
+          "constant_branches": 0,
+          "emitted_statements": 30,
+          "evaluated_operations": 31,
+          "export_schema": 2,
+          "generated_bytes": 1209,
+          "max_path_block_entries": 1,
+          "mode": "cfg",
+          "symbolic_branches": 0,
+          "terminal_paths": 1
+        },
+        "candidate_sha256": "3a7e3df1fa661e3aff327607a44d9056d47aab16fac3b14e9ffe7c2b734b5310",
+        "case": "recurrence5",
+        "id": 2,
+        "profile": "clang-O2",
+        "status": "inconclusive",
+        "variant": "identity"
+      },
+      {
+        "adapter": {
+          "block_expansions": 1,
+          "constant_branches": 0,
+          "emitted_statements": 30,
+          "evaluated_operations": 31,
+          "export_schema": 2,
+          "generated_bytes": 1209,
+          "max_path_block_entries": 1,
+          "mode": "cfg",
+          "symbolic_branches": 0,
+          "terminal_paths": 1
+        },
+        "candidate_sha256": "3a7e3df1fa661e3aff327607a44d9056d47aab16fac3b14e9ffe7c2b734b5310",
+        "case": "recurrence5",
+        "id": 3,
+        "profile": "clang-O2",
+        "status": "inconclusive",
+        "variant": "original"
+      },
+      {
+        "adapter": {
+          "block_expansions": 157,
+          "constant_branches": 62,
+          "emitted_statements": 217,
+          "evaluated_operations": 374,
+          "export_schema": 2,
+          "generated_bytes": 8454,
+          "max_path_block_entries": 17,
+          "mode": "cfg",
+          "symbolic_branches": 31,
+          "terminal_paths": 32
+        },
+        "candidate_sha256": "f54d3c940b52f3487461331fa0e9cf33577eea4e7ff757a9554970f3d9b04744",
+        "case": "recurrence5",
+        "id": 4,
+        "profile": "gcc-O1",
+        "status": "recovered-under-source-model",
+        "variant": "original"
+      },
+      {
+        "adapter": {
+          "block_expansions": 94,
+          "constant_branches": 0,
+          "emitted_statements": 217,
+          "evaluated_operations": 249,
+          "export_schema": 2,
+          "generated_bytes": 8454,
+          "max_path_block_entries": 11,
+          "mode": "cfg",
+          "symbolic_branches": 31,
+          "terminal_paths": 32
+        },
+        "candidate_sha256": "f54d3c940b52f3487461331fa0e9cf33577eea4e7ff757a9554970f3d9b04744",
+        "case": "recurrence5",
+        "id": 5,
+        "profile": "gcc-O1",
+        "status": "recovered-under-source-model",
+        "variant": "identity"
+      },
+      {
+        "adapter": {
+          "block_expansions": 157,
+          "constant_branches": 62,
+          "emitted_statements": 217,
+          "evaluated_operations": 374,
+          "export_schema": 2,
+          "generated_bytes": 8454,
+          "max_path_block_entries": 17,
+          "mode": "cfg",
+          "symbolic_branches": 31,
+          "terminal_paths": 32
+        },
+        "candidate_sha256": "f54d3c940b52f3487461331fa0e9cf33577eea4e7ff757a9554970f3d9b04744",
+        "case": "recurrence5",
+        "id": 6,
+        "profile": "gcc-O2",
+        "status": "recovered-under-source-model",
+        "variant": "original"
+      },
+      {
+        "adapter": {
+          "block_expansions": 94,
+          "constant_branches": 0,
+          "emitted_statements": 217,
+          "evaluated_operations": 249,
+          "export_schema": 2,
+          "generated_bytes": 8454,
+          "max_path_block_entries": 11,
+          "mode": "cfg",
+          "symbolic_branches": 31,
+          "terminal_paths": 32
+        },
+        "candidate_sha256": "f54d3c940b52f3487461331fa0e9cf33577eea4e7ff757a9554970f3d9b04744",
+        "case": "recurrence5",
+        "id": 7,
+        "profile": "gcc-O2",
+        "status": "recovered-under-source-model",
+        "variant": "identity"
+      },
+      {
+        "adapter": {
+          "block_expansions": 4,
+          "constant_branches": 0,
+          "emitted_statements": 5,
+          "evaluated_operations": 7,
+          "export_schema": 2,
+          "generated_bytes": 267,
+          "max_path_block_entries": 3,
+          "mode": "cfg",
+          "symbolic_branches": 1,
+          "terminal_paths": 2
+        },
+        "candidate_sha256": "e307db73ad403c5b7e2d8c13b898bf3b43b4b12fe4c86da18b0cc1ae409b3676",
+        "case": "unsigned_distance",
+        "id": 8,
+        "profile": "clang-O1",
+        "status": "recovered-under-source-model",
+        "variant": "identity"
+      },
+      {
+        "adapter": {
+          "block_expansions": 4,
+          "constant_branches": 0,
+          "emitted_statements": 5,
+          "evaluated_operations": 7,
+          "export_schema": 2,
+          "generated_bytes": 267,
+          "max_path_block_entries": 3,
+          "mode": "cfg",
+          "symbolic_branches": 1,
+          "terminal_paths": 2
+        },
+        "candidate_sha256": "e307db73ad403c5b7e2d8c13b898bf3b43b4b12fe4c86da18b0cc1ae409b3676",
+        "case": "unsigned_distance",
+        "id": 9,
+        "profile": "clang-O1",
+        "status": "recovered-under-source-model",
+        "variant": "original"
+      },
+      {
+        "adapter": {
+          "block_expansions": 4,
+          "constant_branches": 0,
+          "emitted_statements": 5,
+          "evaluated_operations": 7,
+          "export_schema": 2,
+          "generated_bytes": 267,
+          "max_path_block_entries": 3,
+          "mode": "cfg",
+          "symbolic_branches": 1,
+          "terminal_paths": 2
+        },
+        "candidate_sha256": "e307db73ad403c5b7e2d8c13b898bf3b43b4b12fe4c86da18b0cc1ae409b3676",
+        "case": "unsigned_distance",
+        "id": 10,
+        "profile": "clang-O2",
+        "status": "recovered-under-source-model",
+        "variant": "original"
+      },
+      {
+        "adapter": {
+          "block_expansions": 4,
+          "constant_branches": 0,
+          "emitted_statements": 5,
+          "evaluated_operations": 7,
+          "export_schema": 2,
+          "generated_bytes": 267,
+          "max_path_block_entries": 3,
+          "mode": "cfg",
+          "symbolic_branches": 1,
+          "terminal_paths": 2
+        },
+        "candidate_sha256": "e307db73ad403c5b7e2d8c13b898bf3b43b4b12fe4c86da18b0cc1ae409b3676",
+        "case": "unsigned_distance",
+        "id": 11,
+        "profile": "clang-O2",
+        "status": "recovered-under-source-model",
+        "variant": "identity"
+      },
+      {
+        "adapter": {
+          "block_expansions": 4,
+          "constant_branches": 0,
+          "emitted_statements": 5,
+          "evaluated_operations": 7,
+          "export_schema": 2,
+          "generated_bytes": 266,
+          "max_path_block_entries": 3,
+          "mode": "cfg",
+          "symbolic_branches": 1,
+          "terminal_paths": 2
+        },
+        "candidate_sha256": "b1d70e140969ccd0542cea7b6b4f6d28360aa5c1ba6d6e9c504941b4f6b9e708",
+        "case": "unsigned_distance",
+        "id": 12,
+        "profile": "gcc-O1",
+        "status": "recovered-under-source-model",
+        "variant": "original"
+      },
+      {
+        "adapter": {
+          "block_expansions": 4,
+          "constant_branches": 0,
+          "emitted_statements": 5,
+          "evaluated_operations": 7,
+          "export_schema": 2,
+          "generated_bytes": 266,
+          "max_path_block_entries": 3,
+          "mode": "cfg",
+          "symbolic_branches": 1,
+          "terminal_paths": 2
+        },
+        "candidate_sha256": "b1d70e140969ccd0542cea7b6b4f6d28360aa5c1ba6d6e9c504941b4f6b9e708",
+        "case": "unsigned_distance",
+        "id": 13,
+        "profile": "gcc-O1",
+        "status": "recovered-under-source-model",
+        "variant": "identity"
+      },
+      {
+        "adapter": {
+          "block_expansions": 4,
+          "constant_branches": 0,
+          "emitted_statements": 5,
+          "evaluated_operations": 7,
+          "export_schema": 2,
+          "generated_bytes": 266,
+          "max_path_block_entries": 3,
+          "mode": "cfg",
+          "symbolic_branches": 1,
+          "terminal_paths": 2
+        },
+        "candidate_sha256": "2e1c72a7adb40289f39d14a99b13f02ce6dd90774ad135a62fe18698436acbc8",
+        "case": "unsigned_distance",
+        "id": 14,
+        "profile": "gcc-O2",
+        "status": "recovered-under-source-model",
+        "variant": "identity"
+      },
+      {
+        "adapter": {
+          "block_expansions": 4,
+          "constant_branches": 0,
+          "emitted_statements": 5,
+          "evaluated_operations": 7,
+          "export_schema": 2,
+          "generated_bytes": 266,
+          "max_path_block_entries": 3,
+          "mode": "cfg",
+          "symbolic_branches": 1,
+          "terminal_paths": 2
+        },
+        "candidate_sha256": "2e1c72a7adb40289f39d14a99b13f02ce6dd90774ad135a62fe18698436acbc8",
+        "case": "unsigned_distance",
+        "id": 15,
+        "profile": "gcc-O2",
+        "status": "recovered-under-source-model",
+        "variant": "original"
+      }
+    ],
+    "statuses": {
+      "inconclusive": 4,
+      "recovered-under-source-model": 12
+    }
+  }
+}

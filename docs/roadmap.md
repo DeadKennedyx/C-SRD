@@ -28,7 +28,10 @@ arbitrary algorithm replacement requires independent specifications and proofs.
 The active protection study now has a [larger reserved corpus](rich-benchmarks.md)
 and a [positional two-piece prototype](limb-representation.md). Compare candidates
 with measured reconstruction/runtime/size trade-offs before imposing cost limits;
-expand wide-value/merge and multi-location runtime observer coverage. The
+expand wide/vector and multi-location runtime observer coverage. Bounded
+[CFG/merge reconstruction](../reports/pcode-control-flow.md) now recovers the
+unchanged GCC Jenkins baseline; four reserved recurrence grades remain
+inconclusive despite passing finite execution checks. The
 [newly admitted Jenkins comparison](../reports/compositional-validation.md) had
 reconstruction-grading timeouts. A separate [checked-circuit replay](../reports/circuit-grading.md)
 resolved all ten saved limb answers: they were correctly reconstructed under the

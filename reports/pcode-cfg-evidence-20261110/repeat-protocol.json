@@ -1,0 +1,179 @@
+{
+  "application_costs_from_matrix": [
+    {
+      "binary_bytes": 70712,
+      "binary_size_ratio": 1.0,
+      "case": "jenkins_word",
+      "profile": "gcc-O2",
+      "timing": {
+        "checksums": [
+          2148067296977424,
+          2147883472951163,
+          2149666367695712,
+          2148218762122675,
+          2147861343336991,
+          2146047382316630,
+          2146999872344104
+        ],
+        "iterations": 1000000,
+        "max_paired_ratio": 1.0,
+        "median_paired_ratio": 1.0,
+        "median_seconds": 0.003189341,
+        "min_paired_ratio": 1.0,
+        "paired_ratios": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "samples_seconds": [
+          0.003191674,
+          0.003232259,
+          0.003182883,
+          0.003178299,
+          0.003182383,
+          0.003238967,
+          0.003189341
+        ],
+        "scope": "linked harness including deterministic input generation; not isolated function latency"
+      },
+      "variant": "original"
+    }
+  ],
+  "artifact_bindings": {
+    "/work/experiments/runs/dependencies/ghidra_12.2_PUBLIC/Ghidra/Features/Decompiler/lib/Decompiler.jar": "74d7333e0461921b2abf4aaa5a40653540664589357469a17ef0d0fbb5c713c4",
+    "/work/experiments/runs/dependencies/ghidra_12.2_PUBLIC/Ghidra/Features/Decompiler/os/linux_arm_64/decompile": "93aa5633f31acc33fc8adb4e71c4ff9a4f0e8b3a0f3c1a1b6724bc6e3f0d3cda",
+    "/work/experiments/runs/dependencies/ghidra_12.2_PUBLIC/Ghidra/Features/Decompiler/os/linux_x86_64/decompile": "c1494df3503ad3567313ef23b6f69fea2ef679758514939541e28dc6b273105c",
+    "/work/experiments/runs/dependencies/ghidra_12.2_PUBLIC/support/analyzeHeadless": "a59a302c3bf61767fc142bcb594db226529787a15623e72197a4305c789b9970",
+    "/work/experiments/runs/jenkins-composition-matrix-linux-20261110/jenkins_word/build-gcc-O2-original/function.i": "0539bca1f8a057c5974838374e29ca9e67e7c28b966ac7f256fbba5d2fea60fd",
+    "/work/experiments/runs/jenkins-composition-matrix-linux-20261110/jenkins_word/build-gcc-O2-original/program": "efe9ce2da86b3548a9b559d9e67e8e935866adf2f805fab5636b24c0e9b50712",
+    "/work/experiments/runs/jenkins-composition-matrix-linux-20261110/matrix.json": "b9e0d3a644a611766ff06656132ee4ceb5d234316e3671494e4a74536b3a2ab9",
+    "/work/experiments/runs/limbs-composition-followup-20261110/csrd-new": "f0ec91ae7e229e85fd7e2910f1dd22ea7edff1dc90eaf2fec22b0a3a6169909a",
+    "/work/tools/effort_resources.py": "b63f009e48d2629036b98730192918372072be483c890883168cc8bde8ffca5a",
+    "/work/tools/effort_statistics.py": "15062c01807d05856df5fb92dc7ed7263fc5fab9957b8e4c2e7e73c70365f9ad",
+    "/work/tools/effort_worker.py": "17533ce61ded6b595943625054d0a65d0ddf62733de42d34bc07019358c9b204",
+    "/work/tools/experiment_support.py": "83b24410449ca528c9e997482a3a8d7385de6af53c53d7137d527ac1fc36eecf",
+    "/work/tools/gdb_trace.py": "0403d246a7d9eb0181b255ada76737e1f6b58cc996262be59b82e836029b16c6",
+    "/work/tools/ghidra/ExportCSRD.java": "0c02e732c1c522fde664dff74bdbe5ebad0081afde9a0ebcb76127dfcc757f3a",
+    "/work/tools/measure_effort.py": "287ff2948c112270704f439f87bfb72bb3c92f3113b53263b05eb3178fd4cb60",
+    "/work/tools/observe_runtime.py": "304e1da02b07b31415d23ef019bf6250757023a233e79d3f138167bc4a21c240",
+    "/work/tools/pcode_cfg.py": "f44d3de92a089599aa6af0cbee7532046fb6abb51211ff1a4d4d2c8a7e2bf67d",
+    "/work/tools/pcode_reconstruct.py": "d5e499c4996aa2033af9b2df4337fdc9d74c4c3a1f5b6fd18d393f0081a13a9b",
+    "/work/tools/pcode_values.py": "325d14595e85280cbcfc120f6762ffd5ea29d2fd219f9305d2ab2aad730c678e"
+  },
+  "environment_start": {
+    "affinity": [
+      0,
+      1
+    ],
+    "clock": {
+      "adjustable": false,
+      "implementation": "clock_gettime(CLOCK_MONOTONIC)",
+      "monotonic": true,
+      "resolution": 1e-09
+    },
+    "load_average": [
+      0.14501953125,
+      0.36328125,
+      0.28369140625
+    ],
+    "logical_cpus": 2,
+    "machine": "aarch64",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "system": "Linux-6.8.0-117-generic-aarch64-with-glibc2.39"
+  },
+  "matrix_status": "completed-with-gaps",
+  "matrix_summary": {
+    "completed": 100,
+    "failed": 0,
+    "unavailable_profiles": 1
+  },
+  "observer": "ghidra",
+  "protocol": {
+    "allow_partial_matrix": false,
+    "analysis_seconds": 30,
+    "binary_lifting_proved": false,
+    "budgets": [
+      {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      }
+    ],
+    "cache": "fresh observer process and Ghidra project; filesystem caches not flushed",
+    "case": [
+      "jenkins_word"
+    ],
+    "cpu_budgets": null,
+    "csrd": "/work/experiments/runs/limbs-composition-followup-20261110/csrd-new",
+    "decompile_seconds": 15,
+    "gdb": "gdb",
+    "grading": "reference withheld from fixed observer; frozen answer; grader resources separate",
+    "grading_seconds": 120,
+    "headless": "/work/experiments/runs/dependencies/ghidra_12.2_PUBLIC/support/analyzeHeadless",
+    "human_effort": "unassessed",
+    "input_seed": 19011,
+    "lock_scope": "cooperating effort runs in this checkout only; shared-host noise remains",
+    "matrix_report": "experiments/runs/jenkins-composition-matrix-linux-20261110/matrix.json",
+    "memory_budgets_mib": null,
+    "observer": "ghidra",
+    "order": "serialized randomized complete blocks",
+    "order_seed": 20261109,
+    "output_dir": "experiments/runs/pcode-cfg-jenkins-repeat-20261110",
+    "pcode_adapter": {
+      "limits": {
+        "block_expansions": 1024,
+        "blocks": 256,
+        "dag_depth": 128,
+        "emitted_statements": 16384,
+        "evaluated_operations": 65536,
+        "generated_bytes": 1048576,
+        "nodes": 4096,
+        "operations": 2048,
+        "path_block_entries": 64,
+        "terminal_paths": 64
+      },
+      "version": "cfg-v2"
+    },
+    "profile": [
+      "gcc-O2"
+    ],
+    "query_budgets": [
+      3,
+      8,
+      32
+    ],
+    "repetitions": 5,
+    "step_budgets": [
+      4,
+      16,
+      64
+    ],
+    "timeout_ms": 10000,
+    "variant": [
+      "original"
+    ],
+    "wall_budgets": [
+      60.0
+    ],
+    "warmups": 1
+  },
+  "schema_version": 1,
+  "status": "running",
+  "tools": {
+    "csrd": {
+      "path": "/work/experiments/runs/limbs-composition-followup-20261110/csrd-new",
+      "sha256": "f0ec91ae7e229e85fd7e2910f1dd22ea7edff1dc90eaf2fec22b0a3a6169909a"
+    },
+    "ghidra": {
+      "path": "/work/experiments/runs/dependencies/ghidra_12.2_PUBLIC/support/analyzeHeadless",
+      "properties": "#Fri Oct 16 12:20:39 UTC 2026\napplication.build.date=2026-Oct-16 1220 UTC\napplication.build.date.short=20261016\napplication.gradle.max=\napplication.gradle.min=9.1\napplication.java.compiler=25\napplication.java.max=\napplication.java.min=25\napplication.layout.version=3\napplication.name=Ghidra\napplication.python.supported=3.15, 3.14, 3.13, 3.12, 3.11, 3.10, 3.9\napplication.release.marking=\napplication.release.name=PUBLIC\napplication.revision.ghidra=8ca9077040cc43cd790babcfccf19475622a3e9a\napplication.revision.ghidra.bin=f8282ebbe9ea7a680df9c32c70f844e38f175eb1\napplication.revision.ghidra.ext-u=ab6d49a83769bb210e93abee2e4439fbfd1c9414\napplication.version=12.2\n",
+      "sha256": "a59a302c3bf61767fc142bcb594db226529787a15623e72197a4305c789b9970"
+    }
+  }
+}
