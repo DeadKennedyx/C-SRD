@@ -41,6 +41,16 @@ class Verification(unittest.TestCase):
         self.assertTrue(data["candidate_dependencies"])
         self.assertEqual(decision["proof"]["obligation_sha256"], hashlib.sha256(decision["proof"]["smtlib"].encode()).hexdigest())
 
+    def test_shift_add_normalization_preserves_wraparound_and_rejects_mutant(self):
+        for count in (0, 1, 7, 16, 31):
+            data = self.compare(f"uint32_t f(uint32_t x){{return x<<{count}u;}}",
+                                f"uint32_t f(uint32_t x){{return x*{1 << count}u;}}")
+            self.assertEqual(data["functions"][0]["verification"], "proved-under-model")
+        self.compare("uint32_t f(uint32_t x){return x<<31u;}",
+                     "uint32_t f(uint32_t x){return x*2147483647u;}", 3)
+        self.compare("uint32_t f(uint32_t x){return (77u*(x&255u))>>8u;}",
+                     "uint32_t f(uint32_t x){uint32_t y=x&255u;return ((y<<6u)+(y<<3u)+(y<<2u)+y)>>8u;}")
+
     def test_counterexample_replays_in_compiled_c(self):
         data = self.compare("uint32_t f(uint32_t x,uint32_t y){return x*17u+y;}",
                             "uint32_t f(uint32_t x,uint32_t y){return x*19u+y;}", 3)

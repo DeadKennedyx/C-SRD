@@ -55,6 +55,17 @@ def main(args):
             raise AssertionError(f"Newton low-bit step {half}->{width}: {answer}")
         newton.append({"from_correct_bits": half, "to_correct_bits": width, "result": answer})
     print("PASS Newton inverse correctness steps: 1 -> 2 -> 4 -> 8 -> 16 -> 32 bits")
+    shifts = []
+    for count in range(32):
+        smt = f"""(set-logic QF_BV)
+(declare-const x (_ BitVec 32))
+(assert (not (= (bvshl x (_ bv{count} 32)) (bvmul x (_ bv{1 << count} 32)))))
+""" + CHECK
+        answer = run(args.z3, smt)
+        if answer != "unsat":
+            raise AssertionError(f"unsigned shift/scale normalization {count}: {answer}")
+        shifts.append({"count": count, "result": answer})
+    print("PASS shift/scale normalization: all u32 values at each legal count 0..31")
     inverses = []
     # These are concrete-parameter proofs, explicitly distinct from all-parameter proofs.
     for a in (1, 3, 5, 0xffffffff, 0x80000001, 1789947473):
@@ -89,6 +100,7 @@ def main(args):
               "xor_contract_sha256": hashlib.sha256(xor_contract.read_bytes()).hexdigest(),
               "xor_rules": dict(zip(("xor", "and", "or", "not", "shl", "lshr"), xor_answers)),
               "newton_steps": newton,
+              "unsigned_shift_scale_normalization": shifts,
               "split_scale": {"sha256": hashlib.sha256(split_contract.read_bytes()).hexdigest(), "result": split_answer},
               "concrete_multiplier_roundtrips": inverses,
               "negative_control": counterexample, "seconds": time.perf_counter() - start,

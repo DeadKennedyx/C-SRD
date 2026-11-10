@@ -225,6 +225,7 @@ def run(args, root):
         report["tools"] = {k: tool_identity(command, getattr(args, k)) for k in ["csrd", "objdump"]}
         report["settings"] = {"tier": args.tier, "seeds": args.seeds, "strategies": args.strategies,
                               "control_flows": args.control_flows,
+                              "selection_policy": "report-only" if args.no_select else "screen",
                               "case_filter": args.case, "profile_filter": args.profile,
                               "inputs": args.inputs, "iterations": args.iterations, "repetitions": args.repetitions}
         frozen = None
@@ -237,6 +238,8 @@ def run(args, root):
             if (frozen["settings"]["seeds"] != args.seeds or frozen["settings"]["strategies"] != args.strategies
                     or frozen["settings"].get("control_flows", ["none"]) != args.control_flows):
                 raise ValueError("holdout must use the frozen development seeds, strategies and control-flow candidates")
+            if frozen["settings"].get("selection_policy", "screen") != report["settings"]["selection_policy"]:
+                raise ValueError("holdout must preserve the development selection policy")
             report["development_sha256"] = audit.file_hash(args.selection)
         selected_profiles = [p for p in manifest["profiles"] if args.tier in p["tiers"]]
         if args.profile:
@@ -367,6 +370,8 @@ def run(args, root):
             report["selection"] = {"status": "not-reranked", "development_sha256": report["development_sha256"],
                                     "frozen_selection": frozen["selection"],
                                     "scope": "new-case evaluation of frozen candidate families; no claim that a per-case choice generalizes"}
+        elif args.no_select:
+            report["selection"] = {"status": "not-performed", "reason": "explicit report-only exploration; no runtime/size ceiling applied"}
         elif required:
             report["selection"] = select_candidates(report["records"], required,
                                                      args.max_runtime_ratio, args.max_size_ratio)
@@ -417,6 +422,7 @@ def main():
     p.add_argument("--max-runtime-ratio", type=float, default=2.0)
     p.add_argument("--max-size-ratio", type=float, default=1.5)
     p.add_argument("--selection", help="previous matrix.json, mandatory for held-out evaluation")
+    p.add_argument("--no-select", action="store_true", help="measure all candidates without screening by runtime/size ceilings")
     p.add_argument("--require-selected-profiles", action="store_true", help="nonzero exit if any selected profile is unavailable")
     p.add_argument("--output-dir", required=True)
     args = p.parse_args()

@@ -1,0 +1,506 @@
+{
+  "schema_version": 1,
+  "corpus_version": "rich-v1",
+  "purpose": "Richer bounded benign whole-function reconstruction tasks; independent oracles and reserved families; no protection claims",
+  "task": "reconstruct the whole pure u32 function from the artifact and neutral public interface",
+  "reserved_policy": "Correctness validation allowed. Freeze observer/candidate configuration on development before assessing reserved reconstruction. Do not tune on reserved outcomes.",
+  "profile_catalog_sha256": "b297c663551013713e0f1e5c45022614b07d3ee965567db552a39df67576ecf3",
+  "cases": [
+    {
+      "id": "crc32_byte",
+      "family": "ieee-crc32",
+      "arity": 2,
+      "split": "development",
+      "contract": "zlib-compatible complemented CRC-32 state update of the low byte; high input-byte bits ignored",
+      "sources": [
+        "https://www.rfc-editor.org/rfc/rfc1952.html"
+      ],
+      "controls": [
+        {
+          "id": "nibble-table",
+          "source": "benchmarks/rich/controls/crc32_nibble.c",
+          "relation": "equivalent",
+          "kind": "algorithmic"
+        },
+        {
+          "id": "wrong-polynomial",
+          "source": "benchmarks/rich/controls/crc32_wrong_polynomial.c",
+          "relation": "different",
+          "witness": [
+            0,
+            0
+          ]
+        }
+      ],
+      "source": "benchmarks/rich/development/crc32_byte.c",
+      "oracle": "crc32_byte",
+      "function": "kernel",
+      "input_domain": "all u32 tuples of the declared arity"
+    },
+    {
+      "id": "jenkins_word",
+      "family": "jenkins-one-at-a-time",
+      "arity": 2,
+      "split": "development",
+      "contract": "Four little-endian bytes, supplied initial u32 hash state, then Jenkins finalization",
+      "sources": [
+        "https://burtleburtle.net/bob/hash/doobs.html"
+      ],
+      "known_answers": [
+        {
+          "input": [
+            0,
+            0
+          ],
+          "output": 0
+        }
+      ],
+      "source": "benchmarks/rich/development/jenkins_word.c",
+      "oracle": "jenkins_word",
+      "function": "kernel",
+      "input_domain": "all u32 tuples of the declared arity"
+    },
+    {
+      "id": "morton16",
+      "family": "morton-interleave",
+      "arity": 2,
+      "split": "development",
+      "contract": "Interleave low 16 bits; first parameter supplies even bits, second odd bits",
+      "controls": [
+        {
+          "id": "serial-interleave",
+          "source": "benchmarks/rich/controls/morton_serial.c",
+          "relation": "equivalent",
+          "kind": "algorithmic"
+        }
+      ],
+      "known_answers": [
+        {
+          "input": [
+            65535,
+            65535
+          ],
+          "output": 4294967295
+        },
+        {
+          "input": [
+            65535,
+            0
+          ],
+          "output": 1431655765
+        },
+        {
+          "input": [
+            0,
+            1
+          ],
+          "output": 2
+        }
+      ],
+      "source": "benchmarks/rich/development/morton16.c",
+      "oracle": "morton16",
+      "function": "kernel",
+      "input_domain": "all u32 tuples of the declared arity"
+    },
+    {
+      "id": "rgb_luma8",
+      "family": "integer-rgb-weighting",
+      "arity": 1,
+      "split": "development",
+      "contract": "floor((77*R+150*G+29*B)/256) for packed 0x??RRGGBB; high byte ignored; integer benchmark, not color-management compliance",
+      "controls": [
+        {
+          "id": "shift-add",
+          "source": "benchmarks/rich/controls/rgb_shift_add.c",
+          "relation": "equivalent",
+          "kind": "algebraic"
+        },
+        {
+          "id": "rare-mutation",
+          "source": "benchmarks/rich/controls/rgb_rare_mutation.c",
+          "relation": "different",
+          "witness": [
+            305419896
+          ]
+        }
+      ],
+      "known_answers": [
+        {
+          "input": [
+            0
+          ],
+          "output": 0
+        },
+        {
+          "input": [
+            16777215
+          ],
+          "output": 255
+        },
+        {
+          "input": [
+            16711680
+          ],
+          "output": 76
+        }
+      ],
+      "source": "benchmarks/rich/development/rgb_luma8.c",
+      "oracle": "rgb_luma8",
+      "function": "kernel",
+      "input_domain": "all u32 tuples of the declared arity"
+    },
+    {
+      "id": "fletcher16_word",
+      "family": "fletcher-mod255",
+      "arity": 2,
+      "split": "heldout",
+      "contract": "State first=sumA in low byte, sumB in next byte, each normalized modulo 255; consume four LE data bytes; output (sumB<<8)|sumA",
+      "sources": [
+        "https://www.rfc-editor.org/rfc/rfc1146.html"
+      ],
+      "known_answers": [
+        {
+          "input": [
+            0,
+            67305985
+          ],
+          "output": 5130
+        },
+        {
+          "input": [
+            65535,
+            0
+          ],
+          "output": 0
+        }
+      ],
+      "source": "benchmarks/rich/reserved/fletcher16_word.c",
+      "oracle": "fletcher16_word",
+      "function": "kernel",
+      "input_domain": "all u32 tuples of the declared arity"
+    },
+    {
+      "id": "internet_checksum",
+      "family": "ones-complement-checksum",
+      "arity": 2,
+      "split": "heldout",
+      "contract": "Complement end-around-carry sum of four 16-bit network-order quantities from two packed words; preserve ones-complement zero conventions",
+      "sources": [
+        "https://www.rfc-editor.org/rfc/rfc1071.html"
+      ],
+      "known_answers": [
+        {
+          "input": [
+            127491,
+            4109760247
+          ],
+          "output": 8717
+        },
+        {
+          "input": [
+            0,
+            0
+          ],
+          "output": 65535
+        },
+        {
+          "input": [
+            4294967295,
+            4294967295
+          ],
+          "output": 0
+        }
+      ],
+      "source": "benchmarks/rich/reserved/internet_checksum.c",
+      "oracle": "internet_checksum",
+      "function": "kernel",
+      "input_domain": "all u32 tuples of the declared arity"
+    },
+    {
+      "id": "gray_decode32",
+      "family": "reflected-gray-decode",
+      "arity": 1,
+      "split": "heldout",
+      "contract": "Invert reflected Gray coding over all u32 values",
+      "known_answers": [
+        {
+          "input": [
+            3
+          ],
+          "output": 2
+        },
+        {
+          "input": [
+            4294967295
+          ],
+          "output": 2863311530
+        }
+      ],
+      "source": "benchmarks/rich/reserved/gray_decode32.c",
+      "oracle": "gray_decode32",
+      "function": "kernel",
+      "input_domain": "all u32 tuples of the declared arity"
+    },
+    {
+      "id": "fnv1a_word",
+      "family": "fnv1a-32",
+      "arity": 2,
+      "split": "heldout",
+      "contract": "FNV-1a four-byte LE update, arbitrary supplied u32 state; multiply by 16777619 modulo 2^32 after each byte XOR",
+      "sources": [
+        "https://www.rfc-editor.org/rfc/rfc9923.html"
+      ],
+      "known_answers": [
+        {
+          "input": [
+            0,
+            0
+          ],
+          "output": 0
+        }
+      ],
+      "source": "benchmarks/rich/reserved/fnv1a_word.c",
+      "oracle": "fnv1a_word",
+      "function": "kernel",
+      "input_domain": "all u32 tuples of the declared arity"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "clang-O0",
+      "compiler": "clang",
+      "optimization": "O0",
+      "tiers": [
+        "core",
+        "extended"
+      ]
+    },
+    {
+      "id": "gcc-O0",
+      "compiler": "gcc",
+      "optimization": "O0",
+      "tiers": [
+        "core",
+        "extended"
+      ]
+    },
+    {
+      "id": "clang-O2",
+      "compiler": "clang",
+      "optimization": "O2",
+      "tiers": [
+        "core",
+        "extended"
+      ],
+      "selection_required": true
+    },
+    {
+      "id": "gcc-O2",
+      "compiler": "gcc",
+      "optimization": "O2",
+      "tiers": [
+        "core",
+        "extended"
+      ],
+      "selection_required": true
+    },
+    {
+      "id": "clang-O2-lto",
+      "compiler": "clang",
+      "optimization": "O2",
+      "lto": "full",
+      "tiers": [
+        "core",
+        "extended"
+      ],
+      "selection_required": true
+    },
+    {
+      "id": "gcc-O2-lto",
+      "compiler": "gcc",
+      "optimization": "O2",
+      "lto": "full",
+      "tiers": [
+        "core",
+        "extended"
+      ],
+      "selection_required": true
+    },
+    {
+      "id": "clang-O1",
+      "compiler": "clang",
+      "optimization": "O1",
+      "tiers": [
+        "extended"
+      ]
+    },
+    {
+      "id": "gcc-O1",
+      "compiler": "gcc",
+      "optimization": "O1",
+      "tiers": [
+        "extended"
+      ]
+    },
+    {
+      "id": "clang-O3",
+      "compiler": "clang",
+      "optimization": "O3",
+      "tiers": [
+        "extended",
+        "holdout"
+      ]
+    },
+    {
+      "id": "gcc-O3",
+      "compiler": "gcc",
+      "optimization": "O3",
+      "tiers": [
+        "extended",
+        "holdout"
+      ]
+    },
+    {
+      "id": "clang-Os",
+      "compiler": "clang",
+      "optimization": "Os",
+      "tiers": [
+        "extended"
+      ]
+    },
+    {
+      "id": "gcc-Os",
+      "compiler": "gcc",
+      "optimization": "Os",
+      "tiers": [
+        "extended"
+      ]
+    },
+    {
+      "id": "clang-Oz",
+      "compiler": "clang",
+      "optimization": "Oz",
+      "tiers": [
+        "extended",
+        "holdout"
+      ]
+    },
+    {
+      "id": "gcc-Oz",
+      "compiler": "gcc",
+      "optimization": "Oz",
+      "tiers": [
+        "extended",
+        "holdout"
+      ]
+    },
+    {
+      "id": "clang-Og",
+      "compiler": "clang",
+      "optimization": "Og",
+      "tiers": [
+        "extended"
+      ]
+    },
+    {
+      "id": "gcc-Og",
+      "compiler": "gcc",
+      "optimization": "Og",
+      "tiers": [
+        "extended"
+      ]
+    },
+    {
+      "id": "clang-O3-thinlto",
+      "compiler": "clang",
+      "optimization": "O3",
+      "lto": "thin",
+      "tiers": [
+        "extended",
+        "holdout"
+      ]
+    },
+    {
+      "id": "gcc-O3-lto",
+      "compiler": "gcc",
+      "optimization": "O3",
+      "lto": "full",
+      "tiers": [
+        "extended",
+        "holdout"
+      ]
+    },
+    {
+      "id": "clang-O2-pgo",
+      "compiler": "clang",
+      "optimization": "O2",
+      "pgo": true,
+      "tiers": [
+        "extended"
+      ]
+    },
+    {
+      "id": "gcc-O2-pgo",
+      "compiler": "gcc",
+      "optimization": "O2",
+      "pgo": true,
+      "tiers": [
+        "extended"
+      ]
+    },
+    {
+      "id": "clang-O2-native",
+      "compiler": "clang",
+      "optimization": "O2",
+      "cpu": "native",
+      "tiers": [
+        "extended"
+      ]
+    },
+    {
+      "id": "gcc-O2-native",
+      "compiler": "gcc",
+      "optimization": "O2",
+      "cpu": "native",
+      "tiers": [
+        "extended"
+      ]
+    },
+    {
+      "id": "clang-O1-sanitizers",
+      "compiler": "clang",
+      "optimization": "O1",
+      "sanitizers": true,
+      "tiers": [
+        "extended"
+      ]
+    },
+    {
+      "id": "gcc-O1-sanitizers",
+      "compiler": "gcc",
+      "optimization": "O1",
+      "sanitizers": true,
+      "tiers": [
+        "extended"
+      ]
+    },
+    {
+      "id": "clang-x86-O2",
+      "compiler": "clang",
+      "optimization": "O2",
+      "target": "x86_64",
+      "tiers": [
+        "extended"
+      ]
+    },
+    {
+      "id": "gcc-arm64-O2",
+      "compiler": "gcc",
+      "optimization": "O2",
+      "target": "aarch64",
+      "tiers": [
+        "extended"
+      ]
+    }
+  ]
+}

@@ -18,7 +18,11 @@ z3::expr expression(z3::context &ctx, const Expr &e, const Environment &values) 
   case Expr::Kind::BitOr: return expression(ctx, *e.left, values) | expression(ctx, *e.right, values);
   case Expr::Kind::BitXor: return expression(ctx, *e.left, values) ^ expression(ctx, *e.right, values);
   case Expr::Kind::BitNot: return ~expression(ctx, *e.left, values);
-  case Expr::Kind::ShiftLeft: return z3::shl(expression(ctx, *e.left, values), ctx.bv_val(e.value, 32));
+  // For admitted constant counts 0..31, unsigned left shift is multiplication
+  // by 2^count modulo 2^32. Keep this in polynomial form so equivalent
+  // shift/add and constant-multiply implementations normalize together.
+  case Expr::Kind::ShiftLeft:
+    return expression(ctx, *e.left, values) * ctx.bv_val(e.value < 32 ? uint32_t(uint64_t(1) << e.value) : 0u, 32);
   case Expr::Kind::ShiftRight: return z3::lshr(expression(ctx, *e.left, values), ctx.bv_val(e.value, 32));
   case Expr::Kind::Equal: return z3::ite(expression(ctx, *e.left, values) == expression(ctx, *e.right, values), ctx.bv_val(1, 32), ctx.bv_val(0, 32));
   case Expr::Kind::NotEqual: return z3::ite(expression(ctx, *e.left, values) != expression(ctx, *e.right, values), ctx.bv_val(1, 32), ctx.bv_val(0, 32));

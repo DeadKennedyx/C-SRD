@@ -62,6 +62,15 @@ class Matrix(unittest.TestCase):
             binding = json.loads(Path(record["validation"]).read_text())
             self.assertEqual(len(binding["configurations"][0]["build_validation"]), 2)
 
+    def test_report_only_retains_all_variants_without_screening(self):
+        report = self.execute_matrix(extra=("--no-select", "--max-runtime-ratio", "1", "--max-size-ratio", "1"))
+        self.assertEqual(report["status"], "completed")
+        self.assertEqual(report["settings"]["selection_policy"], "report-only")
+        self.assertEqual(report["selection"]["status"], "not-performed")
+        self.assertNotIn("decisions", report["selection"])
+        self.assertEqual({r["variant"] for r in report["records"]}, {"original", "identity", "affine-42"})
+        self.assertTrue(all("timing" in r and "binary_bytes" in r for r in report["records"]))
+
     def test_control_flow_selection_requires_its_own_contribution(self):
         # Different instructions from the original are insufficient when the same
         # encoding without the branch already gives that difference.
