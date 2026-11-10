@@ -39,6 +39,7 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Decompiler reconstruction protocol](docs/decompiler-audit.md) | Known-interface Ghidra observer, verified reconstruction and opt-in parity-split experiment |
 | [Decompiler and split results](reports/decompiler-control-flow.md) | 826 final build cells, 112 Ghidra observations, failed pilot and explicit observer gaps |
 | [Reconstruction effort measurements](docs/effort-measurements.md) | Paired CPU, memory, time, query/trace budget sweeps, recovery accuracy, controls and human-session tooling |
+| [Reconstruction effort results](reports/reconstruction-effort.md) | 540 measured attempts, paired cost intervals, false reconstructions, observed coverage gaps and raw evidence |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |

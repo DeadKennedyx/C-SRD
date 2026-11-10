@@ -1,0 +1,6 @@
+{
+  "status": "passed",
+  "included_files_checked": 31039,
+  "scoring_binary_checked": true,
+  "method": "Validate archive and compressed file-manifest SHA256s; read every tar member and compare uncompressed SHA256; verify decompressed scoring executable."
+}

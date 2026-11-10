@@ -69,3 +69,31 @@ whose 1 ms budget prevents the worker from writing an answer. Preserve the
 original report and recompute **only statistics**, with separate implementation
 hashes and provenance. Do not rerun or replace inconvenient observations. The
 runtime sweep will use the corrected driver; no observer inference rule changed.
+
+## Results and interpretation
+
+The 30 fresh build cells pass validation and 5,264 original-versus-variant
+differential comparisons. All 14 CTest groups pass on both native macOS and
+Linux, including real GDB/Ghidra on Linux. After the summary fix, the seven-test
+focused suite passes on Linux and passes with one Linux-only skip on macOS.
+
+There are 540 measured observer attempts and 108 excluded warmups. Black-box:
+200 correct reconstructions, 40 wrong three-query XOR fits; every version
+recovers at 12/64 queries. Ghidra: 25 recoveries, 35 unsupported reconstructions,
+60 one-second budget expirations. Comparable successful CPU ratios remain near
+one; peak-RSS intervals are wide. Runtime: 135 held-out recoveries and 45
+no-candidate outcomes, with all variants recovering at the same lowest tested
+three-trace/four-observation point. Human data is still unassessed.
+
+An increased instruction count has not supplied a general reconstruction
+barrier in this pilot. The split version costs slightly more to trace at a
+64-step setting, but the observer already succeeds at four observations. The
+known target sum is also determined by the public output. Treat that example
+as an exposure control. Do not optimize for unsupported Ghidra operations.
+
+Meaningful next work is improving the independent adapter's coverage and
+designing new held-out tasks with predeclared practical effect thresholds;
+human claims require actual participants. The [result report](../../reports/reconstruction-effort.md)
+links archived raw evidence, counterexamples, resource curves, uncertainty,
+the recovered summary and exact commands. The corpus is a methodological pilot,
+not a new general software-protection result.

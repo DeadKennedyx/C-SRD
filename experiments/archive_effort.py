@@ -35,6 +35,22 @@ def archive(source, destination):
             "included": included, "excluded_transient_project_databases": excluded}
 
 
+def compact_index(index, output):
+    """Keep the reviewable index small; retain every individual hash compressed."""
+    manifests = {}
+    for entry in index["archives"]:
+        included = entry.pop("included")
+        excluded = entry.pop("excluded_transient_project_databases")
+        entry.update(included_files=len(included), excluded_transient_files=len(excluded))
+        manifests[entry["archive"]] = {"included": included, "excluded_transient_project_databases": excluded}
+    path = output / "file-manifests.json.gz"
+    with path.open("wb") as raw, gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as zipped:
+        zipped.write((json.dumps(manifests, sort_keys=True, separators=(",", ":")) + "\n").encode())
+    index["file_manifests"] = {"path": path.name, "sha256": file_hash(path),
+                              "format": "gzip JSON; keyed by archive; per-file SHA256, path and bytes"}
+    save(output / "index.json", index)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-dir", required=True)
@@ -66,7 +82,7 @@ def main():
     index["scoring_verifier"] = {"uncompressed_sha256": expected, "archive": "scoring-verifier.gz",
                                  "sha256": file_hash(output / "scoring-verifier.gz"),
                                  "scope": "Linux ARM64; requires the documented LLVM18/Z3 container libraries"}
-    save(output / "index.json", index)
+    compact_index(index, output)
     return 0
 
 
