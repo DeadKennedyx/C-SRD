@@ -237,7 +237,7 @@ functions may be copied unchanged successfully.
 | Interface | Behavior |
 | --- | --- |
 | `csrd transform input.c -o output.c` | Transform admitted functions; default strategy `affine` and seed `0` |
-| `--strategy identity\|affine\|xor\|independent\|planned` | Select implemented representation strategy |
+| `--strategy identity\|affine\|xor\|independent\|planned\|limbs16` | Select implemented representation strategy; [limbs16](docs/limb-representation.md) is a fixed experimental positional split |
 | `--seed UINT64` | Select deterministic affine/XOR parameters |
 | `--coverage 0..100` | Planned-only minimum encoded percentage of eligible live arithmetic/bitwise nodes; default 50 |
 | `--objective balanced\|runtime\|size` | Planned-only cost proxy; default balanced |
@@ -466,10 +466,12 @@ No new performance study was conducted for publication.
 
 ## 10. Planning for the future
 
-The next engineering problem is independent C-level validation of the existing
-subset. A subsequent, separate specification can introduce caller-provided
-buffers and observable memory modifications. Those changes require a memory
-contract; they are not implemented by this README.
+The active research track compares richer benign kernels and new representation
+prototypes using reconstruction effort, runtime and size, without fixed cost
+cutoffs. Reserved families remain closed until the candidate/observer protocol
+is frozen. Independent C-level validation is the next language-coverage backend
+task; caller-provided buffers and observable memory modifications need a separate
+memory contract.
 
 | Order | Proposed work | Evidence required before acceptance |
 | --- | --- | --- |

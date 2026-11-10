@@ -56,7 +56,7 @@ Implemented options:
 | Command/option | Behavior |
 | --- | --- |
 | `transform input.c -o output.c` | Default uniform affine strategy; unsupported operations use legal ordinary representation boundaries |
-| `--strategy identity\|affine\|xor\|independent\|planned` | Identity lowering; uniform supported affine/XOR operations; independent per-operation encoding; or graph planning |
+| `--strategy identity\|affine\|xor\|independent\|planned\|limbs16` | Identity lowering; uniform supported affine/XOR operations; independent per-operation encoding; graph planning; or experimental fixed two-piece representation |
 | `--seed UINT64` | Deterministic representation parameters; default 0 |
 | `--coverage 0..100` | Minimum percentage of live arithmetic/bitwise graph nodes encoded; planned only; default 50 |
 | `--objective balanced\|runtime\|size` | Explicit proxy cost objective; planned only; no promise of actual speed or size improvement |

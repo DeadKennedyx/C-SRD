@@ -77,10 +77,10 @@ def prepare_variants(args, case, directory, command):
     algorithms = ["none", *case.get("algorithms", [])]
     for algorithm in algorithms:
         for strategy in args.strategies:
-            for seed, flow in [(seed, flow) for seed in ([0] if strategy == "identity" else args.seeds)
+            for seed, flow in [(seed, flow) for seed in ([0] if strategy in ("identity", "limbs16") else args.seeds)
                                for flow in args.control_flows]:
                 stem = ("" if algorithm == "none" else algorithm + "-") + strategy
-                if strategy != "identity":
+                if strategy not in ("identity", "limbs16"):
                     stem += "-" + str(seed)
                 flow_control = stem
                 if flow != "none":
@@ -93,19 +93,24 @@ def prepare_variants(args, case, directory, command):
                         "--timeout-ms", args.timeout_ms]
                 if algorithm != "none":
                     argv += ["--algorithm", algorithm]
-                command(argv)
-                manifest = json.loads(report.read_text())
-                if any(f.get("verification") != "proved-under-model" or f["status"] != "transformed"
-                       for f in manifest["functions"]):
-                    raise ValueError("candidate was not transformed and verified")
                 control = "identity" if algorithm == "none" else algorithm + "-identity"
                 if flow != "none":
                     control += "-" + flow
-                variants.append({"id": stem, "path": str(candidate), "sha256": audit.file_hash(candidate),
-                                 "control": control, "algorithm": algorithm, "strategy": strategy, "seed": seed,
-                                 "control_flow": flow, "control_flow_control": flow_control,
-                                 "split_scales": sum(f.get("split_scales", 0) for f in manifest["functions"]),
-                                 "manifest": str(report), "manifest_sha256": audit.file_hash(report)})
+                variant = {"id": stem, "control": control, "algorithm": algorithm, "strategy": strategy, "seed": seed,
+                           "control_flow": flow, "control_flow_control": flow_control}
+                variants.append(variant)
+                try:
+                    command(argv)
+                    manifest = json.loads(report.read_text())
+                    if not manifest["functions"] or any(f.get("verification") != "proved-under-model" or f["status"] != "transformed"
+                                                       for f in manifest["functions"]):
+                        raise ValueError("candidate was not transformed and verified")
+                    variant.update(preparation="verified", path=str(candidate), sha256=audit.file_hash(candidate),
+                                   split_scales=sum(f.get("split_scales", 0) for f in manifest["functions"]))
+                except (audit.AuditError, OSError, ValueError, KeyError) as error:
+                    variant.update(preparation="failed", error=str(error))
+                if report.is_file():
+                    variant.update(manifest=str(report), manifest_sha256=audit.file_hash(report))
     return function, variants, analysis["target"]
 
 
@@ -309,6 +314,9 @@ def run(args, root):
                     build_dir = directory / ("build-" + profile["id"] + "-" + variant["id"])
                     build_dir.mkdir()
                     try:
+                        if variant.get("preparation") == "failed":
+                            cell["failure_stage"] = "transformation"
+                            raise ValueError("candidate preparation failed: " + variant["error"])
                         if (audit.target_architecture(profile["target_triple"]) != audit.target_architecture(target)
                                 or audit.target_system(profile["target_triple"]) != audit.target_system(target)):
                             raise ValueError("compiler/frontend target mismatch")
@@ -412,7 +420,7 @@ def main():
     p.add_argument("--tier", choices=["core", "extended", "holdout"], default="core")
     p.add_argument("--case", action="append")
     p.add_argument("--profile", action="append")
-    p.add_argument("--strategies", nargs="+", choices=["identity", "affine", "xor", "planned"], default=["identity", "affine", "planned"])
+    p.add_argument("--strategies", nargs="+", choices=["identity", "affine", "xor", "planned", "limbs16"], default=["identity", "affine", "planned"])
     p.add_argument("--seeds", nargs="+", type=int, default=[42])
     p.add_argument("--control-flows", nargs="+", choices=["none", "split-scale"], default=["none"])
     p.add_argument("--inputs", type=int, default=128)

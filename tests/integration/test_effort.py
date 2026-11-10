@@ -150,6 +150,30 @@ class EffortIntegration(unittest.TestCase):
                 self.assertEqual(trial["status"], expected, trial)
                 self.assertEqual(trial["negative_control"]["status"], "counterexample")
                 self.assertGreater(trial["resources"]["cpu_seconds"], 0)
+            bitlinear = [ROOT / "tools/measure_effort.py", "--matrix-report", matrix_path, "--csrd", TOOL,
+                         "--observer", "bitlinear", "--case", "calculate", "--case", "xor", "--profile", "clang-O2",
+                         "--variant", "original", "--query-budgets", "3", "65", "128",
+                         "--repetitions", "1", "--warmups", "0", "--output-dir", root / "bitlinear"]
+            run(bitlinear)
+            linear = json.loads((root / "bitlinear/effort.json").read_text())
+            for trial in linear["trials"]:
+                expected = ("no-candidate" if trial["budget_id"] == 0 else
+                            "recovered-under-source-model" if trial["case"] == "xor" else
+                            "wrong-candidate" if trial["budget_id"] == 1 else "no-candidate")
+                self.assertEqual(trial["status"], expected, trial)
+                self.assertEqual(trial["query_accounting"]["completed"], trial["budget"]["query_budget"])
+            # A partial matrix is opt-in and never authorizes failed cells.
+            original_matrix = json.loads(matrix_path.read_text())
+            partial = copy.deepcopy(original_matrix)
+            partial["status"] = "failed"
+            partial["summary"]["failed"] = 1
+            save(matrix_path, partial)
+            run([*common, "--output-dir", root / "partial-denied"], code=1)
+            run([*common, "--allow-partial-matrix", "--output-dir", root / "partial-allowed"])
+            partial["records"][0]["status"] = "failed"
+            save(matrix_path, partial)
+            run([*common, "--allow-partial-matrix", "--output-dir", root / "failed-cell-denied"], code=1)
+            save(matrix_path, original_matrix)
             run([ROOT / "tools/measure_effort.py", "--matrix-report", matrix_path, "--csrd", TOOL,
                  "--observer", "blackbox", "--case", "calculate", "--profile", "clang-O2", "--variant", "original",
                  "--wall-budgets", "0.001", "--repetitions", "1", "--warmups", "0", "--output-dir", root / "timeout"])

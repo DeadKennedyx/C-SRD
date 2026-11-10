@@ -25,7 +25,10 @@ storage duration, pointer lifetime and API requirements. Encoding is not secret
 storage. General loops require termination/effect contracts or invariants;
 arbitrary algorithm replacement requires independent specifications and proofs.
 
-The next engineering task is an independent C-level validation backend with
-explicit unwinding assertions, followed by a larger held-out benign corpus and
-calibration of planner cost proxies. No solver timeout, small benchmark result,
+The active protection study now has a [larger reserved corpus](rich-benchmarks.md)
+and a [positional two-piece prototype](limb-representation.md). Compare candidates
+with measured reconstruction/runtime/size trade-offs before imposing cost limits;
+expand wide-value/merge and multi-location runtime observer coverage. Independent
+C-level validation with unwinding assertions and planner cost calibration remain
+open backend tasks. No solver timeout, small benchmark result,
 source difference or recovered known rule answers RQ1–RQ9 by itself.

@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "status": "prespecified-development-exploration",
+  "date": "2026-11-09",
+  "corpus": "experiments/rich-benchmarks.json",
+  "split": "development",
+  "reserved_reconstruction": "unopened",
+  "hypothesis": "Positional two-piece computation may change compiled data flow and reconstruction effort; do not assume an improvement.",
+  "selection_policy": "report-only; no runtime or size screening",
+  "matrix": {
+    "tier": "extended",
+    "strategies": [
+      "identity",
+      "affine",
+      "xor",
+      "planned",
+      "limbs16"
+    ],
+    "seeds": [
+      42
+    ],
+    "inputs": 256,
+    "iterations": 1000000,
+    "repetitions": 7,
+    "timeout_ms": 30000
+  },
+  "bitlinear": {
+    "cases": [
+      "crc32_byte",
+      "morton16",
+      "rgb_luma8"
+    ],
+    "variants": [
+      "original",
+      "identity",
+      "affine-42",
+      "xor-42",
+      "planned-42",
+      "limbs16"
+    ],
+    "profiles": [
+      "clang-O2",
+      "gcc-O2"
+    ],
+    "query_budgets": [
+      32,
+      65,
+      128
+    ],
+    "wall_budgets": [
+      5
+    ],
+    "repetitions": 5,
+    "warmups": 1
+  },
+  "bitlinear_proof_limited_case": {
+    "case": "jenkins_word",
+    "variants": [
+      "original",
+      "identity",
+      "affine-42"
+    ],
+    "same_budgets": true
+  },
+  "ghidra": {
+    "cases": [
+      "crc32_byte",
+      "morton16",
+      "rgb_luma8"
+    ],
+    "variants": [
+      "original",
+      "identity",
+      "limbs16"
+    ],
+    "profiles": [
+      "clang-O2",
+      "gcc-O2"
+    ],
+    "wall_budgets": [
+      60
+    ],
+    "analysis_seconds": 30,
+    "decompile_seconds": 15,
+    "repetitions": 5,
+    "warmups": 1
+  },
+  "runtime_multi_location": "unassessed; current known-sum observer cannot evaluate this claim",
+  "human_effort": "unassessed",
+  "resources": "serialize measured runs after tests/builds; shared host noise remains; no CPU/RSS ceiling",
+  "failures": "retain every transformation/build/observer failure; only validated cells may be measured",
+  "bindings": {
+    "experiments/rich-benchmarks.json": "36e8eb55eccbe737f83a8d4d38d3d2bdba9d7b75cf46ae1ad7d3221994726072",
+    "build-linux-release/csrd": "08c5e2db22670ae5e008c3e61d4db66ca014632d6f54fe8519b8c985fa30f19e",
+    "tools/run_matrix.py": "97f1d1b76c932cc567221efa8d52adcf49638f0d46bf521a5e01b142f08e921d",
+    "tools/measure_effort.py": "a6e0e70fe77794d27f657f49c36f6b2c9ec95307d1574af5707114365d805f22",
+    "tools/effort_worker.py": "72226538b02afce1e2c75467dd0cc29fdfd03d12a689c2a93bfa4ac19f9512c0",
+    "tools/verify_limbs.py": "8b22d5cb3dfe927ea2adf18af7d31c6ef130f8f1439c107ea4c978e06aa876fe"
+  }
+}

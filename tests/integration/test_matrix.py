@@ -71,6 +71,17 @@ class Matrix(unittest.TestCase):
         self.assertEqual({r["variant"] for r in report["records"]}, {"original", "identity", "affine-42"})
         self.assertTrue(all("timing" in r and "binary_bytes" in r for r in report["records"]))
 
+    def test_failed_candidate_does_not_discard_other_measurements(self):
+        self.manifest["cases"][0]["algorithms"] = ["popcount8-serial"]
+        report = self.execute_matrix(expected=1, extra=("--no-select",))
+        self.assertEqual(report["status"], "failed")
+        self.assertEqual(report["summary"]["completed"], 3)
+        self.assertEqual(report["summary"]["failed"], 2)
+        for r in report["records"]:
+            if r["status"] == "failed":
+                self.assertEqual(r["failure_stage"], "transformation")
+                self.assertNotIn("binary", r)
+
     def test_control_flow_selection_requires_its_own_contribution(self):
         # Different instructions from the original are insufficient when the same
         # encoding without the branch already gives that difference.

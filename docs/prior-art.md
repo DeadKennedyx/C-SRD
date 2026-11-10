@@ -58,3 +58,13 @@ distinguishes lexicographic combination from Pareto enumeration. C-SRD exposes
 three explicit proxy scalarizations with lexicographic tie objectives and a
 deterministic local-search fallback. It does not claim a complete Pareto front,
 an optimal scalable optimizer, or cost estimates calibrated to machine cycles.
+
+## Positional representation update (2026-11-09)
+
+The new `limbs16` prototype uses established positional multi-precision arithmetic.
+Tigress's [EncodeData documentation](https://tigress.wtf/encodeData.html), checked
+again on this date, explicitly includes `bignum` and several bit-slice codecs.
+Splitting values is therefore prior art. C-SRD's fixed two-piece u32 prototype,
+rule obligations and emitted-source checks support a reproducible comparison;
+they do not establish novelty or superior reconstruction resistance. A direct
+Tigress comparison remains unperformed.

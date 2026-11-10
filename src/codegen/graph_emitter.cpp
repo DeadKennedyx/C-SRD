@@ -127,6 +127,10 @@ public:
 }
 Emission emitGraph(const Graph &g, const Plan &p, const PlanOptions &o, const Affine &a,
                    uint32_t mask, unsigned newlines, const std::set<std::string> &reserved) {
+  if (o.strategy == "limbs16") {
+    if (o.controlFlow != "none") throw std::runtime_error("limbs16 does not support split-scale composition");
+    return emitLimbs16(g, newlines, reserved);
+  }
   return Emitter(g, p, o, a, mask, reserved).run(newlines);
 }
 }

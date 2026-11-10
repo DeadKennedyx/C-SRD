@@ -2,6 +2,7 @@
 
 namespace csrd {
 const char *encodingName(Encoding e) {
+  if (e == Encoding::Limbs16) return "limbs16-u32";
   return e == Encoding::Affine ? "affine-u32" : e == Encoding::Xor ? "xor-u32" : "identity-u32";
 }
 std::vector<Encoding> allowed(const Node &node) {

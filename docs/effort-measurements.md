@@ -74,6 +74,17 @@ Do not use held-out answers to select among fits. Repetitions use matched input
 seeds across variants and independent held-out random streams. Query budgets
 are exact input counts, not process launches.
 
+**Bit-linear query control (`--observer bitlinear`):** learn a single affine map
+over GF(2) using zero and every input bit separately (1+32n basis queries for n
+parameters). Extra boundary/random queries reject inconsistent fits. Insufficient
+basis data produces no candidate. A nonlinear function can agree on the entire
+basis, so the frozen hypothesis still requires source-model grading and separate
+held-out execution. The model contains only the measured offset and bit columns;
+it has no library of corpus algorithms. This is a whole-function recognition
+control: identical input/output behavior gives identical query observations
+regardless of the internal representation. CPU/RSS variation mainly measures
+execution/inference overhead, not a new query-security property.
+
 **Ghidra:** fresh project/process, fixed known u32 ABI, two analysis CPUs, declared
 analysis/decompile/outer-process deadlines. Export high P-code and decompiled C;
 apply the existing bounded reconstruction adapter; grade the frozen C against
@@ -102,6 +113,13 @@ Use the same host/container paths and exact `csrd` binary. The verifier, matrix,
 binaries, frozen original inputs and observer implementation are hash-checked
 before/after measurement. Tool versions/properties, command lines, outputs,
 environment/load, order, all trials and resource samples are retained.
+
+Broad exploration can retain failed transformation/build cells in a matrix whose
+overall status is `failed`. `--allow-partial-matrix` explicitly permits measurement
+of its completed validated cells only, retaining the original matrix status and
+summary. Every requested cell, its original baseline and its hashes must pass the
+usual checks; the option cannot make failed code eligible. Source proof failures
+stay visible and are not included as successful protection candidates.
 
 ```sh
 python3 tools/measure_effort.py \

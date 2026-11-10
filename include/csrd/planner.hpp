@@ -2,7 +2,7 @@
 #include "csrd/graph.hpp"
 #include "csrd/representation.hpp"
 namespace csrd {
-enum class Encoding : unsigned { Identity = 0, Affine = 1, Xor = 2 };
+enum class Encoding : unsigned { Identity = 0, Affine = 1, Xor = 2, Limbs16 = 3 };
 struct PlanOptions {
   std::string strategy = "affine", objective = "balanced";
   std::string algorithm = "none";

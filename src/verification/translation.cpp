@@ -94,11 +94,34 @@ Verification verify(const Region &original, const Region &candidate, unsigned ti
     result.obligation = solver.to_smt2();
     result.strategy = "simplify/bit-blast/sat";
     auto answer = solver.check();
-    if (answer == z3::unknown && timeoutMs > firstBudget) {
+    unsigned usedBudget = firstBudget;
+    if (answer == z3::unknown && timeoutMs > usedBudget) {
+      // A bijective change of solver variables, not a restriction of C inputs.
+      // Every u32 is exactly low + 65536*high for independent 16-bit halves.
+      // Exposing that arithmetic structure helps positional/carry identities.
+      z3::expr_vector from(ctx), to(ctx);
+      for (unsigned i = 0; i < inputs.size(); ++i) {
+        from.push_back(inputs[i]);
+        const auto name = "input_" + std::to_string(i);
+        to.push_back(z3::zext(ctx.bv_const((name + "_low").c_str(), 16), 16) +
+                     z3::zext(ctx.bv_const((name + "_high").c_str(), 16), 16) * ctx.bv_val(65536, 32));
+      }
+      left = left.substitute(from, to); right = right.substitute(from, to);
+      for (unsigned i = 0; i < inputs.size(); ++i) inputs[i] = to[i];
+      const auto splitBudget = std::min(1000u, std::max(1u, (timeoutMs - usedBudget) / 2));
+      solver = (simplify & z3::tactic(ctx, "bit-blast") & z3::tactic(ctx, "sat")).mk_solver();
+      solver.set("timeout", splitBudget); solver.add(left != right);
+      result.obligation = solver.to_smt2();
+      result.strategy = "split-inputs/simplify/bit-blast/sat (after direct solver inconclusive)";
+      answer = solver.check();
+      usedBudget += splitBudget;
+    }
+    if (answer == z3::unknown && timeoutMs > usedBudget) {
       solver = (simplify & lift & simplify & z3::tactic(ctx, "smt")).mk_solver();
-      solver.set("timeout", timeoutMs - firstBudget);
+      solver.set("timeout", timeoutMs - usedBudget);
       solver.add(left != right);
-      result.strategy = "simplify/blast-term-ite/simplify/smt (after direct solver inconclusive)";
+      result.obligation = solver.to_smt2();
+      result.strategy = "split-inputs/simplify/blast-term-ite/simplify/smt (after direct solvers inconclusive)";
       answer = solver.check();
     }
     if (answer == z3::unsat) result.status = "proved-under-model";

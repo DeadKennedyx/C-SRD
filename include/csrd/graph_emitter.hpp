@@ -11,4 +11,5 @@ struct Emission {
 Emission emitGraph(const Graph &graph, const Plan &plan, const PlanOptions &options,
                    const Affine &affine, uint32_t xorMask, unsigned originalNewlines,
                    const std::set<std::string> &reserved);
+Emission emitLimbs16(const Graph &graph, unsigned originalNewlines, const std::set<std::string> &reserved);
 }

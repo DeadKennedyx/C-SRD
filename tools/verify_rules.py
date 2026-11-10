@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 import subprocess
 import time
+from verify_limbs import verify as verify_limbs
 
 ROOT = Path(__file__).resolve().parents[1]
 CHECK = "(check-sat-using (then (using-params simplify :som true) smt))\n"
@@ -94,6 +95,8 @@ def main(args):
         raise AssertionError("mutated addition rule did not produce a counterexample")
     counterexample = run(args.z3, mutant + "(get-value (a b x y))\n")
     print("PASS incorrect-rule control: sat with a counterexample")
+    limb_rules = verify_limbs(args.z3)
+    print(f"PASS {len(limb_rules['obligations'])} limbs16 obligations, including a wrong-borrow control")
     report = {"solver": subprocess.check_output([args.z3, "-version"], text=True).strip(),
               "contract_sha256": hashlib.sha256(contract.read_bytes()).hexdigest(),
               "generic_rules": dict(zip(("add", "subtract", "scale"), output)),
@@ -101,6 +104,7 @@ def main(args):
               "xor_rules": dict(zip(("xor", "and", "or", "not", "shl", "lshr"), xor_answers)),
               "newton_steps": newton,
               "unsigned_shift_scale_normalization": shifts,
+              "limbs16": limb_rules,
               "split_scale": {"sha256": hashlib.sha256(split_contract.read_bytes()).hexdigest(), "result": split_answer},
               "concrete_multiplier_roundtrips": inverses,
               "negative_control": counterexample, "seconds": time.perf_counter() - start,

@@ -29,6 +29,13 @@ def predict(model, vector):
         return vector[0] ^ vector[1]
     if kind == "minimum":
         return min(vector)
+    if kind == "bitlinear":
+        value = model["offset"]
+        for parameter, columns in zip(vector, model["columns"]):
+            for bit, column in enumerate(columns):
+                if (parameter >> bit) & 1:
+                    value ^= column
+        return value
     raise ValueError("unknown model")
 
 
@@ -44,6 +51,13 @@ def model_source(function, arity, model, result_offset=0):
         body = "p0 ^ p1"
     elif model["kind"] == "minimum":
         body = "p0 < p1 ? p0 : p1"
+    elif model["kind"] == "bitlinear":
+        terms = [str(model["offset"]) + "u"]
+        for p, columns in zip(names, model["columns"]):
+            for bit, column in enumerate(columns):
+                if column:
+                    terms.append(f"((0u - (({p} >> {bit}u) & 1u)) & {column}u)")
+        body = " ^ ".join(terms)
     else:
         raise ValueError("unknown model")
     return ("#include <stdint.h>\nuint32_t " + function + "(" +
@@ -89,6 +103,35 @@ def blackbox(config, directory):
     return {"status": "candidate" if selected else "no-candidate", "model": selected,
             "training_queries": len(vectors), "models_tested": len(models), "training_fits": fitted,
             "query_seconds": query_seconds, "fit_seconds": time.perf_counter() - started - query_seconds}
+
+
+def bitlinear(config, directory):
+    """Learn one affine map over GF(2), without family names or reference code.
+
+    Basis queries determine a hypothesis, not a proof that the target is linear.
+    Additional queries only reject hypotheses; the hidden grader decides success.
+    """
+    arity, count = config["arity"], config["query_budget"]
+    if not 1 <= arity <= 4 or not 1 <= count <= 4096:
+        raise ValueError("arity 1..4 and query budget 1..4096 required")
+    basis = [tuple([0] * arity)] + [tuple((1 << bit) if i == j else 0 for i in range(arity))
+                                           for j in range(arity) for bit in range(32)]
+    vectors = list(dict.fromkeys(basis + input_vectors(arity, config["input_seed"], count)))[:count]
+    started = time.perf_counter()
+    values = query(config["binary"], vectors, directory)
+    queried = time.perf_counter()
+    selected = None
+    if len(values) >= len(basis):
+        model = {"kind": "bitlinear", "offset": values[0],
+                 "columns": [[values[1 + 32*j + bit] ^ values[0] for bit in range(32)] for j in range(arity)]}
+        if all(predict(model, v) == y for v, y in zip(vectors, values)):
+            selected = model
+            (directory / "candidate.c").write_text(model_source(config["function"], arity, selected))
+    return {"status": "candidate" if selected else "no-candidate", "model": selected,
+            "reason": "insufficient basis" if len(values) < len(basis) else "basis fit with optional probe checks",
+            "training_queries": len(values), "basis_queries_required": len(basis),
+            "models_tested": int(len(values) >= len(basis)), "query_seconds": queried - started,
+            "fit_seconds": time.perf_counter() - queried}
 
 
 def collect_traces(config, directory, vectors):
@@ -180,7 +223,7 @@ def main():
             result = {"status": "completed", "correct": correct, "total": len(values),
                       "accuracy": correct / len(values), "predictions": predictions}
         else:
-            result = {"blackbox": blackbox, "runtime": runtime, "ghidra": ghidra}[config["observer"]](config, directory)
+            result = {"blackbox": blackbox, "bitlinear": bitlinear, "runtime": runtime, "ghidra": ghidra}[config["observer"]](config, directory)
         result["observer_seconds"] = time.perf_counter() - start
     except (OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
         result = {"status": "error", "error": str(error), "observer_seconds": time.perf_counter() - start}

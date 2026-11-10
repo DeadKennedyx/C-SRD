@@ -72,6 +72,12 @@ Plan heuristic(const Graph &g, const PlanOptions &options, const std::string &re
 }
 Plan plan(const Graph &g, const PlanOptions &options) {
   Plan result;
+  if (options.strategy == "limbs16") {
+    result.labels.assign(g.nodes.size(), Encoding::Limbs16);
+    result.status = "fixed-representation";
+    result.reason = "two positional 16-bit limbs; no seed diversification or cost optimization";
+    return result;
+  }
   if (options.strategy != "planned") {
     for (const auto &node : g.nodes) {
       Encoding choice = Encoding::Identity;

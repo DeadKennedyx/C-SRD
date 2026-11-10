@@ -65,7 +65,7 @@ CTest covers numeric rules and boundary values; rejection/macro/path behavior;
 proofs, mutations and compiled counterexample replay; exhaustive small-graph
 planner optimality; algorithm-candidate rejection and compiled low-byte coverage;
 defensive false matches; and two compiled differential suites. The expanded
-suite exercises all five representation strategies on branches, loops, tables,
+suite exercises the original five representation strategies on branches, loops, tables,
 comparisons, wraparound and bitwise operations. Each compiler uses `-O0`/`-O2`;
 selected Clang configurations use ASan/UBSan. Release checks remain active.
 

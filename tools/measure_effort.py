@@ -78,7 +78,7 @@ def grade(args, matrix, record, config, answer, directory):
     result["verification"] = proof(args.csrd, frozen, candidate, directory / "grade", args.timeout_ms)
     result["status"] = {"proved-under-model": "recovered-under-source-model",
                         "counterexample": "wrong-candidate"}.get(result["verification"]["status"], "inconclusive")
-    if config["observer"] == "blackbox":
+    if config["observer"] in ("blackbox", "bitlinear"):
         original = next(r for r in matrix["records"] if r["case"] == record["case"] and
                         r["profile"] == record["profile"] and r["variant"] == "original")
         heldout = input_vectors(config["arity"], 771992 + config["input_seed"], 128)
@@ -106,7 +106,8 @@ def grade(args, matrix, record, config, answer, directory):
 def run(args, output):
     matrix_path = Path(args.matrix_report).resolve(strict=True)
     matrix = json.loads(matrix_path.read_text())
-    if matrix["status"] not in ("completed", "completed-with-gaps"):
+    partial = matrix["status"] == "failed" and args.allow_partial_matrix and "summary" in matrix and "error" not in matrix
+    if matrix["status"] not in ("completed", "completed-with-gaps") and not partial:
         raise ValueError("completed validated matrix required")
     args.csrd = executable(args.csrd)
     if file_hash(args.csrd) != matrix["tools"]["csrd"]["sha256"]:
@@ -155,6 +156,7 @@ def run(args, output):
                                  args.cpu_budgets or [None], args.memory_budgets_mib or [None])]
     report = {"schema_version": 1, "status": "running", "observer": args.observer,
               "environment_start": environment(), "tools": tools, "artifact_bindings": bindings,
+              "matrix_status": matrix["status"], "matrix_summary": matrix.get("summary"),
               "protocol": {**vars(args), "budgets": budgets, "order": "serialized randomized complete blocks",
                            "cache": "fresh observer process and Ghidra project; filesystem caches not flushed",
                            "grading": "reference withheld from fixed observer; frozen answer; grader resources separate",
@@ -240,7 +242,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--matrix-report", required=True)
     parser.add_argument("--csrd", required=True)
-    parser.add_argument("--observer", choices=["blackbox", "ghidra", "runtime"], required=True)
+    parser.add_argument("--observer", choices=["blackbox", "bitlinear", "ghidra", "runtime"], required=True)
+    parser.add_argument("--allow-partial-matrix", action="store_true", help="explicitly measure only validated cells of a completed matrix that retained other failed cells")
     parser.add_argument("--case", action="append", required=True)
     parser.add_argument("--profile", action="append", required=True)
     parser.add_argument("--variant", action="append", required=True)
