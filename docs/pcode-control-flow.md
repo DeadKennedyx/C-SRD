@@ -1,4 +1,4 @@
-# Bounded scalar P-code control-flow observer
+# Bounded P-code control-flow observer
 
 ## Problem and hypothesis
 
@@ -10,7 +10,7 @@ technique or an expansion of C-SRD's admitted source language.
 
 ## Export contract
 
-`ExportCSRD.java` schema 2 records the known symbol and public u32 interface,
+`ExportCSRD.java` schema 2 introduced the known symbol and public u32 interface,
 varnode sizes/constants/parameter slots, and live instructions in each basic
 block's execution order. Each block has an `id`, ordered `operations` indexes,
 and ordered `incoming`/`outgoing` lists. An edge is
@@ -24,6 +24,8 @@ outgoing slot 0 is the conditional false edge; slot 1 is the true edge.
 [block API](https://github.com/NationalSecurityAgency/ghidra/blob/Ghidra_12.2_build/Ghidra/Framework/SoftwareModeling/src/main/java/ghidra/program/model/pcode/PcodeBlock.java)
 and [merge semantics](https://ghidra.re/ghidra_docs/languages/html/additionalpcode.html).
 
+The current schema 3 retains that CFG contract and adds named vector operations
+and explicit immutable bytes under the [wide-value contract](pcode-wide-values.md).
 Old schema-1 exports remain replayable only for unconditional expression DAGs.
 Their global address/sequence order is not instruction execution order; it
 cannot reconstruct loops or branches. New P-code counts include block-contained
@@ -54,14 +56,16 @@ comparable and cannot establish a protection benefit.
    expression evaluation is safe only because all admitted scalar operations are
    pure and total. Emit one C11 return, preserving the known public interface.
 
-Supported payload widths are 8, 16 and 32 bits. Rules include unsigned
-add/subtract, scale when an operand is an exact constant, bitwise operations,
-copy/cast, extensions, unsigned comparisons and fixed logical shifts/subpieces.
-P-code `CAST` copies bits; it is not a numeric C cast. Shift/count metadata may
-have 8/16/32/64-bit storage. Oversized logical shifts produce zero without an
-invalid C shift. Subpiece extraction must remain within its source. No native
-wide data, vector intrinsics, signed comparisons/shifts, variable multiplication,
-loads/stores, calls, indirect control flow or unmodeled effects are admitted.
+The initial scalar observer supported 8/16/32-bit payloads. The current
+[wide-value extension](pcode-wide-values.md) supports every byte-aligned width
+through 128 bits using u32 components, including fixed arithmetic right shifts
+and concatenation. It models three explicitly named AArch64 vector operations
+and immutable mapped constants under a pinned export contract. P-code `CAST`
+copies bits; it is not a numeric C cast. Shift/count metadata may have
+8/16/32/64-bit storage. Oversized shifts have explicit total semantics and
+subpiece extraction must remain within its source. Signed comparisons, general
+variable multiplication, arbitrary loads/stores, calls, indirect control flow
+and unmodeled effects remain unsupported.
 
 ## Fixed bounds and measurements
 
@@ -116,5 +120,5 @@ algorithm corpus or permit adapter tuning on these validation outcomes.
 The original GCC Jenkins artifact is a development recovery check. New exports
 and grades get new directories. Old exports, statuses and resource observations
 are never overwritten. Final resource trials run serially after builds/tests.
-The next separate coverage question concerns wide/vector operations, whose
-semantics cannot be inferred merely from their storage sizes.
+Wide/vector coverage has its own [contract and validation](pcode-wide-values.md);
+its semantics cannot be inferred merely from storage sizes.

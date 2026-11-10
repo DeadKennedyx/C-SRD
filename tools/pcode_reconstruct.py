@@ -24,13 +24,13 @@ def _reconstruct(export, result_offset, metrics):
     if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*", name) or type(arity) is not int or not 1 <= arity <= 4:
         raise Unsupported("interface outside bounded protocol")
     schema = export.get("schema_version", 1)
-    if type(schema) is not int or schema not in (1, 2):
+    if type(schema) is not int or schema not in (1, 2, 3):
         raise Unsupported("unknown P-code export schema")
-    metrics.update(export_schema=schema, mode="cfg" if schema == 2 else "dag",
+    metrics.update(export_schema=schema, mode="cfg" if schema >= 2 else "dag",
                    evaluated_operations=0, emitted_statements=0, block_expansions=0,
                    max_path_block_entries=0, terminal_paths=0, constant_branches=0, symbolic_branches=0)
     graph, builder = Graph(export), Builder(metrics)
-    if schema == 2:
+    if schema >= 2:
         graph.cfg(export)
         result = graph.expand(builder, metrics)
     else:

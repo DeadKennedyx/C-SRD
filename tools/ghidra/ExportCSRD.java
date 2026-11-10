@@ -7,6 +7,8 @@ import ghidra.program.model.listing.*;
 import ghidra.program.model.data.UnsignedIntegerDataType;
 import ghidra.program.model.symbol.SourceType;
 import ghidra.program.model.pcode.*;
+import ghidra.program.model.address.AddressSet;
+import ghidra.program.model.mem.MemoryBlock;
 import com.google.gson.*;
 import java.nio.file.*;
 import java.util.*;
@@ -23,7 +25,8 @@ public class ExportCSRD extends HeadlessScript {
         if (args.length != 4) throw new IllegalArgumentException("function arity timeout-seconds output-directory");
         Path out = Paths.get(args[3]);
         JsonObject report = new JsonObject();
-        report.addProperty("schema_version", 2);
+        report.addProperty("schema_version", 3);
+        report.addProperty("memory_model", "immutable-mapped-constants-v1");
         report.addProperty("ghidra_version", Application.getApplicationVersion());
         report.addProperty("language", currentProgram.getLanguageID().toString());
         report.addProperty("compiler_spec", currentProgram.getCompilerSpec().getCompilerSpecID().toString());
@@ -66,6 +69,7 @@ public class ExportCSRD extends HeadlessScript {
             Files.writeString(out.resolve("decompiled.c"), result.getDecompiledFunction().getC());
             HighFunction high = result.getHighFunction();
             JsonArray operations = new JsonArray();
+            JsonObject userops = new JsonObject();
             JsonArray blocks = new JsonArray();
             Integer entryBlock = null;
             // getPcodeOps() is sequence/address order and includes dead ops.
@@ -99,6 +103,13 @@ public class ExportCSRD extends HeadlessScript {
                     item.addProperty("opcode", op.getMnemonic());
                     item.addProperty("address", op.getSeqnum().getTarget().toString());
                     item.addProperty("block", block.getIndex());
+                    if (op.getOpcode() == PcodeOp.CALLOTHER && op.getNumInputs() > 0 && op.getInput(0).isConstant()) {
+                        long number = op.getInput(0).getOffset();
+                        if (number >= 0 && number <= Integer.MAX_VALUE) {
+                            String name = currentProgram.getLanguage().getUserDefinedOpName((int)number);
+                            if (name != null) userops.addProperty(Long.toString(number), name);
+                        }
+                    }
                     if (op.getOutput() != null) item.addProperty("output", id(op.getOutput()));
                     JsonArray inputs = new JsonArray();
                     for (int i = 0; i < op.getNumInputs(); ++i) inputs.add(id(op.getInput(i)));
@@ -121,10 +132,48 @@ public class ExportCSRD extends HeadlessScript {
                 if (node.isConstant()) item.addProperty("constant", Long.toUnsignedString(node.getOffset()));
                 if (node.isInput() && node instanceof VarnodeAST && ((VarnodeAST)node).getHigh() instanceof HighParam)
                     item.addProperty("parameter", ((HighParam)((VarnodeAST)node).getHigh()).getSlot());
+                if (node.isInput() && !item.has("parameter")) {
+                    JsonObject diagnostic = new JsonObject();
+                    diagnostic.addProperty("space", node.getAddress().getAddressSpace().getName());
+                    diagnostic.addProperty("default_space", currentProgram.getAddressFactory().getDefaultAddressSpace().getName());
+                    MemoryBlock found = currentProgram.getMemory().getBlock(node.getAddress());
+                    if (found != null) {
+                        diagnostic.addProperty("block", found.getName());
+                        diagnostic.addProperty("read", found.isRead()); diagnostic.addProperty("write", found.isWrite());
+                        diagnostic.addProperty("execute", found.isExecute()); diagnostic.addProperty("initialized", found.isInitialized());
+                        diagnostic.addProperty("relocations", currentProgram.getRelocationTable().getRelocations(new AddressSet(node.getAddress(), node.getAddress().addNoWrap(node.getSize()-1))).hasNext());
+                    }
+                    item.add("memory_diagnostic", diagnostic);
+                }
+                if (node.isInput() && !item.has("parameter") && !node.isConstant() && node.getSize() >= 1 && node.getSize() <= 16 &&
+                    node.getAddress().getAddressSpace().equals(currentProgram.getAddressFactory().getDefaultAddressSpace())) {
+                    MemoryBlock block = currentProgram.getMemory().getBlock(node.getAddress());
+                    var end = node.getAddress().addNoWrap(node.getSize()-1);
+                    if (block != null && block.contains(end) && block.isRead() && !block.isWrite() &&
+                        block.isInitialized() &&
+                        !currentProgram.getRelocationTable().getRelocations(new AddressSet(node.getAddress(), end)).hasNext()) {
+                        byte[] bytes = new byte[node.getSize()];
+                        if (currentProgram.getMemory().getBytes(node.getAddress(), bytes) != bytes.length)
+                            throw new IllegalStateException("incomplete read-only constant");
+                        StringBuilder hex = new StringBuilder();
+                        for (byte value : bytes) hex.append(String.format("%02x", value & 255));
+                        JsonObject snapshot = new JsonObject();
+                        snapshot.addProperty("bytes_hex", hex.toString());
+                        snapshot.addProperty("byte_order", currentProgram.getLanguage().isBigEndian() ? "big" : "little");
+                        snapshot.addProperty("address", node.getAddress().toString());
+                        snapshot.addProperty("block_start", block.getStart().toString());
+                        snapshot.addProperty("block_end", block.getEnd().toString());
+                        snapshot.addProperty("read", true); snapshot.addProperty("write", false);
+                        snapshot.addProperty("execute", block.isExecute()); snapshot.addProperty("initialized", true);
+                        snapshot.addProperty("relocations", false);
+                        item.add("readonly", snapshot);
+                    }
+                }
                 variables.add(item);
             }
             report.add("nodes", variables);
             report.add("operations", operations);
+            report.add("userops", userops);
             report.addProperty("status", "decompiled");
         } catch (Exception error) {
             report.addProperty("status", "export-error");

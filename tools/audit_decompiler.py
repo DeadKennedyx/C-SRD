@@ -74,7 +74,7 @@ def verify(command, csrd, reference, candidate, report_path, timeout_ms):
 
 def run(args, root):
     report = {"schema_version": 1, "status": "running", "commands": [], "observations": [],
-              "protocol": {"observer": "ghidra-high-pcode-cfg-v2", "known_interface": True,
+              "protocol": {"observer": "ghidra-high-pcode-cfg-wide-v3", "known_interface": True,
                            "known_symbol": True, "source_or_seed_given_to_observer": False,
                            "analysis_seconds": args.analysis_seconds, "decompile_seconds": args.decompile_seconds,
                            "process_seconds": args.process_seconds, "verification_ms": args.timeout_ms,
@@ -106,7 +106,7 @@ def run(args, root):
                             set(installation.glob("Ghidra/Features/Decompiler/os/*/decompile")))
         report["ghidra_components"] = [{"path": str(p), "sha256": file_hash(p)} for p in components]
         implementation = [Path(__file__), ROOT / "tools/pcode_reconstruct.py", ROOT / "tools/pcode_cfg.py",
-                          ROOT / "tools/pcode_values.py", ROOT / "tools/ghidra/ExportCSRD.java"]
+                          ROOT / "tools/pcode_values.py", ROOT / "tools/pcode_wide.py", ROOT / "tools/pcode_vector.py", ROOT / "tools/ghidra/ExportCSRD.java"]
         report["implementation"] = {str(p.relative_to(ROOT)): file_hash(p) for p in implementation}
         records = [r for r in matrix["records"] if all(not requested or r[key] in requested
                    for key, requested in (("case", args.case), ("profile", args.profile), ("variant", args.variant)))]

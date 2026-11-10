@@ -15,8 +15,9 @@ BINARY = {"INT_ADD": "+", "INT_SUB": "-", "INT_MULT": "*", "INT_AND": "&",
           "INT_OR": "|", "INT_XOR": "^", "INT_EQUAL": "==", "INT_NOTEQUAL": "!=",
           "INT_LESS": "<", "INT_LESSEQUAL": "<="}
 COMPARE = {"INT_EQUAL", "INT_NOTEQUAL", "INT_LESS", "INT_LESSEQUAL"}
-COUNTED = {"INT_LEFT", "INT_RIGHT", "SUBPIECE"}
-SCALAR = UNARY | set(BINARY) | COUNTED
+COUNTED = {"INT_LEFT", "INT_RIGHT", "INT_SRIGHT", "SUBPIECE"}
+SCALAR = UNARY | set(BINARY) | COUNTED | {"PIECE"}
+WIDTHS = tuple(range(8, 129, 8))
 
 
 def shape(code, bits, inputs):
@@ -26,12 +27,12 @@ def shape(code, bits, inputs):
     if len(inputs) != (1 if code in UNARY else 2):
         raise Unsupported("unexpected operation arity")
     data_widths = inputs[:1] if code in COUNTED else inputs
-    if bits not in (8, 16, 32) or any(w not in (8, 16, 32) for w in data_widths):
+    if bits not in WIDTHS or any(w not in WIDTHS for w in data_widths):
         raise Unsupported("unsupported scalar data width")
     if code in BINARY:
         if inputs[0] != inputs[1] or bits != (8 if code in COMPARE else inputs[0]):
             raise Unsupported("binary input/output widths differ")
-    elif code in ("COPY", "CAST", "INT_NEGATE", "INT_2COMP", "INT_LEFT", "INT_RIGHT"):
+    elif code in ("COPY", "CAST", "INT_NEGATE", "INT_2COMP", "INT_LEFT", "INT_RIGHT", "INT_SRIGHT"):
         if bits != inputs[0]:
             raise Unsupported("scalar input/output widths differ")
     elif code in ("INT_ZEXT", "INT_SEXT") and bits < inputs[0]:
@@ -40,6 +41,8 @@ def shape(code, bits, inputs):
         raise Unsupported("boolean operation requires byte values")
     elif code == "SUBPIECE" and bits > inputs[0]:
         raise Unsupported("subpiece cannot widen a value")
+    elif code == "PIECE" and bits != sum(inputs):
+        raise Unsupported("piece widths must sum to output width")
     if code in COUNTED and inputs[1] not in (8, 16, 32, 64):
         raise Unsupported("unsupported constant count width")
 
@@ -49,11 +52,15 @@ class Value:
     bits: int
     atom: str
     known: int | None = None
+    parts: tuple = ()  # least-significant first; each stored in unsigned int
 
 
 def literal(bits, number):
     if not 0 <= number < (1 << bits):
         raise Unsupported("constant does not fit its storage width")
+    if bits > 32:
+        return Value(bits, "", number, tuple(literal(min(32, bits-i), (number >> i) & ((1 << min(32, bits-i))-1))
+                                            for i in range(0, bits, 32)))
     return Value(bits, str(number) + "u", number)
 
 
@@ -64,6 +71,8 @@ class Builder:
         self.serial = 0
 
     def emit(self, bits, expression):
+        if not 0 < bits <= 32:
+            raise Unsupported("C scalar storage must fit unsigned int")
         count = 1 + (bits < 32)
         if len(self.lines) + count > 16384:
             raise Unsupported("emitted statement budget exceeded")
@@ -76,10 +85,23 @@ class Builder:
         return Value(bits, name)
 
     def operation(self, code, bits, args):
-        shape(code, bits, [a.bits for a in args])
+        if code.startswith("NEON_"):
+            from pcode_vector import shape as vector_shape, operation as vector_operation
+            vector_shape(code, bits, [a.bits for a in args])
+        else:
+            shape(code, bits, [a.bits for a in args])
         self.metrics["evaluated_operations"] += 1
         if self.metrics["evaluated_operations"] > 65536:
             raise Unsupported("evaluated operation budget exceeded")
+        if code.startswith("NEON_"):
+            return vector_operation(self, code, bits, args)
+        if bits > 32 or any(a.bits > 32 for a in (args[:1] if code in COUNTED else args)) or code == "PIECE":
+            from pcode_wide import operation
+            return operation(self, code, bits, args)
+        return self.scalar(code, bits, args)
+
+    def scalar(self, code, bits, args):
+        """Internal u32 lowering; original-operation counts exclude helper steps."""
         a, av = args[0].atom, args[0].known
         if code in COUNTED:
             count = args[1].known
@@ -88,6 +110,19 @@ class Builder:
             shift = count * (8 if code == "SUBPIECE" else 1)
             if code == "SUBPIECE" and shift + bits > args[0].bits:
                 raise Unsupported("subpiece extends outside input")
+            if code == "INT_SRIGHT":
+                sign = 1 << (bits - 1)
+                if av is not None:
+                    signed = av - (1 << bits) if av & sign else av
+                    number = (-1 if signed < 0 else 0) if shift >= bits else signed >> shift
+                    return literal(bits, number & ((1 << bits) - 1))
+                if shift == 0:
+                    return args[0]
+                fill = f"(0u - ({a} >> {bits-1}u))"
+                if shift >= bits:
+                    return self.emit(bits, fill)
+                mask = ((1 << bits) - 1) ^ ((1 << (bits-shift)) - 1)
+                return self.emit(bits, f"(({a} >> {shift}u) | ({fill} & {mask}u))")
             if shift >= args[0].bits:
                 return literal(bits, 0)
             if av is not None:

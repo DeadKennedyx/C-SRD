@@ -41,6 +41,7 @@ causal explanations and estimates.
 | [2026-11-10 — reconstruction grading solvers](2026-11-10-grading-solvers.md) | Failed solver/decomposition probes and circuit-checker adaptation | Frozen answers, validated Boolean gates and separate grading resources |
 | [2026-11-10 — bounded P-code control flow](2026-11-10-pcode-cfg.md) | Observer specification, independent controls and reserved validation | Checked CFG/merge execution, unchanged Jenkins recovery, supplemental compiled checks and retained grading gaps |
 | [2026-11-10 — byte and nibble representations](2026-11-10-positional-widths.md) | Failed proof prototypes, verified representations and broad comparison | 500 build cells, complete observer repeat after host interruption, separate grading/finite checks, CPU/RSS/runtime/size trade-offs and retained unknowns |
+| [2026-11-10 — wide-value observer and grading investigation](2026-11-10-pcode-wide.md) | Scalar/vector semantics, constant snapshots, independent proof and hardware controls | Frozen binaries, retained failed pilot, explicit scope refinement and separate larger-budget grading |
 
 Future work is tracked in [the backlog](../backlog.md). External issue numbers
 and review outcomes belong here only after those events actually occur.

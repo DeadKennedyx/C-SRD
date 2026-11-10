@@ -1,5 +1,6 @@
 """Validated high P-code graphs and exhaustive, bounded control-flow expansion."""
-from pcode_values import SCALAR, COUNTED, Unsupported, Value, literal, shape
+from pcode_values import SCALAR, COUNTED, WIDTHS, Unsupported, Value, literal, shape
+from pcode_vector import readonly_value, userop_name, shape as vector_shape
 
 
 LIMITS = {"nodes": 4096, "operations": 2048, "blocks": 256, "path_block_entries": 64,
@@ -21,14 +22,16 @@ class Graph:
             raise Unsupported("nodes and operations must be lists")
         if len(self.nodes) > LIMITS["nodes"] or len(self.ops) > LIMITS["operations"]:
             raise Unsupported("P-code budget exceeded")
-        self.definitions, self.initial = {}, {}
+        self.definitions, self.initial, self.userops = {}, {}, {}
         for i, node in enumerate(self.nodes):
             size = node["size"]
-            if type(size) is not int or not 1 <= size <= 8:
+            if type(size) is not int or not 1 <= size <= 16:
                 raise Unsupported("unsupported varnode storage width")
-            if "constant" in node:
+            if "readonly" in node:
+                self.initial[i] = readonly_value(export, node)
+            elif "constant" in node:
                 number = node["constant"]
-                if not isinstance(number, str) or not number.isascii() or not number.isdecimal() or len(number) > 20:
+                if not isinstance(number, str) or not number.isascii() or not number.isdecimal() or len(number) > 39:
                     raise Unsupported("invalid unsigned decimal constant")
                 if "parameter" in node or node.get("input", False):
                     raise Unsupported("constant is also an input")
@@ -44,7 +47,9 @@ class Graph:
                 raise Unsupported("operation inputs must be a list")
             for v in inputs:
                 index(v, len(self.nodes), "varnode")
-            if code not in SCALAR | CONTROL | {"MULTIEQUAL"}:
+            if code == "CALLOTHER":
+                self.userops[oi] = userop_name(export, op, self.initial)
+            elif code not in SCALAR | CONTROL | {"MULTIEQUAL"}:
                 raise Unsupported(f"unsupported P-code operation: {code}")
             if "output" in op:
                 out = index(op["output"], len(self.nodes), "varnode")
@@ -62,8 +67,10 @@ class Graph:
                 if "output" not in op:
                     raise Unsupported("missing data operation output")
                 bits = self.width(op["output"])
-                if code == "MULTIEQUAL":
-                    if not inputs or bits not in (8, 16, 32) or any(self.width(v) != bits for v in inputs):
+                if code == "CALLOTHER":
+                    vector_shape(self.userops[oi], bits, [self.width(v) for v in inputs[1:]])
+                elif code == "MULTIEQUAL":
+                    if not inputs or bits not in WIDTHS or any(self.width(v) != bits for v in inputs):
                         raise Unsupported("invalid merge widths or arity")
                 else:
                     shape(code, bits, [self.width(v) for v in inputs])
@@ -186,7 +193,11 @@ class Graph:
                     return env[op["inputs"][1]]
                 if code in CONTROL:
                     continue
-                env[op["output"]] = builder.operation(code, self.width(op["output"]), [env[v] for v in op["inputs"]])
+                if code == "CALLOTHER":
+                    oi = self.definitions[op["output"]]
+                    env[op["output"]] = builder.operation(self.userops[oi], self.width(op["output"]), [env[v] for v in op["inputs"][1:]])
+                else:
+                    env[op["output"]] = builder.operation(code, self.width(op["output"]), [env[v] for v in op["inputs"]])
             def successor(slot):
                 edge = block["outgoing"][slot]
                 return walk(edge["block"], edge["reverse_index"], env, depth + 1)
