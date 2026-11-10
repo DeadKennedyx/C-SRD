@@ -1,0 +1,103 @@
+"""Check persistent-session membership and hash chains before grading/analysis."""
+from collections import Counter
+import json
+from pathlib import Path
+
+from audit_protection import file_hash
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def local(value):
+    path = Path(value)
+    if path.is_relative_to("/work"):
+        path = ROOT / path.relative_to("/work")
+    return path.resolve()
+
+
+def checked(path, expected):
+    path = local(path)
+    if file_hash(path) != expected:
+        raise ValueError("changed evidence: " + str(path))
+    return path
+
+
+def read_sessions(path):
+    """Return validated report, matrix, session payloads and distinct answer groups.
+
+    Original C is inspected here, after observation; this module is never imported
+    by the measured worker. Memberships count requests, not independent samples.
+    """
+    path = local(path)
+    report = json.loads(path.read_text())
+    if report["status"] != "completed":
+        raise ValueError("completed session experiment required; preserve failed run")
+    for name, value in report["bindings"].items():
+        checked(name, value)
+    matrix_path = next(local(p) for p in report["bindings"] if p.endswith("/matrix/matrix.json"))
+    matrix = json.loads(matrix_path.read_text())
+    records = {(r["case"], r["profile"], r["variant"]): r for r in matrix["records"]}
+    protocol = report["protocol"]
+    expected = [("first", 1)]
+    if protocol["warmup_calls"] > 1:
+        expected.append(("warmup", protocol["warmup_calls"]-1))
+    expected += [("empty", 0)] + [(f"batch-{i}", protocol["calls"]) for i in range(protocol["batches"])]
+    if len(report["sessions"]) != len(report["schedule"]):
+        raise ValueError("incomplete randomized schedule")
+    payloads, groups = [], {}
+    for index, (row, scheduled) in enumerate(zip(report["sessions"], report["schedule"])):
+        directory = local(row["directory"])
+        if (row["id"] != index or any(row[k] != v for k, v in scheduled.items()) or
+                json.loads((directory/"record.json").read_text()) != row or row["status"] != "completed"):
+            raise ValueError("session record/schedule mismatch")
+        config = json.loads(checked(directory/"config.json", row["config_sha256"]).read_text())
+        record = records[(row["case"], row["profile"], row["variant"])]
+        if config["binary"] != record["binary"] or row["binary_sha256"] != record["binary_sha256"]:
+            raise ValueError("session binary identity mismatch")
+        checked(config["binary"], row["binary_sha256"])
+        for name in ("warmup_calls", "calls", "batches", "analysis_seconds", "decompile_seconds", "session_seconds"):
+            if config[name] != protocol[name]:
+                raise ValueError("session configuration differs from protocol")
+        resources = json.loads(checked(directory/"measurement/resources.json", row["resources_sha256"]).read_text())
+        session = json.loads(checked(directory/"session.json", row["session_sha256"]).read_text())
+        if resources["status"] != "completed" or session["status"] != "completed":
+            raise ValueError("incomplete session")
+        original = records[(row["case"], row["profile"], "original")]
+        reference = checked(local(original["binary"]).parent/"function.i", original["preprocessed_sha256"])
+        for role in ("jvm", "adapter"):
+            phases = session[role]["phases"]
+            pattern = [("setup", None)]+expected if role == "jvm" else expected
+            if (session[role]["status"] != "completed" or
+                    [p["phase"] for p in phases] != [name for name, _ in pattern]):
+                raise ValueError("phase sequence mismatch")
+            for phase, (_, count) in zip(phases, pattern):
+                if phase["resources"]["status"] != "completed":
+                    raise ValueError("invalid process counters")
+                if count is not None and phase["result"]["requests"] != count:
+                    raise ValueError("request count mismatch")
+        for native, adapter in zip(session["jvm"]["phases"][1:], session["adapter"]["phases"]):
+            nr, ar = native["result"], adapter["result"]
+            n = nr["requests"]
+            if not (n == len(nr["exports"]) == len(nr["decompile_ns"]) == len(nr["flush_ns"]) ==
+                    len(ar["answers"]) == len(ar["metrics"]) == len(ar["reconstruct_ns"])):
+                raise ValueError("missing per-request evidence")
+            if nr["exports"] != [a["export_sha256"] for a in ar["answers"]]:
+                raise ValueError("adapter replay differs from native request sequence")
+            memberships = Counter((a["candidate_sha256"], a["export_sha256"]) for a in ar["answers"])
+            for (candidate_hash, export_hash), count in memberships.items():
+                for sha in (candidate_hash, export_hash):
+                    if len(sha) != 64 or any(c not in "0123456789abcdef" for c in sha):
+                        raise ValueError("invalid content hash")
+                candidate = checked(directory/"answers"/(candidate_hash+".c"), candidate_hash)
+                export = checked(directory/"exports"/(export_hash+".json"), export_hash)
+                key = (original["preprocessed_sha256"], candidate_hash)
+                if key not in groups:
+                    groups[key] = {"reference": str(reference), "reference_sha256": key[0],
+                                   "candidate": str(candidate), "candidate_sha256": key[1],
+                                   "export": str(export), "export_sha256": export_hash, "members": []}
+                groups[key]["members"].append({"session": index, "phase": native["phase"], "requests": count,
+                    "case": row["case"], "profile": row["profile"], "variant": row["variant"],
+                    "repetition": row["repetition"], "binary_sha256": row["binary_sha256"],
+                    "session_sha256": row["session_sha256"], "export_sha256": export_hash})
+        payloads.append({"record": row, "session": session, "resources": resources})
+    return report, matrix, payloads, list(groups.values())
