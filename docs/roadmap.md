@@ -22,8 +22,25 @@ Strings, character buffers, escaping arrays, mutable/static object layouts,
 pointer aliasing and calls remain outside the model. Runtime string replacement
 must not be added without handling length/encoding, embedded NULs, sizeof,
 storage duration, pointer lifetime and API requirements. Encoding is not secret
-storage. General loops require termination/effect contracts or invariants;
+storage. General loops require state/effect and progress-preservation contracts;
 arbitrary algorithm replacement requires independent specifications and proofs.
+
+## Next coverage milestones
+
+The next priority is [one sequence for broader C-SRD support](broader-c-support.md),
+informed by Tigress's published designs. Start with bounded pointer/buffer
+transformations, then known calls/I/O boundaries, selected allocation patterns,
+input-dependent loops and recursion, signed operations, exact floating point
+and concurrency. Each increment has its own contract and includes validation,
+compiled-code audits and applicable reconstruction measurements. These are
+proposed extensions; the implemented v0.5 scope above has not expanded.
+
+The first deliverable combines MEM-01/02, COV-06 and the VER-01 investigation:
+ordinary caller-visible memory around encoded computation, memory/effect-aware
+region analysis, and validation of both return and observable memory. See the
+[backlog](backlog.md) for acceptance criteria and dependencies.
+
+## Existing experimental evidence
 
 The active protection study has a [larger reserved corpus](rich-benchmarks.md)
 and verified [16-bit](limb-representation.md) and [8/4-bit](positional-widths.md)
@@ -40,11 +57,12 @@ then separated native/JVM/adapter costs across 120 sessions. All 33 distinct
 answer contracts were recovered under the model, while nibble native CPU grew
 2.7–39.9 times baseline per request. These are measurable automated-analysis
 costs, with application overhead and millisecond absolute native costs; no
-general protection winner follows. JVM CPU continued to decline across batches,
-so next check a declared longer-warmup grid on development controls, then freeze
-the sampling protocol before evaluating reserved families. Multi-location runtime
-inference and human analysis require
-separate protocols. Bounded
+general protection winner follows. JVM CPU continued to decline across batches;
+a declared longer-warmup grid on development controls remains a calibration
+requirement for future steady-state cost comparisons. Freeze the relevant
+sampling protocol before evaluating reserved families. This measurement work
+belongs inside the coverage milestones' acceptance work. Multi-location runtime
+inference and human analysis require separate protocols. Bounded
 [CFG/merge reconstruction](../reports/pcode-control-flow.md) now recovers the
 unchanged GCC Jenkins baseline; four reserved recurrence grades remain
 inconclusive despite passing finite execution checks. The

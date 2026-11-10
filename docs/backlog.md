@@ -8,6 +8,11 @@ hypothesis, constraints, protocol and stop/acceptance criteria.
 Current baseline: implemented v0.5, in evaluation/maintenance. Future language
 coverage remains proposed and requires separate, bounded specifications.
 
+The next priority is [broader C-SRD support](broader-c-support.md), informed by
+published Tigress designs. Follow one coverage sequence, starting with bounded
+pointer/buffer transformations. Verification and measurement tasks are acceptance
+work inside these milestones; existing experimental results remain unchanged.
+
 | ID | Status | Specific problem / next action | Dependencies | Acceptance evidence |
 | --- | --- | --- | --- | --- |
 | DOC-01 | Implemented | Make the existing behavior and evidence inspectable through a technical-spec README, usage guide and journal | v0.5 source and historical reports | Valid links, accurate CLI/constraints, source-linked decisions and explicit historical/proposed distinction |
@@ -24,32 +29,39 @@ coverage remains proposed and requires separate, bounded specifications.
 | PROT-10 | Bounded implementation and comparison complete | Model `PIECE`, signed shifts, wide values, three pinned AArch64 vector operations and immutable mapped constants | PROT-06/09; [explicit observer contract](pcode-wide-values.md); unchanged binaries and budgets | [23 CTest groups on two hosts, 2,011 actual-C obligations per host, hardware/negative controls and 200/200 reconstructed answers after separate grading](../reports/pcode-wide-values.md); no established protection winner |
 | PROT-11 | Implementation and development study complete | Separate per-function reconstruction cost from analyzer process startup | PROT-10 frozen observer and cold-process baseline; [persistent-session protocol](persistent-sessions.md) | [120 sessions and 33/33 recovered contracts](../reports/persistent-sessions.md), native/JVM/adapter CPU/RSS, identical-byte controls and retained cold totals; nibble native CPU grows 2.7–39.9×, JVM steady state remains unestablished |
 | PROT-12 | Proposed | Test whether the frozen observer findings generalize to reserved algorithm families | PROT-11 observer and PROT-13 sampling protocol frozen before opening reconstruction outcomes; BENCH-01 corpus | All original/identity/candidate outcomes and costs reported; no tuning on held-out results; unsupported and inconclusive remain gaps |
-| PROT-13 | Next bounded measurement check | Determine whether longer fixed warmup materially changes JVM/export cost ratios | PROT-11 observed last/first JVM batch CPU median 0.695; use development controls only | Declare warmup/batch grid before results, retain original protocol, separate native and JVM behavior, report all conditions without selecting a favorable stabilization point |
-| VER-01 | Proposed | Add an independent CBMC comparison backend for the current subset | Specify harness semantics, supported CBMC version and reproducible dependency setup | Original/candidate harnesses, boundary assumptions, unwinding assertions, positive/negative controls, reproducible counterexamples, explicit unavailable/unknown states |
+| PROT-13 | Calibration for future cost measurements | Determine whether longer fixed warmup materially changes JVM/export cost ratios | PROT-11 observed last/first JVM batch CPU median 0.695; use development controls only | Declare warmup/batch grid before results, retain original protocol, separate native and JVM behavior, report all conditions without selecting a favorable stabilization point |
+| VER-01 | Planned within C1 validation | Investigate independent CBMC comparison for the bounded memory contract, retaining pure-function controls | MEM-01 contract; specify harness semantics, supported CBMC version and reproducible dependency setup | Original/candidate harnesses, boundary assumptions, unwinding assertions, positive/negative controls, reproducible counterexamples, explicit unavailable/unknown states; document the new coverage acceptance policy |
 | VER-02 | Implemented, tested and measured | Avoid monolithic proof timeouts for long limb computations | Untrusted partition proposals, independent source-to-graph and actual emitted-fragment checks | [Follow-up evidence](../reports/compositional-validation.md): 88 generated contracts, 13 corruption/budget controls, 17 test groups on macOS/Linux and 100 validated build cells; reconstruction grading still incomplete |
 | VER-03 | Saved Jenkins answers resolved; general grading remains open | Resolve grading of optimized limb reconstructions without weakening success criteria | VER-02; frozen answers and original/build-input hashes | [Checked-circuit replay](../reports/circuit-grading.md): ten frozen answer queries unsat, thirteen controls passed, eighteen test groups on macOS/Linux; failed probes/pilot retained; not independent C modeling or a protection result |
 | VER-04 | Both positional-width contracts resolved under source model | Investigate Clang nibble Jenkins and GCC nibble RGB answers without changing the observer or accepting finite checks as proof | PROT-09; two frozen answer artifacts, four SMT query artifacts, ten repeated unknown grades | [All four saved queries UNSAT at the declared 30-second tier; five controls passed](../reports/pcode-wide-values.md); artifact bindings retained, original grades/costs immutable; unrelated grading gaps remain open |
-| MEM-01 | Proposed | Define equivalence for a caller-provided bounded uint32 buffer | VER-01 investigation and separate memory specification | Valid object/length assumptions, aliasing policy, equal final observable values, untouched-region checks and no newly introduced undefined behavior |
-| MEM-02 | Proposed | Transform eligible arithmetic around admitted buffer loads/stores | MEM-01 accepted contract | AST-aware access analysis, ordinary external memory layout, conversion boundaries, actual-candidate validation and GCC/Clang/sanitizer tests |
+| MEM-01 | Next coverage contract (C1) | Define equivalence for caller-provided bounded uint32 storage | Existing pure-function semantics; a separate memory/effect specification | Valid object/length/initialization/lifetime assumptions, aliasing and access-order policy, equal return and observable memory, untouched-region checks and no newly introduced undefined behavior |
+| MEM-02 | Next implementation after contract (C1) | Transform eligible arithmetic around admitted buffer loads/stores | MEM-01 contract, COV-06 analysis and explicit validation policy from VER-01 investigation | AST-aware access analysis, ordinary external memory layout, conversion boundaries, actual-candidate validation and GCC/Clang/sanitizer tests |
 | EXP-01 | Proposed | Determine conversion effects at matched encoded coverage | Prespecified corpus and identical coverage rule for comparison | Paired counts per function, all exclusions reported, dependency-aware analysis; runtime and code size measured separately |
 | EXP-02 | Proposed | Determine whether planner proxy costs predict compiled costs | EXP-01 and held-out benign corpus design | Raw replicated timings/sizes, measurement-noise analysis, calibration on a separate set, failed predictions retained |
-| COV-01 | Proposed | Admit known direct calls and preserve I/O boundaries | Explicit call/effect/environment contracts and relevant memory model | Return/memory/event behavior preserved, negative call-order/effect controls, no unmodeled callbacks or hidden state |
-| COV-02 | Proposed | Admit input-dependent loops without arbitrary unrolling claims | General control-flow model and bounds/invariant strategy | Termination/iteration obligations, bound-failure controls and correct post-state |
-| COV-03 | Proposed | Admit selected signed operations, allocation and recursion | Separate contracts for each feature; relevant COV/MEM work | Defined-input conditions, promotions/conversions, failure/lifetime/depth behavior and independent verification |
-| COV-04 | Proposed | Investigate floating-point transformations | Rounding/exception/representation contract and solver/tool study | Exceptional values and environment behavior preserved; no reuse of integer affine laws without proof |
-| COV-05 | Proposed | Investigate shared-memory transformations | C11 memory model, synchronization and observable-execution contract | Explicit thread-local/shared boundary, atomic/order preservation, concurrency-specific negative controls |
+| COV-01 | Planned C2 | Admit known direct calls and preserve I/O boundaries | C1 memory/effect model; explicit call/environment contracts | Arguments, return, memory and ordered event behavior preserved; negative call-order/effect controls; no unmodeled callbacks or hidden state |
+| COV-02 | Planned C4 | Admit input-dependent loops beyond literal-loop expansion | General control-flow/state model and bounds/invariant strategy | Preserved effects, progress and post-state; explicit iteration obligations and bound-failure controls; no universal claim from finite unrolling |
+| COV-03 | Split; no implementation claimed | Former combined signed/allocation/recursion task is replaced by COV-07/08/09 | Separate contracts and acceptance evidence for each feature | Close each replacement only on its own implementation and evidence |
+| COV-04 | Planned C6 | Investigate exact floating-point transformations within a declared model | Rounding/exception/representation contract and solver/tool study | Exceptional values, signed zero and relevant environment behavior preserved; no approximate substitution under an exact contract |
+| COV-05 | Planned C7 | Investigate shared-memory transformations | C11 memory model, synchronization and observable-execution contract | Explicit thread-local/shared boundary, atomic/order preservation, concurrency-specific negative controls |
+| COV-06 | Planned within C1 | Select computation regions around admitted memory boundaries in richer functions | MEM-01 memory/effect contract | Declaration identity, reads/writes/order, aliases and escapes tracked; unknown effects rejected; no repeated evaluation; accepted versus transformed coverage reported |
+| COV-07 | Planned C5 | Admit selected signed types and operations | Defined-input domain and C promotion/conversion/overflow/shift semantics | Negative and boundary-value controls; actual emitted-C validation; no new signed overflow or invalid shifts |
+| COV-08 | Planned C3 | Admit selected dynamic allocation/deallocation patterns | C1 memory model and C2 call summaries | Allocation failure, bounds, object identity, aliases, lifetime and release behavior preserved under the declared environment |
+| COV-09 | Planned C4 after loop model | Admit selected recursive calls with separate activation state | COV-01 call contracts and COV-02 state/effect model | Correct per-call state, returns and effects; explicit depth/resource assumptions and failure controls |
 
 ```mermaid
 flowchart LR
-    V["Independent C-level checks"] --> M["Bounded buffer contract"]
-    M --> B["Buffer transformations"]
-    B --> E["Calls and memory effects"]
-    V --> L["Input-dependent loop obligations"]
-    B --> A["Allocation and recursion contracts"]
-    P["Matched-coverage experiment"] --> C["Cost-model calibration"]
+    C1["C1: Pointers and buffers"] --> C2["C2: Calls and I/O boundaries"]
+    C2 --> C3["C3: Allocation and lifetime"]
+    C3 --> C4["C4: Loops, then recursion"]
+    C4 --> C5["C5: Signed integers"]
+    C5 --> C6["C6: Floating point"]
+    C6 --> C7["C7: Concurrency"]
 ```
 
-The diagram expresses dependencies, not a delivery schedule. Add a dated Gantt
-or resource plan only when estimates, owners and start constraints are known.
+The diagram expresses the proposed development order, not dates or a claim
+that every earlier stage is a semantic prerequisite for every later one. Each
+stage includes correctness validation, compiler checks and scoped measurements.
+Add a dated Gantt or resource plan only when estimates, owners and start
+constraints are known.
 A task is complete only when its acceptance evidence exists; code presence or
 passing an unrelated test does not close a research question.

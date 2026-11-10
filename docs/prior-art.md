@@ -80,3 +80,26 @@ frontend or decompiler's correctness. C-SRD's optional saved-query path checks
 the Boolean export and records this trust boundary. The failed SMT-level sweeping
 prototypes and subsequent ABC adaptation are applications of existing ideas,
 with no claim of new equivalence-checking methods or a protection improvement.
+
+## Coverage design update (2026-11-10)
+
+The [broader-coverage plan](broader-c-support.md) uses published Tigress designs
+to inform a single C-SRD development sequence. The
+[developer documentation](https://tigress.wtf/developers.html) separates analysis,
+transformation infrastructure and representation codecs within OCaml/CIL;
+C-SRD must implement its own adaptation within Clang. No new language coverage
+or correctness guarantee follows from citing that architecture.
+
+[EncodeData](https://tigress.wtf/encodeData.html) includes integer pointers and
+arrays with alias analysis and documents field-insensitive struct limitations.
+These motivate explicit alias, escape and memory-boundary contracts for C-SRD.
+[Flatten](https://tigress.wtf/flatten.html) and
+[Virtualize](https://tigress.wtf/virtualize.html) provide control/execution-state
+designs relevant to loops, calls and recursion. Each adapted transformation
+still needs its own supported domain and preservation evidence.
+
+[LowerType](https://tigress.wtf/lowerType.html) illustrates conversions at function
+and memory boundaries, but its float-to-fixed conversion is approximate and
+range-limited. It is not a solution for exact floating-point equivalence.
+These are design references; this update adds no external Tigress backend or
+comparison experiment and reports no new protection or novelty finding.
