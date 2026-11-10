@@ -55,7 +55,10 @@ public class ExportCSRD extends HeadlessScript {
             decompiler.toggleCCode(true);
             decompiler.toggleSyntaxTree(true);
             if (!decompiler.openProgram(currentProgram)) throw new IllegalStateException(decompiler.getLastMessage());
+            long decompileStart = System.nanoTime();
+            report.addProperty("setup_seconds", (decompileStart - start) / 1e9);
             DecompileResults result = decompiler.decompileFunction(target, Integer.parseInt(args[2]), monitor);
+            report.addProperty("decompile_seconds", (System.nanoTime() - decompileStart) / 1e9);
             report.addProperty("message", result.getErrorMessage());
             if (!result.decompileCompleted()) {
                 report.addProperty("status", result.isTimedOut() ? "timeout" : "decompiler-error"); return;

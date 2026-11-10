@@ -38,6 +38,7 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Matrix and recovery results](reports/validation-matrix.md) | Actual linked-build, held-out and runtime results, commands, limitations and archived evidence |
 | [Decompiler reconstruction protocol](docs/decompiler-audit.md) | Known-interface Ghidra observer, verified reconstruction and opt-in parity-split experiment |
 | [Decompiler and split results](reports/decompiler-control-flow.md) | 826 final build cells, 112 Ghidra observations, failed pilot and explicit observer gaps |
+| [Reconstruction effort measurements](docs/effort-measurements.md) | Paired CPU, memory, time, query/trace budget sweeps, recovery accuracy, controls and human-session tooling |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |

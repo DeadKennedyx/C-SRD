@@ -57,6 +57,13 @@ jobs:
         run: >-
           python3 tools/observe_runtime.py --matrix-report build/matrix-core/matrix.json
           --output-dir build/runtime-observation
+      - name: Reconstruction effort protocol smoke test
+        if: matrix.build_type == 'Release'
+        run: >-
+          python3 tools/measure_effort.py --matrix-report build/matrix-core/matrix.json
+          --csrd build/csrd --observer blackbox --case calculate --profile clang-O2
+          --variant original --variant affine-42 --query-budgets 3 12
+          --repetitions 2 --warmups 0 --output-dir build/reconstruction-effort
       - uses: actions/upload-artifact@v4
         if: always() && matrix.build_type == 'Release'
         with:
@@ -64,3 +71,4 @@ jobs:
           path: |
             build/matrix-core/
             build/runtime-observation/
+            build/reconstruction-effort/

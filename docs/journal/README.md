@@ -33,6 +33,7 @@ causal explanations and estimates.
 | [2026-11-09 — algorithm and encoding survival at O2](2026-11-09-algorithm-survival.md) | Exploratory analysis and next-increment selection | Four existing popcount candidates across four compiler configurations; separates algorithm differences from encoding differences |
 | [2026-11-09 — validation matrix before selection](2026-11-09-validation-matrix.md) | Protocol, implementation and validation | Linked build matrix, compiled screening, fixed reconstruction observer and bounded debugger recovery |
 | [2026-11-09 — decompiler and control-flow experiment](2026-11-09-decompiler-control-flow.md) | Hypothesis, bounded prototype and fixed observer | Ghidra reconstruction, source-model scoring, parity-split controls and expanded benign corpus |
+| [2026-11-09 — reconstruction effort measurements](2026-11-09-effort-measurements.md) | Instrumentation, fixed observers and paired pilot | CPU/RSS accounting, observation and resource budgets, recovery accuracy, controls and human-session recorder |
 
 Future work is tracked in [the backlog](../backlog.md). External issue numbers
 and review outcomes belong here only after those events actually occur.

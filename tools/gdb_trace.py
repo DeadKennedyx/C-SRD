@@ -46,6 +46,8 @@ def collect(config):
             stack_failures += 1
         samples.append({"offset": offset, "visit": visit, "values": values})
         gdb.execute("stepi", to_string=True)
+    if not finished and int(gdb.parse_and_eval("$pc")) == return_address:
+        finished = True
     return {"status": "completed" if finished else "step-limit", "architecture": architecture,
             "samples": samples, "steps": len(samples), "stack_read_failures": stack_failures,
             "scope": "lower 32 bits of general registers and 64 bytes at SP before each instruction; excludes SIMD/heap"}

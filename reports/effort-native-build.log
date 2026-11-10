@@ -1,0 +1,6 @@
+[0/1] Re-running CMake...
+-- Using LLVM 23.1.5 from /opt/homebrew/opt/llvm/lib/cmake/llvm
+-- Configuring done (0.5s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/admin/C-SRD/build
+ninja: no work to do.

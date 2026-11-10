@@ -43,6 +43,11 @@ Use installed compiler/objdump paths on the host; setup is in
 missing families; set `CSRD_REQUIRE_BOTH_COMPILERS=1` when both are required.
 The standalone evaluator fails when an explicitly requested compiler is absent.
 
+For analysis cost, use the [reconstruction effort protocol](../docs/effort-measurements.md).
+It adds paired process-tree CPU/RSS, wall time, query/trace/resource budget grids,
+correct and incorrect recovery, separate grading cost and human-session recording.
+Application runtime benchmarks and analyzer effort remain distinct measurements.
+
 ## Analysis and reporting
 
 Preserve tested, bounded-checked, proved-under-model, unsupported and inconclusive
