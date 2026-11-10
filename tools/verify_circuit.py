@@ -25,7 +25,9 @@ def abc_status(resources, stdout, stderr):
     if resources["status"] != "completed" or resources.get("returncode") != 0 or stderr.strip():
         return "inconclusive"
     positive = re.findall(r"^Networks are equivalent\.\s+Time =\s+[0-9.]+ sec\s*$", stdout, re.M)
-    negative = re.findall(r"^Networks are NOT EQUIVALENT\.\s+Time =\s+[0-9.]+ sec\s*$", stdout, re.M)
+    negative = re.findall(r"^Networks are NOT EQUIVALENT\."
+                          r"(?: Output [0-9]+ trivially differs \((?:different phase|different PIs|PI vs\. constant)\)\.)?"
+                          r"\s+Time =\s+[0-9.]+ sec\s*$", stdout, re.M)
     if len(positive) == 1 and not negative:
         return "unsat"
     if len(negative) == 1 and not positive:

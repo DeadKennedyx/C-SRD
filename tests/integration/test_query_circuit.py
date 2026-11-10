@@ -127,6 +127,10 @@ class QueryCircuits(unittest.TestCase):
         negative = "Networks are NOT EQUIVALENT.  Time = 0.10 sec\n"
         self.assertEqual(abc_status(ok, positive, ""), "unsat")
         self.assertEqual(abc_status(ok, negative, ""), "sat")
+        for reason in ("different phase", "different PIs", "PI vs. constant"):
+            trivial = f"Networks are NOT EQUIVALENT. Output 0 trivially differs ({reason}).  Time = 0.00 sec\n"
+            self.assertEqual(abc_status(ok, trivial, ""), "sat")
+            self.assertEqual(abc_status(ok, positive + trivial, ""), "inconclusive")
         for out, err, resource in [("", "", ok), (positive + negative, "", ok),
                                    (positive + positive, "", ok), ("command: " + positive, "", ok),
                                    (positive, "load error", ok), (positive, "", {"status": "wall-budget", "returncode": 0}),

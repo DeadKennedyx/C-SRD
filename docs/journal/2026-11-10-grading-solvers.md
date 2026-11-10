@@ -75,3 +75,30 @@ of the writer before a circuit result can grade a saved query. A second solver
 still does not independently validate C modeling or binary lifting. The ABC
 source revision and build are frozen with the experiment. No additional
 protection conclusion is justified by these grading failures.
+
+## Circuit export and first replay
+
+ABC revision `25d4ee221b2a9ab5124f3a222bcdf6f922d3d8a3` resolved both
+exploratory exported reconstruction circuits within five seconds. A direct
+whole-circuit export/reimport equivalence check itself timed out. Replaced that
+check with mandatory local contracts over the independently parsed truth tables,
+plus complete acyclic wiring/interface binding to the original lowered DAG.
+The actual Clang and GCC circuits then passed 13 and 14 distinct universal gate
+contracts, respectively, and ABC again resolved them. This is still conditional
+on the documented trusted lowering, binding checker and decision engines.
+
+All 18 CTest groups passed on macOS and Linux. Early regression failures exposed
+test assumptions about Z3's presentation of XOR and macOS's `/var` symlink;
+the controls now locate the actual gate and compare resolved paths. The Linux
+run preserved its failed log before the corrected run. These were test-fixture
+assumptions, not an admitted incorrect circuit.
+
+The first full saved-answer replay discharged all ten answer queries, but the
+driver conservatively labeled all ten corrupted-answer controls inconclusive.
+Inspection found a distinct ABC diagnostic for a trivially satisfiable mismatch:
+`Networks are NOT EQUIVALENT. Output 0 trivially differs (different phase).`
+The exact supported variants were confirmed in ABC's `cecCec.c`; the parser and
+regression tests now accept those negative results without relaxing the positive
+result protocol. The first replay fails its control acceptance criterion and is
+retained. A fresh replay will follow the correction; earlier outputs are not
+overwritten or silently regraded.
