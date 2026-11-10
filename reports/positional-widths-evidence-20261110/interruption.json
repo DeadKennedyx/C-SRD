@@ -1,0 +1,81 @@
+{
+  "status": "interrupted",
+  "recorded_utc": "2026-11-10T13:51:58.915454+00:00",
+  "reason": "Long host completion timestamp gaps during user interruption are not reflected in guest monotonic durations; retain this run but repeat all Ghidra trials for clean resource comparison. Exact host/VM sleep mechanism not established.",
+  "completed_trial_records": 155,
+  "gaps_over_90_seconds": [
+    {
+      "trial": "trial-00096",
+      "completion_gap_seconds": 942.3530185222626,
+      "observer_seconds": 6.277029492892325,
+      "grade_seconds": 10.045255033066496,
+      "mtime_utc": "2026-11-10T11:34:38.458644+00:00"
+    },
+    {
+      "trial": "trial-00100",
+      "completion_gap_seconds": 991.839555978775,
+      "observer_seconds": 7.586185070918873,
+      "grade_seconds": null,
+      "mtime_utc": "2026-11-10T11:53:21.552953+00:00"
+    },
+    {
+      "trial": "trial-00105",
+      "completion_gap_seconds": 931.5475797653198,
+      "observer_seconds": 5.539642681134865,
+      "grade_seconds": 0.03341401112265885,
+      "mtime_utc": "2026-11-10T12:09:25.712058+00:00"
+    },
+    {
+      "trial": "trial-00111",
+      "completion_gap_seconds": 1036.2381863594055,
+      "observer_seconds": 7.199559443164617,
+      "grade_seconds": 0.22698110109195113,
+      "mtime_utc": "2026-11-10T12:28:56.271518+00:00"
+    },
+    {
+      "trial": "trial-00116",
+      "completion_gap_seconds": 1033.0884771347046,
+      "observer_seconds": 7.370163462124765,
+      "grade_seconds": 10.026942183962092,
+      "mtime_utc": "2026-11-10T12:48:22.531995+00:00"
+    },
+    {
+      "trial": "trial-00118",
+      "completion_gap_seconds": 932.7693648338318,
+      "observer_seconds": 6.561916026985273,
+      "grade_seconds": 0.251261527184397,
+      "mtime_utc": "2026-11-10T13:04:01.515678+00:00"
+    },
+    {
+      "trial": "trial-00126",
+      "completion_gap_seconds": 238.7855224609375,
+      "observer_seconds": 6.183066979981959,
+      "grade_seconds": 0.042813974898308516,
+      "mtime_utc": "2026-11-10T13:10:33.738792+00:00"
+    },
+    {
+      "trial": "trial-00127",
+      "completion_gap_seconds": 571.8011517524719,
+      "observer_seconds": 6.91682980209589,
+      "grade_seconds": 0.033948058960959315,
+      "mtime_utc": "2026-11-10T13:20:05.539944+00:00"
+    },
+    {
+      "trial": "trial-00133",
+      "completion_gap_seconds": 1065.721739768982,
+      "observer_seconds": 6.599810749990866,
+      "grade_seconds": 10.040562253911048,
+      "mtime_utc": "2026-11-10T13:40:42.099144+00:00"
+    },
+    {
+      "trial": "trial-00135",
+      "completion_gap_seconds": 450.90835070610046,
+      "observer_seconds": 6.9102375220973045,
+      "grade_seconds": 10.054870510008186,
+      "mtime_utc": "2026-11-10T13:49:20.401569+00:00"
+    }
+  ],
+  "matrix_sha256": "df372e5ea4df4da1206bf4aaecbd033c9bf017d1cdc31d4094f72c6c0e097d84",
+  "bitlinear_sha256": "90bee0dca434b2c32ca1113dedd4f124f33c427869ba2b452d7c44fd58944410",
+  "ghidra_snapshot_sha256": "95968cfa5ac5e2b2174acaf2eafa50ffa071b1e5506176ba0873be46f1c6c6b5"
+}

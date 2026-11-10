@@ -49,6 +49,8 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Jenkins follow-up evidence](reports/compositional-validation.md) | Unchanged candidate newly verified, 100 build cells, runtime/size costs and unresolved reconstruction-grading limits |
 | [Saved-answer grading follow-up](reports/circuit-grading.md) | Ten earlier inconclusive answers resolved, thirteen controls passed, and failed solver prototypes preserved |
 | [Bounded control-flow reconstruction](reports/pcode-control-flow.md) | Fixed-loop and merge recovery, reserved observer checks, CPU/RSS measurements and four explicitly unresolved proof grades |
+| [Byte and nibble representations](docs/positional-widths.md) | Fixed 8/4-bit pieces, actual-C carry proofs, operation coverage and validation assumptions |
+| [Positional-width comparison](reports/positional-widths.md) | 500 validated build cells, 800 measured observer attempts, separate proof follow-ups, runtime/size/CPU/RSS costs and no established protection winner |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |

@@ -125,3 +125,115 @@ driver, with its unchanged five-second ABC/eight-second stage budgets and negati
 controls. That can resolve grading gaps; it must not change observer costs or
 rewrite the initial grades. No reserved algorithm reconstruction is authorized
 by this development comparison.
+
+## Analysis follow-up declared during the frozen run
+
+The completed compiler matrix has 500 validated cells, zero failed cells and one
+unavailable x86 execution profile on the ARM64 host. Its O2 records show that
+whole executable file size often stays unchanged while function instruction
+counts grow. This is a measurement limitation: alignment and fixed executable
+overhead can hide code growth.
+
+After the serialized observer runs finish, a read-only follow-up will inspect
+`.text` section sizes and target-function symbol sizes from those same frozen
+ELF files. It will retain tool commands and binary hashes, record missing LTO
+symbols as unavailable, and make no changes to candidates or timing samples.
+This metric addition is post hoc and will be labeled as such. It does not change
+the prespecified candidate search or introduce a cost cutoff.
+
+The input/output observer completed 600 measured attempts plus 120 excluded
+warmups. The outcomes were 200 model-proved reconstructions, 50 wrong candidates
+and 350 no-candidate results. CRC32 and Morton required the same 65-query point
+for every representation. Jenkins's wrong 65-query fits and RGB's absence of a
+fit also occurred in the originals. For this deterministic observer, unchanged
+outputs imply unchanged query/answer sequences; runtime overhead may affect
+elapsed time, but piece width cannot supply additional black-box information.
+These results are controls, not evidence of a protection improvement.
+
+## Host interruption and complete decompiler repeat
+
+On continuation, the original Ghidra process was still running, but ten gaps
+between saved trial timestamps exceeded 90 seconds (roughly 239–1,066 seconds).
+The guest observer and grader duration counters did not account for those gaps.
+Host/VM suspension is a possible explanation; its exact mechanism was not
+established. The original run is unsuitable for an uninterrupted resource study.
+
+I recorded the gaps after 155 trial records and stopped only this experiment's
+container. Two more trials completed during its graceful stop, leaving 157 saved
+records. Its completed and partial data remain under the original
+run directory, with an interruption record. No result is relabeled as a
+protection success. The earlier 500-cell matrix and 720-attempt input/output
+study were complete before this interruption and remain unchanged.
+
+The [repeat driver](../../experiments/repeat_positional_ghidra.py) repeats **all**
+240 Ghidra trials, including 40 excluded warmups, using the original arguments,
+frontend/binary hashes, observer implementation, order seed and budgets. Only
+the output directory changes. The host command is wrapped in `caffeinate -i`
+to prevent idle sleep while it runs; no persistent power setting changes. The
+original partial run is excluded from primary resource comparisons, regardless
+of its outcomes. This is an environmental repeat, not candidate or observer
+tuning. Circuit grading and read-only size inspection wait until it completes.
+
+## Completed comparison and separate grading
+
+The full repeat completed 240 trials, of which 200 are measured and 40 warmups
+excluded. Host completion gaps stayed below 17.10 seconds; none exceeded 90
+seconds. The original interruption data remain unchanged. Of the measured
+attempts, 120 were initially proved, 35 had an answer but an inconclusive grade,
+and 45 reached unsupported operations. All 155 wrong-output controls were
+rejected. This gives us coverage information rather than a protection win.
+
+I applied the previously declared checked-circuit follow-up to every one of the
+35 unknown grades, retaining their source/binary/trial/query bindings. With the
+unchanged five-second ABC and eight-second stage budgets, 25 became proved and
+ten remained unknown. All 38 controls passed. These were seven distinct answers
+and 13 distinct queries, so repeated grades must not be described as independent
+program samples. The original records are not edited; a separate derived summary
+can pair the newly proved answers with their successful baselines.
+
+The remaining ten grades are two answer artifacts: Clang's nibble Jenkins and
+GCC's nibble RGB. I added a finite diagnostic follow-up on **all** of them,
+grouping identical answers only after checking every trial binding. Its protocol
+uses 2,048 seeded random inputs plus independent edge/bit-pattern vectors,
+GCC/Clang O0/O2 and Clang ASan/UBSan. Each frozen original and reconstructed
+answer is compared with the existing independent Python oracle; each answer's
+result-plus-one control must disagree. It passed on 2,644 Jenkins and 2,126 RGB
+inputs, in all 20 answer/control build configurations. Those ten proof grades
+remain unknown. This diagnostic does not change measured observer resources or
+query counts.
+
+The read-only size follow-up completed all 500 inspections. Twenty-eight linked
+builds lack the named function symbol; missing sizes stay null. For example,
+GCC O2 Jenkins grows from 44 symbol bytes to 728 for bytes and 1,672 for nibbles,
+while its paired harness runtime grows to 3.918× and 7.774×. The executable-file
+size by itself was insufficient to expose this change.
+
+## What the evidence changed
+
+The representation and verification engineering succeeded: both widths pass the
+admitted C/artifact checks, all 21 CTest groups on both hosts, and the final 172
+universal rule/control obligations. Smaller pieces remain composed across the
+supported operations. This does not establish the stronger protection hypothesis.
+
+Successful paired Ghidra CPU medians for the new candidates lie between 0.990×
+and 1.037×, compared with their matching originals. Some individual stages do
+grow: GCC Jenkins decompilation goes from 16.54 ms to 24.95/49.97 ms, and Python
+reconstruction from 0.90 ms to 1.92/3.14 ms. Headless startup and process work
+dominate the total. We must report both the local increase and the small total
+effect, without treating application slowdown as increased analyst effort.
+
+The new comparison still finds no increased query requirement for the fixed
+output-only observer. Unknown grades and unsupported P-code also cannot count as
+success. No cost ceiling or protection winner is selected. The next task is to
+specify and validate the missing observer semantics (`PIECE`, signed shift and
+wide values) against the same frozen artifacts, and separately investigate the
+two unknown proof contracts. Larger algorithm families, memory inference and
+human comprehension remain unmeasured by this comparison.
+
+The [final report](../../reports/positional-widths.md) contains every O2 cost
+table, outcome table and interpretation. The
+[evidence package](../../reports/positional-widths-evidence-20261110/index.json)
+retains failed prototypes, original partial data, complete repeats, proof chains,
+compiler inputs/binaries, finite checks and script snapshots. All 31,210 archived
+files were rehashed after packaging. Historical reports are retained; this entry
+is an additional result, not a retroactive revision of those experiments.

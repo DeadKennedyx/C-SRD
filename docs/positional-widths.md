@@ -35,6 +35,10 @@ inspect the most significant unequal digit. Selection tests all condition digits
 and selects each output digit. Read-only lookup payloads stay split; their bounded
 index requires an explicit decode, which is reported.
 
+Conversion counters describe explicit source operations. They do not establish
+which ordinary values appear in registers or memory after optimization. A low
+digit can itself equal the full value for small inputs or Boolean results.
+
 For constant multiplication by k, with c_0 = 0:
 
 ```
@@ -46,6 +50,13 @@ c_(i+1) = p_i >> w          (except the discarded final carry)
 Wrapping a partial product is valid: the discarded multiple of 2^32 contributes
 zero to the final value modulo 2^32. This claim is checked with bit-vector
 obligations, not a no-overflow assumption.
+
+For a small worked example, 55 is hexadecimal `0x37`, so its two lowest nibbles
+are 7 and 3. Multiplying by 3 computes `7*3 = 21`: store digit 5 and carry 1.
+Then compute `3*3+1 = 10`: store digit 10 and carry 0. The result's digits are
+`0xA5`, which decode to 165. The actual u32 implementation maintains eight
+nibbles; this example's remaining digits are zero. An analyst can apply the same
+reassembly, so splitting alone does not make the value secret.
 
 ## Translation validation
 
@@ -107,3 +118,9 @@ for arbitrary precision. Neither smaller pieces nor more operations demonstrates
 confidentiality. A memory observer can combine pieces; that capability requires
 its own evaluation. See the [research journal](journal/2026-11-10-positional-widths.md)
 for prototypes, failures and measurement decisions.
+
+The [completed comparison](../reports/positional-widths.md) records 500 validated
+build cells and 800 measured reconstruction attempts across the two observers.
+It separates original grades from the checked-circuit follow-up, retains the
+interrupted run and all failed prototypes, and reports runtime, linked symbol
+size, CPU/RSS and individual analysis stages. It establishes no protection winner.

@@ -25,10 +25,17 @@ storage duration, pointer lifetime and API requirements. Encoding is not secret
 storage. General loops require termination/effect contracts or invariants;
 arbitrary algorithm replacement requires independent specifications and proofs.
 
-The active protection study now has a [larger reserved corpus](rich-benchmarks.md)
-and a [positional two-piece prototype](limb-representation.md). Compare candidates
-with measured reconstruction/runtime/size trade-offs before imposing cost limits;
-expand wide/vector and multi-location runtime observer coverage. Bounded
+The active protection study has a [larger reserved corpus](rich-benchmarks.md)
+and verified [16-bit](limb-representation.md) and [8/4-bit](positional-widths.md)
+positional representations. The [width comparison](../reports/positional-widths.md)
+completed 500 build cells, 600 measured output-only attempts and 200 measured
+Ghidra attempts. A separate grading follow-up proved 25 more saved answers;
+ten remain unknown, with finite checks passing. No protection winner or cost
+limit was selected: some local analysis stages grew, while successful paired
+end-to-end observer CPU stayed near its baseline and application costs increased.
+Next, expand bounded wide-value/`PIECE`/signed-shift observer coverage on the same
+frozen artifacts and investigate the remaining grading contracts. Multi-location
+runtime inference and human analysis require separate protocols. Bounded
 [CFG/merge reconstruction](../reports/pcode-control-flow.md) now recovers the
 unchanged GCC Jenkins baseline; four reserved recurrence grades remain
 inconclusive despite passing finite execution checks. The

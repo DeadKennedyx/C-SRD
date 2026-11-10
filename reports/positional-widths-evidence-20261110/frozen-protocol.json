@@ -1,0 +1,69 @@
+{
+  "bindings": {
+    "/work/experiments/positional-widths-exploration.json": "a84cbd0ecbde3c82a6ad1ad1cdea002a5b3262429f6164a0d2eca048054c8032",
+    "/work/experiments/rich-benchmarks.json": "36e8eb55eccbe737f83a8d4d38d3d2bdba9d7b75cf46ae1ad7d3221994726072",
+    "/work/experiments/run_positional_widths.py": "98795c7438e27bf019409230a828251318e4fb8fa7ec0654ffd9915e7bcdd38c",
+    "/work/experiments/runs/positional-widths-comparison-20261110/csrd": "052491c722e38d475038d386b7cf2912928814f8a564fb96e8968a2979b51d66"
+  },
+  "protocol": {
+    "cases": [
+      "crc32_byte",
+      "jenkins_word",
+      "morton16",
+      "rgb_luma8"
+    ],
+    "corpus": "experiments/rich-benchmarks.json",
+    "date": "2026-11-10",
+    "hypothesis": "Changing positional piece width may change optimized structure and reconstruction resources; a useful trade-off is not assumed.",
+    "interpretation": [
+      "Compare successful reconstruction costs only when both candidate and baseline succeeded at the same budget.",
+      "Retain failed answers, unsupported exports, observer timeouts and grading gaps separately.",
+      "Application slowdowns and increased instruction counts alone are not protection benefits.",
+      "Identical compiled artifacts are negative controls for resource-cost claims.",
+      "Repeated trials measure noise on the same artifacts; they are not independent program samples.",
+      "Reserved algorithm families, multi-location memory inference and human effort are outside this comparison."
+    ],
+    "matrix": {
+      "inputs": 256,
+      "iterations": 1000000,
+      "repetitions": 7,
+      "tier": "extended",
+      "timeout_ms": 30000
+    },
+    "observers": {
+      "bitlinear": {
+        "query_budgets": [
+          32,
+          65,
+          128
+        ],
+        "wall_seconds": 5
+      },
+      "ghidra": {
+        "analysis_seconds": 30,
+        "decompile_seconds": 15,
+        "wall_seconds": 60
+      },
+      "grading_timeout_ms": 10000,
+      "input_seed": 19011,
+      "order_seed": 20261110,
+      "profiles": [
+        "clang-O2",
+        "gcc-O2"
+      ],
+      "repetitions": 5,
+      "warmups": 1
+    },
+    "reserved_reconstruction": "unopened",
+    "schema_version": 1,
+    "selection": "report-only; no runtime, size, CPU or memory ceiling",
+    "status": "prespecified-development-exploration",
+    "variants": [
+      "original",
+      "identity",
+      "limbs16",
+      "limbs8",
+      "limbs4"
+    ]
+  }
+}

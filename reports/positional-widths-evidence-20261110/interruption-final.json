@@ -1,0 +1,10 @@
+{
+  "status": "stopped",
+  "recorded_utc": "2026-11-10T13:55:20.812313+00:00",
+  "completed_trial_records": 157,
+  "trial_directories": 158,
+  "final_effort_sha256": "02c9ce3b8cc931eb7396e191e45ec8021b1fa3b0c7cda14bee0426325e628ece",
+  "observed_snapshot_reconstructed_by_truncating_trial_list": true,
+  "observation_snapshot_sha256": "95968cfa5ac5e2b2174acaf2eafa50ffa071b1e5506176ba0873be46f1c6c6b5",
+  "note": "Two additional trials completed during the graceful container stop; original interruption record remains the observation made before stopping."
+}

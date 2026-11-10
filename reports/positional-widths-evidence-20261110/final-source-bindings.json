@@ -1,0 +1,11 @@
+{
+  "CMakeLists.txt": "325ba4447686dff1b8229133ab3a12e0291ac658e8506fd234ada04922c5d89b",
+  "src/codegen/positional_emitter.cpp": "a3b4e8052fb579595c52938288506eadc36c7061647e241c2f3458b7dee53d76",
+  "src/verification/composition.cpp": "b34fef19c82815246d968b40f815c19851c259f106bf5138808c5d9dd9805aa6",
+  "include/csrd/limb_witness.hpp": "5f2fc1d16d84cc20aed6184f05b8df14386dee9cd724fbcc05918e98cb0059d1",
+  "tests/unit/composition_test.cpp": "512252ea89e93a8e539b3ac77e56b3fe88aa1425912eaf29e8b1f1d7680d7f4c",
+  "tests/integration/test_positional.py": "88e58d18224968978f189dd98565557518b74cd1bd092a11739b810d49725e98",
+  "tools/verify_positional.py": "aa55f6aabb3cb106dd59518ec6a296f2af695fed84d960f5cdbde113fc488c17",
+  "experiments/positional-widths-exploration.json": "a84cbd0ecbde3c82a6ad1ad1cdea002a5b3262429f6164a0d2eca048054c8032",
+  "experiments/run_positional_widths.py": "98795c7438e27bf019409230a828251318e4fb8fa7ec0654ffd9915e7bcdd38c"
+}
