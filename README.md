@@ -1,6 +1,6 @@
 # C-SRD — Verified Semantic and Representation Diversification for C
 
-**Technical specification · implemented baseline 0.5 · reviewed 2026-11-09**
+**Technical specification · implemented baseline 0.5 · reviewed 2026-11-10**
 
 Personal research project maintained by [DeadKennedyx](https://github.com/DeadKennedyx).
 Repository: [DeadKennedyx/C-SRD](https://github.com/DeadKennedyx/C-SRD).
@@ -45,6 +45,7 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Positional representation prototype](docs/limb-representation.md) | Two-piece arithmetic, bitwise operations, explicit correctness rules and limitations |
 | [Broad candidate comparison](reports/limb-exploration.md) | Compiler survival, application costs, reconstruction measurements and retained failures |
 | [Compositional emitted-C validation](docs/compositional-validation.md) | Scalable limb proofs with checked graph mappings, local invariants and actual return validation |
+| [Saved-query circuit validation](docs/circuit-validation.md) | Optional ABC grading with independently parsed, universally checked Boolean gate contracts |
 | [Jenkins follow-up evidence](reports/compositional-validation.md) | Unchanged candidate newly verified, 100 build cells, runtime/size costs and unresolved reconstruction-grading limits |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
@@ -378,6 +379,12 @@ reported as a transformation attempt with `output_written: false`.
 Compositional reports include the rebound partition and a `steps` array of
 individual queries/hashes; they do not substitute a single synthetic whole-function
 query. Failed attempts remain available under `prior_attempts`.
+
+An optional [saved-query circuit checker](docs/circuit-validation.md) exports a
+recorded mismatch to a Boolean circuit, validates every actual gate, then asks
+ABC to check it. Its separate report binds the query/circuit/tool bytes and
+measures grader resources. It adds no C coverage and does not alter the mandatory
+transformation gate or confer machine-code equivalence.
 
 `verify` checks selected original definitions and does not establish whole-file
 equivalence or validate extra candidate functions. Timing, debug information,

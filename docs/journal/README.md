@@ -38,6 +38,7 @@ causal explanations and estimates.
 | [2026-11-09 — two-piece prototype](2026-11-09-limb-prototype.md) | New representation and query observer | Positional arithmetic, proof bottlenecks, preserved failed candidates and a prespecified broad development comparison |
 | [2026-11-10 — P-code count correction](2026-11-10-pcode-counts.md) | Measurement adapter correction and repeated comparison | Wide constant counts distinguished from wide data, original-run preservation and unchanged binaries |
 | [2026-11-10 — compositional validation](2026-11-10-compositional-validation.md) | Verification hypothesis, failed scale prototype and validated correction | Actual emitted fragments, untrusted graph/partition hints, range invariants, independent SMT replay and newly admitted Jenkins candidate |
+| [2026-11-10 — reconstruction grading solvers](2026-11-10-grading-solvers.md) | Failed solver/decomposition probes and circuit-checker adaptation | Frozen answers, validated Boolean gates and separate grading resources |
 
 Future work is tracked in [the backlog](../backlog.md). External issue numbers
 and review outcomes belong here only after those events actually occur.

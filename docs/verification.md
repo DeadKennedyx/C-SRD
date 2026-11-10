@@ -93,6 +93,13 @@ container results and failures fixed during development are recorded in
 
 ## Other verification tools
 
+The optional [saved-query circuit path](circuit-validation.md) uses Z3's Boolean
+lowering, an independent parser with universal gate contracts, and ABC's
+combinational checker. It replays an existing model query. This supplies another
+decision engine, not independent C modeling or machine-code validation. It is not
+called by `csrd transform`; its `sat` result does not yet reconstruct public C
+counterexample inputs.
+
 CBMC, Frama-C WP and Alive2 are reviewed but not integrated or run in this
 release. There are no placeholder success statuses for unavailable tools.
 

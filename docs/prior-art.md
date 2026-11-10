@@ -68,3 +68,15 @@ Splitting values is therefore prior art. C-SRD's fixed two-piece u32 prototype,
 rule obligations and emitted-source checks support a reproducible comparison;
 they do not establish novelty or superior reconstruction resistance. A direct
 Tigress comparison remains unperformed.
+
+## Circuit-checking update (2026-11-10)
+
+[Mishchenko, Chatterjee, Brayton and Een, ICCAD 2006](https://people.eecs.berkeley.edu/~alanmi/publications/2006/iccad06_cec)
+combine simulation, proven intermediate equivalences, SAT and rewriting for
+combinational equivalence checking. The [ABC implementation](https://github.com/berkeley-abc/abc)
+offers circuit synthesis and formal verification. Its assumptions concern the
+submitted circuit and command semantics; it does not itself establish a C
+frontend or decompiler's correctness. C-SRD's optional saved-query path checks
+the Boolean export and records this trust boundary. The failed SMT-level sweeping
+prototypes and subsequent ABC adaptation are applications of existing ideas,
+with no claim of new equivalence-checking methods or a protection improvement.

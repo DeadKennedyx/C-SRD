@@ -161,12 +161,14 @@ def collect(config, directory):
 
 
 def measure(argv, directory, wall_seconds=120, cpu_seconds=None, memory_bytes=None,
-            sample_seconds=0.01):
+            sample_seconds=0.01, cwd=None):
     """Run collection in a separate process so subreaping cannot affect the caller."""
     directory = Path(directory).resolve()
     directory.mkdir(parents=True, exist_ok=False)
     config = {"argv": list(map(str, argv)), "wall_seconds": wall_seconds,
               "cpu_seconds": cpu_seconds, "memory_bytes": memory_bytes, "sample_seconds": sample_seconds}
+    if cwd is not None:
+        config["cwd"] = str(Path(cwd).resolve())
     save(directory / "command.json", config)
     result = subprocess.run([sys.executable, str(Path(__file__).resolve()), str(directory)],
                             capture_output=True, text=True)
