@@ -1,0 +1,51 @@
+Test project /Users/admin/C-SRD/build
+      Start  1: representation
+ 1/23 Test  #1: representation ...................   Passed    0.02 sec
+      Start  2: compositional_validation
+ 2/23 Test  #2: compositional_validation .........   Passed    0.13 sec
+      Start  3: saved_query_circuits
+ 3/23 Test  #3: saved_query_circuits .............   Passed    0.64 sec
+      Start  4: integration
+ 4/23 Test  #4: integration ......................   Passed    4.36 sec
+      Start  5: translation_validation
+ 5/23 Test  #5: translation_validation ...........   Passed    1.12 sec
+      Start  6: representation_planning
+ 6/23 Test  #6: representation_planning ..........   Passed    2.06 sec
+      Start  7: algorithm_candidates
+ 7/23 Test  #7: algorithm_candidates .............   Passed   10.03 sec
+      Start  8: control_flow_candidates
+ 8/23 Test  #8: control_flow_candidates ..........   Passed   10.06 sec
+      Start  9: decompiler_observer
+ 9/23 Test  #9: decompiler_observer ..............   Passed    1.50 sec
+      Start 10: pcode_control_flow
+10/23 Test #10: pcode_control_flow ...............   Passed    2.64 sec
+      Start 11: pcode_wide_values
+11/23 Test #11: pcode_wide_values ................   Passed  127.33 sec
+      Start 12: pcode_vector_values
+12/23 Test #12: pcode_vector_values ..............   Passed   48.60 sec
+      Start 13: reconstruction_effort
+13/23 Test #13: reconstruction_effort ............   Passed   13.85 sec
+      Start 14: defensive_evaluation
+14/23 Test #14: defensive_evaluation .............   Passed    2.45 sec
+      Start 15: protection_audit
+15/23 Test #15: protection_audit .................   Passed    7.11 sec
+      Start 16: validation_matrix
+16/23 Test #16: validation_matrix ................   Passed   21.03 sec
+      Start 17: rich_benchmarks
+17/23 Test #17: rich_benchmarks ..................   Passed   21.91 sec
+      Start 18: limb_representation
+18/23 Test #18: limb_representation ..............   Passed    9.67 sec
+      Start 19: positional_widths
+19/23 Test #19: positional_widths ................   Passed   15.73 sec
+      Start 20: differential
+20/23 Test #20: differential .....................   Passed    9.22 sec
+      Start 21: expanded_differential
+21/23 Test #21: expanded_differential ............   Passed   30.83 sec
+      Start 22: rule_contracts
+22/23 Test #22: rule_contracts ...................   Passed    0.68 sec
+      Start 23: positional_rule_contracts
+23/23 Test #23: positional_rule_contracts ........   Passed    1.84 sec
+
+100% tests passed out of 23
+
+Total Test time (real) = 342.82 sec

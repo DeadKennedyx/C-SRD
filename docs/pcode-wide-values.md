@@ -15,6 +15,21 @@ one u32 result. [CFG validation and expansion bounds](pcode-control-flow.md)
 remain in force. Earlier schema-1/2 exports stay replayable with their recorded
 facts; the observer never invents missing vector names or memory bytes.
 
+```mermaid
+flowchart LR
+    B["Frozen binary + known interface"] --> G
+    subgraph O["Measured observer process tree"]
+        G["Ghidra schema-3 export"] --> V["Validated bounded graph"]
+        V --> C["Reconstructed unsigned C"]
+    end
+    C --> S["Separate source-model scorer"]
+    R["Frozen original C"] --> S
+    S --> E["Proved / counterexample / inconclusive"]
+```
+
+The original source enters only the scorer. An unsupported export produces no
+answer and retains its reason; it is not sent through a successful-proof path.
+
 ## Value model and lowering
 
 Payloads have explicit widths of 1–16 bytes, including non-power-of-two widths.

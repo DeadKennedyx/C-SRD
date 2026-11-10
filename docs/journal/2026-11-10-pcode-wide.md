@@ -97,12 +97,21 @@ pointer traversal or arbitrary external memory. The original pilot and exporter
 snapshots are retained. Repeat validation with the corrected condition before
 freezing resources. A permission flag is never silently rewritten.
 
+The old exports lack symbolic user-op and snapshot facts, so the vector pilot
+requires fresh exports from the same frozen binaries rather than replaying or
+patching those incomplete JSON files. The retained first live pilot covers nine
+Clang cells; a separate constant-memory diagnostic covers one. The corrected
+pilot covers all 15 Clang CRC32/Morton/RGB cells. The subsequent full repeat
+includes Jenkins and every GCC cell as well. No old export is retroactively
+given facts it did not record.
+
 ## Validation and grading before the resource repeat
 
 Final native and Linux correctness suites each passed all 23 CTest groups. Each
 host checked 1,457 wide-value and 554 vector actual-C SMT obligations, the five
 compiled configurations, ARM intrinsics, and deliberate wrong-operation
-controls. Native skipped its optional live-Ghidra effort test; Linux ran it.
+controls. Native skipped live Ghidra, Linux-only resource-budget accounting and
+live GDB tests; Linux ran all three.
 The suites overlapped, so their elapsed times are not performance comparisons.
 Full logs and generated proof artifacts are retained under
 `experiments/runs/pcode-wide-development-20261110/final-v3-{native,linux}`.
@@ -128,3 +137,36 @@ with a 30-second checked-circuit budget, including their wrong-output controls
 and the same arithmetic controls; do not rerun observers or charge grading cost
 to reconstruction. No outcome or resource threshold will select which cells
 are reported.
+
+## Completed comparison and interpretation
+
+The serial repeat completed all 240 attempts, including 40 excluded warmups.
+Every measured attempt produced an answer: 160 initially proved, 40 grading-
+inconclusive, no unsupported result and no wrong answer. All 200 wrong-output
+controls were rejected. Separate replay of all 40 unknown trials produced 15
+distinct exact answer queries; all proved UNSAT at the declared 30-second
+budget. Eight distinct wrong-output and three arithmetic controls passed.
+The final source-model result is 200/200 recovered. Historical data remain
+immutable: 155 old recovered trials stay recovered, and all 45 former observer
+rejections now have proved answers.
+
+The new paired byte/nibble whole-observer CPU medians span 0.988–1.056 times
+their originals; wall medians span 0.973–1.052 and sampled-tree RSS medians
+0.842–1.246. Memory is noisy even for byte-identical controls. Application costs
+are unchanged from the frozen matrix, including GCC nibble Jenkins at 7.774
+times runtime and 1,672 versus 44 function-symbol bytes. These observations
+establish no useful protection winner on this corpus.
+
+Do not discard the local-stage evidence: Clang nibble Jenkins decompilation
+grew from 11.624 to 52.911 ms, adapter expansion from 0.928 to 3.232 ms, and
+reconstructed statements from 26 to 592. Whole-process CPU includes roughly
+six seconds of startup/import/analysis. The next bounded measurement task is
+therefore a declared persistent-session comparison, retaining cold-process
+controls and tracking native-decompiler resources. After that protocol freezes,
+test reserved families without tuning on their reconstruction outcomes. No
+human-understanding or runtime-memory-protection claim follows from these costs.
+
+The [report](../../reports/pcode-wide-values.md) links the validated summaries,
+paired trade-off CSV, raw resource/proof archives, failed pilots and per-file
+hashes. The compiler and its accepted C subset have not changed. Unrelated
+earlier recurrence grading gaps remain open.

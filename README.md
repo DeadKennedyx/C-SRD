@@ -51,6 +51,7 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Bounded control-flow reconstruction](reports/pcode-control-flow.md) | Fixed-loop and merge recovery, reserved observer checks, CPU/RSS measurements and four explicitly unresolved proof grades |
 | [Byte and nibble representations](docs/positional-widths.md) | Fixed 8/4-bit pieces, actual-C carry proofs, operation coverage and validation assumptions |
 | [Positional-width comparison](reports/positional-widths.md) | 500 validated build cells, 800 measured observer attempts, separate proof follow-ups, runtime/size/CPU/RSS costs and no established protection winner |
+| [Wide-value observer follow-up](reports/pcode-wide-values.md) | All 200 measured reconstructions proved after separate grading; 2,011 arithmetic/vector obligations per host, hardware controls, CPU/RSS trade-offs and retained failed pilots; input-C coverage stays unchanged |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |

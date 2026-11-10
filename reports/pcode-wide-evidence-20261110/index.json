@@ -1,0 +1,105 @@
+{
+  "archives": [
+    {
+      "archive": "development.tar.gz",
+      "bytes": 11186565,
+      "excluded_transient_files": 0,
+      "included_files": 32224,
+      "sha256": "fbfb0195f37a8d0c2953f159d0b80b328b7c251b1fa4521b29c1cbb151938bf1"
+    },
+    {
+      "archive": "observer-repeat.tar.gz",
+      "bytes": 14513406,
+      "excluded_transient_files": 0,
+      "included_files": 5047,
+      "sha256": "1eb731b436120f12f30f583e6369f7b7aa69cb968db52136401f73c5289cf55f"
+    },
+    {
+      "archive": "old-query-grading.tar.gz",
+      "bytes": 716618,
+      "excluded_transient_files": 0,
+      "included_files": 338,
+      "sha256": "071a92e3f94102030908eb9c077a08d62fa80b06f85f980fc53f8b4f1cdeae35"
+    },
+    {
+      "archive": "new-query-grading.tar.gz",
+      "bytes": 2740151,
+      "excluded_transient_files": 0,
+      "included_files": 953,
+      "sha256": "48e3c3ea3362f204371ae04b72c8fa3f8ca8362694a5926a9801e7af273bb502"
+    },
+    {
+      "archive": "prevector-native-evidence.tar.gz",
+      "bytes": 1607585,
+      "excluded_transient_files": 0,
+      "included_files": 5839,
+      "sha256": "82bb292e16d823b078f76affe83a6f7e76e36960acc67e94da752f8015232b8a"
+    },
+    {
+      "archive": "ghidra-language.tar.gz",
+      "bytes": 594728,
+      "excluded_transient_files": 0,
+      "included_files": 6,
+      "sha256": "f27c1d4a51a5b746c425dbc31823bdcb6bc279722e5bdd606dd2666927556ec6"
+    }
+  ],
+  "created_utc": "2026-11-10T16:59:57.605761+00:00",
+  "exclusion_reason": "Transient Ghidra project databases are reproducible from retained binaries and exports; their hashes are retained.",
+  "file_manifests": {
+    "format": "gzip JSON; keyed by archive; per-file SHA256, path and bytes",
+    "path": "file-manifests.json.gz",
+    "sha256": "53559fa9e89e774df32f5fd6439b16c9202915b0ce903cb6c655e899c4c8234c"
+  },
+  "human_data": "none; human effort unassessed",
+  "implementation": {
+    "implementation/experiments/archive_effort.py": "290953fd85ad4fd5298b482371068415f7d85d4250c0e271d80347be19cab85c",
+    "implementation/experiments/archive_wide_observer.py": "e0f436ca8617158307ff58116729ca74990d0f17de0404342cac636e902d096e",
+    "implementation/experiments/grade_saved_answers.py": "48975ce3fbef7ad88970200ec446b50d46b6a98e48479b4c60ac15e6d0775381",
+    "implementation/experiments/grade_wide_observer.py": "adf1ebef14edbb37597c062e07d9bf9bbb01e29af75f5986ae5b84e62e0e7af8",
+    "implementation/experiments/investigate_width_grades.py": "8c7cccc8c13b789b1a15f49c673b12bad7cec3a56ffa051548d445b483d6f1f4",
+    "implementation/experiments/run_wide_observer.py": "df80a07af0b56b4a333246c00b286c3d03ac65014174913b2f8e6fdc5673350d",
+    "implementation/experiments/summarize_positional_widths.py": "4ca3fefc0669047b899d99a7f4fd98b27e50b4cecd6fb3974841f69f8917fb49",
+    "implementation/experiments/summarize_wide_observer.py": "f730b022573772a6e04cfa10225bdc2660e7b334cc7f71110055588be5e5a02c",
+    "implementation/tests/integration/test_pcode_vector.py": "ab294333df7b3fcd60ad151795638bdf1db088fe53d644b1f25b19ddce405ae1",
+    "implementation/tests/integration/test_pcode_wide.py": "666bb13c598015522b349d4ae1838ac9e72fc6466f7a898d1b2a858d297a570e",
+    "implementation/tools/audit_decompiler.py": "ad184b9c76c358082ccd8934436acb2396e302626994cc5b3af4b1444a9c4200",
+    "implementation/tools/effort_statistics.py": "15062c01807d05856df5fb92dc7ed7263fc5fab9957b8e4c2e7e73c70365f9ad",
+    "implementation/tools/ghidra/ExportCSRD.java": "d3e74bff5bce0a826c83efe277ab982ad7cc50cc44875d76fa6c2a62a67a5523",
+    "implementation/tools/measure_effort.py": "7556cc7e6b1f63cb8edbb9faa6ca40ebf1dd6925fbd3b3b9c02dba592b14ac6d",
+    "implementation/tools/pcode_cfg.py": "190799c4c0e71703eb43b794ff18eeb1936fac892b643457ff6550af84d7f3f6",
+    "implementation/tools/pcode_reconstruct.py": "d81ed07401f862fd72e8987e3728d6cd56994b2975892987e0e307ce4d75334b",
+    "implementation/tools/pcode_values.py": "4a8053707ec2558b9d7ee050799083512304d4daf17ac7a969232c36b2a3c689",
+    "implementation/tools/pcode_vector.py": "6a2d618832fd31aab59a616d49531c6b6466e6afb50425813a65aa6d4fdd70f5",
+    "implementation/tools/pcode_wide.py": "9ca7795d38ab321be12826fd6cbebba3069ee223e5f2e61760f2728d151da288"
+  },
+  "reused_circuit_dependencies": {
+    "reports/circuit-evidence-20261110/ABC-COPYRIGHT.txt": "819151b8f059a48f806c75732ef62b1f873b49b6a04fb128aed28bf87d3dcd6c",
+    "reports/circuit-evidence-20261110/dependencies.json": "c6d1ee46956e0c64a6a428b651db927b96236ef7c8a8bfccc68bbbd00bb20259",
+    "reports/circuit-evidence-20261110/native-tools.tar.xz": "80c47a702aaa35f49efb9741ee94f1c52b1dded708f01eaa99e8487eb8556a51"
+  },
+  "reused_frozen_evidence": {
+    "reports/positional-widths-evidence-20261110/archive-validation.json": "0024be1e2eb98a7f9737eb714a416bbadf45a218340990ad48195de9b5e693a1",
+    "reports/positional-widths-evidence-20261110/circuit-grading.tar.gz": "87139bc5f8706dcf92dfd2424b29a173ea9d1cdf61079998fb4aca4545b98901",
+    "reports/positional-widths-evidence-20261110/file-manifests.json.gz": "db3788edd58ef8f6c1e3af5fa40f3e5639da7b9a1ea957f669ad0026d94571df",
+    "reports/positional-widths-evidence-20261110/ghidra-repeat.tar.gz": "82fa32cf127ba59061f351f821ff20366e119d315a41bab2f32a320a29d8c7c9",
+    "reports/positional-widths-evidence-20261110/index.json": "01d552274616a1ee0a043004d7396d99a5ea0c8929254792838585e560b70d92",
+    "reports/positional-widths-evidence-20261110/linked-sizes.tar.gz": "30d3c507807d36fb3846f53b7a17d30a91989d452b531e4092de15c4148712c4",
+    "reports/positional-widths-evidence-20261110/matrix.tar.gz": "2cfc10a38b0b6eace8c41c392d677e374c776b8b150d5703148e397eb691a05f",
+    "reports/positional-widths-evidence-20261110/scoring-verifier.gz": "b23717bf20b5a361e4b13cdbd025fe01b7392776f6ff49b193e521a123e3a0d9",
+    "reports/positional-widths-evidence-20261110/sha256.json": "b765b71932e25233d2be78b96a762f0b968049046d96f03bbc37406caa5211ee",
+    "reports/positional-widths-evidence-20261110/summary.json": "6e84e3d51581772c4a658d8a71c70eade111f5f68cd2262da842d603226e4a4e"
+  },
+  "scope": "bounded wide/vector observer, tests, failed prototypes, unchanged-binary repeat and separate query grading",
+  "supplemental_ghidra_language": {
+    "archive": "ghidra-language.tar.gz",
+    "capture": "post-run packaging; no claim of a pre-run full-installation attestation",
+    "members": {
+      "reports/pcode-wide-evidence-20261110/ghidra-language/AARCH64.cspec": "1e54d6a9e6cd98a7b9729ba79187d9f1969a61e2984378445bb67f339d439e00",
+      "reports/pcode-wide-evidence-20261110/ghidra-language/AARCH64.ldefs": "ae0450a9ff7d920d93d7e0f6e5e70095862e6e65e45740153b096454b85d10b8",
+      "reports/pcode-wide-evidence-20261110/ghidra-language/AARCH64.pspec": "45784c3d7374bc84aacba3707c5e21fc9b5ac36cce485167a22d72d96dde82c9",
+      "reports/pcode-wide-evidence-20261110/ghidra-language/AARCH64.sla": "7d48076e27f5cd81d24be3dbbf21ea2e5cc3b84f9559e03e6446908d19f804c5",
+      "reports/pcode-wide-evidence-20261110/ghidra-language/AARCH64neon.sinc": "2e25dfb07e382252005f684320869388529de0734bb8bde456196eb33d78b98e",
+      "reports/pcode-wide-evidence-20261110/ghidra-language/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    }
+  }
+}

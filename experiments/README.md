@@ -55,6 +55,16 @@ before execution, checks corrupted-answer controls and reports grader resources
 separately. The [first result](../reports/circuit-grading.md) resolved correct
 reconstructions that the earlier grader could not prove in time.
 
+For the wide/vector coverage follow-up, `run_wide_observer.py` repeats all cells
+of the completed positional-width Ghidra study while checking frozen inputs and
+declaring observer changes. `grade_wide_observer.py` replays every inconclusive
+measured answer with a separate 30-second circuit budget. It deduplicates exact
+query bytes and retains all trial memberships and controls; shared results are
+not independent grading-time samples. `summarize_wide_observer.py` validates the
+source/query/report chain before deriving statuses and paired cost tables.
+Commands and limitations are in the [follow-up report](../reports/pcode-wide-values.md).
+Always use fresh directories and keep tests/builds separate from resource runs.
+
 ## Analysis and reporting
 
 Preserve tested, bounded-checked, proved-under-model, unsupported and inconclusive

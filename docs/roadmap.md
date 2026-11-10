@@ -29,13 +29,16 @@ The active protection study has a [larger reserved corpus](rich-benchmarks.md)
 and verified [16-bit](limb-representation.md) and [8/4-bit](positional-widths.md)
 positional representations. The [width comparison](../reports/positional-widths.md)
 completed 500 build cells, 600 measured output-only attempts and 200 measured
-Ghidra attempts. A separate grading follow-up proved 25 more saved answers;
-ten remain unknown, with finite checks passing. No protection winner or cost
-limit was selected: some local analysis stages grew, while successful paired
-end-to-end observer CPU stayed near its baseline and application costs increased.
-Next, expand bounded wide-value/`PIECE`/signed-shift observer coverage on the same
-frozen artifacts and investigate the remaining grading contracts. Multi-location
-runtime inference and human analysis require separate protocols. Bounded
+Ghidra attempts. The [wide/vector observer follow-up](../reports/pcode-wide-values.md)
+closed all nine unsupported build cells and separately resolved the two older
+unproved answer contracts. Its complete repeat recovered 200/200 measured
+answers under the source model after grading. Byte/nibble whole-observer CPU
+medians span 0.988–1.056 times baseline, while some per-function stages grow
+and application overhead reaches 7.774 times baseline. No protection winner or
+cost limit was selected. Next, compare persistent-session per-function analysis
+with the retained cold-process baseline, then evaluate a frozen protocol on
+reserved families. Multi-location runtime inference and human analysis require
+separate protocols. Bounded
 [CFG/merge reconstruction](../reports/pcode-control-flow.md) now recovers the
 unchanged GCC Jenkins baseline; four reserved recurrence grades remain
 inconclusive despite passing finite execution checks. The

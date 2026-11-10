@@ -1,0 +1,7395 @@
+{
+  "budget_points_succeeding_in_every_measured_repeat": [
+    {
+      "case": "crc32_byte",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "clang-O2",
+      "variant": "identity"
+    },
+    {
+      "case": "crc32_byte",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "clang-O2",
+      "variant": "limbs16"
+    },
+    {
+      "case": "crc32_byte",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "clang-O2",
+      "variant": "limbs4"
+    },
+    {
+      "case": "crc32_byte",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "clang-O2",
+      "variant": "limbs8"
+    },
+    {
+      "case": "crc32_byte",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "clang-O2",
+      "variant": "original"
+    },
+    {
+      "case": "crc32_byte",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "gcc-O2",
+      "variant": "identity"
+    },
+    {
+      "case": "crc32_byte",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "gcc-O2",
+      "variant": "limbs16"
+    },
+    {
+      "case": "crc32_byte",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "gcc-O2",
+      "variant": "limbs4"
+    },
+    {
+      "case": "crc32_byte",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "gcc-O2",
+      "variant": "limbs8"
+    },
+    {
+      "case": "crc32_byte",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "gcc-O2",
+      "variant": "original"
+    },
+    {
+      "case": "jenkins_word",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "clang-O2",
+      "variant": "identity"
+    },
+    {
+      "case": "jenkins_word",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "clang-O2",
+      "variant": "original"
+    },
+    {
+      "case": "jenkins_word",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "gcc-O2",
+      "variant": "identity"
+    },
+    {
+      "case": "jenkins_word",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "gcc-O2",
+      "variant": "original"
+    },
+    {
+      "case": "morton16",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "clang-O2",
+      "variant": "identity"
+    },
+    {
+      "case": "morton16",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "clang-O2",
+      "variant": "limbs16"
+    },
+    {
+      "case": "morton16",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "clang-O2",
+      "variant": "limbs4"
+    },
+    {
+      "case": "morton16",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "clang-O2",
+      "variant": "limbs8"
+    },
+    {
+      "case": "morton16",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "clang-O2",
+      "variant": "original"
+    },
+    {
+      "case": "morton16",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "gcc-O2",
+      "variant": "identity"
+    },
+    {
+      "case": "morton16",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "gcc-O2",
+      "variant": "limbs16"
+    },
+    {
+      "case": "morton16",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "gcc-O2",
+      "variant": "limbs4"
+    },
+    {
+      "case": "morton16",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "gcc-O2",
+      "variant": "limbs8"
+    },
+    {
+      "case": "morton16",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "gcc-O2",
+      "variant": "original"
+    },
+    {
+      "case": "rgb_luma8",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "clang-O2",
+      "variant": "identity"
+    },
+    {
+      "case": "rgb_luma8",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "clang-O2",
+      "variant": "limbs16"
+    },
+    {
+      "case": "rgb_luma8",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "clang-O2",
+      "variant": "limbs8"
+    },
+    {
+      "case": "rgb_luma8",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "clang-O2",
+      "variant": "original"
+    },
+    {
+      "case": "rgb_luma8",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "gcc-O2",
+      "variant": "identity"
+    },
+    {
+      "case": "rgb_luma8",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "gcc-O2",
+      "variant": "limbs16"
+    },
+    {
+      "case": "rgb_luma8",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "gcc-O2",
+      "variant": "limbs8"
+    },
+    {
+      "case": "rgb_luma8",
+      "points": [
+        {
+          "budget": {
+            "cpu_seconds": null,
+            "memory_bytes": null,
+            "query_budget": 0,
+            "step_budget": 0,
+            "wall_seconds": 60.0
+          },
+          "budget_id": 0,
+          "repetitions": 5
+        }
+      ],
+      "profile": "gcc-O2",
+      "variant": "original"
+    }
+  ],
+  "budget_scope": "Minimum is only over the tested grid. No claim of a theoretical minimum, guaranteed success probability or unseen observers.",
+  "groups": [
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": true,
+        "identical_pairs": 5,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "crc32_byte",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.15507400000000082,
+            0.10583799999999943
+          ],
+          "max": 0.10583799999999943,
+          "median": -0.039973999999999066,
+          "min": -0.15507400000000082,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -32727040,
+            47030272
+          ],
+          "max": 47030272,
+          "median": 13017088,
+          "min": -32727040,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -500047872,
+            20754432
+          ],
+          "max": 20754432,
+          "median": -36528128,
+          "min": -500047872,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.07883804012089968,
+            0.32987942011095583
+          ],
+          "max": 0.32987942011095583,
+          "median": -0.04420688399113715,
+          "min": -0.07883804012089968,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9761572513788369,
+            1.0164904062786881
+          ],
+          "max": 1.0164904062786881,
+          "median": 0.993673384310487,
+          "min": 0.9761572513788369,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.9343462148415352,
+            1.122185331800962
+          ],
+          "max": 1.122185331800962,
+          "median": 1.0316071091131511,
+          "min": 0.9343462148415352,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.5056528288440046,
+            1.0473644360108059
+          ],
+          "max": 1.0473644360108059,
+          "median": 0.9310707301803229,
+          "min": 0.5056528288440046,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.9875746791076091,
+            1.0543301847634519
+          ],
+          "max": 1.0543301847634519,
+          "median": 0.9931868231727249,
+          "min": 0.9875746791076091,
+          "n": 5
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.269882,
+            6.523994
+          ],
+          "max": 6.523994,
+          "median": 6.348958,
+          "min": 6.269882,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            424857600,
+            478150656
+          ],
+          "max": 478150656,
+          "median": 465752064,
+          "min": 424857600,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            458940416,
+            511963136
+          ],
+          "max": 511963136,
+          "median": 493408256,
+          "min": 458940416,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            6.266111986013129,
+            6.500053673051298
+          ],
+          "max": 6.500053673051298,
+          "median": 6.444232373032719,
+          "min": 6.266111986013129,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "identity",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "crc32_byte",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.12607999999999997,
+            0.07140900000000094
+          ],
+          "max": 0.07140900000000094,
+          "median": -0.041248000000000395,
+          "min": -0.12607999999999997,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -76795904,
+            25776128
+          ],
+          "max": 25776128,
+          "median": -4866048,
+          "min": -76795904,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -559427584,
+            15462400
+          ],
+          "max": 15462400,
+          "median": -68100096,
+          "min": -559427584,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.19880194799043238,
+            0.026946919970214367
+          ],
+          "max": 0.026946919970214367,
+          "median": -0.05158085795119405,
+          "min": -0.19880194799043238,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9806151015247158,
+            1.011301778650434
+          ],
+          "max": 1.011301778650434,
+          "median": 0.9933615204770408,
+          "min": 0.9806151015247158,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.8472686097851057,
+            1.0669667560549951
+          ],
+          "max": 1.0669667560549951,
+          "median": 0.988184630073498,
+          "min": 0.8472686097851057,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.4469500639790084,
+            1.0311060572351454
+          ],
+          "max": 1.0311060572351454,
+          "median": 0.8714938282101423,
+          "min": 0.4469500639790084,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.9694691185536828,
+            1.0042469869517054
+          ],
+          "max": 1.0042469869517054,
+          "median": 0.9920503443265872,
+          "min": 0.9694691185536828,
+          "n": 5
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.172223,
+            6.463697
+          ],
+          "max": 6.463697,
+          "median": 6.389795,
+          "min": 6.172223,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            406974464,
+            478191616
+          ],
+          "max": 478191616,
+          "median": 426020864,
+          "min": 406974464,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            437686272,
+            512548864
+          ],
+          "max": 512548864,
+          "median": 452104192,
+          "min": 437686272,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.9885334419086576,
+            6.500116154085845
+          ],
+          "max": 6.500116154085845,
+          "median": 6.371896946104243,
+          "min": 5.9885334419086576,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "limbs16",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "crc32_byte",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.06552899999999884,
+            0.24414400000000036
+          ],
+          "max": 0.24414400000000036,
+          "median": 0.2389499999999991,
+          "min": 0.06552899999999884,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -107622400,
+            46297088
+          ],
+          "max": 46297088,
+          "median": 16261120,
+          "min": -107622400,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -462774272,
+            63455232
+          ],
+          "max": 63455232,
+          "median": 851968,
+          "min": -462774272,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.06743006897158921,
+            0.47328414116054773
+          ],
+          "max": 0.47328414116054773,
+          "median": 0.15565510792657733,
+          "min": -0.06743006897158921,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            1.0100751349316852,
+            1.0384997054627558
+          ],
+          "max": 1.0384997054627558,
+          "median": 1.0372303197366968,
+          "min": 1.0100751349316852,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.7840984724607433,
+            1.1002278914279127
+          ],
+          "max": 1.1002278914279127,
+          "median": 1.0348001759559458,
+          "min": 0.7840984724607433,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.542501498242602,
+            1.0861987986057895
+          ],
+          "max": 1.0861987986057895,
+          "median": 1.0019443068265734,
+          "min": 0.542501498242602,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.98964447047678,
+            1.07794852684722
+          ],
+          "max": 1.07794852684722,
+          "median": 1.0239896070165222,
+          "min": 0.98964447047678,
+          "n": 5
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.3879600000000005,
+            6.71694
+          ],
+          "max": 6.71694,
+          "median": 6.569560999999999,
+          "min": 6.3879600000000005,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            390856704,
+            520314880
+          ],
+          "max": 520314880,
+          "median": 406663168,
+          "min": 390856704,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            419561472,
+            816365568
+          ],
+          "max": 816365568,
+          "median": 539934720,
+          "min": 419561472,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            6.444073647027835,
+            6.644094364950433
+          ],
+          "max": 6.644094364950433,
+          "median": 6.545036364113912,
+          "min": 6.444073647027835,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "limbs4",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "crc32_byte",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.0005700000000006256,
+            0.22316699999999923
+          ],
+          "max": 0.22316699999999923,
+          "median": 0.21640199999999865,
+          "min": -0.0005700000000006256,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -102129664,
+            117854208
+          ],
+          "max": 117854208,
+          "median": -16437248,
+          "min": -102129664,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -578863104,
+            13725696
+          ],
+          "max": 13725696,
+          "median": -70635520,
+          "min": -578863104,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.04902586084790528,
+            0.5694678619038314
+          ],
+          "max": 0.5694678619038314,
+          "median": 0.1238869100343436,
+          "min": 0.04902586084790528,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9999119391372754,
+            1.0359166398298147
+          ],
+          "max": 1.0359166398298147,
+          "median": 1.0337171611285234,
+          "min": 0.9999119391372754,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.796884928069861,
+            1.306186949304048
+          ],
+          "max": 1.306186949304048,
+          "median": 0.9600883169065213,
+          "min": 0.796884928069861,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.4277361149354541,
+            1.027612290806615
+          ],
+          "max": 1.027612290806615,
+          "median": 0.8667094350706065,
+          "min": 0.4277361149354541,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            1.0075536286035198,
+            1.0937897069895313
+          ],
+          "max": 1.0937897069895313,
+          "median": 1.0190258526198703,
+          "min": 1.0075536286035198,
+          "n": 5
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.436637999999999,
+            6.674455
+          ],
+          "max": 6.674455,
+          "median": 6.5389539999999995,
+          "min": 6.436637999999999,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            395403264,
+            502763520
+          ],
+          "max": 502763520,
+          "median": 427712512,
+          "min": 395403264,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            423059456,
+            536903680
+          ],
+          "max": 536903680,
+          "median": 459300864,
+          "min": 423059456,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            6.513610397931188,
+            6.641220084857196
+          ],
+          "max": 6.641220084857196,
+          "median": 6.590834310045466,
+          "min": 6.513610397931188,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "limbs8",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": true,
+        "identical_pairs": 5,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "crc32_byte",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.0,
+            0.0
+          ],
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0,
+            0
+          ],
+          "max": 0,
+          "median": 0,
+          "min": 0,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0,
+            0
+          ],
+          "max": 0,
+          "median": 0,
+          "min": 0,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.0,
+            0.0
+          ],
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.213471,
+            6.5040320000000005
+          ],
+          "max": 6.5040320000000005,
+          "median": 6.418156000000001,
+          "min": 6.213471,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            384909312,
+            502816768
+          ],
+          "max": 502816768,
+          "median": 461918208,
+          "min": 384909312,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            438185984,
+            1011531776
+          ],
+          "max": 1011531776,
+          "median": 529936384,
+          "min": 438185984,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            6.071752222953364,
+            6.5115037159994245
+          ],
+          "max": 6.5115037159994245,
+          "median": 6.488439257023856,
+          "min": 6.071752222953364,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "original",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "crc32_byte",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.17623800000000056,
+            0.13623099999999955
+          ],
+          "max": 0.13623099999999955,
+          "median": 0.0010639999999995098,
+          "min": -0.17623800000000056,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -48140288,
+            43278336
+          ],
+          "max": 43278336,
+          "median": 18595840,
+          "min": -48140288,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -23748608,
+            370454528
+          ],
+          "max": 370454528,
+          "median": 40943616,
+          "min": -23748608,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.3021974640432745,
+            0.1349139721132815
+          ],
+          "max": 0.1349139721132815,
+          "median": -0.03217785572633147,
+          "min": -0.3021974640432745,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9721386588557906,
+            1.0227835839654116
+          ],
+          "max": 1.0227835839654116,
+          "median": 1.0001788602032684,
+          "min": 0.9721386588557906,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.8974906892972709,
+            1.1111216280170373
+          ],
+          "max": 1.1111216280170373,
+          "median": 1.041577376046303,
+          "min": 0.8974906892972709,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.9464264264264264,
+            1.7473331074772147
+          ],
+          "max": 1.7473331074772147,
+          "median": 1.0846473029045642,
+          "min": 0.9464264264264264,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.9464631177388917,
+            1.0260889839387077
+          ],
+          "max": 1.0260889839387077,
+          "median": 0.9938406512500496,
+          "min": 0.9464631177388917,
+          "n": 5
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            5.949844,
+            6.265941
+          ],
+          "max": 6.265941,
+          "median": 6.11558,
+          "min": 5.949844,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            393195520,
+            493838336
+          ],
+          "max": 493838336,
+          "median": 432746496,
+          "min": 393195520,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            419540992,
+            866156544
+          ],
+          "max": 866156544,
+          "median": 496656384,
+          "min": 419540992,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.192052340134978,
+            5.517288289964199
+          ],
+          "max": 5.517288289964199,
+          "median": 5.342461904976517,
+          "min": 5.192052340134978,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "identity",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "crc32_byte",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.3457030000000003,
+            0.1577820000000001
+          ],
+          "max": 0.1577820000000001,
+          "median": -0.05170600000000025,
+          "min": -0.3457030000000003,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -28729344,
+            78532608
+          ],
+          "max": 78532608,
+          "median": 11988992,
+          "min": -28729344,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -28860416,
+            78401536
+          ],
+          "max": 78401536,
+          "median": 12644352,
+          "min": -28860416,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.234428898897022,
+            0.18878174503333867
+          ],
+          "max": 0.18878174503333867,
+          "median": -0.09274244005791843,
+          "min": -0.234428898897022,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9453480565055404,
+            1.0263362585827942
+          ],
+          "max": 1.0263362585827942,
+          "median": 0.9913081337686046,
+          "min": 0.9453480565055404,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.9388241040356554,
+            1.1882936410508225
+          ],
+          "max": 1.1882936410508225,
+          "median": 1.0264872495611097,
+          "min": 0.9388241040356554,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.9417786995645384,
+            1.1768630168630168
+          ],
+          "max": 1.1768630168630168,
+          "median": 1.0261410788381742,
+          "min": 0.9417786995645384,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.9584689024489832,
+            1.0361358014397783
+          ],
+          "max": 1.0361358014397783,
+          "median": 0.9825909554738674,
+          "min": 0.9584689024489832,
+          "n": 5
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            5.897074,
+            6.1488380000000005
+          ],
+          "max": 6.1488380000000005,
+          "median": 6.098369,
+          "min": 5.897074,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            425447424,
+            495607808
+          ],
+          "max": 495607808,
+          "median": 455892992,
+          "min": 425447424,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            456642560,
+            521691136
+          ],
+          "max": 521691136,
+          "median": 487874560,
+          "min": 456642560,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.166112517938018,
+            5.485277422005311
+          ],
+          "max": 5.485277422005311,
+          "median": 5.4102304701227695,
+          "min": 5.166112517938018,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "limbs16",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "crc32_byte",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.1099679999999994,
+            0.6525169999999996
+          ],
+          "max": 0.6525169999999996,
+          "median": 0.33502399999999977,
+          "min": -0.1099679999999994,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -41762816,
+            64311296
+          ],
+          "max": 64311296,
+          "median": -31551488,
+          "min": -41762816,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -40366080,
+            70602752
+          ],
+          "max": 70602752,
+          "median": -34041856,
+          "min": -40366080,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.2909925940912217,
+            0.4578807121142745
+          ],
+          "max": 0.4578807121142745,
+          "median": 0.11160516389645636,
+          "min": -0.2909925940912217,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9826152364249119,
+            1.1089151895759277
+          ],
+          "max": 1.1089151895759277,
+          "median": 1.0560301798740965,
+          "min": 0.9826152364249119,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.9110707962286203,
+            1.154195924380064
+          ],
+          "max": 1.154195924380064,
+          "median": 0.9302933777351456,
+          "min": 0.9110707962286203,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.9156091044546062,
+            1.1592700392700392
+          ],
+          "max": 1.1592700392700392,
+          "median": 0.9296214751460751,
+          "min": 0.9156091044546062,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.948222823099873,
+            1.087645585081035
+          ],
+          "max": 1.087645585081035,
+          "median": 1.0209498398619483,
+          "min": 0.948222823099873,
+          "n": 5
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.215571000000001,
+            6.643573
+          ],
+          "max": 6.643573,
+          "median": 6.314373,
+          "min": 6.215571000000001,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            409251840,
+            481386496
+          ],
+          "max": 481386496,
+          "median": 427855872,
+          "min": 409251840,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            437956608,
+            513892352
+          ],
+          "max": 513892352,
+          "median": 456429568,
+          "min": 437956608,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.329101267969236,
+            5.682110907975584
+          ],
+          "max": 5.682110907975584,
+          "median": 5.43886134494096,
+          "min": 5.329101267969236,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "limbs4",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "crc32_byte",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.12858700000000045,
+            0.25864399999999943
+          ],
+          "max": 0.25864399999999943,
+          "median": 0.19325100000000006,
+          "min": -0.12858700000000045,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -61460480,
+            100233216
+          ],
+          "max": 100233216,
+          "median": -19013632,
+          "min": -61460480,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -17702912,
+            182657024
+          ],
+          "max": 182657024,
+          "median": 102068224,
+          "min": -17702912,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.06222674995660782,
+            0.2968491578940302
+          ],
+          "max": 0.2968491578940302,
+          "median": 0.007260521873831749,
+          "min": -0.06222674995660782,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9796717718442649,
+            1.0432562140125956
+          ],
+          "max": 1.0432562140125956,
+          "median": 1.0324858206220435,
+          "min": 0.9796717718442649,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.8691268436063601,
+            1.257359204921912
+          ],
+          "max": 1.257359204921912,
+          "median": 0.9544119813405353,
+          "min": 0.8691268436063601,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.96006468006468,
+            1.3776272334660005
+          ],
+          "max": 1.3776272334660005,
+          "median": 1.2456986225732343,
+          "min": 0.96006468006468,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.9889759955581848,
+            1.057403193985079
+          ],
+          "max": 1.057403193985079,
+          "median": 1.0012918862303788,
+          "min": 0.9889759955581848,
+          "n": 5
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.142031,
+            6.354051
+          ],
+          "max": 6.354051,
+          "median": 6.230719,
+          "min": 6.142031,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            398061568,
+            489701376
+          ],
+          "max": 489701376,
+          "median": 418963456,
+          "min": 398061568,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            425586688,
+            666353664
+          ],
+          "max": 666353664,
+          "median": 517488640,
+          "min": 425586688,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.195490702055395,
+            5.627354383934289
+          ],
+          "max": 5.627354383934289,
+          "median": 5.468149520922452,
+          "min": 5.195490702055395,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "limbs8",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": true,
+        "identical_pairs": 5,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "crc32_byte",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.0,
+            0.0
+          ],
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0,
+            0
+          ],
+          "max": 0,
+          "median": 0,
+          "min": 0,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0,
+            0
+          ],
+          "max": 0,
+          "median": 0,
+          "min": 0,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.0,
+            0.0
+          ],
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            5.94878,
+            6.325539
+          ],
+          "max": 6.325539,
+          "median": 5.991056,
+          "min": 5.94878,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            389468160,
+            469618688
+          ],
+          "max": 469618688,
+          "median": 447258624,
+          "min": 389468160,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            415420416,
+            495702016
+          ],
+          "max": 495702016,
+          "median": 478322688,
+          "min": 415420416,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.171300363028422,
+            5.6446593690197915
+          ],
+          "max": 5.6446593690197915,
+          "median": 5.327256181044504,
+          "min": 5.171300363028422,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "original",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": true,
+        "identical_pairs": 5,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "jenkins_word",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.25102700000000056,
+            0.012087999999999433
+          ],
+          "max": 0.012087999999999433,
+          "median": -0.039816999999999325,
+          "min": -0.25102700000000056,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -24764416,
+            66629632
+          ],
+          "max": 66629632,
+          "median": 51458048,
+          "min": -24764416,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -24240128,
+            66629632
+          ],
+          "max": 66629632,
+          "median": 52948992,
+          "min": -24240128,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.33508261083625257,
+            0.09101311676204205
+          ],
+          "max": 0.09101311676204205,
+          "median": -0.15166486497037113,
+          "min": -0.33508261083625257,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9616056943490425,
+            1.0019171474470043
+          ],
+          "max": 1.0019171474470043,
+          "median": 0.9938129867764772,
+          "min": 0.9616056943490425,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.9427293997290871,
+            1.1700953864942831
+          ],
+          "max": 1.1700953864942831,
+          "median": 1.1183079226661896,
+          "min": 0.9427293997290871,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.947070450500407,
+            1.1571662039498296
+          ],
+          "max": 1.1571662039498296,
+          "median": 1.1129676398877926,
+          "min": 0.947070450500407,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.9483933848284846,
+            1.0140881418345429
+          ],
+          "max": 1.0140881418345429,
+          "median": 0.9767096579399939,
+          "min": 0.9483933848284846,
+          "n": 5
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.287103999999999,
+            6.39576
+          ],
+          "max": 6.39576,
+          "median": 6.317289,
+          "min": 6.287103999999999,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            407646208,
+            486408192
+          ],
+          "max": 486408192,
+          "median": 459993088,
+          "min": 407646208,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            433729536,
+            521658368
+          ],
+          "max": 521658368,
+          "median": 486207488,
+          "min": 433729536,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            6.157934025162831,
+            6.5512772048823535
+          ],
+          "max": 6.5512772048823535,
+          "median": 6.360256023937836,
+          "min": 6.157934025162831,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "identity",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "jenkins_word",
+      "correct_fraction_decidable_submissions": null,
+      "coverage_gaps": 5,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "inconclusive": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.235135,
+            6.519826
+          ],
+          "max": 6.519826,
+          "median": 6.357618,
+          "min": 6.235135,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            410275840,
+            487088128
+          ],
+          "max": 487088128,
+          "median": 444964864,
+          "min": 410275840,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            441995264,
+            518283264
+          ],
+          "max": 518283264,
+          "median": 476684288,
+          "min": 441995264,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            6.273278741165996,
+            6.511943917023018
+          ],
+          "max": 6.511943917023018,
+          "median": 6.394585554022342,
+          "min": 6.273278741165996,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 0.0,
+      "success_wilson_95_interval": [
+        5.551115123125783e-17,
+        0.4344824647831612
+      ],
+      "successful": 0,
+      "variant": "limbs16",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "jenkins_word",
+      "correct_fraction_decidable_submissions": null,
+      "coverage_gaps": 5,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "inconclusive": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.237876,
+            6.595598
+          ],
+          "max": 6.595598,
+          "median": 6.440777000000001,
+          "min": 6.237876,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            412499968,
+            514613248
+          ],
+          "max": 514613248,
+          "median": 478986240,
+          "min": 412499968,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            442515456,
+            545415168
+          ],
+          "max": 545415168,
+          "median": 509132800,
+          "min": 442515456,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            6.26860979385674,
+            6.535335884895176
+          ],
+          "max": 6.535335884895176,
+          "median": 6.369689079001546,
+          "min": 6.26860979385674,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 0.0,
+      "success_wilson_95_interval": [
+        5.551115123125783e-17,
+        0.4344824647831612
+      ],
+      "successful": 0,
+      "variant": "limbs4",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "jenkins_word",
+      "correct_fraction_decidable_submissions": null,
+      "coverage_gaps": 5,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "inconclusive": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.194033,
+            6.651396
+          ],
+          "max": 6.651396,
+          "median": 6.5123619999999995,
+          "min": 6.194033,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            408297472,
+            467152896
+          ],
+          "max": 467152896,
+          "median": 429531136,
+          "min": 408297472,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            436084736,
+            867917824
+          ],
+          "max": 867917824,
+          "median": 462168064,
+          "min": 436084736,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            6.193316732067615,
+            6.620698770042509
+          ],
+          "max": 6.620698770042509,
+          "median": 6.584391864947975,
+          "min": 6.193316732067615,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 0.0,
+      "success_wilson_95_interval": [
+        5.551115123125783e-17,
+        0.4344824647831612
+      ],
+      "successful": 0,
+      "variant": "limbs8",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": true,
+        "identical_pairs": 5,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "jenkins_word",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.0,
+            0.0
+          ],
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0,
+            0
+          ],
+          "max": 0,
+          "median": 0,
+          "min": 0,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0,
+            0
+          ],
+          "max": 0,
+          "median": 0,
+          "min": 0,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.0,
+            0.0
+          ],
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.305201,
+            6.538131
+          ],
+          "max": 6.538131,
+          "median": 6.435576999999999,
+          "min": 6.305201,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            389046272,
+            434950144
+          ],
+          "max": 434950144,
+          "median": 423030784,
+          "min": 389046272,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            416047104,
+            468709376
+          ],
+          "max": 468709376,
+          "median": 450424832,
+          "min": 416047104,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            6.435516376979649,
+            6.565322348847985
+          ],
+          "max": 6.565322348847985,
+          "median": 6.4930166359990835,
+          "min": 6.435516376979649,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "original",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "jenkins_word",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.07998599999999989,
+            0.3981079999999997
+          ],
+          "max": 0.3981079999999997,
+          "median": 0.021577999999999875,
+          "min": -0.07998599999999989,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -112160768,
+            17653760
+          ],
+          "max": 17653760,
+          "median": -61829120,
+          "min": -112160768,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -94773248,
+            357949440
+          ],
+          "max": 357949440,
+          "median": 214970368,
+          "min": -94773248,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.07539881719276309,
+            0.513032338116318
+          ],
+          "max": 0.513032338116318,
+          "median": 0.04640838992781937,
+          "min": -0.07539881719276309,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9871197134278751,
+            1.0666504717589997
+          ],
+          "max": 1.0666504717589997,
+          "median": 1.003497537800169,
+          "min": 0.9871197134278751,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.7728927703548888,
+            1.0391864493076455
+          ],
+          "max": 1.0391864493076455,
+          "median": 0.8736820083682009,
+          "min": 0.7728927703548888,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.8221726933866196,
+            1.6921870544625035
+          ],
+          "max": 1.6921870544625035,
+          "median": 1.4096234146341464,
+          "min": 0.8221726933866196,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.9863252978589887,
+            1.1028141939779443
+          ],
+          "max": 1.1028141939779443,
+          "median": 1.0088240318564095,
+          "min": 0.9863252978589887,
+          "n": 5
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.111821,
+            6.371179
+          ],
+          "max": 6.371179,
+          "median": 6.1910609999999995,
+          "min": 6.111821,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            381706240,
+            468160512
+          ],
+          "max": 468160512,
+          "median": 410652672,
+          "min": 381706240,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            438177792,
+            875077632
+          ],
+          "max": 875077632,
+          "median": 719110144,
+          "min": 438177792,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.305726429913193,
+            5.6162995169870555
+          ],
+          "max": 5.6162995169870555,
+          "median": 5.46108001191169,
+          "min": 5.305726429913193,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "identity",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "jenkins_word",
+      "correct_fraction_decidable_submissions": null,
+      "coverage_gaps": 5,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "inconclusive": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.016584,
+            6.287221
+          ],
+          "max": 6.287221,
+          "median": 6.234676,
+          "min": 6.016584,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            389984256,
+            502370304
+          ],
+          "max": 502370304,
+          "median": 413569024,
+          "min": 389984256,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            418295808,
+            534089728
+          ],
+          "max": 534089728,
+          "median": 446332928,
+          "min": 418295808,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.160766399931163,
+            5.5257079978473485
+          ],
+          "max": 5.5257079978473485,
+          "median": 5.4152018839959055,
+          "min": 5.160766399931163,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 0.0,
+      "success_wilson_95_interval": [
+        5.551115123125783e-17,
+        0.4344824647831612
+      ],
+      "successful": 0,
+      "variant": "limbs16",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "jenkins_word",
+      "correct_fraction_decidable_submissions": null,
+      "coverage_gaps": 5,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "inconclusive": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            5.978074,
+            6.375423
+          ],
+          "max": 6.375423,
+          "median": 6.125381,
+          "min": 5.978074,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            387465216,
+            407719936
+          ],
+          "max": 407719936,
+          "median": 397156352,
+          "min": 387465216,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            417611776,
+            437866496
+          ],
+          "max": 437866496,
+          "median": 427171840,
+          "min": 417611776,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            4.978910794015974,
+            5.647343694930896
+          ],
+          "max": 5.647343694930896,
+          "median": 5.1530621571000665,
+          "min": 4.978910794015974,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 0.0,
+      "success_wilson_95_interval": [
+        5.551115123125783e-17,
+        0.4344824647831612
+      ],
+      "successful": 0,
+      "variant": "limbs4",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "jenkins_word",
+      "correct_fraction_decidable_submissions": null,
+      "coverage_gaps": 5,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "inconclusive": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.132026,
+            6.394625
+          ],
+          "max": 6.394625,
+          "median": 6.1574789999999995,
+          "min": 6.132026,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            425615360,
+            510689280
+          ],
+          "max": 510689280,
+          "median": 505032704,
+          "min": 425615360,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            458252288,
+            737468416
+          ],
+          "max": 737468416,
+          "median": 537669632,
+          "min": 458252288,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.245022985851392,
+            5.651478699175641
+          ],
+          "max": 5.651478699175641,
+          "median": 5.396311654010788,
+          "min": 5.245022985851392,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 0.0,
+      "success_wilson_95_interval": [
+        5.551115123125783e-17,
+        0.4344824647831612
+      ],
+      "successful": 0,
+      "variant": "limbs8",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": true,
+        "identical_pairs": 5,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "jenkins_word",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.0,
+            0.0
+          ],
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0,
+            0
+          ],
+          "max": 0,
+          "median": 0,
+          "min": 0,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0,
+            0
+          ],
+          "max": 0,
+          "median": 0,
+          "min": 0,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.0,
+            0.0
+          ],
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            5.973071,
+            6.209955
+          ],
+          "max": 6.209955,
+          "median": 6.169483,
+          "min": 5.973071,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            421969920,
+            501624832
+          ],
+          "max": 501624832,
+          "median": 489472000,
+          "min": 421969920,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            448184320,
+            532951040
+          ],
+          "max": 532951040,
+          "median": 517128192,
+          "min": 448184320,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            4.989897972904146,
+            5.513744754018262
+          ],
+          "max": 5.513744754018262,
+          "median": 5.339209605939686,
+          "min": 4.989897972904146,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "original",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": true,
+        "identical_pairs": 5,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "morton16",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.18437099999999962,
+            0.3504049999999994
+          ],
+          "max": 0.3504049999999994,
+          "median": 0.015463000000000449,
+          "min": -0.18437099999999962,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -42139648,
+            115302400
+          ],
+          "max": 115302400,
+          "median": 15319040,
+          "min": -42139648,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -149323776,
+            117116928
+          ],
+          "max": 117116928,
+          "median": -18898944,
+          "min": -149323776,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.18653111718595028,
+            0.2831980660557747
+          ],
+          "max": 0.2831980660557747,
+          "median": -0.04319341713562608,
+          "min": -0.18653111718595028,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9714999475974109,
+            1.0558631474448792
+          ],
+          "max": 1.0558631474448792,
+          "median": 1.0024191297578462,
+          "min": 0.9714999475974109,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.9038837037659875,
+            1.2956435893127205
+          ],
+          "max": 1.2956435893127205,
+          "median": 1.0376057031964847,
+          "min": 0.9038837037659875,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.8194192647189943,
+            1.2779689687354177
+          ],
+          "max": 1.2779689687354177,
+          "median": 0.9634207250846302,
+          "min": 0.8194192647189943,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.971263653081725,
+            1.0454389894976381
+          ],
+          "max": 1.0454389894976381,
+          "median": 0.9932624510740824,
+          "min": 0.971263653081725,
+          "n": 5
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.284775,
+            6.622966
+          ],
+          "max": 6.622966,
+          "median": 6.407431,
+          "min": 6.284775,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            396283904,
+            505307136
+          ],
+          "max": 505307136,
+          "median": 467218432,
+          "min": 396283904,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            422236160,
+            677584896
+          ],
+          "max": 677584896,
+          "median": 497758208,
+          "min": 422236160,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            6.181604056851938,
+            6.515688471030444
+          ],
+          "max": 6.515688471030444,
+          "median": 6.367656820919365,
+          "min": 6.181604056851938,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "identity",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "morton16",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.2051980000000002,
+            0.08891099999999952
+          ],
+          "max": 0.08891099999999952,
+          "median": -0.16293199999999963,
+          "min": -0.2051980000000002,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -96034816,
+            56442880
+          ],
+          "max": 56442880,
+          "median": 23158784,
+          "min": -96034816,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -369258496,
+            364986368
+          ],
+          "max": 364986368,
+          "median": 49995776,
+          "min": -369258496,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.31905127596110106,
+            0.1503428230062127
+          ],
+          "max": 0.1503428230062127,
+          "median": 0.0007098079659044743,
+          "min": -0.31905127596110106,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9676887431963829,
+            1.0141745931207364
+          ],
+          "max": 1.0141745931207364,
+          "median": 0.9744743156927375,
+          "min": 0.9676887431963829,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.8009643627226268,
+            1.1484545856091701
+          ],
+          "max": 1.1484545856091701,
+          "median": 1.056850974832333,
+          "min": 0.8009643627226268,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.5534470631358913,
+            1.8662700264426817
+          ],
+          "max": 1.8662700264426817,
+          "median": 1.1064009693419459,
+          "min": 0.5534470631358913,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.9508480499712192,
+            1.0236421805777374
+          ],
+          "max": 1.0236421805777374,
+          "median": 1.0001138883367293,
+          "min": 0.9508480499712192,
+          "n": 5
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.145468,
+            6.4634920000000005
+          ],
+          "max": 6.4634920000000005,
+          "median": 6.271590000000001,
+          "min": 6.145468,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            386465792,
+            493924352
+          ],
+          "max": 493924352,
+          "median": 430518272,
+          "min": 386465792,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            421933056,
+            786317312
+          ],
+          "max": 786317312,
+          "median": 471040000,
+          "min": 421933056,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            6.172070150030777,
+            6.509435737971216
+          ],
+          "max": 6.509435737971216,
+          "median": 6.233200212940574,
+          "min": 6.172070150030777,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "limbs16",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "morton16",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.06979799999999958,
+            0.11669399999999985
+          ],
+          "max": 0.11669399999999985,
+          "median": 0.06985600000000058,
+          "min": -0.06979799999999958,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            1204224,
+            118001664
+          ],
+          "max": 118001664,
+          "median": 62861312,
+          "min": 1204224,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -290222080,
+            213905408
+          ],
+          "max": 213905408,
+          "median": 59846656,
+          "min": -290222080,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.20682692900300026,
+            0.16282862005755305
+          ],
+          "max": 0.16282862005755305,
+          "median": 0.005085207987576723,
+          "min": -0.20682692900300026,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.989065120950591,
+            1.0183750806608314
+          ],
+          "max": 1.0183750806608314,
+          "median": 1.0109287155380002,
+          "min": 0.989065120950591,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            1.0024957978913054,
+            1.3103648880126693
+          ],
+          "max": 1.3103648880126693,
+          "median": 1.1433803264291786,
+          "min": 1.0024957978913054,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.6490276498152386,
+            1.4140180914402594
+          ],
+          "max": 1.4140180914402594,
+          "median": 1.12736560405171,
+          "min": 0.6490276498152386,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.9677379877359683,
+            1.0261257714777363
+          ],
+          "max": 1.0261257714777363,
+          "median": 1.000799675056738,
+          "min": 0.9677379877359683,
+          "n": 5
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.313263,
+            6.479861
+          ],
+          "max": 6.479861,
+          "median": 6.461824,
+          "min": 6.313263,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            395579392,
+            508112896
+          ],
+          "max": 508112896,
+          "median": 498204672,
+          "min": 395579392,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            424153088,
+            730562560
+          ],
+          "max": 730562560,
+          "median": 529727488,
+          "min": 424153088,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            6.2040233090519905,
+            6.5562584300059825
+          ],
+          "max": 6.5562584300059825,
+          "median": 6.3641781229525805,
+          "min": 6.2040233090519905,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "limbs4",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "morton16",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.1362849999999991,
+            0.1409319999999994
+          ],
+          "max": 0.1409319999999994,
+          "median": 0.03847499999999915,
+          "min": -0.1362849999999991,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -75591680,
+            112312320
+          ],
+          "max": 112312320,
+          "median": 34455552,
+          "min": -75591680,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -96370688,
+            104673280
+          ],
+          "max": 104673280,
+          "median": 34324480,
+          "min": -96370688,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.14371269708499312,
+            0.25123720709234476
+          ],
+          "max": 0.25123720709234476,
+          "median": 0.015774525003507733,
+          "min": -0.14371269708499312,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9786489585482578,
+            1.0221916882418316
+          ],
+          "max": 1.0221916882418316,
+          "median": 1.0061338582438655,
+          "min": 0.9786489585482578,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.8433335031155028,
+            1.2954009243398728
+          ],
+          "max": 1.2954009243398728,
+          "median": 1.078589646570812,
+          "min": 0.8433335031155028,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.8413629624931622,
+            1.2519223186119874
+          ],
+          "max": 1.2519223186119874,
+          "median": 1.0730493300905708,
+          "min": 0.8413629624931622,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.9775828959110743,
+            1.0403108854996088
+          ],
+          "max": 1.0403108854996088,
+          "median": 1.0024301694527455,
+          "min": 0.9775828959110743,
+          "n": 5
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.2467760000000006,
+            6.53821
+          ],
+          "max": 6.53821,
+          "median": 6.348464,
+          "min": 6.2467760000000006,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            406908928,
+            492515328
+          ],
+          "max": 492515328,
+          "median": 434823168,
+          "min": 406908928,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            434696192,
+            730537984
+          ],
+          "max": 730537984,
+          "median": 504205312,
+          "min": 434696192,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            6.267137540969998,
+            6.506895950995386
+          ],
+          "max": 6.506895950995386,
+          "median": 6.467363359872252,
+          "min": 6.267137540969998,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "limbs8",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": true,
+        "identical_pairs": 5,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "morton16",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.0,
+            0.0
+          ],
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0,
+            0
+          ],
+          "max": 0,
+          "median": 0,
+          "min": 0,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0,
+            0
+          ],
+          "max": 0,
+          "median": 0,
+          "min": 0,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.0,
+            0.0
+          ],
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.2725610000000005,
+            6.469145999999999
+          ],
+          "max": 6.469145999999999,
+          "median": 6.383061,
+          "min": 6.2725610000000005,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            380203008,
+            482500608
+          ],
+          "max": 482500608,
+          "median": 407359488,
+          "min": 380203008,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            415498240,
+            826908672
+          ],
+          "max": 826908672,
+          "median": 469880832,
+          "min": 415498240,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            6.232490404974669,
+            6.491121425991878
+          ],
+          "max": 6.491121425991878,
+          "median": 6.359092914965004,
+          "min": 6.232490404974669,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "original",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": true,
+        "identical_pairs": 5,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "morton16",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.10759799999999942,
+            0.5954309999999996
+          ],
+          "max": 0.5954309999999996,
+          "median": 0.03745100000000079,
+          "min": -0.10759799999999942,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -62308352,
+            27676672
+          ],
+          "max": 27676672,
+          "median": 10649600,
+          "min": -62308352,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -57327616,
+            27672576
+          ],
+          "max": 27672576,
+          "median": 10387456,
+          "min": -57327616,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.16148251807317138,
+            0.5499546979553998
+          ],
+          "max": 0.5499546979553998,
+          "median": 0.07415861287154257,
+          "min": -0.16148251807317138,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.98289738606483,
+            1.1058818822307657
+          ],
+          "max": 1.1058818822307657,
+          "median": 1.006123829186192,
+          "min": 0.98289738606483,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.8724467549890994,
+            1.073248200502992
+          ],
+          "max": 1.073248200502992,
+          "median": 1.026808269319998,
+          "min": 0.8724467549890994,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.888620085946204,
+            1.0676953907815632
+          ],
+          "max": 1.0676953907815632,
+          "median": 1.0245144950652012,
+          "min": 0.888620085946204,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.9712053098223125,
+            1.1146230134929214
+          ],
+          "max": 1.1146230134929214,
+          "median": 1.0138004977850197,
+          "min": 0.9712053098223125,
+          "n": 5
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.153069,
+            6.218971
+          ],
+          "max": 6.218971,
+          "median": 6.187022,
+          "min": 6.153069,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            401842176,
+            434257920
+          ],
+          "max": 434257920,
+          "median": 407900160,
+          "min": 401842176,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            428711936,
+            460079104
+          ],
+          "max": 460079104,
+          "median": 436453376,
+          "min": 428711936,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.347897808998823,
+            5.470089342910796
+          ],
+          "max": 5.470089342910796,
+          "median": 5.446583312004805,
+          "min": 5.347897808998823,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "identity",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "morton16",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.23270199999999974,
+            0.5077660000000002
+          ],
+          "max": 0.5077660000000002,
+          "median": 0.06867500000000071,
+          "min": -0.23270199999999974,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -64073728,
+            79863808
+          ],
+          "max": 79863808,
+          "median": 3796992,
+          "min": -64073728,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -62500864,
+            84713472
+          ],
+          "max": 84713472,
+          "median": 5369856,
+          "min": -62500864,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.14299880270846188,
+            0.7683798419311643
+          ],
+          "max": 0.7683798419311643,
+          "median": -0.005604405188933015,
+          "min": -0.14299880270846188,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9628840992190256,
+            1.0902929471471707
+          ],
+          "max": 1.0902929471471707,
+          "median": 1.01122944565864,
+          "min": 0.9628840992190256,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.8688328022807311,
+            1.1941161829857136
+          ],
+          "max": 1.1941161829857136,
+          "median": 1.009558179099861,
+          "min": 0.8688328022807311,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.8785691548623269,
+            1.1936281164277756
+          ],
+          "max": 1.1936281164277756,
+          "median": 1.012672911289621,
+          "min": 0.8785691548623269,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.9740599574084202,
+            1.1601477600187848
+          ],
+          "max": 1.1601477600187848,
+          "median": 0.9990006527457516,
+          "min": 0.9740599574084202,
+          "n": 5
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.0369019999999995,
+            6.29375
+          ],
+          "max": 6.29375,
+          "median": 6.184293,
+          "min": 6.0369019999999995,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            401047552,
+            491286528
+          ],
+          "max": 491286528,
+          "median": 410013696,
+          "min": 401047552,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            429096960,
+            522219520
+          ],
+          "max": 522219520,
+          "median": 441339904,
+          "min": 429096960,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.237350960029289,
+            5.602461424889043
+          ],
+          "max": 5.602461424889043,
+          "median": 5.508342080051079,
+          "min": 5.237350960029289,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "limbs16",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "morton16",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.15746099999999963,
+            0.5361700000000003
+          ],
+          "max": 0.5361700000000003,
+          "median": 0.09442800000000062,
+          "min": -0.15746099999999963,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -38969344,
+            86704128
+          ],
+          "max": 86704128,
+          "median": 18751488,
+          "min": -38969344,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -33464320,
+            181272576
+          ],
+          "max": 181272576,
+          "median": 67178496,
+          "min": -33464320,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.07800275110639632,
+            0.5936233699321747
+          ],
+          "max": 0.5936233699321747,
+          "median": 0.12266643694601953,
+          "min": -0.07800275110639632,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9749717030721221,
+            1.0953438581391792
+          ],
+          "max": 1.0953438581391792,
+          "median": 1.0154404673411583,
+          "min": 0.9749717030721221,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.9076714056965404,
+            1.2182605557560446
+          ],
+          "max": 1.2182605557560446,
+          "median": 1.0383867180949187,
+          "min": 0.9076714056965404,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.9253288000511822,
+            1.3521884450103454
+          ],
+          "max": 1.3521884450103454,
+          "median": 1.1643386773547095,
+          "min": 0.9253288000511822,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.9860909708498711,
+            1.1237245536667226
+          ],
+          "max": 1.1237245536667226,
+          "median": 1.0228275290734223,
+          "min": 0.9860909708498711,
+          "n": 5
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.133858,
+            6.3163149999999995
+          ],
+          "max": 6.3163149999999995,
+          "median": 6.1597100000000005,
+          "min": 6.133858,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            383102976,
+            507240448
+          ],
+          "max": 507240448,
+          "median": 444633088,
+          "min": 383102976,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            414691328,
+            695975936
+          ],
+          "max": 695975936,
+          "median": 475959296,
+          "min": 414691328,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.27147161681205,
+            5.591817267006263
+          ],
+          "max": 5.591817267006263,
+          "median": 5.496285130036995,
+          "min": 5.27147161681205,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "limbs4",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "morton16",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.2527999999999988,
+            0.5417829999999997
+          ],
+          "max": 0.5417829999999997,
+          "median": -0.060103999999999935,
+          "min": -0.2527999999999988,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -41238528,
+            103428096
+          ],
+          "max": 103428096,
+          "median": 93585408,
+          "min": -41238528,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -36257792,
+            104251392
+          ],
+          "max": 104251392,
+          "median": 93454336,
+          "min": -36257792,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.28180734207853675,
+            0.7792235519737005
+          ],
+          "max": 0.7792235519737005,
+          "median": 0.04184327810071409,
+          "min": -0.28180734207853675,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9596784741109647,
+            1.0963419838749258
+          ],
+          "max": 1.0963419838749258,
+          "median": 0.9901720480252364,
+          "min": 0.9596784741109647,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.9155794063390911,
+            1.2737295117509322
+          ],
+          "max": 1.2737295117509322,
+          "median": 1.2217283711000049,
+          "min": 0.9155794063390911,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.9295559446124463,
+            1.2539779559118236
+          ],
+          "max": 1.2539779559118236,
+          "median": 1.208530978951313,
+          "min": 0.9295559446124463,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.9497496372872252,
+            1.162407834761559
+          ],
+          "max": 1.162407834761559,
+          "median": 1.007786797033908,
+          "min": 0.9497496372872252,
+          "n": 5
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.0168040000000005,
+            6.165323
+          ],
+          "max": 6.165323,
+          "median": 6.117979,
+          "min": 6.0168040000000005,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            447250432,
+            515657728
+          ],
+          "max": 515657728,
+          "median": 486789120,
+          "min": 447250432,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            478445568,
+            541609984
+          ],
+          "max": 541609984,
+          "median": 517722112,
+          "min": 478445568,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.287403855938464,
+            5.577166663017124
+          ],
+          "max": 5.577166663017124,
+          "median": 5.415461971191689,
+          "min": 5.287403855938464,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "limbs8",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": true,
+        "identical_pairs": 5,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "morton16",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.0,
+            0.0
+          ],
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0,
+            0
+          ],
+          "max": 0,
+          "median": 0,
+          "min": 0,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0,
+            0
+          ],
+          "max": 0,
+          "median": 0,
+          "min": 0,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.0,
+            0.0
+          ],
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            5.62354,
+            6.291319
+          ],
+          "max": 6.291319,
+          "median": 6.1156179999999996,
+          "min": 5.62354,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            377847808,
+            488488960
+          ],
+          "max": 488488960,
+          "median": 411422720,
+          "min": 377847808,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            408780800,
+            514703360
+          ],
+          "max": 514703360,
+          "median": 437506048,
+          "min": 408780800,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            4.797943111043423,
+            5.608065830077976
+          ],
+          "max": 5.608065830077976,
+          "median": 5.373618693090975,
+          "min": 4.797943111043423,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "original",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": true,
+        "identical_pairs": 5,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "rgb_luma8",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.11761900000000036,
+            0.2585480000000002
+          ],
+          "max": 0.2585480000000002,
+          "median": 0.1422939999999997,
+          "min": -0.11761900000000036,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -101482496,
+            116772864
+          ],
+          "max": 116772864,
+          "median": 2719744,
+          "min": -101482496,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -268931072,
+            120311808
+          ],
+          "max": 120311808,
+          "median": -3309568,
+          "min": -268931072,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.17084477795287967,
+            0.3339939231518656
+          ],
+          "max": 0.3339939231518656,
+          "median": 0.14964812085963786,
+          "min": -0.17084477795287967,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9817655053821052,
+            1.0406681524309684
+          ],
+          "max": 1.0406681524309684,
+          "median": 1.0229120420659,
+          "min": 0.9817655053821052,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.7987801411527747,
+            1.3022903191602162
+          ],
+          "max": 1.3022903191602162,
+          "median": 1.0058528501793758,
+          "min": 0.7987801411527747,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.6318354118069263,
+            1.2908275411394285
+          ],
+          "max": 1.2908275411394285,
+          "median": 0.9933399823608444,
+          "min": 0.6318354118069263,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.9735916376297924,
+            1.053492569222322
+          ],
+          "max": 1.053492569222322,
+          "median": 1.0245990041380482,
+          "min": 0.9735916376297924,
+          "n": 5
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.332738,
+            6.66103
+          ],
+          "max": 6.66103,
+          "median": 6.392845,
+          "min": 6.332738,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            402853888,
+            503066624
+          ],
+          "max": 503066624,
+          "median": 433876992,
+          "min": 402853888,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            428937216,
+            533999616
+          ],
+          "max": 533999616,
+          "median": 462680064,
+          "min": 428937216,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            6.233151339925826,
+            6.629751108121127
+          ],
+          "max": 6.629751108121127,
+          "median": 6.33038216503337,
+          "min": 6.233151339925826,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "identity",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": true,
+        "identical_pairs": 5,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "rgb_luma8",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.4083100000000002,
+            0.21294199999999996
+          ],
+          "max": 0.21294199999999996,
+          "median": -0.04317999999999955,
+          "min": -0.4083100000000002,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -33218560,
+            92430336
+          ],
+          "max": 92430336,
+          "median": -208896,
+          "min": -33218560,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -7454720,
+            442777600
+          ],
+          "max": 442777600,
+          "median": 25837568,
+          "min": -7454720,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.5206517109181732,
+            0.12894625589251518
+          ],
+          "max": 0.12894625589251518,
+          "median": -0.20669111190363765,
+          "min": -0.5206517109181732,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9351543766071053,
+            1.0339370244135822
+          ],
+          "max": 1.0339370244135822,
+          "median": 0.9932557405081343,
+          "min": 0.9351543766071053,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.9296788290788013,
+            1.2418519907829162
+          ],
+          "max": 1.2418519907829162,
+          "median": 0.9995504587964636,
+          "min": 0.9296788290788013,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.9897945451282971,
+            1.8349747035878423
+          ],
+          "max": 1.8349747035878423,
+          "median": 1.0624566823105408,
+          "min": 0.9897945451282971,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.91661226221069,
+            1.0211960528743351
+          ],
+          "max": 1.0211960528743351,
+          "median": 0.9676370612751163,
+          "min": 0.91661226221069,
+          "n": 5
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            5.888337,
+            6.487564
+          ],
+          "max": 6.487564,
+          "median": 6.3593020000000005,
+          "min": 5.888337,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            405082112,
+            474607616
+          ],
+          "max": 474607616,
+          "median": 464478208,
+          "min": 405082112,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            439525376,
+            973066240
+          ],
+          "max": 973066240,
+          "median": 505581568,
+          "min": 439525376,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.7230925699695945,
+            6.562582125188783
+          ],
+          "max": 6.562582125188783,
+          "median": 6.212449474958703,
+          "min": 5.7230925699695945,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "limbs16",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "rgb_luma8",
+      "correct_fraction_decidable_submissions": null,
+      "coverage_gaps": 5,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "inconclusive": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.006426,
+            6.380000000000001
+          ],
+          "max": 6.380000000000001,
+          "median": 6.370348,
+          "min": 6.006426,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            391917568,
+            507748352
+          ],
+          "max": 507748352,
+          "median": 422723584,
+          "min": 391917568,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            419442688,
+            535142400
+          ],
+          "max": 535142400,
+          "median": 448544768,
+          "min": 419442688,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.87580250389874,
+            6.3024974500294775
+          ],
+          "max": 6.3024974500294775,
+          "median": 6.235099930083379,
+          "min": 5.87580250389874,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 0.0,
+      "success_wilson_95_interval": [
+        5.551115123125783e-17,
+        0.4344824647831612
+      ],
+      "successful": 0,
+      "variant": "limbs4",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "rgb_luma8",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.11336100000000027,
+            0.21033599999999986
+          ],
+          "max": 0.21033599999999986,
+          "median": 0.013133999999999979,
+          "min": -0.11336100000000027,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -70377472,
+            104194048
+          ],
+          "max": 104194048,
+          "median": 22790144,
+          "min": -70377472,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -278683648,
+            106737664
+          ],
+          "max": 106737664,
+          "median": 29904896,
+          "min": -278683648,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.10860109305940568,
+            0.25639136089012027
+          ],
+          "max": 0.25639136089012027,
+          "median": 0.04483085311949253,
+          "min": -0.10860109305940568,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9819966086712499,
+            1.0335217005900914
+          ],
+          "max": 1.0335217005900914,
+          "median": 1.0020361663703266,
+          "min": 0.9819966086712499,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.8604552948533651,
+            1.2726327635174963
+          ],
+          "max": 1.2726327635174963,
+          "median": 1.0589969250344609,
+          "min": 0.8604552948533651,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.6184842095819127,
+            1.2598105682951146
+          ],
+          "max": 1.2598105682951146,
+          "median": 1.0722885601695082,
+          "min": 0.6184842095819127,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.9831820491504558,
+            1.0421453481090581
+          ],
+          "max": 1.0421453481090581,
+          "median": 1.0069297372078392,
+          "min": 0.9831820491504558,
+          "n": 5
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.183286,
+            6.484958
+          ],
+          "max": 6.484958,
+          "median": 6.316141,
+          "min": 6.183286,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            409083904,
+            504066048
+          ],
+          "max": 504066048,
+          "median": 433958912,
+          "min": 409083904,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            443592704,
+            537878528
+          ],
+          "max": 537878528,
+          "median": 466628608,
+          "min": 443592704,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            6.286689229076728,
+            6.591725786915049
+          ],
+          "max": 6.591725786915049,
+          "median": 6.348849878879264,
+          "min": 6.286689229076728,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "limbs8",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": true,
+        "identical_pairs": 5,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "rgb_luma8",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.0,
+            0.0
+          ],
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0,
+            0
+          ],
+          "max": 0,
+          "median": 0,
+          "min": 0,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0,
+            0
+          ],
+          "max": 0,
+          "median": 0,
+          "min": 0,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.0,
+            0.0
+          ],
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        }
+      },
+      "profile": "clang-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.210446,
+            6.450357
+          ],
+          "max": 6.450357,
+          "median": 6.296647,
+          "min": 6.210446,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            382177280,
+            504336384
+          ],
+          "max": 504336384,
+          "median": 464687104,
+          "min": 382177280,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            410828800,
+            730464256
+          ],
+          "max": 730464256,
+          "median": 496930816,
+          "min": 410828800,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            6.083503219066188,
+            6.469343897886574
+          ],
+          "max": 6.469343897886574,
+          "median": 6.38666079309769,
+          "min": 6.083503219066188,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "original",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": true,
+        "identical_pairs": 5,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "rgb_luma8",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.32493700000000025,
+            0.27102100000000107
+          ],
+          "max": 0.27102100000000107,
+          "median": -0.07754700000000003,
+          "min": -0.32493700000000025,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -109527040,
+            102346752
+          ],
+          "max": 102346752,
+          "median": 42135552,
+          "min": -109527040,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -594018304,
+            604733440
+          ],
+          "max": 604733440,
+          "median": 42135552,
+          "min": -594018304,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.2922834870405495,
+            0.5549174058251083
+          ],
+          "max": 0.5549174058251083,
+          "median": -0.005623519187793136,
+          "min": -0.2922834870405495,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9473395652159821,
+            1.0457019237838667
+          ],
+          "max": 1.0457019237838667,
+          "median": 0.987518971735936,
+          "min": 0.9473395652159821,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.7782532258599529,
+            1.2481971512009058
+          ],
+          "max": 1.2481971512009058,
+          "median": 1.091268010504649,
+          "min": 0.7782532258599529,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.4086445930517045,
+            2.3629733572127547
+          ],
+          "max": 2.3629733572127547,
+          "median": 1.085536818998204,
+          "min": 0.4086445930517045,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.945949951064276,
+            1.1076951325466322
+          ],
+          "max": 1.1076951325466322,
+          "median": 0.9989652510435643,
+          "min": 0.945949951064276,
+          "n": 5
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            5.845483,
+            6.201209
+          ],
+          "max": 6.201209,
+          "median": 6.1054330000000006,
+          "min": 5.845483,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            384401408,
+            514707456
+          ],
+          "max": 514707456,
+          "median": 448729088,
+          "min": 384401408,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            410484736,
+            1048420352
+          ],
+          "max": 1048420352,
+          "median": 479924224,
+          "min": 410484736,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.115361700998619,
+            5.707586729899049
+          ],
+          "max": 5.707586729899049,
+          "median": 5.449592296034098,
+          "min": 5.115361700998619,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "identity",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "rgb_luma8",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.31328599999999884,
+            0.18323499999999981
+          ],
+          "max": 0.18323499999999981,
+          "median": -0.006632000000000637,
+          "min": -0.31328599999999884,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -76738560,
+            97562624
+          ],
+          "max": 97562624,
+          "median": 22552576,
+          "min": -76738560,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -561360896,
+            97300480
+          ],
+          "max": 97300480,
+          "median": 22290432,
+          "min": -561360896,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.42057205410674214,
+            0.28141262591816485
+          ],
+          "max": 0.28141262591816485,
+          "median": -0.1117026989813894,
+          "min": -0.42057205410674214,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9499546648553909,
+            1.0308986831446152
+          ],
+          "max": 1.0308986831446152,
+          "median": 0.9989251947193221,
+          "min": 0.9499546648553909,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.844636282217136,
+            1.2365953473588016
+          ],
+          "max": 1.2365953473588016,
+          "median": 1.0541348356585947,
+          "min": 0.844636282217136,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.4411556026749307,
+            1.2192998652166689
+          ],
+          "max": 1.2192998652166689,
+          "median": 1.0501747171794469,
+          "min": 0.4411556026749307,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.9247942039977433,
+            1.0546149205817203
+          ],
+          "max": 1.0546149205817203,
+          "median": 0.979619187014823,
+          "min": 0.9247942039977433,
+          "n": 5
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            5.943205000000001,
+            6.218881
+          ],
+          "max": 6.218881,
+          "median": 6.113422999999999,
+          "min": 5.943205000000001,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            417189888,
+            509923328
+          ],
+          "max": 509923328,
+          "median": 427024384,
+          "min": 417189888,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            443142144,
+            540987392
+          ],
+          "max": 540987392,
+          "median": 457957376,
+          "min": 443142144,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.119239107007161,
+            5.538467342033982
+          ],
+          "max": 5.538467342033982,
+          "median": 5.369074690155685,
+          "min": 5.119239107007161,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "limbs16",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "rgb_luma8",
+      "correct_fraction_decidable_submissions": null,
+      "coverage_gaps": 5,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "inconclusive": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": null,
+          "max": null,
+          "median": null,
+          "min": null,
+          "n": 0
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            5.859898,
+            6.211126999999999
+          ],
+          "max": 6.211126999999999,
+          "median": 6.077358,
+          "min": 5.859898,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            386367488,
+            498823168
+          ],
+          "max": 498823168,
+          "median": 451047424,
+          "min": 386367488,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            413368320,
+            1004593152
+          ],
+          "max": 1004593152,
+          "median": 482504704,
+          "min": 413368320,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            4.97079390892759,
+            5.495315774111077
+          ],
+          "max": 5.495315774111077,
+          "median": 5.2390711470507085,
+          "min": 4.97079390892759,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 0.0,
+      "success_wilson_95_interval": [
+        5.551115123125783e-17,
+        0.4344824647831612
+      ],
+      "successful": 0,
+      "variant": "limbs4",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": false,
+        "identical_pairs": 0,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "rgb_luma8",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            -0.17088099999999962,
+            0.45429600000000114
+          ],
+          "max": 0.45429600000000114,
+          "median": -0.029659999999999798,
+          "min": -0.17088099999999962,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            -94420992,
+            13713408
+          ],
+          "max": 13713408,
+          "median": -24698880,
+          "min": -94420992,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            -577732608,
+            17645568
+          ],
+          "max": 17645568,
+          "median": -22077440,
+          "min": -577732608,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            -0.21196416206657887,
+            0.5152967819012702
+          ],
+          "max": 0.5152967819012702,
+          "median": -0.14734253729693592,
+          "min": -0.21196416206657887,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.9724970586767828,
+            1.0766073520772024
+          ],
+          "max": 1.0766073520772024,
+          "median": 0.9951887639632906,
+          "min": 0.9724970586767828,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.8088367001691711,
+            1.0351341140914243
+          ],
+          "max": 1.0351341140914243,
+          "median": 0.940713211220246,
+          "min": 0.8088367001691711,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0.4248572826618822,
+            1.0422568368187703
+          ],
+          "max": 1.0422568368187703,
+          "median": 0.9503047178248403,
+          "min": 0.4248572826618822,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.960802871731413,
+            1.1000057930156195
+          ],
+          "max": 1.1000057930156195,
+          "median": 0.9731164893525927,
+          "min": 0.960802871731413,
+          "n": 5
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            6.0127749999999995,
+            6.3844840000000005
+          ],
+          "max": 6.3844840000000005,
+          "median": 6.135076,
+          "min": 6.0127749999999995,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            391901184,
+            416989184
+          ],
+          "max": 416989184,
+          "median": 404029440,
+          "min": 391901184,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            422178816,
+            444252160
+          ],
+          "max": 444252160,
+          "median": 435224576,
+          "min": 422178816,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.19568102597259,
+            5.667966105975211
+          ],
+          "max": 5.667966105975211,
+          "median": 5.333434851840138,
+          "min": 5.19568102597259,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "limbs8",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    },
+    {
+      "attempts": 5,
+      "binary_identity_control": {
+        "all_paired_binaries_identical": true,
+        "identical_pairs": 5,
+        "interpretation": "Identical artifact bytes are a negative control: resource differences cannot establish a cost caused by changed program instructions. Distinct bytes alone imply no protection.",
+        "paired_artifacts_checked": 5
+      },
+      "budget": {
+        "cpu_seconds": null,
+        "memory_bytes": null,
+        "query_budget": 0,
+        "step_budget": 0,
+        "wall_seconds": 60.0
+      },
+      "budget_id": 0,
+      "case": "rgb_luma8",
+      "correct_fraction_decidable_submissions": 1.0,
+      "coverage_gaps": 0,
+      "observer_accuracy": {
+        "bootstrap_95_interval": null,
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0
+      },
+      "outcomes": {
+        "recovered-under-source-model": 5
+      },
+      "paired_successful_differences": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            0.0,
+            0.0
+          ],
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            0,
+            0
+          ],
+          "max": 0,
+          "median": 0,
+          "min": 0,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            0,
+            0
+          ],
+          "max": 0,
+          "median": 0,
+          "min": 0,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            0.0,
+            0.0
+          ],
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 5
+        }
+      },
+      "paired_successful_ratios": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 5
+        }
+      },
+      "profile": "gcc-O2",
+      "queries": {
+        "bootstrap_95_interval": [
+          0,
+          0
+        ],
+        "max": 0,
+        "median": 0,
+        "min": 0,
+        "n": 5
+      },
+      "resource_cost_all_attempts": {
+        "cpu_seconds": {
+          "bootstrap_95_interval": [
+            5.930187999999999,
+            6.260044
+          ],
+          "max": 6.260044,
+          "median": 6.17042,
+          "min": 5.930187999999999,
+          "n": 5
+        },
+        "peak_process_rss_bytes": {
+          "bootstrap_95_interval": [
+            390316032,
+            493928448
+          ],
+          "max": 493928448,
+          "median": 416600064,
+          "min": 390316032,
+          "n": 5
+        },
+        "peak_sampled_tree_rss_bytes": {
+          "bootstrap_95_interval": [
+            417579008,
+            1004503040
+          ],
+          "max": 1004503040,
+          "median": 444256256,
+          "min": 417579008,
+          "n": 5
+        },
+        "wall_seconds": {
+          "bootstrap_95_interval": [
+            5.1526693240739405,
+            5.592282463097945
+          ],
+          "max": 5.592282463097945,
+          "median": 5.434670074144378,
+          "min": 5.1526693240739405,
+          "n": 5
+        }
+      },
+      "success_fraction_all_attempts": 1.0,
+      "success_wilson_95_interval": [
+        0.5655175352168389,
+        1
+      ],
+      "successful": 5,
+      "variant": "original",
+      "wrong_candidate_fraction_all_attempts": 0.0
+    }
+  ],
+  "human_effort": "unassessed; separate participant sessions required",
+  "interpretation": "Each budget group is a success-curve point. Repeats estimate execution noise on this artifact, not population robustness. Ratios condition on BOTH runs succeeding; inspect all outcome counts alongside them.",
+  "interval_scope": "exploratory within-artifact repeated-run intervals; deterministic repeated successes are not independent program samples",
+  "timeouts": "not recovered within the measured budget; right-censored, not infinite effort"
+}
