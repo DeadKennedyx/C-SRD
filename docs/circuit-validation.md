@@ -68,7 +68,8 @@ python3 tools/verify_circuit.py --query saved-mismatch.smt2 \
 The driver defaults to five seconds in ABC and eight seconds of wall budget for
 each process stage. Solver budgets are experimental limits, not application
 overhead cutoffs. Export, validation, solving and version lookup have separate
-CPU/wall/RSS records. `total_wall_seconds` includes driver overhead;
+CPU/wall/RSS records. `total_wall_seconds` includes driver overhead through result
+handling, but excludes the initial query copy and final manifest/report I/O;
 `child_cpu_seconds` sums measured children. Native macOS records peak process
 RSS; aggregate sampled tree RSS is available on Linux. These measurements must
 not be added to observer costs or described as reconstruction effort.

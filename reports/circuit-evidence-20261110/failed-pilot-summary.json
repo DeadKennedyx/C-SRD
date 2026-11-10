@@ -1,0 +1,1129 @@
+[
+  {
+    "child_cpu_seconds": 1.7462160000000002,
+    "circuit_validation": {
+      "gates": 4980,
+      "inputs": 64,
+      "obligations": 13,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": null,
+    "expected": null,
+    "kind": "saved-answer",
+    "name": "trial-00008-grade",
+    "profile": "clang-O2",
+    "query_sha256": "6320583b282231d6e8b46c208349609e2695a508848d0d55f8ca3b7e340a0c8b",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00008-grade/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.015558999999999998,
+        "peak_process_rss_bytes": 10485760,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.03141249995678663
+      },
+      "export": {
+        "cpu_seconds": 0.041863,
+        "peak_process_rss_bytes": 30162944,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.0755167081952095
+      },
+      "solve": {
+        "cpu_seconds": 1.5924230000000001,
+        "peak_process_rss_bytes": 25067520,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 1.5992297497577965
+      },
+      "validate": {
+        "cpu_seconds": 0.096371,
+        "peak_process_rss_bytes": 44515328,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.10637816693633795
+      }
+    },
+    "status": "unsat",
+    "total_wall_seconds": 1.922721582930535
+  },
+  {
+    "child_cpu_seconds": 0.037582,
+    "circuit_validation": {
+      "gates": 2,
+      "inputs": 0,
+      "obligations": 2,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": false,
+    "expected": "sat",
+    "kind": "negative-control",
+    "name": "trial-00008-negative-control",
+    "profile": "clang-O2",
+    "query_sha256": "708edd67f99cc635088b717b0be57dab9e51abe3ba99a78e5a07f47af7e27a68",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00008-negative-control/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.013233,
+        "peak_process_rss_bytes": 10469376,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016299957875162363
+      },
+      "export": {
+        "cpu_seconds": 0.004778999999999999,
+        "peak_process_rss_bytes": 26443776,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016033959109336138
+      },
+      "solve": {
+        "cpu_seconds": 0.013186999999999999,
+        "peak_process_rss_bytes": 11468800,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016238792333751917
+      },
+      "validate": {
+        "cpu_seconds": 0.006383,
+        "peak_process_rss_bytes": 27574272,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.015994209330528975
+      }
+    },
+    "status": "inconclusive",
+    "total_wall_seconds": 0.17169462516903877
+  },
+  {
+    "child_cpu_seconds": 1.9043189999999999,
+    "circuit_validation": {
+      "gates": 5787,
+      "inputs": 64,
+      "obligations": 14,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": null,
+    "expected": null,
+    "kind": "saved-answer",
+    "name": "trial-00010-grade",
+    "profile": "gcc-O2",
+    "query_sha256": "742055f0a1579be4ddcafcb201f39f2520f9f54af3174811c8293b143f4b9647",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00010-grade/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.013129,
+        "peak_process_rss_bytes": 10452992,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016383333131670952
+      },
+      "export": {
+        "cpu_seconds": 0.035696,
+        "peak_process_rss_bytes": 30507008,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.04595783306285739
+      },
+      "solve": {
+        "cpu_seconds": 1.751313,
+        "peak_process_rss_bytes": 25509888,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 1.7573902918957174
+      },
+      "validate": {
+        "cpu_seconds": 0.104181,
+        "peak_process_rss_bytes": 45563904,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.12129779113456607
+      }
+    },
+    "status": "unsat",
+    "total_wall_seconds": 2.049245625268668
+  },
+  {
+    "child_cpu_seconds": 0.036594,
+    "circuit_validation": {
+      "gates": 2,
+      "inputs": 0,
+      "obligations": 2,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": false,
+    "expected": "sat",
+    "kind": "negative-control",
+    "name": "trial-00010-negative-control",
+    "profile": "gcc-O2",
+    "query_sha256": "8458a58b4f88dabac9e91c329dec5c40e497f3862cd515fe1a7862a5b5e669ef",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00010-negative-control/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.012713,
+        "peak_process_rss_bytes": 10452992,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016263042110949755
+      },
+      "export": {
+        "cpu_seconds": 0.0049429999999999995,
+        "peak_process_rss_bytes": 26460160,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.015973875299096107
+      },
+      "solve": {
+        "cpu_seconds": 0.013287,
+        "peak_process_rss_bytes": 11517952,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.01629608403891325
+      },
+      "validate": {
+        "cpu_seconds": 0.005651,
+        "peak_process_rss_bytes": 27377664,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.015981917269527912
+      }
+    },
+    "status": "inconclusive",
+    "total_wall_seconds": 0.17017154209315777
+  },
+  {
+    "child_cpu_seconds": 1.7519150000000001,
+    "circuit_validation": {
+      "gates": 4980,
+      "inputs": 64,
+      "obligations": 13,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": null,
+    "expected": null,
+    "kind": "saved-answer",
+    "name": "trial-00013-grade",
+    "profile": "clang-O2",
+    "query_sha256": "6320583b282231d6e8b46c208349609e2695a508848d0d55f8ca3b7e340a0c8b",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00013-grade/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.013427999999999999,
+        "peak_process_rss_bytes": 10436608,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016286499798297882
+      },
+      "export": {
+        "cpu_seconds": 0.036789,
+        "peak_process_rss_bytes": 30130176,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.046169832814484835
+      },
+      "solve": {
+        "cpu_seconds": 1.604959,
+        "peak_process_rss_bytes": 25083904,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 1.61385487485677
+      },
+      "validate": {
+        "cpu_seconds": 0.09673899999999999,
+        "peak_process_rss_bytes": 44089344,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.10071979183703661
+      }
+    },
+    "status": "unsat",
+    "total_wall_seconds": 1.8839612919837236
+  },
+  {
+    "child_cpu_seconds": 0.036714,
+    "circuit_validation": {
+      "gates": 2,
+      "inputs": 0,
+      "obligations": 2,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": false,
+    "expected": "sat",
+    "kind": "negative-control",
+    "name": "trial-00013-negative-control",
+    "profile": "clang-O2",
+    "query_sha256": "708edd67f99cc635088b717b0be57dab9e51abe3ba99a78e5a07f47af7e27a68",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00013-negative-control/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.013424,
+        "peak_process_rss_bytes": 10485760,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.026730166282504797
+      },
+      "export": {
+        "cpu_seconds": 0.004801,
+        "peak_process_rss_bytes": 26656768,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016087915748357773
+      },
+      "solve": {
+        "cpu_seconds": 0.012957,
+        "peak_process_rss_bytes": 11534336,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016234582755714655
+      },
+      "validate": {
+        "cpu_seconds": 0.0055320000000000005,
+        "peak_process_rss_bytes": 27344896,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.015953625086694956
+      }
+    },
+    "status": "inconclusive",
+    "total_wall_seconds": 0.18872529221698642
+  },
+  {
+    "child_cpu_seconds": 1.9038089999999999,
+    "circuit_validation": {
+      "gates": 5787,
+      "inputs": 64,
+      "obligations": 14,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": null,
+    "expected": null,
+    "kind": "saved-answer",
+    "name": "trial-00015-grade",
+    "profile": "gcc-O2",
+    "query_sha256": "6299b7de9f4f83bd112622e59f8de06ad6322b6faa96d2a2c1245252cbbf96aa",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00015-grade/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.013319,
+        "peak_process_rss_bytes": 10485760,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016289666760712862
+      },
+      "export": {
+        "cpu_seconds": 0.035479,
+        "peak_process_rss_bytes": 30654464,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.045990375336259604
+      },
+      "solve": {
+        "cpu_seconds": 1.751037,
+        "peak_process_rss_bytes": 25575424,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 1.7660484579391778
+      },
+      "validate": {
+        "cpu_seconds": 0.103974,
+        "peak_process_rss_bytes": 45072384,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.12033254094421864
+      }
+    },
+    "status": "unsat",
+    "total_wall_seconds": 2.055694666225463
+  },
+  {
+    "child_cpu_seconds": 0.036940999999999995,
+    "circuit_validation": {
+      "gates": 2,
+      "inputs": 0,
+      "obligations": 2,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": false,
+    "expected": "sat",
+    "kind": "negative-control",
+    "name": "trial-00015-negative-control",
+    "profile": "gcc-O2",
+    "query_sha256": "8458a58b4f88dabac9e91c329dec5c40e497f3862cd515fe1a7862a5b5e669ef",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00015-negative-control/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.013177,
+        "peak_process_rss_bytes": 10469376,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016234333161264658
+      },
+      "export": {
+        "cpu_seconds": 0.005094,
+        "peak_process_rss_bytes": 26476544,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.01595537504181266
+      },
+      "solve": {
+        "cpu_seconds": 0.012991999999999998,
+        "peak_process_rss_bytes": 11485184,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.01630258373916149
+      },
+      "validate": {
+        "cpu_seconds": 0.005678,
+        "peak_process_rss_bytes": 27623424,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.015945292077958584
+      }
+    },
+    "status": "inconclusive",
+    "total_wall_seconds": 0.17279874999076128
+  },
+  {
+    "child_cpu_seconds": 1.771238,
+    "circuit_validation": {
+      "gates": 4980,
+      "inputs": 64,
+      "obligations": 13,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": null,
+    "expected": null,
+    "kind": "saved-answer",
+    "name": "trial-00018-grade",
+    "profile": "clang-O2",
+    "query_sha256": "6320583b282231d6e8b46c208349609e2695a508848d0d55f8ca3b7e340a0c8b",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00018-grade/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.012993,
+        "peak_process_rss_bytes": 10452992,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016181999817490578
+      },
+      "export": {
+        "cpu_seconds": 0.037374,
+        "peak_process_rss_bytes": 30359552,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.046100125182420015
+      },
+      "solve": {
+        "cpu_seconds": 1.623629,
+        "peak_process_rss_bytes": 24887296,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 1.6301007918082178
+      },
+      "validate": {
+        "cpu_seconds": 0.097242,
+        "peak_process_rss_bytes": 44597248,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.10560570890083909
+      }
+    },
+    "status": "unsat",
+    "total_wall_seconds": 1.905656167306006
+  },
+  {
+    "child_cpu_seconds": 0.038085999999999995,
+    "circuit_validation": {
+      "gates": 2,
+      "inputs": 0,
+      "obligations": 2,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": false,
+    "expected": "sat",
+    "kind": "negative-control",
+    "name": "trial-00018-negative-control",
+    "profile": "clang-O2",
+    "query_sha256": "708edd67f99cc635088b717b0be57dab9e51abe3ba99a78e5a07f47af7e27a68",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00018-negative-control/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.013844999999999998,
+        "peak_process_rss_bytes": 10452992,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.01633020816370845
+      },
+      "export": {
+        "cpu_seconds": 0.004796999999999999,
+        "peak_process_rss_bytes": 26443776,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.015940458979457617
+      },
+      "solve": {
+        "cpu_seconds": 0.013803,
+        "peak_process_rss_bytes": 11534336,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.01630841614678502
+      },
+      "validate": {
+        "cpu_seconds": 0.005641,
+        "peak_process_rss_bytes": 27574272,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.01221083290874958
+      }
+    },
+    "status": "inconclusive",
+    "total_wall_seconds": 0.16712749982252717
+  },
+  {
+    "child_cpu_seconds": 1.9196609999999998,
+    "circuit_validation": {
+      "gates": 5787,
+      "inputs": 64,
+      "obligations": 14,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": null,
+    "expected": null,
+    "kind": "saved-answer",
+    "name": "trial-00021-grade",
+    "profile": "gcc-O2",
+    "query_sha256": "6299b7de9f4f83bd112622e59f8de06ad6322b6faa96d2a2c1245252cbbf96aa",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00021-grade/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.013721999999999998,
+        "peak_process_rss_bytes": 10452992,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016195375006645918
+      },
+      "export": {
+        "cpu_seconds": 0.035632,
+        "peak_process_rss_bytes": 30474240,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.04601654224097729
+      },
+      "solve": {
+        "cpu_seconds": 1.7645369999999998,
+        "peak_process_rss_bytes": 25427968,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 1.7737590409815311
+      },
+      "validate": {
+        "cpu_seconds": 0.10576999999999999,
+        "peak_process_rss_bytes": 45219840,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.12070895778015256
+      }
+    },
+    "status": "unsat",
+    "total_wall_seconds": 2.0638662092387676
+  },
+  {
+    "child_cpu_seconds": 0.036552999999999995,
+    "circuit_validation": {
+      "gates": 2,
+      "inputs": 0,
+      "obligations": 2,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": false,
+    "expected": "sat",
+    "kind": "negative-control",
+    "name": "trial-00021-negative-control",
+    "profile": "gcc-O2",
+    "query_sha256": "8458a58b4f88dabac9e91c329dec5c40e497f3862cd515fe1a7862a5b5e669ef",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00021-negative-control/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.012927999999999999,
+        "peak_process_rss_bytes": 10452992,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016257875133305788
+      },
+      "export": {
+        "cpu_seconds": 0.005005,
+        "peak_process_rss_bytes": 26460160,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.012197792064398527
+      },
+      "solve": {
+        "cpu_seconds": 0.013015999999999998,
+        "peak_process_rss_bytes": 11501568,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016286625061184168
+      },
+      "validate": {
+        "cpu_seconds": 0.005604,
+        "peak_process_rss_bytes": 27623424,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.012197250034660101
+      }
+    },
+    "status": "inconclusive",
+    "total_wall_seconds": 0.16263812500983477
+  },
+  {
+    "child_cpu_seconds": 1.765832,
+    "circuit_validation": {
+      "gates": 4980,
+      "inputs": 64,
+      "obligations": 13,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": null,
+    "expected": null,
+    "kind": "saved-answer",
+    "name": "trial-00024-grade",
+    "profile": "clang-O2",
+    "query_sha256": "65efed103e1c8d4123a02384f2fb31d138876c263ca1b6764b7b9d8b5058bbc6",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00024-grade/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.013349,
+        "peak_process_rss_bytes": 10452992,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016225582920014858
+      },
+      "export": {
+        "cpu_seconds": 0.037635999999999996,
+        "peak_process_rss_bytes": 30097408,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.04595504095777869
+      },
+      "solve": {
+        "cpu_seconds": 1.618236,
+        "peak_process_rss_bytes": 25100288,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 1.6323413751088083
+      },
+      "validate": {
+        "cpu_seconds": 0.09661099999999999,
+        "peak_process_rss_bytes": 44089344,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.10613112477585673
+      }
+    },
+    "status": "unsat",
+    "total_wall_seconds": 1.9076828751713037
+  },
+  {
+    "child_cpu_seconds": 0.037195,
+    "circuit_validation": {
+      "gates": 2,
+      "inputs": 0,
+      "obligations": 2,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": false,
+    "expected": "sat",
+    "kind": "negative-control",
+    "name": "trial-00024-negative-control",
+    "profile": "clang-O2",
+    "query_sha256": "708edd67f99cc635088b717b0be57dab9e51abe3ba99a78e5a07f47af7e27a68",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00024-negative-control/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.013249999999999998,
+        "peak_process_rss_bytes": 10469376,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.02630225010216236
+      },
+      "export": {
+        "cpu_seconds": 0.004835,
+        "peak_process_rss_bytes": 26624000,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016108375042676926
+      },
+      "solve": {
+        "cpu_seconds": 0.013602,
+        "peak_process_rss_bytes": 11534336,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016301542054861784
+      },
+      "validate": {
+        "cpu_seconds": 0.005508,
+        "peak_process_rss_bytes": 27590656,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.015937374904751778
+      }
+    },
+    "status": "inconclusive",
+    "total_wall_seconds": 0.1802934999577701
+  },
+  {
+    "child_cpu_seconds": 1.924764,
+    "circuit_validation": {
+      "gates": 5787,
+      "inputs": 64,
+      "obligations": 14,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": null,
+    "expected": null,
+    "kind": "saved-answer",
+    "name": "trial-00029-grade",
+    "profile": "gcc-O2",
+    "query_sha256": "6299b7de9f4f83bd112622e59f8de06ad6322b6faa96d2a2c1245252cbbf96aa",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00029-grade/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.012917999999999999,
+        "peak_process_rss_bytes": 10469376,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.01643645903095603
+      },
+      "export": {
+        "cpu_seconds": 0.035806,
+        "peak_process_rss_bytes": 30408704,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.046287833247333765
+      },
+      "solve": {
+        "cpu_seconds": 1.769931,
+        "peak_process_rss_bytes": 25509888,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 1.7807935420423746
+      },
+      "validate": {
+        "cpu_seconds": 0.106109,
+        "peak_process_rss_bytes": 45219840,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.117381458170712
+      }
+    },
+    "status": "unsat",
+    "total_wall_seconds": 2.069335584063083
+  },
+  {
+    "child_cpu_seconds": 0.036830999999999996,
+    "circuit_validation": {
+      "gates": 2,
+      "inputs": 0,
+      "obligations": 2,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": false,
+    "expected": "sat",
+    "kind": "negative-control",
+    "name": "trial-00029-negative-control",
+    "profile": "gcc-O2",
+    "query_sha256": "8458a58b4f88dabac9e91c329dec5c40e497f3862cd515fe1a7862a5b5e669ef",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00029-negative-control/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.012868,
+        "peak_process_rss_bytes": 10436608,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.01616799971088767
+      },
+      "export": {
+        "cpu_seconds": 0.004802,
+        "peak_process_rss_bytes": 26689536,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.015946750063449144
+      },
+      "solve": {
+        "cpu_seconds": 0.013489,
+        "peak_process_rss_bytes": 11517952,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.01617712527513504
+      },
+      "validate": {
+        "cpu_seconds": 0.005672,
+        "peak_process_rss_bytes": 27623424,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.015922999940812588
+      }
+    },
+    "status": "inconclusive",
+    "total_wall_seconds": 0.1700665419921279
+  },
+  {
+    "child_cpu_seconds": 1.790461,
+    "circuit_validation": {
+      "gates": 4980,
+      "inputs": 64,
+      "obligations": 13,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": null,
+    "expected": null,
+    "kind": "saved-answer",
+    "name": "trial-00030-grade",
+    "profile": "clang-O2",
+    "query_sha256": "6320583b282231d6e8b46c208349609e2695a508848d0d55f8ca3b7e340a0c8b",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00030-grade/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.012936,
+        "peak_process_rss_bytes": 10452992,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016291833017021418
+      },
+      "export": {
+        "cpu_seconds": 0.037758,
+        "peak_process_rss_bytes": 30146560,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.0460230833850801
+      },
+      "solve": {
+        "cpu_seconds": 1.640398,
+        "peak_process_rss_bytes": 25051136,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 1.6549304169602692
+      },
+      "validate": {
+        "cpu_seconds": 0.09936899999999999,
+        "peak_process_rss_bytes": 44105728,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.113538125064224
+      }
+    },
+    "status": "unsat",
+    "total_wall_seconds": 1.9376144167035818
+  },
+  {
+    "child_cpu_seconds": 0.037744999999999994,
+    "circuit_validation": {
+      "gates": 2,
+      "inputs": 0,
+      "obligations": 2,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": false,
+    "expected": "sat",
+    "kind": "negative-control",
+    "name": "trial-00030-negative-control",
+    "profile": "clang-O2",
+    "query_sha256": "708edd67f99cc635088b717b0be57dab9e51abe3ba99a78e5a07f47af7e27a68",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00030-negative-control/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.014157,
+        "peak_process_rss_bytes": 10436608,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016265916172415018
+      },
+      "export": {
+        "cpu_seconds": 0.004841999999999999,
+        "peak_process_rss_bytes": 26476544,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.0159423747099936
+      },
+      "solve": {
+        "cpu_seconds": 0.013159999999999998,
+        "peak_process_rss_bytes": 11501568,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016279625240713358
+      },
+      "validate": {
+        "cpu_seconds": 0.005586,
+        "peak_process_rss_bytes": 27574272,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.015978666953742504
+      }
+    },
+    "status": "inconclusive",
+    "total_wall_seconds": 0.17642583325505257
+  },
+  {
+    "child_cpu_seconds": 1.9327699999999999,
+    "circuit_validation": {
+      "gates": 5787,
+      "inputs": 64,
+      "obligations": 14,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": null,
+    "expected": null,
+    "kind": "saved-answer",
+    "name": "trial-00034-grade",
+    "profile": "gcc-O2",
+    "query_sha256": "742055f0a1579be4ddcafcb201f39f2520f9f54af3174811c8293b143f4b9647",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00034-grade/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.013606,
+        "peak_process_rss_bytes": 10436608,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016163124702870846
+      },
+      "export": {
+        "cpu_seconds": 0.035647,
+        "peak_process_rss_bytes": 30441472,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.04601662512868643
+      },
+      "solve": {
+        "cpu_seconds": 1.7776979999999998,
+        "peak_process_rss_bytes": 25477120,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 1.7873477907851338
+      },
+      "validate": {
+        "cpu_seconds": 0.105819,
+        "peak_process_rss_bytes": 45563904,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.11934091709554195
+      }
+    },
+    "status": "unsat",
+    "total_wall_seconds": 2.077323209028691
+  },
+  {
+    "child_cpu_seconds": 0.036873,
+    "circuit_validation": {
+      "gates": 2,
+      "inputs": 0,
+      "obligations": 2,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": false,
+    "expected": "sat",
+    "kind": "negative-control",
+    "name": "trial-00034-negative-control",
+    "profile": "gcc-O2",
+    "query_sha256": "8458a58b4f88dabac9e91c329dec5c40e497f3862cd515fe1a7862a5b5e669ef",
+    "report": "experiments/runs/graded-circuits-20261110/trial-00034-negative-control/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.013048,
+        "peak_process_rss_bytes": 10436608,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.01619212469086051
+      },
+      "export": {
+        "cpu_seconds": 0.004889,
+        "peak_process_rss_bytes": 26476544,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.01601020898669958
+      },
+      "solve": {
+        "cpu_seconds": 0.013204,
+        "peak_process_rss_bytes": 11468800,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.01624012505635619
+      },
+      "validate": {
+        "cpu_seconds": 0.005731999999999999,
+        "peak_process_rss_bytes": 27394048,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.01592795830219984
+      }
+    },
+    "status": "inconclusive",
+    "total_wall_seconds": 0.17140324972569942
+  },
+  {
+    "child_cpu_seconds": 0.111901,
+    "circuit_validation": {
+      "gates": 826,
+      "inputs": 64,
+      "obligations": 11,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": true,
+    "expected": "unsat",
+    "kind": "rule-control",
+    "name": "subtract",
+    "profile": null,
+    "query_sha256": "3024db8e8cf97fd79dbe516fe37b4c37fbeaa686c15fce30622bd96732c65a02",
+    "report": "experiments/runs/graded-circuits-20261110/subtract/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.013649999999999999,
+        "peak_process_rss_bytes": 10452992,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.01645612483844161
+      },
+      "export": {
+        "cpu_seconds": 0.0068909999999999996,
+        "peak_process_rss_bytes": 27344896,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016195041127502918
+      },
+      "solve": {
+        "cpu_seconds": 0.07030600000000001,
+        "peak_process_rss_bytes": 19136512,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.07653704099357128
+      },
+      "validate": {
+        "cpu_seconds": 0.021054,
+        "peak_process_rss_bytes": 37961728,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.031041374895721674
+      }
+    },
+    "status": "unsat",
+    "total_wall_seconds": 0.24853083305060863
+  },
+  {
+    "child_cpu_seconds": 0.06333699999999999,
+    "circuit_validation": {
+      "gates": 341,
+      "inputs": 32,
+      "obligations": 11,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": true,
+    "expected": "unsat",
+    "kind": "rule-control",
+    "name": "scale-partial-products",
+    "profile": null,
+    "query_sha256": "02afba7c6f360ee1ea57512281c8988274b7f38d64c21282a53f9ff94770b0ea",
+    "report": "experiments/runs/graded-circuits-20261110/scale-partial-products/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.013191999999999999,
+        "peak_process_rss_bytes": 10436608,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016379750333726406
+      },
+      "export": {
+        "cpu_seconds": 0.00554,
+        "peak_process_rss_bytes": 26902528,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.01597895799204707
+      },
+      "solve": {
+        "cpu_seconds": 0.031176,
+        "peak_process_rss_bytes": 17842176,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.0463272500783205
+      },
+      "validate": {
+        "cpu_seconds": 0.013428999999999998,
+        "peak_process_rss_bytes": 37289984,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.015982000157237053
+      }
+    },
+    "status": "unsat",
+    "total_wall_seconds": 0.20300045795738697
+  },
+  {
+    "child_cpu_seconds": 0.061237,
+    "circuit_validation": {
+      "gates": 575,
+      "inputs": 64,
+      "obligations": 11,
+      "status": "circuit-validated",
+      "z3_version": "5.3.3.0"
+    },
+    "control_passed": true,
+    "expected": "sat",
+    "kind": "rule-control",
+    "name": "wrong-no-borrow",
+    "profile": null,
+    "query_sha256": "dd329c7c25b2e8130c0a70d990c6a787739504533f7c0502293e2562a19ca1fa",
+    "report": "experiments/runs/graded-circuits-20261110/wrong-no-borrow/report.json",
+    "stages": {
+      "abc-version": {
+        "cpu_seconds": 0.013434999999999999,
+        "peak_process_rss_bytes": 10485760,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.016289708204567432
+      },
+      "export": {
+        "cpu_seconds": 0.0060739999999999995,
+        "peak_process_rss_bytes": 27099136,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.015969957690685987
+      },
+      "solve": {
+        "cpu_seconds": 0.024175,
+        "peak_process_rss_bytes": 13910016,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.03122845757752657
+      },
+      "validate": {
+        "cpu_seconds": 0.017553,
+        "peak_process_rss_bytes": 37650432,
+        "peak_sampled_tree_rss_bytes": null,
+        "status": "completed",
+        "wall_seconds": 0.031111374963074923
+      }
+    },
+    "status": "sat",
+    "total_wall_seconds": 0.20166558306664228
+  }
+]

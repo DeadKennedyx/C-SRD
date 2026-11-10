@@ -7,7 +7,7 @@ This does not close the research questions or imply broad C11 support.
 | --- | --- | --- |
 | M0 | Repository, CMake, real CLI, charter, semantics, prior-art comparison, CI configuration and local Linux validation | Hosted CI execution requires a remote workflow run |
 | M1 | Clang AST transformation, affine encoded intermediates, unchanged public interface, deterministic parameters and independently compilable C11 | Larger real-world pure-function corpus and more targets |
-| M2 | Mandatory reparsed-artifact translation validation, compositional limb invariants with checked source-to-graph mapping, hashes/header environment, SMT obligations, concrete counterexamples and replay, inverse/XOR contracts | Optimized reconstruction grading; independently checked certificates; CBMC source-level backend; Frama-C/Alive2 integration where appropriate |
+| M2 | Mandatory reparsed-artifact translation validation, compositional limb invariants with checked source-to-graph mapping, optional checked-circuit replay of saved queries, hashes/header environment, SMT obligations, concrete counterexamples and replay, inverse/XOR contracts | General reconstruction grading; independently checked certificates; CBMC source-level backend; Frama-C/Alive2 integration where appropriate |
 | M3 | Versioned data-flow graph, compatibility/coverage constraints, conversion sharing, three cost objectives, exact small-graph solving and labeled heuristic fallback | Cost calibration, better scalable optimization, complete Pareto exploration and independent prior-system comparisons |
 | M4 | Independent fingerprints, positive/negative/rare controls, confusion matrices, AST/CFG/LLVM/object metrics, measured compile/verification/runtime/text-size comparisons and raw reports | Held-out applications, more targets, repeated isolated performance studies and stronger defensive semantic analysis |
 | M5 | XOR/bitwise rules, fixed shifts, unsigned comparisons, selections, assignment-only branches, exact finite loops and bounds-checked local literal lookup arrays | Memory contracts, richer control flow and operators, expanded rejection/proof coverage before each addition |
@@ -29,8 +29,10 @@ The active protection study now has a [larger reserved corpus](rich-benchmarks.m
 and a [positional two-piece prototype](limb-representation.md). Compare candidates
 with measured reconstruction/runtime/size trade-offs before imposing cost limits;
 expand wide-value/merge and multi-location runtime observer coverage. The
-[newly admitted Jenkins comparison](../reports/compositional-validation.md) also
-has unresolved reconstruction-grading timeouts; these are not protection evidence.
+[newly admitted Jenkins comparison](../reports/compositional-validation.md) had
+reconstruction-grading timeouts. A separate [checked-circuit replay](../reports/circuit-grading.md)
+resolved all ten saved limb answers: they were correctly reconstructed under the
+source model. This closes that grading gap without demonstrating a protection benefit.
 Independent C-level validation with unwinding assertions and planner cost calibration remain
 open backend tasks. No solver timeout, small benchmark result,
 source difference or recovered known rule answers RQ1–RQ9 by itself.

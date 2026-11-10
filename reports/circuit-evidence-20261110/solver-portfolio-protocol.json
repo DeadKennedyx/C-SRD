@@ -1,0 +1,80 @@
+{
+  "bitwuzla": {
+    "module_sha256": "75a43bf7391bab82139c779be15368f1b31ea0fb4a8a32331c6b6a4b35e45b9a",
+    "version": "0.9.1"
+  },
+  "bitwuzla_driver_sha256": "ad8238cbf70c27069ba182637e9c9d85a3467250505f481d1458fda4de72c96a",
+  "cases": [
+    {
+      "candidate_sha256": "2693cc4561e5154e8ac71c544e1ac2d1c695edea3e9b6063818b1fd2b1a5c43e",
+      "expected": null,
+      "name": "clang",
+      "original_proof_sha256": "75e6268d66a466d23a869f31f5f29b7122e668294054a57a17258d83682c3ae6",
+      "query": "/Users/admin/C-SRD/experiments/runs/solver-probes-20261110/results/clang.smt2",
+      "reference_sha256": "0539bca1f8a057c5974838374e29ca9e67e7c28b966ac7f256fbba5d2fea60fd",
+      "sha256": "4cddb5a345267195e60899269d547e8b077c249313299c4fa6b47972d90a71ee"
+    },
+    {
+      "candidate_sha256": "534cc5ec48a2ad0a6c3cd25a6db54293db663e16ef5a0211683d8ca00aae11b9",
+      "expected": null,
+      "name": "gcc",
+      "original_proof_sha256": "a2c8b2f025249174aaf17573346bdd45bc8093138e5198ac4b281c848fe395ed",
+      "query": "/Users/admin/C-SRD/experiments/runs/solver-probes-20261110/results/gcc.smt2",
+      "reference_sha256": "0539bca1f8a057c5974838374e29ca9e67e7c28b966ac7f256fbba5d2fea60fd",
+      "sha256": "988c5441f5599f29be3cc020f94b16462b55d0c876cf4b1f509316d678169882"
+    },
+    {
+      "expected": "unsat",
+      "name": "subtract",
+      "query": "/Users/admin/C-SRD/experiments/runs/solver-probes-20261110/results/subtract.smt2",
+      "sha256": "3024db8e8cf97fd79dbe516fe37b4c37fbeaa686c15fce30622bd96732c65a02"
+    },
+    {
+      "expected": "unsat",
+      "name": "scale-partial-products",
+      "query": "/Users/admin/C-SRD/experiments/runs/solver-probes-20261110/results/scale-partial-products.smt2",
+      "sha256": "02afba7c6f360ee1ea57512281c8988274b7f38d64c21282a53f9ff94770b0ea"
+    },
+    {
+      "expected": "sat",
+      "name": "wrong-no-borrow",
+      "query": "/Users/admin/C-SRD/experiments/runs/solver-probes-20261110/results/wrong-no-borrow.smt2",
+      "sha256": "dd329c7c25b2e8130c0a70d990c6a787739504533f7c0502293e2562a19ca1fa"
+    }
+  ],
+  "driver_sha256": "dfbb44b1dfa157a211f6beab3c6e39d18f9878eb7cdd9ca6416f43865ee39483",
+  "environment": {
+    "affinity": null,
+    "clock": {
+      "adjustable": false,
+      "implementation": "mach_absolute_time()",
+      "monotonic": true,
+      "resolution": 4.166666666666666e-08
+    },
+    "load_average": [
+      2.85498046875,
+      4.02490234375,
+      4.40478515625
+    ],
+    "logical_cpus": 10,
+    "machine": "arm64",
+    "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 21.0.0 (clang-2100.0.123.102)]",
+    "system": "macOS-26.3.1-arm64-arm-64bit-Mach-O"
+  },
+  "process_wall_seconds": 8,
+  "scope": "native development-only solver probes; no source/assertion changes",
+  "solver_ms": 5000,
+  "tactics": {
+    "aig": "(then (using-params simplify :som true) bit-blast aig sat)",
+    "context": "(then (using-params simplify :som true) ctx-solver-simplify bit-blast sat)",
+    "default": null,
+    "qfbv": "qfbv",
+    "sharing": "(then (using-params simplify :som true :mul2concat true :bv_extract_prop true) solve-eqs reduce-bv-size max-bv-sharing bit-blast sat)",
+    "slices": "(then simplify bv-slice simplify bit-blast sat)"
+  },
+  "z3": {
+    "path": "/opt/homebrew/bin/z3",
+    "sha256": "7995688cd4cefeab9e5e41c28e0ea621e65549f72386120c35cceec304c75733",
+    "version": "Z3 version 5.3.3 - 64 bit"
+  }
+}

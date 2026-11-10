@@ -102,3 +102,23 @@ regression tests now accept those negative results without relaxing the positive
 result protocol. The first replay fails its control acceptance criterion and is
 retained. A fresh replay will follow the correction; earlier outputs are not
 overwritten or silently regraded.
+
+## Successful replay and decision
+
+Implementation commits `eabc8bd` and `b69f68e` supply the optional helper,
+independent gate reader/contracts, measured driver and frozen-answer replay.
+The corrected run completed 23 cases: all ten saved answer mismatches unsat,
+all ten corrupted-answer controls sat, two valid rules unsat, and the wrong-borrow
+rule sat. The answers are two unique artifacts repeated five times each. Complete
+replay wall medians were 1.886 seconds for Clang and 2.043 for GCC; these are
+grader resources on native macOS, not observer resources or environment-matched
+speedups against the earlier Linux timeouts.
+
+The [report and hash-bound evidence](../../reports/circuit-grading.md) retain
+every failed prototype/pilot, the successful queries, local proof obligations,
+raw process measurements, frozen source bindings, test logs, tools and dependency
+identities. No observer was rerun and no historical status was edited. We learned
+that these limb answers had already reconstructed the functionality correctly.
+Keep the representation as a correctness/cost baseline, with no established
+protection benefit. Broader adapter coverage and subsequent candidate experiments
+remain next; runtime/size ceilings are still not imposed.

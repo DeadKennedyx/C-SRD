@@ -48,6 +48,13 @@ It adds paired process-tree CPU/RSS, wall time, query/trace/resource budget grid
 correct and incorrect recovery, separate grading cost and human-session recording.
 Application runtime benchmarks and analyzer effort remain distinct measurements.
 
+To investigate a grader timeout without changing an observer, use the optional
+[checked-circuit replay](../docs/circuit-validation.md) and
+`grade_saved_answers.py`. It binds saved C files and queries, records a protocol
+before execution, checks corrupted-answer controls and reports grader resources
+separately. The [first result](../reports/circuit-grading.md) resolved correct
+reconstructions that the earlier grader could not prove in time.
+
 ## Analysis and reporting
 
 Preserve tested, bounded-checked, proved-under-model, unsupported and inconclusive

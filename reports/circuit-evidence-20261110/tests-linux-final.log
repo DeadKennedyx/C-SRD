@@ -1,0 +1,42 @@
+Internal ctest changing into directory: /work/build-linux-release
+Test project /work/build-linux-release
+      Start  1: representation
+ 1/18 Test  #1: representation ...................   Passed    0.01 sec
+      Start  2: compositional_validation
+ 2/18 Test  #2: compositional_validation .........   Passed    0.05 sec
+      Start  3: saved_query_circuits
+ 3/18 Test  #3: saved_query_circuits .............   Passed    0.47 sec
+      Start  4: integration
+ 4/18 Test  #4: integration ......................   Passed    0.79 sec
+      Start  5: translation_validation
+ 5/18 Test  #5: translation_validation ...........   Passed    0.26 sec
+      Start  6: representation_planning
+ 6/18 Test  #6: representation_planning ..........   Passed    0.77 sec
+      Start  7: algorithm_candidates
+ 7/18 Test  #7: algorithm_candidates .............   Passed    0.56 sec
+      Start  8: control_flow_candidates
+ 8/18 Test  #8: control_flow_candidates ..........   Passed    0.81 sec
+      Start  9: decompiler_observer
+ 9/18 Test  #9: decompiler_observer ..............   Passed    0.52 sec
+      Start 10: reconstruction_effort
+10/18 Test #10: reconstruction_effort ............   Passed    7.25 sec
+      Start 11: defensive_evaluation
+11/18 Test #11: defensive_evaluation .............   Passed    0.26 sec
+      Start 12: protection_audit
+12/18 Test #12: protection_audit .................   Passed    2.10 sec
+      Start 13: validation_matrix
+13/18 Test #13: validation_matrix ................   Passed    6.68 sec
+      Start 14: rich_benchmarks
+14/18 Test #14: rich_benchmarks ..................   Passed    2.11 sec
+      Start 15: limb_representation
+15/18 Test #15: limb_representation ..............   Passed    2.98 sec
+      Start 16: differential
+16/18 Test #16: differential .....................   Passed    1.23 sec
+      Start 17: expanded_differential
+17/18 Test #17: expanded_differential ............   Passed    6.83 sec
+      Start 18: rule_contracts
+18/18 Test #18: rule_contracts ...................   Passed    0.46 sec
+
+100% tests passed, 0 tests failed out of 18
+
+Total Test time (real) =  34.14 sec

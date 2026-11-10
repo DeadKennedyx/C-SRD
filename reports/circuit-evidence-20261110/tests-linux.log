@@ -1,0 +1,75 @@
+[0/1] Re-running CMake...
+-- Could NOT find LibEdit (missing: LibEdit_INCLUDE_DIRS LibEdit_LIBRARIES) 
+-- Could NOT find ZLIB (missing: ZLIB_LIBRARY ZLIB_INCLUDE_DIR) 
+-- Could NOT find zstd (missing: zstd_LIBRARY zstd_INCLUDE_DIR) 
+-- Could NOT find CURL (missing: CURL_LIBRARY CURL_INCLUDE_DIR) 
+-- Could NOT find LibEdit (missing: LibEdit_INCLUDE_DIRS LibEdit_LIBRARIES) 
+-- Could NOT find ZLIB (missing: ZLIB_LIBRARY ZLIB_INCLUDE_DIR) 
+-- Could NOT find zstd (missing: zstd_LIBRARY zstd_INCLUDE_DIR) 
+-- Could NOT find CURL (missing: CURL_LIBRARY CURL_INCLUDE_DIR) 
+-- Using LLVM 18.1.3 from /usr/lib/llvm-18/cmake
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /work/build-linux-release
+[1/2] Building CXX object CMakeFiles/csrd-query-circuit.dir/tools/query_circuit.cpp.o
+[2/2] Linking CXX executable csrd-query-circuit
+Internal ctest changing into directory: /work/build-linux-release
+Test project /work/build-linux-release
+      Start  1: representation
+ 1/18 Test  #1: representation ...................   Passed    0.00 sec
+      Start  2: compositional_validation
+ 2/18 Test  #2: compositional_validation .........   Passed    0.05 sec
+      Start  3: saved_query_circuits
+ 3/18 Test  #3: saved_query_circuits .............***Failed    0.48 sec
+.......F..
+======================================================================
+FAIL: test_rewiring_and_bad_networks_rejected (__main__.QueryCircuits.test_rewiring_and_bad_networks_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/work/tests/integration/test_query_circuit.py", line 97, in test_rewiring_and_bad_networks_rejected
+    self.assertNotEqual(mutant, valid)
+AssertionError: '.model query\n.inputs wire_1 wire_3\n.outputs output\n.names wire_0\n1\n.names wire_1 wire_2\n0 1\n.names wire_2 wire_3 wire_4\n00 1\n11 1\n.names wire_0 wire_4 wire_5\n11 1\n.names wire_5 output\n1 1\n.end\n' == '.model query\n.inputs wire_1 wire_3\n.outputs output\n.names wire_0\n1\n.names wire_1 wire_2\n0 1\n.names wire_2 wire_3 wire_4\n00 1\n11 1\n.names wire_0 wire_4 wire_5\n11 1\n.names wire_5 output\n1 1\n.end\n'
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.444s
+
+FAILED (failures=1)
+
+      Start  4: integration
+ 4/18 Test  #4: integration ......................   Passed    0.83 sec
+      Start  5: translation_validation
+ 5/18 Test  #5: translation_validation ...........   Passed    0.27 sec
+      Start  6: representation_planning
+ 6/18 Test  #6: representation_planning ..........   Passed    0.77 sec
+      Start  7: algorithm_candidates
+ 7/18 Test  #7: algorithm_candidates .............   Passed    0.58 sec
+      Start  8: control_flow_candidates
+ 8/18 Test  #8: control_flow_candidates ..........   Passed    0.82 sec
+      Start  9: decompiler_observer
+ 9/18 Test  #9: decompiler_observer ..............   Passed    0.52 sec
+      Start 10: reconstruction_effort
+10/18 Test #10: reconstruction_effort ............   Passed    7.42 sec
+      Start 11: defensive_evaluation
+11/18 Test #11: defensive_evaluation .............   Passed    0.27 sec
+      Start 12: protection_audit
+12/18 Test #12: protection_audit .................   Passed    2.14 sec
+      Start 13: validation_matrix
+13/18 Test #13: validation_matrix ................   Passed    6.76 sec
+      Start 14: rich_benchmarks
+14/18 Test #14: rich_benchmarks ..................   Passed    2.13 sec
+      Start 15: limb_representation
+15/18 Test #15: limb_representation ..............   Passed    3.11 sec
+      Start 16: differential
+16/18 Test #16: differential .....................   Passed    1.24 sec
+      Start 17: expanded_differential
+17/18 Test #17: expanded_differential ............   Passed    6.90 sec
+      Start 18: rule_contracts
+18/18 Test #18: rule_contracts ...................   Passed    0.47 sec
+
+94% tests passed, 1 tests failed out of 18
+
+Total Test time (real) =  34.78 sec
+
+The following tests FAILED:
+	  3 - saved_query_circuits (Failed)
+Errors while running CTest

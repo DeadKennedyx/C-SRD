@@ -47,6 +47,7 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Compositional emitted-C validation](docs/compositional-validation.md) | Scalable limb proofs with checked graph mappings, local invariants and actual return validation |
 | [Saved-query circuit validation](docs/circuit-validation.md) | Optional ABC grading with independently parsed, universally checked Boolean gate contracts |
 | [Jenkins follow-up evidence](reports/compositional-validation.md) | Unchanged candidate newly verified, 100 build cells, runtime/size costs and unresolved reconstruction-grading limits |
+| [Saved-answer grading follow-up](reports/circuit-grading.md) | Ten earlier inconclusive answers resolved, thirteen controls passed, and failed solver prototypes preserved |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |

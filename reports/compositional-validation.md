@@ -1,5 +1,9 @@
 # Compositional verification and Jenkins follow-up, 2026-11-10
 
+**Later follow-up:** [checked-circuit grading](circuit-grading.md) resolved all ten
+saved inconclusive limb answers under the recorded model. The observations and
+original grader statuses below remain the historical record.
+
 ## Result
 
 The new verifier admits the previously blocked Jenkins limb candidate without
