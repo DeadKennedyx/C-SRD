@@ -1,0 +1,7 @@
+{
+  "old_report_sha256": "1c82abdd89401fb63530ccaf73ce7f7f121dda103ccb4514de0982a82fae4431",
+  "old_candidate_sha256": "557dbff695e80e6c9a8ee83832e746c5c9be95546a8e1f6d7d83de0298f5a675",
+  "new_candidate_sha256": "557dbff695e80e6c9a8ee83832e746c5c9be95546a8e1f6d7d83de0298f5a675",
+  "same_generated_C": true,
+  "new_proof_steps": 41
+}

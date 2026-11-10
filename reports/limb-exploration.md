@@ -177,3 +177,7 @@ and Z3; compiler/binary-lifter correctness is not proved. Multi-location runtime
 recovery, human effort, x86 execution and reserved-family generalization remain
 unassessed. The representation is positional splitting, not encryption or secret
 sharing. A larger code footprint or source operation count is not success.
+
+**Dated follow-up, 2026-11-10:** a new compositional validator admitted the unchanged
+Jenkins limb candidate in a [separate experiment](compositional-validation.md).
+The 75 blocked cells in this initial run remain unchanged historical evidence.

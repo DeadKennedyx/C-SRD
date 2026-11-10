@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "implementation_commit": "fc5174c",
+  "scope": "raw prototypes, unchanged observer rounds, proof-chain probe and complete validated build artifacts",
+  "files": {
+    "bitlinear-protocol.json": {
+      "sha256": "61c536bcb48550ba3f2614d2122b805cbac67956ee1b4758dcf6d8094948b552",
+      "bytes": 15167
+    },
+    "bitlinear-summary.json": {
+      "sha256": "12705f46572ebbd007a0a365c5c652dbf8661830144fb6bde4ec4f2363a3489a",
+      "bytes": 95695
+    },
+    "bitlinear-trials.csv": {
+      "sha256": "faa6c1a589537119bcaebb2ca4725566b0f78cc6cc3c55b5a3af8289cd2dfaaa",
+      "bytes": 17789
+    },
+    "bitlinear.log": {
+      "sha256": "7084dfd80a5bdb8538ea7b5a6a96cd73ffbf7a029930d9727fd066288257c96c",
+      "bytes": 8215
+    },
+    "bitlinear.tar.xz": {
+      "sha256": "b63292ba28e4c97b82100a60d22b875dd3826e5fc08cb68e5022d98b3e3676cc",
+      "bytes": 177076
+    },
+    "candidate-identity.json": {
+      "sha256": "29d661e392e7a5091d71057861363c5d1178c4101f122b303511673005a26a4d",
+      "bytes": 335
+    },
+    "environment.json": {
+      "sha256": "9ed3a96dfe721971707bb2b0db06ec0f3f5ffd2b97c1f282db154479c77de992",
+      "bytes": 431
+    },
+    "followup.tar.xz": {
+      "sha256": "c097b7d39b67636111a6df8fea89920869b2bff3b1578305eae7224cee28c7a9",
+      "bytes": 449416
+    },
+    "ghidra-protocol.json": {
+      "sha256": "75403fe8d8d1e55cc72a472b0aea9bc0ff83a61b0856f33d447a7d16fa83a892",
+      "bytes": 13745
+    },
+    "ghidra-summary.json": {
+      "sha256": "5fe66e8978fc3a97eafad05b7f85eb390c7fa28f6ba986c3fd5df277047258bd",
+      "bytes": 26531
+    },
+    "ghidra-trials.csv": {
+      "sha256": "59a9c3eec869b062835816eae283e538028f6fd3d235e0dd1557a425a564e2b3",
+      "bytes": 4586
+    },
+    "ghidra.log": {
+      "sha256": "c67a7b813d1654476721c8d42d13a667a046506f2679ffec7d09103b3815f167",
+      "bytes": 2089
+    },
+    "ghidra.tar.xz": {
+      "sha256": "02b874a8511368d4aea854bdfe8204a0b3a49b6b70d00b187e4c916358737048",
+      "bytes": 1580476
+    },
+    "grading-chain-summary.json": {
+      "sha256": "c5b91ed69b4437fabb4e92816fbe908a2afa67119e10a16f2b3c98f2d685452a",
+      "bytes": 14233
+    },
+    "linked-sizes.json": {
+      "sha256": "17fe49d465657f1c573f02579bd9828b00fb636c8f08c9ecdf234a22b766d96f",
+      "bytes": 340448
+    },
+    "linux-ctest.log": {
+      "sha256": "615f770f35eb886d543f4ef24ce8267faf10475cd59b8a58488449f44885837e",
+      "bytes": 13666
+    },
+    "matrix-summary.json": {
+      "sha256": "1268ba3f744a0f99ef46602cc8365e750b5b8ca176854df41457eb46a82291bd",
+      "bytes": 947541
+    },
+    "matrix.tar.xz": {
+      "sha256": "53b54e32175e180abac0b5190df341d870a383e6a6bdfa085358b8f6c4690a9a",
+      "bytes": 9304060
+    },
+    "native-ctest.log": {
+      "sha256": "2c0cea438f9cf0f626fccc48a133149beca506980bed4e776e448eac34357766",
+      "bytes": 15193
+    },
+    "probe-grading.py": {
+      "sha256": "b617efca5f0b105c9c2574faba017dade54ac8b9fe0702b7ff5579ed672f4667",
+      "bytes": 4156
+    },
+    "proof-resources-summary.json": {
+      "sha256": "2e58a96c4a239939762c9e8473813410093bc0c72032adf35da6a6bf5c455d94",
+      "bytes": 12233
+    },
+    "protocol.json": {
+      "sha256": "e864f2ecd88ed4fdfc31d9bfac3ec92e594ac5f87932fc5837a7e067a3af6123",
+      "bytes": 6111
+    },
+    "prototype.tar.xz": {
+      "sha256": "6a6eada4397aa8f5995e0fead5996739edd2e5cf92a1c3b6cdbdee269e02a99a",
+      "bytes": 14480
+    },
+    "run.py": {
+      "sha256": "78bf4e1771c3e3f0e81997355494f8742242a1be250faa3e02061fcdd1a0cee9",
+      "bytes": 4698
+    }
+  }
+}

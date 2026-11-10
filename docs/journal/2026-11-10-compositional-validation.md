@@ -66,3 +66,41 @@ The broader protection question remains open. Newly admitted candidates require
 a separate matrix/observer round; the original 75 failed cells remain historical
 evidence. This is a verification-engine improvement, not evidence of increased
 software protection. Measurement results will be recorded separately.
+
+## Follow-up grading hypothesis (recorded before probing)
+
+During the frozen follow-up observer run, some Jenkins limb reconstructions were
+produced successfully but their direct source-equivalence grading timed out.
+Keep that run unchanged. After it finishes, probe the first measured inconclusive
+limb answer for each O2 compiler using the exact validated transformed build
+input as an intermediate proof target: prove original frozen input = transformed
+frozen input, then transformed frozen input = fixed reconstructed answer. Both
+links must succeed, and all hashes must remain bound. Also check the existing
+corrupted answer against the transformed input. Use the same 30-second solver
+budget per link and record grading resources separately. This is a proposed
+validation experiment, not extra information for the observer or a changed
+reconstruction result. Do not silently relabel the original inconclusive trials.
+
+## Completed follow-up and failed grading-chain probe
+
+The same candidate SHA-256 as the original failed transformation was proved in
+three controlled attempts, taking about 0.21–0.22 seconds process wall time.
+The frozen old verifier remained inconclusive in all three 30-second attempts.
+Do not estimate a completed-proof speedup from censored baseline failures.
+
+The new matrix completed 100 cells over 25 available profiles; x86 was unavailable.
+Jenkins limb runtime ratios were 2.259 (Clang O2) and 2.420 (GCC O2), with larger
+linked text. The fixed query observer yielded 80 no-candidate and 40 wrong-model
+outcomes across all four variants, matching the original's model-class limitation.
+The Ghidra round yielded 15 proved recoveries, 5 unsupported baseline attempts
+and 10 inconclusive limb grades. All limb answers had been produced before
+grading; therefore these timeouts cannot be reported as reconstruction failures.
+
+The separately planned grading-chain probe completed after the observer run.
+Both original-to-transformed links proved, but both transformed-to-reconstructed
+links timed out. Corrupted-answer controls were rejected. The probe failed to
+resolve grading, and no observer result was reclassified. Exact measurements,
+commands, failures and raw artifacts are in the
+[follow-up report](../../reports/compositional-validation.md). The next task is
+grading/observer coverage, followed by further representation experiments with
+the same controls. No protection winner has been selected.

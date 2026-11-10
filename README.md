@@ -45,6 +45,7 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Positional representation prototype](docs/limb-representation.md) | Two-piece arithmetic, bitwise operations, explicit correctness rules and limitations |
 | [Broad candidate comparison](reports/limb-exploration.md) | Compiler survival, application costs, reconstruction measurements and retained failures |
 | [Compositional emitted-C validation](docs/compositional-validation.md) | Scalable limb proofs with checked graph mappings, local invariants and actual return validation |
+| [Jenkins follow-up evidence](reports/compositional-validation.md) | Unchanged candidate newly verified, 100 build cells, runtime/size costs and unresolved reconstruction-grading limits |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |
@@ -265,6 +266,8 @@ parsing and required semantic checks; file-system I/O can still fail.
 
 Proof states are `proved-under-model`, `counterexample`, `inconclusive`,
 `unsupported` and `not-verified`. Empirical reports separately use `tested-pass`.
+An individual compositional step can report `local-counterexample`; its abstract
+operand values are not necessarily reachable function inputs.
 `bounded-model checked` is reserved for an actual backend result with bounds;
 CBMC has not been integrated into this baseline. Planning states `optimized`
 and `heuristic` describe cost selection, not semantic proof strength.
@@ -352,12 +355,17 @@ path. Costs and limits are specified in [planning](docs/planning.md).
 Reparse the actual candidate at the original virtual source path. Confirm target
 and included-buffer hashes for transformations. Symbolically execute original
 and candidate ordered regions independently of the planner/emitter; submit the
-existence of a return mismatch to Z3. An `unsat` result establishes equivalence
-within this model, trusting Clang, the analyzer/interpreter and Z3.
+existence of a return mismatch to Z3. Alternatively, the
+[compositional limb path](docs/compositional-validation.md) checks the
+source-to-graph mapping, every actual fragment's value/range invariant and the
+actual return. All obligations must be `unsat` before that path establishes
+equivalence under the model and its documented trusted implementation boundary.
 
 The solver first tries simplification, bit-blasting and SAT with up to
 `min(1000, max(1, timeout/4))` milliseconds. If inconclusive and budget remains,
-it tries conditional-term lifting, simplification and SMT. A concrete model
+it can next split inputs into independent 16-bit halves, then try conditional-term
+lifting, simplification and SMT. A compositional attempt first receives at most
+half the per-function budget, leaving the remainder for this fallback. A concrete model
 records inputs and both outputs; unknown never becomes success.
 
 JSON schema version 2 records `csrd_version`, `action`, decimal-string `seed`,
@@ -367,6 +375,9 @@ Each function records decision/location, source metrics, proof status/reason,
 available SMT-LIB and its hash, solver strategy, concrete counterexample if any,
 and transformation/graph counters where applicable. A failed candidate can be
 reported as a transformation attempt with `output_written: false`.
+Compositional reports include the rebound partition and a `steps` array of
+individual queries/hashes; they do not substitute a single synthetic whole-function
+query. Failed attempts remain available under `prior_attempts`.
 
 `verify` checks selected original definitions and does not establish whole-file
 equivalence or validate extra candidate functions. Timing, debug information,
