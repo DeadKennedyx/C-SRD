@@ -13,11 +13,18 @@ struct LimbPiece {
   LimbPiece(uint32_t value = 0) : constant(value) {}
   LimbPiece(std::string variable) : name(std::move(variable)) {}
 };
+struct LimbScaleStep {
+  unsigned declarationEnd = 0;
+  LimbPiece partial; // first declaration in this step; independently checked
+  LimbPiece carry; // final carry is deliberately discarded, represented by zero
+};
 struct LimbCheckpoint {
   unsigned declarationEnd = 0;
-  LimbPiece low, high;
+  std::vector<LimbPiece> pieces; // least significant first
+  std::vector<LimbScaleStep> scaleSteps;
 };
 struct LimbWitness {
+  unsigned pieceBits = 16;
   std::vector<std::string> declarations;
   std::vector<LimbCheckpoint> nodes;
 };

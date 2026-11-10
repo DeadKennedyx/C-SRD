@@ -15,7 +15,7 @@ namespace {
 void usage() {
   std::cout << "C-SRD " CSRD_VERSION "\n"
     "Usage: csrd transform input.c -o output.c [--seed UINT64] [--report report.json] [--timeout-ms UINT]\n"
-    "       [--strategy affine|xor|identity|independent|planned|limbs16] [--coverage 0..100] [--objective balanced|runtime|size]\n"
+    "       [--strategy affine|xor|identity|independent|planned|limbs16|limbs8|limbs4] [--coverage 0..100] [--objective balanced|runtime|size]\n"
     "       [--algorithm popcount8-serial|popcount8-swar]\n"
     "       [--control-flow none|split-scale] (experimental)\n"
     "       csrd verify original.c candidate.c [--function NAME] [--report report.json] [--timeout-ms UINT]\n"
@@ -68,10 +68,27 @@ llvm::json::Object proof(const csrd::Verification &v) {
     auto piece = [](const csrd::LimbPiece &p) {
       return p.name.empty() ? llvm::json::Object{{"constant", p.constant}} : llvm::json::Object{{"declaration", p.name}};
     };
-    for (const auto &point : v.composition->witness.nodes)
-      points.push_back(llvm::json::Object{{"declaration_end", point.declarationEnd},
-        {"low", piece(point.low)}, {"high", piece(point.high)}});
-    result["composition"] = llvm::json::Object{{"invariant", "decoded-value-equality-and-both-pieces-u16"},
+    const auto bits = v.composition->witness.pieceBits;
+    for (const auto &point : v.composition->witness.nodes) {
+      llvm::json::Array pieces;
+      for (const auto &p : point.pieces) pieces.push_back(piece(p));
+      llvm::json::Object checkpoint{{"declaration_end", point.declarationEnd}, {"pieces", std::move(pieces)}};
+      if (!point.scaleSteps.empty()) {
+        llvm::json::Array steps;
+        for (const auto &step : point.scaleSteps)
+          steps.push_back(llvm::json::Object{{"declaration_end", step.declarationEnd},
+            {"partial", piece(step.partial)}, {"carry", piece(step.carry)}});
+        checkpoint["scale_steps"] = std::move(steps);
+      }
+      if (bits == 16) { // Preserve the legacy aliases in new two-piece reports.
+        checkpoint["low"] = piece(point.pieces.at(0)); checkpoint["high"] = piece(point.pieces.at(1));
+      }
+      points.push_back(std::move(checkpoint));
+    }
+    const auto invariant = bits == 16 ? "decoded-value-equality-and-both-pieces-u16" :
+      "decoded-value-equality-and-each-piece-u" + std::to_string(bits);
+    result["composition"] = llvm::json::Object{{"invariant", invariant},
+      {"piece_bits", bits}, {"piece_order", "least-significant-first"},
       {"graph", std::move(graph)}, {"result", v.composition->graph.result},
       {"declarations", std::move(declarations)}, {"checkpoints", std::move(points)}};
   }
@@ -109,11 +126,11 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
       f["algorithm_candidate"] = result.options.algorithm;
       f["control_flow"] = result.options.controlFlow;
       f["split_scales"] = d.emission.splitScales;
-      if (result.options.strategy != "limbs16") {
+      if (!csrd::limbBits(result.options.strategy)) {
         f["a"] = d.a; f["b"] = d.b; f["inverse"] = d.inverse;
         f["xor_mask"] = d.xorMask;
       }
-      f["seed_affects_representation"] = result.options.strategy != "limbs16" && result.options.strategy != "identity";
+      f["seed_affects_representation"] = !csrd::limbBits(result.options.strategy) && result.options.strategy != "identity";
       f["operations_transformed"] = d.operations;
       f["operations_without_decoding"] = d.emission.encodedOperations;
       f["boundary_conversions"] = d.conversions;
@@ -187,7 +204,7 @@ int main(int argc, char **argv) {
         options.algorithm = value; algorithmSet = true;
       }
       else if (key == "--strategy" && action == "transform" && !strategySet) {
-        if (value != "affine" && value != "xor" && value != "identity" && value != "independent" && value != "planned" && value != "limbs16")
+        if (value != "affine" && value != "xor" && value != "identity" && value != "independent" && value != "planned" && !csrd::limbBits(value))
           throw std::runtime_error("unknown representation strategy");
         options.strategy = value; strategySet = true;
       } else if (key == "--coverage" && action == "transform" && !coverageSet) {
@@ -205,7 +222,7 @@ int main(int argc, char **argv) {
     }
     if (output.empty() && action != "analyze") throw std::runtime_error("an output/candidate file is required");
     if ((coverageSet || objectiveSet) && options.strategy != "planned") throw std::runtime_error("coverage/objective require --strategy planned");
-    if (options.strategy == "limbs16" && options.controlFlow != "none") throw std::runtime_error("limbs16 requires --control-flow none");
+    if (csrd::limbBits(options.strategy) && options.controlFlow != "none") throw std::runtime_error(options.strategy + " requires --control-flow none");
     options.timeoutMs = timeout;
     if ((action == "transform" && samePath(input, output)) ||
         (!reportPath.empty() && (samePath(input, reportPath) || (!output.empty() && samePath(output, reportPath)))))

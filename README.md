@@ -244,7 +244,7 @@ functions may be copied unchanged successfully.
 | Interface | Behavior |
 | --- | --- |
 | `csrd transform input.c -o output.c` | Transform admitted functions; default strategy `affine` and seed `0` |
-| `--strategy identity\|affine\|xor\|independent\|planned\|limbs16` | Select implemented representation strategy; [limbs16](docs/limb-representation.md) is a fixed experimental positional split |
+| `--strategy identity\|affine\|xor\|independent\|planned\|limbs16\|limbs8\|limbs4` | Select an implemented representation; [16-bit](docs/limb-representation.md) and [8/4-bit](docs/positional-widths.md) positional splits are fixed experiments |
 | `--seed UINT64` | Select deterministic affine/XOR parameters |
 | `--coverage 0..100` | Planned-only minimum encoded percentage of eligible live arithmetic/bitwise nodes; default 50 |
 | `--objective balanced\|runtime\|size` | Planned-only cost proxy; default balanced |
@@ -379,7 +379,9 @@ available SMT-LIB and its hash, solver strategy, concrete counterexample if any,
 and transformation/graph counters where applicable. A failed candidate can be
 reported as a transformation attempt with `output_written: false`.
 Compositional reports include the rebound partition and a `steps` array of
-individual queries/hashes; they do not substitute a single synthetic whole-function
+individual queries/hashes. Byte/nibble scale proofs nest actual partial and
+digit/carry checks beneath a whole-word algebraic bridge; see their
+[contract](docs/positional-widths.md). They do not substitute a single synthetic whole-function
 query. Failed attempts remain available under `prior_attempts`.
 
 An optional [saved-query circuit checker](docs/circuit-validation.md) exports a

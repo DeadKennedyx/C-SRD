@@ -72,10 +72,11 @@ Plan heuristic(const Graph &g, const PlanOptions &options, const std::string &re
 }
 Plan plan(const Graph &g, const PlanOptions &options) {
   Plan result;
-  if (options.strategy == "limbs16") {
-    result.labels.assign(g.nodes.size(), Encoding::Limbs16);
+  if (const auto bits = limbBits(options.strategy)) {
+    result.labels.assign(g.nodes.size(), bits == 16 ? Encoding::Limbs16 : bits == 8 ? Encoding::Limbs8 : Encoding::Limbs4);
     result.status = "fixed-representation";
-    result.reason = "two positional 16-bit limbs; no seed diversification or cost optimization";
+    result.reason = std::to_string(32 / bits) + " positional " + std::to_string(bits) +
+                    "-bit pieces; no seed diversification or cost optimization";
     return result;
   }
   if (options.strategy != "planned") {

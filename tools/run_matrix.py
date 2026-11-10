@@ -77,10 +77,10 @@ def prepare_variants(args, case, directory, command):
     algorithms = ["none", *case.get("algorithms", [])]
     for algorithm in algorithms:
         for strategy in args.strategies:
-            for seed, flow in [(seed, flow) for seed in ([0] if strategy in ("identity", "limbs16") else args.seeds)
+            for seed, flow in [(seed, flow) for seed in ([0] if strategy in ("identity", "limbs16", "limbs8", "limbs4") else args.seeds)
                                for flow in args.control_flows]:
                 stem = ("" if algorithm == "none" else algorithm + "-") + strategy
-                if strategy not in ("identity", "limbs16"):
+                if strategy not in ("identity", "limbs16", "limbs8", "limbs4"):
                     stem += "-" + str(seed)
                 flow_control = stem
                 if flow != "none":
@@ -420,7 +420,7 @@ def main():
     p.add_argument("--tier", choices=["core", "extended", "holdout"], default="core")
     p.add_argument("--case", action="append")
     p.add_argument("--profile", action="append")
-    p.add_argument("--strategies", nargs="+", choices=["identity", "affine", "xor", "planned", "limbs16"], default=["identity", "affine", "planned"])
+    p.add_argument("--strategies", nargs="+", choices=["identity", "affine", "xor", "planned", "limbs16", "limbs8", "limbs4"], default=["identity", "affine", "planned"])
     p.add_argument("--seeds", nargs="+", type=int, default=[42])
     p.add_argument("--control-flows", nargs="+", choices=["none", "split-scale"], default=["none"])
     p.add_argument("--inputs", type=int, default=128)

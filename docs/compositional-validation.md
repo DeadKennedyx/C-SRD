@@ -13,6 +13,12 @@ CLI option or trusted certificate is required. Other representations retain the
 whole-function portfolio. An arbitrary equivalent program need not fit the
 proposed partition; failure of this method does not imply inequivalence.
 
+The two-piece argument below also applies to the [4/8-bit prototypes](positional-widths.md)
+using N = 32/w normalized pieces and their positional sum. Those prototypes add
+checked partial-product/carry partitions for scale operations. Their nested
+obligations and telescoping bridge are specified separately. Width proposals
+share the same compositional budget; they do not each receive a new deadline.
+
 ## Invariant and argument
 
 For graph node i, let its ordinary value be v_i and its proposed candidate pieces

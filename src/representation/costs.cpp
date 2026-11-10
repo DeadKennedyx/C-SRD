@@ -1,8 +1,13 @@
 #include "csrd/planner.hpp"
 
 namespace csrd {
+unsigned limbBits(const std::string &strategy) {
+  return strategy == "limbs16" ? 16 : strategy == "limbs8" ? 8 : strategy == "limbs4" ? 4 : 0;
+}
 const char *encodingName(Encoding e) {
   if (e == Encoding::Limbs16) return "limbs16-u32";
+  if (e == Encoding::Limbs8) return "limbs8-u32";
+  if (e == Encoding::Limbs4) return "limbs4-u32";
   return e == Encoding::Affine ? "affine-u32" : e == Encoding::Xor ? "xor-u32" : "identity-u32";
 }
 std::vector<Encoding> allowed(const Node &node) {

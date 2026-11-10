@@ -122,7 +122,7 @@ public:
         ++result.operations;
         if (n.kind != Expr::Kind::Table) ++result.encodedOperations;
       }
-      result.limbWitness.nodes.push_back({result.temporaries, values[id].low, values[id].high});
+      result.limbWitness.nodes.push_back({result.temporaries, {values[id].low, values[id].high}, {}});
     }
     const auto output = decode(values[graph.result], true);
     lines.push_back("return " + output + ";");

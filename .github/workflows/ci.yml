@@ -42,6 +42,7 @@ jobs:
           path: |
             build/Testing/Temporary/LastTest.log
             build/rule-contracts.json
+            build/positional-rule-contracts.json
             build/differential.json
             build/expanded-differential.json
             build/protection-audit/
