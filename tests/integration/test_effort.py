@@ -76,6 +76,7 @@ class Statistics(unittest.TestCase):
         rows += [{**base, "variant": "encoded", "repetition": i,
                   "resources": {"wall_seconds": 6, "cpu_seconds": 4}} for i in range(5)]
         rows[7]["status"] = "wall-budget"
+        rows[7]["answer"] = None  # A killed worker cannot necessarily write an answer.
         rows[8]["status"] = "unsupported-reconstruction"
         rows[9]["status"] = "wrong-candidate"
         rows.append({**base, "variant": "encoded", "repetition": -1, "warmup": True})
@@ -149,6 +150,12 @@ class EffortIntegration(unittest.TestCase):
                 self.assertEqual(trial["status"], expected, trial)
                 self.assertEqual(trial["negative_control"]["status"], "counterexample")
                 self.assertGreater(trial["resources"]["cpu_seconds"], 0)
+            run([ROOT / "tools/measure_effort.py", "--matrix-report", matrix_path, "--csrd", TOOL,
+                 "--observer", "blackbox", "--case", "calculate", "--profile", "clang-O2", "--variant", "original",
+                 "--wall-budgets", "0.001", "--repetitions", "1", "--warmups", "0", "--output-dir", root / "timeout"])
+            timed = json.loads((root / "timeout/effort.json").read_text())
+            self.assertTrue(all(t["status"] == "wall-budget" for t in timed["trials"]))
+            self.assertTrue(all(g["success_fraction_all_attempts"] == 0 for g in timed["summary"]["groups"]))
             run([ROOT / "tools/human_effort.py", "prepare", "--matrix-report", matrix_path, "--case", "calculate",
                  "--profile", "clang-O2", "--variant", "affine-42", "--participants", "2", "--output-dir", root / "study"])
             task = next((root / "study/packets/p001").glob("*/task.json"))

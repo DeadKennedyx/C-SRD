@@ -219,17 +219,21 @@ def run(args, output):
                   environment_end=environment(), summary=summarize(report["trials"]))
     save(output / "effort.json", report)
     save(output / "summary.json", report["summary"])
+    export_csv(report, output / "trials.csv")
+    return report
+
+
+def export_csv(report, path):
     fields = ["id", "case", "profile", "variant", "budget_id", "repetition", "warmup", "status", "accuracy",
               "wall_seconds", "cpu_seconds", "peak_process_rss_bytes", "peak_sampled_tree_rss_bytes",
               "training_queries", "instruction_steps", "value_observations"]
-    with (output / "trials.csv").open("w", newline="") as stream:
+    with Path(path).open("w", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=fields)
         writer.writeheader()
         for trial in report["trials"]:
             flat = {**trial, **trial.get("resources", {}), **(trial.get("answer") or {})}
             flat["status"] = trial["status"]
             writer.writerow({k: flat.get(k) for k in fields})
-    return report
 
 
 def main():

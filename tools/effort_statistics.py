@@ -71,7 +71,7 @@ def summarize(trials):
             summary["paired_successful_differences"][metric] = distribution(differences)
         summary["observer_accuracy"] = distribution([t["accuracy"] for t in rows if t.get("accuracy") is not None])
         summary["queries"] = distribution([t["answer"]["training_queries"] for t in rows
-                                             if t.get("answer", {}).get("training_queries") is not None])
+                                             if (t.get("answer") or {}).get("training_queries") is not None])
         summaries.append(summary)
     frontiers = defaultdict(list)
     for group in summaries:

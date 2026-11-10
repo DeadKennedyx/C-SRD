@@ -58,3 +58,14 @@ CPU/RSS grid enforcement is exercised by real integration tests. The pilot
 collects their uncapped costs; additional CPU/RSS sweeps are available through
 the CLI. No threshold for declaring software protection is invented after
 measurement. Any apparent speed/memory increase is exploratory on this host.
+
+## Deviation during the pilot
+
+All 144 Ghidra attempts (24 warmups, 120 measured) were collected, but the final
+summary raised an exception on a timed-out trial whose answer was `null`. The
+earlier tests retained timeout outcomes without modeling an absent answer. Fix
+the summary and add both a null-answer regression and a real CLI experiment
+whose 1 ms budget prevents the worker from writing an answer. Preserve the
+original report and recompute **only statistics**, with separate implementation
+hashes and provenance. Do not rerun or replace inconvenient observations. The
+runtime sweep will use the corrected driver; no observer inference rule changed.
