@@ -20,6 +20,18 @@ from pcode_reconstruct import reconstruct, Unsupported
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def scoring_reference(matrix, record):
+    """Score against the exact header-free input of the matched original build."""
+    original = next((r for r in matrix["records"] if r["case"] == record["case"]
+                     and r["profile"] == record["profile"] and r["variant"] == "original"), None)
+    if original is None or original["status"] != "completed":
+        raise ValueError("original build did not complete")
+    frozen = Path(original["binary"]).parent / "function.i"
+    if file_hash(frozen) != original["preprocessed_sha256"]:
+        raise ValueError("original preprocessed input changed since build validation")
+    return frozen, original["preprocessed_sha256"]
+
+
 def run_headless(report, argv, timeout):
     """Bound the launcher AND Java child; preserve output from failed/timed out runs."""
     argv = [str(a) for a in argv]
@@ -79,6 +91,8 @@ def run(args, root):
         except ValueError as error:
             report.update(status="unavailable", error=str(error)); return report
         csrd = executable(args.csrd)
+        if file_hash(csrd) != matrix["tools"]["csrd"]["sha256"]:
+            raise ValueError("scoring verifier must match the matrix's frontend/model binary")
         installation = Path(headless).resolve().parent.parent
         properties = installation / "Ghidra/application.properties"
         report["tools"] = {"csrd": {"path": csrd, "sha256": file_hash(csrd),
@@ -115,6 +129,8 @@ def run(args, root):
                 if file_hash(binary) != record["binary_sha256"] or file_hash(reference["path"]) != reference["sha256"]:
                     raise ValueError("binary or reference changed since matrix validation")
                 observation.update(binary_sha256=record["binary_sha256"], reference_sha256=reference["sha256"])
+                frozen, frozen_hash = scoring_reference(matrix, record)
+                observation.update(reference_preprocessed_path=str(frozen), reference_preprocessed_sha256=frozen_hash)
                 project = directory / "project"
                 project.mkdir()
                 run_headless(report, [headless, project, "audit", "-import", binary, "-deleteProject", "-max-cpu", "2",
@@ -133,7 +149,7 @@ def run(args, root):
                 recovered = directory / "recovered.c"
                 recovered.write_text(reconstruct(export))
                 observation["recovered_c_sha256"] = file_hash(recovered)
-                proof = verify(command, csrd, reference["path"], recovered, directory / "verification.json", args.timeout_ms)
+                proof = verify(command, csrd, frozen, recovered, directory / "verification.json", args.timeout_ms)
                 observation["verification"] = proof
                 observation["status"] = {"proved-under-model": "recovered-under-source-model",
                                          "counterexample": "counterexample"}.get(proof["verification"], "inconclusive")
@@ -146,6 +162,8 @@ def run(args, root):
                     raise ValueError("corruption control was not rejected by the scorer")
                 if file_hash(binary) != record["binary_sha256"] or file_hash(reference["path"]) != reference["sha256"]:
                     raise ValueError("binary or reference changed during observation")
+                if file_hash(frozen) != frozen_hash:
+                    raise ValueError("original preprocessed input changed during observation")
             except Unsupported as error:
                 observation.update(status="unsupported-reconstruction", reason=str(error))
             except (AuditError, OSError, ValueError, KeyError, IndexError) as error:

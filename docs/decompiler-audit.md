@@ -36,7 +36,10 @@ wide values are conservatively unsupported. SIMD/popcount intrinsics may therefo
 be unsupported even when a person can easily understand the decompiled C.
 
 The reference is consulted only after reconstruction, for a full-input-domain
-source-model equivalence query. The same scorer must reject a reconstructed
+source-model equivalence query. Scoring uses the exact frozen preprocessed input
+of the matched original build, with its hash checked before and after, and requires
+the same C-SRD frontend/model binary as the matrix. This avoids reinterpreting
+changed headers or a different target environment. The same scorer must reject a reconstructed
 result deliberately offset by one, with a concrete counterexample. This control
 tests the scoring gate, not a population estimate of semantic-recognition errors.
 The expanded matrix's unrelated unary/binary corpus supplies fingerprint controls.
