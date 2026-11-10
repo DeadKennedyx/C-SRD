@@ -1,16 +1,20 @@
 # Verification and evidence
 
 `csrd transform` reparses the generated source and verifies every changed
-function before writing C. The original and candidate ordered region trees are
-independently interpreted as 32-bit bit-vector expressions; a mismatch query
-asks whether any input makes their returns differ. Both terminate and have no
-external effects under the accepted contract. This is per-artifact translation
-validation, not a mechanized proof of the entire compiler.
+function before writing C. The whole-function path independently interprets the
+original and candidate ordered region trees as 32-bit bit-vector expressions;
+a mismatch query asks whether any input makes their returns differ. The
+[compositional limb path](compositional-validation.md) instead validates the
+source-to-graph mapping, actual emitted operations and actual return using an
+inductive value/range invariant. Both terminate and have no external effects
+under the accepted contract. This is per-artifact translation validation, not a
+mechanized proof of the entire compiler.
 
 | Status | Meaning |
 | --- | --- |
 | `proved-under-model` | Z3 returned unsat for the full input domain of the stated model, trusting parsing, analysis, symbolic execution and Z3 |
 | `counterexample` | Z3 returned sat; report includes concrete inputs and both modeled outputs |
+| `local-counterexample` | A compositional step failed; abstract operand values need not be reachable from function inputs, and no whole-function inequivalence is claimed |
 | `inconclusive` | Timeout, unknown or solver failure; C output is blocked |
 | `unsupported` | A required function/model is missing or outside the subset; no proof claim |
 | `not-verified` | No applicable query was discharged, including skipped functions |
@@ -31,14 +35,19 @@ solver strategy, status and counterexamples. `output_written` distinguishes a
 failed generated candidate from a saved artifact. A report is evidence tied to
 bytes, not a signed certificate. Changing either file invalidates that binding.
 
-The solver first uses polynomial simplification and direct bit-blasting/SAT,
+The whole-function solver first uses polynomial simplification and direct bit-blasting/SAT,
 with up to min(1000, timeout/4) milliseconds (at least one). If inconclusive,
-remaining budget is assigned to conditional-term lifting, simplification and
-SMT. The second path helps simplify affine decodes around branch selections.
+it can next reparameterize each input as two independent 16-bit halves, a
+bijection over the full domain, with at most another 1000 milliseconds. Remaining
+budget is assigned to conditional-term lifting, simplification and SMT. That
+path helps simplify affine decodes around branch selections.
 Solver checks have bounded budgets; frontend parsing/graph construction is not
 a whole-process wall-clock sandbox. Replay a raw query with equivalent tactics
 if plain `check-sat` is slow. No independently checked proof certificate is
-produced. [Z3 bit-vector theory](https://microsoft.github.io/z3guide/docs/theories/Bitvectors/).
+produced. A recognized limb partition first receives at most half the overall
+budget for composition, leaving the remainder for this whole-function fallback.
+Every local obligation and failed attempt is retained in the report.
+[Z3 bit-vector theory](https://microsoft.github.io/z3guide/docs/theories/Bitvectors/).
 
 The trusted computing base includes Clang's C semantics and AST, the subset
 analyzer, the independent region interpreter, Z3's simplifier/tactics/solver,

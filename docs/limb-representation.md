@@ -58,6 +58,13 @@ selection and a wrong-borrow counterexample. Integration tests reparse and prove
 O1 with ASan/UBSan, and compare boundary/random executions. An actual emitted
 mask mutation must also be rejected. Rule proofs alone never permit output.
 
+The [compositional validator](compositional-validation.md) checks the
+original-to-graph relationship and every actual emitted fragment under explicit
+piece-value and range invariants. It can validate long limb computations such
+as Jenkins without expanding the whole encoded function into one solver circuit.
+Every local obligation and failed proposal is recorded; unrelated candidates
+can still use the existing whole-function path.
+
 The general verifier can reparameterize its symbolic input into two independent
 16-bit halves after a direct query is inconclusive. This is a bijection over all
 u32 inputs, not a smaller test domain. The report retains the actual final SMT

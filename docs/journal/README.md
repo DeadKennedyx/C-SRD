@@ -37,6 +37,7 @@ causal explanations and estimates.
 | [2026-11-09 — richer benchmarks](2026-11-09-richer-benchmarks.md) | Corpus design, failed proof pilot and validation | Eight contracts, reserved families, independent oracles, deliberate false fingerprints and report-only exploration |
 | [2026-11-09 — two-piece prototype](2026-11-09-limb-prototype.md) | New representation and query observer | Positional arithmetic, proof bottlenecks, preserved failed candidates and a prespecified broad development comparison |
 | [2026-11-10 — P-code count correction](2026-11-10-pcode-counts.md) | Measurement adapter correction and repeated comparison | Wide constant counts distinguished from wide data, original-run preservation and unchanged binaries |
+| [2026-11-10 — compositional validation](2026-11-10-compositional-validation.md) | Verification hypothesis, failed scale prototype and validated correction | Actual emitted fragments, untrusted graph/partition hints, range invariants, independent SMT replay and newly admitted Jenkins candidate |
 
 Future work is tracked in [the backlog](../backlog.md). External issue numbers
 and review outcomes belong here only after those events actually occur.

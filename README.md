@@ -44,6 +44,7 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Rich corpus validation](reports/rich-benchmarks.md) | 156 compiled runs, proof controls, a retained timeout and deliberate false fingerprints |
 | [Positional representation prototype](docs/limb-representation.md) | Two-piece arithmetic, bitwise operations, explicit correctness rules and limitations |
 | [Broad candidate comparison](reports/limb-exploration.md) | Compiler survival, application costs, reconstruction measurements and retained failures |
+| [Compositional emitted-C validation](docs/compositional-validation.md) | Scalable limb proofs with checked graph mappings, local invariants and actual return validation |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |

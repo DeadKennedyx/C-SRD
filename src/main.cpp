@@ -38,6 +38,43 @@ uint64_t number(const std::string &value) {
 }
 llvm::json::Object proof(const csrd::Verification &v) {
   llvm::json::Object result{{"status", v.status}, {"reason", v.reason}, {"solver_strategy", v.strategy}};
+  if (!v.label.empty()) result["label"] = v.label;
+  if (!v.steps.empty()) {
+    llvm::json::Array steps;
+    for (const auto &step : v.steps) steps.push_back(proof(step));
+    result["steps"] = std::move(steps);
+  }
+  if (!v.priorAttempts.empty()) {
+    llvm::json::Array attempts;
+    for (const auto &attempt : v.priorAttempts) attempts.push_back(proof(attempt));
+    result["prior_attempts"] = std::move(attempts);
+  }
+  if (!v.localValues.empty()) {
+    llvm::json::Object values;
+    for (const auto &entry : v.localValues) values[entry.first] = entry.second;
+    result["local_countermodel"] = std::move(values);
+  }
+  if (v.composition) {
+    llvm::json::Array graph, declarations, points;
+    for (const auto &name : v.composition->witness.declarations) declarations.push_back(name);
+    for (unsigned id = 0; id < v.composition->graph.nodes.size(); ++id) {
+      const auto &node = v.composition->graph.nodes[id];
+      llvm::json::Array inputs, table;
+      for (auto input : node.inputs) inputs.push_back(input);
+      for (auto value : node.table) table.push_back(value);
+      graph.push_back(llvm::json::Object{{"id", id}, {"operation", csrd::operationName(node.kind)},
+        {"value", node.value}, {"parameter", node.parameter}, {"inputs", std::move(inputs)}, {"table", std::move(table)}});
+    }
+    auto piece = [](const csrd::LimbPiece &p) {
+      return p.name.empty() ? llvm::json::Object{{"constant", p.constant}} : llvm::json::Object{{"declaration", p.name}};
+    };
+    for (const auto &point : v.composition->witness.nodes)
+      points.push_back(llvm::json::Object{{"declaration_end", point.declarationEnd},
+        {"low", piece(point.low)}, {"high", piece(point.high)}});
+    result["composition"] = llvm::json::Object{{"invariant", "decoded-value-equality-and-both-pieces-u16"},
+      {"graph", std::move(graph)}, {"result", v.composition->graph.result},
+      {"declarations", std::move(declarations)}, {"checkpoints", std::move(points)}};
+  }
   if (!v.obligation.empty()) {
     result["obligation_sha256"] = csrd::sha256(v.obligation);
     result["smtlib"] = v.obligation;

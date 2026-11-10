@@ -32,6 +32,7 @@ flowchart LR
 | Algorithm candidates | `src/transforms/algorithms.cpp` | Explicit serial/SWAR low-byte population-count graphs; no name-based equivalence assumption |
 | Emission | `src/codegen/graph_emitter.cpp` | Materialize each operation once, cache conversions per producer/destination, encode constants, decode boundaries |
 | Translation validation | `src/verification/translation.cpp` | Independent execution of original/reparsed region trees into bit vectors, solver portfolio, concrete counterexamples |
+| Compositional validation | `src/verification/composition.cpp` | Independently validate source-to-graph lowering and every reparsed limb fragment under explicit value/range invariants; proposal hints are untrusted |
 | Source metrics | `src/frontend/metrics.cpp` | Clang AST traversal and reachable CFG, independent of graph planner |
 | Defensive evaluation | `tools/evaluate.py` | Output-only classifier, curated controls, separate compiler/structure/timing measurements |
 | Compiled-code audit | `tools/audit_protection.py` | Pairwise source and build-specific validation, frozen preprocessed compilation, code-section comparison and explicit unmeasured protection claims |
@@ -54,6 +55,12 @@ It directly models the ordered region language, including both branch states
 and exact finite iterations. It shares Clang parsing and subset analysis with
 the transformer: a shared analyzer/model bug remains a trusted-boundary risk.
 Compiled differential and rejection tests provide a different source of evidence.
+
+The compositional path uses an untrusted proposed graph/partition, validates the
+source-to-graph relationship with that interpreter, and checks each actual
+reparsed limb fragment under a value/range invariant. It then checks the actual
+return. The hint generator cannot certify its own output. See
+[the proof boundary and induction argument](compositional-validation.md).
 
 Representation parameters use the existing deterministic FNV-1a function-name
 hash and SplitMix64 seed derivation. Affine `a` is odd, with 1 remapped to 3;

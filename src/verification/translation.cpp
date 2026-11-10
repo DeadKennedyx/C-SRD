@@ -1,12 +1,9 @@
-#include "csrd/verification.hpp"
-#include <z3++.h>
-#include <map>
+#include "symbolic.hpp"
 #include <stdexcept>
 #include <algorithm>
 
 namespace csrd {
-namespace {
-using Environment = std::map<std::string, z3::expr>;
+namespace verification_detail {
 z3::expr expression(z3::context &ctx, const Expr &e, const Environment &values) {
   switch (e.kind) {
   case Expr::Kind::Constant: return ctx.bv_val(e.value, 32);
@@ -69,7 +66,7 @@ z3::expr execute(z3::context &ctx, const Region &r, const std::vector<z3::expr> 
 }
 }
 std::string solverVersion() { return Z3_get_full_version(); }
-Verification verify(const Region &original, const Region &candidate, unsigned timeoutMs) {
+Verification verification_detail::verifyDirect(const Region &original, const Region &candidate, unsigned timeoutMs) {
   Verification result;
   if (original.parameters.size() != candidate.parameters.size()) {
     result.status = "unsupported"; result.reason = "parameter arity mismatch"; return result;
