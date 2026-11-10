@@ -65,6 +65,17 @@ source/query/report chain before deriving statuses and paired cost tables.
 Commands and limitations are in the [follow-up report](../reports/pcode-wide-values.md).
 Always use fresh directories and keep tests/builds separate from resource runs.
 
+For persistent per-function measurements, `tools/measure_sessions.py` reuses
+frozen binaries and the semantic observer while measuring native, JVM/export
+and adapter process clocks separately. `grade_session_answers.py` grades every
+distinct answer after observation; `grade_session_queries.py` replays every
+unknown obligation without changing observer costs. `summarize_sessions.py`
+checks the complete request/grade chain and pairs independent session medians.
+`diagnose_sessions.py` preserves descriptive controls and historical cold costs;
+`archive_sessions.py` validates every packaged file. The
+[persistent-session report](../reports/persistent-sessions.md) records the
+protocol, results, warmup limitation and reproducible commands.
+
 ## Analysis and reporting
 
 Preserve tested, bounded-checked, proved-under-model, unsupported and inconclusive

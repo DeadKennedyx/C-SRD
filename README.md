@@ -53,6 +53,7 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Positional-width comparison](reports/positional-widths.md) | 500 validated build cells, 800 measured observer attempts, separate proof follow-ups, runtime/size/CPU/RSS costs and no established protection winner |
 | [Wide-value observer follow-up](reports/pcode-wide-values.md) | All 200 measured reconstructions proved after separate grading; 2,011 arithmetic/vector obligations per host, hardware controls, CPU/RSS trade-offs and retained failed pilots; input-C coverage stays unchanged |
 | [Persistent reconstruction sessions](docs/persistent-sessions.md) | Separate native-decompiler, JVM/export and adapter costs; cached-session controls, request-bound evidence and independent source grading |
+| [Persistent-session results](reports/persistent-sessions.md) | 120 sessions, all 33 answer contracts recovered under model; nibble native CPU grows 2.7–39.9× per request, with application costs and unresolved JVM warmup effects |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |

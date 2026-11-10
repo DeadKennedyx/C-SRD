@@ -1,0 +1,36 @@
+{
+  "implementation_commit": "54d3feaa15a4b3b8e032b9c05a220f14e24b0aca",
+  "created_utc": "2026-11-10T19:00:39.144690+00:00",
+  "image_id": "sha256:880358a74512e1deac327db13818f10e5b0cf8538f3490996952b8d379541f00",
+  "native_full_ctest": {
+    "groups": 24,
+    "seconds": 334.72
+  },
+  "linux_full_ctest": {
+    "groups": 24,
+    "seconds": 254.49
+  },
+  "suite_timing_scope": "overlapping correctness runs; not performance comparisons",
+  "focused_final": {
+    "tests": 6,
+    "native_skipped": 3,
+    "linux_skipped": 0
+  },
+  "frozen_source": {
+    "CMakeLists.txt": "27127d543f3a5b31faf428a83e80abb682543be09428fa3ade018667a2552780",
+    "README.md": "00e7c45940c27997b815ea4945b05fe24702084cc7a209fcdaef04af07c9b591",
+    "docs/backlog.md": "d2f1ce7dbd88842441cd6671e3a8f2ee0bbb4c30e8320d0d4aa2ff0449adb0aa",
+    "docs/journal/2026-11-10-persistent-observer.md": "86c596cdb533e743efbe81f15415cea1f6897301288f53456840567a5945e557",
+    "docs/journal/README.md": "e59af125d828355f5e83de8a96280730f514b57e1f9275f56a44492aea304756",
+    "docs/persistent-sessions.md": "b154acd4c6f50ccde8bb82a771bdf3203bf3e1872eeda4fa90f84fc4761688a0",
+    "experiments/grade_session_answers.py": "2412fccf57ef2cb4d6c538c0a95fc2f6d43fa2647cf56a1de152e8954666702e",
+    "experiments/grade_session_queries.py": "4231dfa2fc90e901d2c6becddfdf72cc0c8131686317cc070e230d20ec8b04d1",
+    "experiments/summarize_sessions.py": "aa8b8fc663c837d9f98c457bad32c3daf22363e646ae91d6db8dee43625f4b9e",
+    "tests/integration/test_sessions.py": "40a1c3ce01f1794602bb807e73ad373566f4426310b15f2a543df23341273871",
+    "tools/ghidra/SessionCSRD.java": "b18f70bce37511fa8580797a0a95300dde5947d4cedb76d82a7e6f967e3d07d0",
+    "tools/measure_sessions.py": "9402b1187facb0e21d4c845177b84eab252a3e13a9390546c1957957e5a9cc27",
+    "tools/process_counters.py": "4f772d5082c91a5f02a01f35444926bcda9fac367c0db86daae01b82c4dd327f",
+    "tools/session_evidence.py": "cb04c939eda992965f21e618f0314ae5e4cf9c584b7c7c8c1f785a834b7823a3",
+    "tools/session_worker.py": "97f65a7a9264101721b52817bf3820c32078ab379b641c27c99ebae2141dd71d"
+  }
+}

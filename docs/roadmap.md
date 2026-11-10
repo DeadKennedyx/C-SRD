@@ -35,9 +35,15 @@ unproved answer contracts. Its complete repeat recovered 200/200 measured
 answers under the source model after grading. Byte/nibble whole-observer CPU
 medians span 0.988–1.056 times baseline, while some per-function stages grow
 and application overhead reaches 7.774 times baseline. No protection winner or
-cost limit was selected. Next, compare persistent-session per-function analysis
-with the retained cold-process baseline, then evaluate a frozen protocol on
-reserved families. Multi-location runtime inference and human analysis require
+cost limit was selected. The [persistent-session study](../reports/persistent-sessions.md)
+then separated native/JVM/adapter costs across 120 sessions. All 33 distinct
+answer contracts were recovered under the model, while nibble native CPU grew
+2.7–39.9 times baseline per request. These are measurable automated-analysis
+costs, with application overhead and millisecond absolute native costs; no
+general protection winner follows. JVM CPU continued to decline across batches,
+so next check a declared longer-warmup grid on development controls, then freeze
+the sampling protocol before evaluating reserved families. Multi-location runtime
+inference and human analysis require
 separate protocols. Bounded
 [CFG/merge reconstruction](../reports/pcode-control-flow.md) now recovers the
 unchanged GCC Jenkins baseline; four reserved recurrence grades remain

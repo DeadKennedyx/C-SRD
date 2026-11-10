@@ -98,3 +98,37 @@ request-to-graph-to-C-to-query chain. This pilot remains excluded from the main
 resource comparison. Regression validation passed all 24 CTest groups on each
 host. A final focused run also checked paired-session counting and explicit
 unknown outcomes (six tests; Linux all exercised, macOS three Linux/live skips).
+
+## Full experiment and interpretation
+
+Implementation `54d3fea` was frozen before the 120-session run. All sessions
+completed with one continuous native process, valid counters and no RSS sampling
+errors. Each stage executed 19,200 measured requests plus 3,840 excluded initial
+requests. The 33 distinct source/answer contracts initially produced 25 proofs
+and eight unknown grades. Every unknown saved query proved UNSAT in the declared
+separate replay; all 33 source negative controls and all 11 replay controls passed.
+All request memberships are therefore correctly reconstructed under the model.
+
+The local-cost hypothesis has supporting evidence within this protocol: nibble
+native CPU paired medians are 2.712–39.879 times original. GCC Jenkins rises from
+0.266 to 10.615 ms per request. Combined native/JVM/adapter ratios span
+1.226–10.977 for nibbles. The earlier whole-process totals masked this distinction;
+they did not establish that every component had unchanged cost. Application
+runtime still reaches 7.774 times baseline, every answer is recovered, and no
+cost threshold or winner is selected. These are automated-analysis measurements,
+not measurements of human understanding or runtime memory secrecy.
+
+The descriptive post-processing also checks between-phase process continuity,
+identical-byte controls, historical cold totals and within-session trends. These
+checks do not select or rerun outcomes. Seven identical-byte controls give native
+CPU pair ratios 0.818–1.530, warning against overinterpreting small differences.
+All empty native phases use zero CPU. Native/adapter last-to-first batch medians
+are 0.979/0.996, but JVM's is 0.695: its work is still declining after warmup.
+We must not call the JVM results steady state. Keep all batches and the declared
+summary; do not adjust warmup retrospectively to make a desired ratio.
+
+Next, specify a fixed longer-warmup comparison on development controls, then
+freeze the sampling protocol before opening the reserved-family outcomes.
+The [report](../../reports/persistent-sessions.md) contains the complete costs,
+commands, limitations and archive links. No transformation or source-language
+coverage changed during this increment.
