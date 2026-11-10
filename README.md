@@ -35,6 +35,7 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Validation record](reports/roadmap-validation.md) | Historical commands, results, raw data and limitations |
 | [Compiled-code audit](reports/protection-audit-validation.md) | Current paired audit, preprocessing controls and observed optimization effects |
 | [Linked validation matrix and observers](docs/validation-matrix.md) | Declared build profiles, compiled candidate selection, independent recovery and bounded runtime observation |
+| [Matrix and recovery results](reports/validation-matrix.md) | Actual linked-build, held-out and runtime results, commands, limitations and archived evidence |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |

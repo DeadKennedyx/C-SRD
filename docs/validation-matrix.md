@@ -37,6 +37,9 @@ the semantic contract are not silently added as stress tests.
 
 ## Running the suite
 
+Use Python 3.10 or newer and the existing C-SRD build. The experiment scripts
+use the Python standard library; GDB is needed only for live observation.
+
 ```sh
 python3 tools/run_matrix.py --csrd build/csrd \
   --compiler clang=clang-18 --compiler gcc=gcc --objdump llvm-objdump-18 \
@@ -62,6 +65,9 @@ recorded. A filtered run does not claim coverage of the full matrix.
 `--strategies` defaults to identity/affine/planned; XOR is also implemented.
 Identity controls are mandatory. Non-identity strategies use every `--seeds`
 value; identity uses one control per algorithm.
+The planner retains its default 50% encoded-operation requirement. Coverage is
+not matched across strategies in this matrix, so these runs do not isolate the
+effect of coverage or establish that the planner is globally optimal.
 
 `--inputs` adds random vectors to edge cases. Timings use `--iterations`
 (default 200000) and `--repetitions` (default 5, minimum 3). Exploratory budgets
