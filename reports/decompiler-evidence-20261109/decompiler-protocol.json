@@ -1,0 +1,64 @@
+{
+  "stage": "development protocol freeze before matrix measurements",
+  "sha256": {
+    "tools/audit_decompiler.py": "207c0e4d696ec2b08a305291445c2864befeb11a5bc5c67e4cea8888411f1601",
+    "tools/pcode_reconstruct.py": "41c3fbb03c6c50566d110c329eca465e1437429455cab59127ffbaba06e216ca",
+    "tools/ghidra/ExportCSRD.java": "c347bbac82fcb063db6cf5ac6d9ccf5fa1668a5dafe21b50aec9ee683c3da58f",
+    "tools/run_matrix.py": "aa0858b861eaeb2f1543ff030b8a85c8447faab09994cea455e9161fba4ad124",
+    "tools/experiment_support.py": "83b24410449ca528c9e997482a3a8d7385de6af53c53d7137d527ac1fc36eecf",
+    "experiments/matrix.json": "5cf98d25edd9b96717051a484cfbce2d36da0fdf7811ce5923d22616293dd364",
+    "src/codegen/graph_emitter.cpp": "5009daadc49a912dea3637396a0a6af8b0fcf68bba0f2da3a2e554075f369097",
+    "src/transforms/planner.cpp": "521d64bdf5be1a5c46bb63a9afcf103b95c8371a5785a818b9add12a4ed367f5",
+    "src/main.cpp": "bf1b8390704982e74f98a55dbfcf40871697915963cd4857913ac20773cbdaf4"
+  },
+  "development": {
+    "tier": "extended",
+    "seeds": [
+      42
+    ],
+    "strategies": [
+      "identity",
+      "affine",
+      "planned"
+    ],
+    "control_flows": [
+      "none",
+      "split-scale"
+    ],
+    "inputs": 32,
+    "iterations": 100000,
+    "repetitions": 3
+  },
+  "decompiler": {
+    "development_cases": [
+      "calculate",
+      "rotate_mix",
+      "parity",
+      "bounded_mix"
+    ],
+    "profiles": [
+      "clang-O2",
+      "gcc-O2",
+      "clang-O2-lto",
+      "gcc-O2-lto"
+    ],
+    "variants": [
+      "original",
+      "identity",
+      "affine-42",
+      "affine-42-split-scale"
+    ],
+    "heldout_cases": [
+      "rotate_mix_heldout",
+      "bounded_mix_heldout",
+      "byte_sum_heldout"
+    ],
+    "heldout_profiles": [
+      "clang-O3",
+      "gcc-O3",
+      "clang-O3-thinlto",
+      "gcc-O3-lto"
+    ]
+  },
+  "claim": "Exploratory finite-corpus protocol, not a preregistered human-effort study. Freeze changes invalidate held-out independence and must be recorded."
+}

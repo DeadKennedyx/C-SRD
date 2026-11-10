@@ -1,6 +1,6 @@
 # Decompiler baseline and bounded control-flow experiment
 
-## Before implementation
+## Initial design, before measurements
 
 The previous linked matrix found that optimized affine arithmetic often collapses
 to the original computation. More instructions at O0 did not prevent the bounded
@@ -59,4 +59,54 @@ transform command (only build-input verification). Forward it explicitly, making
 the new experiment's transform/proof budget reproducible at 30 seconds. Keep
 both protocol snapshots and the pilot's actual 10-second failure manifest.
 
-Final experiment outcomes will be appended after execution.
+## Final observations and decision
+
+Implementation was frozen and pushed as `1d059db24726` using the personal
+DeadKennedyx account. The revised development run completed 700 cells with zero
+correctness failures and one native-x86 capability gap. Held-out evaluation
+completed 126 cells with no failure and no re-ranking. The two final matrices
+made 94,608 paired output comparisons. Planned labels matched in every paired
+split/unsplit graph. Full final suites passed 13/13 groups on native macOS and
+Linux; the Linux suite includes real Ghidra integration. Hosted Debug/Release
+correctness and the separate x86-64 Ghidra workflow also passed.
+
+H1 has configuration-specific support: the split survives the required compiled
+contribution checks for the bounded arithmetic case, but not across all tested
+functions/compilers. Cost screening selected the unsplit affine candidate there.
+For Clang O2 ARM64 `calculate`, the split leaves 21 instructions versus four for
+the original/affine pair, whereas GCC O2 does not retain the same contribution.
+Instruction count alone does not establish additional reconstruction effort.
+
+The fixed Ghidra observer completed 112 attempts: 40 recovered C functions proved
+equivalent under the source model, 29 unsupported reconstructions and 43 missing
+known symbols. All 40 +1 corruption controls produced counterexamples. P-code
+control-flow merges and 64-bit temporaries were observer gaps; simple original
+rotation functions were affected too. LTO often removed the symbol. There were
+no timed-out, incorrect reconstructed or integration-error results in this run.
+
+H2 has no demonstrated positive result. The separate black-box affine observer
+still recovered all tested arithmetic variants, including every split version
+and the held-out arithmetic function. Keep the prototype opt-in, preserve all
+negative/inconclusive evidence and improve the independent observer before
+making a protection claim. Wider C memory support is still a separate task.
+
+The next experiment needs bounded P-code merge/wide-value semantics and a newly
+reserved corpus. No observer rule was changed after viewing held-out results.
+Subsequent tests expanded rule-category coverage without changing the observer.
+The [result report](../../reports/decompiler-control-flow.md) links commands,
+archives, actual counts, scope revisions and CI evidence. Shared-host timing
+samples and overlapping observer jobs are not human-effort or isolated-performance
+measurements.
+
+## Post-experiment scoring-input review
+
+Review found that the first runner re-read the reference source at scoring time.
+It preserved its bytes, but changed headers or a different frontend could change
+its interpretation. Harden scoring to require the same C-SRD binary and the
+matched original build's frozen, hash-checked preprocessed input. This changes
+the evidence binding, not the observer's inference rules. Re-score the 40 saved,
+unchanged reconstructions; all 40 again prove equivalent. Preserve both original
+reports and the separate rescoring evidence. Focused tests cover frozen-input
+mutation, frontend mismatch and real headless operation after this change.
+Hardening commit: `aa5937f5124c`; six focused Linux tests passed, including the
+real decompiler, and all unchanged reconstruction results survived rescoring.

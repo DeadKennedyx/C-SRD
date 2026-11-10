@@ -37,6 +37,7 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Linked validation matrix and observers](docs/validation-matrix.md) | Declared build profiles, compiled candidate selection, independent recovery and bounded runtime observation |
 | [Matrix and recovery results](reports/validation-matrix.md) | Actual linked-build, held-out and runtime results, commands, limitations and archived evidence |
 | [Decompiler reconstruction protocol](docs/decompiler-audit.md) | Known-interface Ghidra observer, verified reconstruction and opt-in parity-split experiment |
+| [Decompiler and split results](reports/decompiler-control-flow.md) | 826 final build cells, 112 Ghidra observations, failed pilot and explicit observer gaps |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |

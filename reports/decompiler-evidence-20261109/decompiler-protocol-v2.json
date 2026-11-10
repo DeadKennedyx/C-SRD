@@ -1,0 +1,91 @@
+{
+  "stage": "development protocol freeze before matrix measurements",
+  "sha256": {
+    "tools/audit_decompiler.py": "207c0e4d696ec2b08a305291445c2864befeb11a5bc5c67e4cea8888411f1601",
+    "tools/pcode_reconstruct.py": "41c3fbb03c6c50566d110c329eca465e1437429455cab59127ffbaba06e216ca",
+    "tools/ghidra/ExportCSRD.java": "c347bbac82fcb063db6cf5ac6d9ccf5fa1668a5dafe21b50aec9ee683c3da58f",
+    "tools/run_matrix.py": "5045691b11f5194e9cc1f212e8bf2573668ff213ef925b1b474d0d9d9ba32aab",
+    "tools/experiment_support.py": "83b24410449ca528c9e997482a3a8d7385de6af53c53d7137d527ac1fc36eecf",
+    "experiments/matrix.json": "b297c663551013713e0f1e5c45022614b07d3ee965567db552a39df67576ecf3",
+    "src/codegen/graph_emitter.cpp": "5009daadc49a912dea3637396a0a6af8b0fcf68bba0f2da3a2e554075f369097",
+    "src/transforms/planner.cpp": "521d64bdf5be1a5c46bb63a9afcf103b95c8371a5785a818b9add12a4ed367f5",
+    "src/main.cpp": "bf1b8390704982e74f98a55dbfcf40871697915963cd4857913ac20773cbdaf4",
+    "benchmarks/algorithms/minimum.c": "c08d4b38e9789e7ea83aa88fd84b0f4073335cd08c471fb20112bcce96a92055",
+    "benchmarks/algorithms/popcount8.c": "f3f34ac730db32b0dd447f4040560c8da21f913106c958a02c9ef92b54cb860b",
+    "benchmarks/algorithms/minimum_select.c": "33831af7420d2675c5ef84b8694a19ec9a5793d5385e115e0e1872b33e05241f",
+    "benchmarks/arithmetic/bounded_mix_heldout.c": "99c042cb34ac3c507df66c70d1a7a7eaeb0d5320cdf4b98fb5de8bf95d83886e",
+    "benchmarks/arithmetic/distributed.c": "02fc18df788d8c8e71aa99b5563675f2046bf00c17a5db20d7bd83f04320884d",
+    "benchmarks/arithmetic/difference.c": "d5aad42f98586b35b354739361fd0d30cb9d3a855307c279c3ab82d88bb3587d",
+    "benchmarks/arithmetic/calculate.c": "5291f929d99a94c0fe1cae0960ef09988ac62a45e9adeef149667844b4f96bf9",
+    "benchmarks/arithmetic/bounded_arithmetic_heldout.c": "0f67459075893a093644cf0c957d959efa4ecd32c66812ceee1748378369ec74",
+    "benchmarks/arithmetic/rare_difference.c": "00c3697001889afdb2f983de219dd44dce6be8f8a24f14226e8c02534d2964b9",
+    "benchmarks/arithmetic/linear.c": "31bf3cc97d5d30cee6104e864bcf8e79c38bb9dfd4273b246dc37704723947f9",
+    "benchmarks/arithmetic/bounded_arithmetic.c": "6babb4acad0db4b69109992b4cd2595c94dffaf7010bb0fb6375b13e6805ad11",
+    "benchmarks/arithmetic/bounded_mix.c": "ce93c809a16bc70ccadc0706f85edb27c70ef4d8564330580a2a8ba193154bae",
+    "benchmarks/bitwise/rotate_mix.c": "5f5dd7da93c927dae53cf41637d0484485351e1672a1da4e1898ae0a1fe7de87",
+    "benchmarks/bitwise/parity.c": "b8bce7f3efd74f0a9919afaeafb8739600451f95e18d660e4651a6c125b6e6cf",
+    "benchmarks/bitwise/xor.c": "944d162fd344947f9c7cc5e71985893e706cd806a6378d3bae641ea27bd27494",
+    "benchmarks/bitwise/rotate_mix_heldout.c": "209e3c1860ef04b748426db32bfabd25ac0e25f2ec6b53dfc8659e6d616558ee",
+    "benchmarks/bitwise/xor_boolean.c": "7c761aae5a53bb3f4743952ee36409b06fc304f69a9bcc7a8d70371364214cf4",
+    "benchmarks/bitwise/byte_sum_heldout.c": "6e7058a34b56c29b52ca25ce028268bf538e21f67b138308d8981e31d6bb40ff"
+  },
+  "development": {
+    "tier": "extended",
+    "seeds": [
+      42
+    ],
+    "strategies": [
+      "identity",
+      "affine",
+      "planned"
+    ],
+    "control_flows": [
+      "none",
+      "split-scale"
+    ],
+    "inputs": 32,
+    "iterations": 100000,
+    "repetitions": 3,
+    "case_filter": [
+      "calculate",
+      "rotate_mix",
+      "parity",
+      "bounded_arithmetic"
+    ],
+    "timeout_ms": 30000
+  },
+  "decompiler": {
+    "development_cases": [
+      "calculate",
+      "rotate_mix",
+      "parity",
+      "bounded_arithmetic"
+    ],
+    "profiles": [
+      "clang-O2",
+      "gcc-O2",
+      "clang-O2-lto",
+      "gcc-O2-lto"
+    ],
+    "variants": [
+      "original",
+      "identity",
+      "affine-42",
+      "affine-42-split-scale"
+    ],
+    "heldout_cases": [
+      "rotate_mix_heldout",
+      "bounded_arithmetic_heldout",
+      "byte_sum_heldout"
+    ],
+    "heldout_profiles": [
+      "clang-O3",
+      "gcc-O3",
+      "clang-O3-thinlto",
+      "gcc-O3-lto"
+    ]
+  },
+  "claim": "Exploratory finite-corpus protocol, not a preregistered human-effort study. Freeze changes invalidate held-out independence and must be recorded.",
+  "revision": 2,
+  "deviation": "Retain failed mixed-loop pilot; use pure bounded arithmetic; forward declared transform timeout."
+}

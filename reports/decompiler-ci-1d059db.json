@@ -1,0 +1,438 @@
+[
+  {
+    "run": {
+      "id": 42748202813,
+      "head_sha": "1d059db24726879aaf61a71f458aa1d103c48bfc",
+      "name": "C-SRD correctness",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/DeadKennedyx/C-SRD/actions/runs/42748202813"
+    },
+    "jobs": [
+      {
+        "id": 129605289218,
+        "run_id": 42748202813,
+        "workflow_name": "C-SRD correctness",
+        "head_branch": "main",
+        "run_url": "https://api.github.com/repos/DeadKennedyx/C-SRD/actions/runs/42748202813",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOVoel2c8AAAAeLRPFAg",
+        "head_sha": "1d059db24726879aaf61a71f458aa1d103c48bfc",
+        "url": "https://api.github.com/repos/DeadKennedyx/C-SRD/actions/jobs/129605289218",
+        "html_url": "https://github.com/DeadKennedyx/C-SRD/actions/runs/42748202813/job/129605289218",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-10T03:15:12Z",
+        "started_at": "2026-11-10T03:15:14Z",
+        "completed_at": "2026-11-10T03:26:12Z",
+        "name": "linux (Release)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-10T03:15:15Z",
+            "completed_at": "2026-11-10T03:15:16Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-10T03:15:16Z",
+            "completed_at": "2026-11-10T03:15:18Z"
+          },
+          {
+            "name": "Dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-10T03:15:18Z",
+            "completed_at": "2026-11-10T03:22:51Z"
+          },
+          {
+            "name": "Configure",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-10T03:22:51Z",
+            "completed_at": "2026-11-10T03:22:54Z"
+          },
+          {
+            "name": "Build",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-10T03:22:54Z",
+            "completed_at": "2026-11-10T03:23:08Z"
+          },
+          {
+            "name": "Test",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-10T03:23:08Z",
+            "completed_at": "2026-11-10T03:23:54Z"
+          },
+          {
+            "name": "Record arithmetic contracts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-10T03:23:54Z",
+            "completed_at": "2026-11-10T03:23:54Z"
+          },
+          {
+            "name": "Audit compiled representation",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-10T03:23:54Z",
+            "completed_at": "2026-11-10T03:23:56Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-10T03:23:56Z",
+            "completed_at": "2026-11-10T03:23:57Z"
+          },
+          {
+            "name": "Core linked validation matrix",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-10T03:23:57Z",
+            "completed_at": "2026-11-10T03:26:01Z"
+          },
+          {
+            "name": "Runtime recovery observer",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-10T03:26:01Z",
+            "completed_at": "2026-11-10T03:26:05Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-11-10T03:26:05Z",
+            "completed_at": "2026-11-10T03:26:10Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 24,
+            "started_at": "2026-11-10T03:26:10Z",
+            "completed_at": "2026-11-10T03:26:10Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 25,
+            "started_at": "2026-11-10T03:26:10Z",
+            "completed_at": "2026-11-10T03:26:10Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/DeadKennedyx/C-SRD/check-runs/129605289218",
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "runner_id": 1000000795,
+        "runner_name": "GitHub Actions 1000000795",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 129605289601,
+        "run_id": 42748202813,
+        "workflow_name": "C-SRD correctness",
+        "head_branch": "main",
+        "run_url": "https://api.github.com/repos/DeadKennedyx/C-SRD/actions/runs/42748202813",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOVoel2c8AAAAeLRPGgQ",
+        "head_sha": "1d059db24726879aaf61a71f458aa1d103c48bfc",
+        "url": "https://api.github.com/repos/DeadKennedyx/C-SRD/actions/jobs/129605289601",
+        "html_url": "https://github.com/DeadKennedyx/C-SRD/actions/runs/42748202813/job/129605289601",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-10T03:15:12Z",
+        "started_at": "2026-11-10T03:15:14Z",
+        "completed_at": "2026-11-10T03:17:57Z",
+        "name": "linux (Debug)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-10T03:15:15Z",
+            "completed_at": "2026-11-10T03:15:15Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-10T03:15:15Z",
+            "completed_at": "2026-11-10T03:15:16Z"
+          },
+          {
+            "name": "Dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-10T03:15:16Z",
+            "completed_at": "2026-11-10T03:16:55Z"
+          },
+          {
+            "name": "Configure",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-10T03:16:55Z",
+            "completed_at": "2026-11-10T03:16:58Z"
+          },
+          {
+            "name": "Build",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-10T03:16:58Z",
+            "completed_at": "2026-11-10T03:17:07Z"
+          },
+          {
+            "name": "Test",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-10T03:17:07Z",
+            "completed_at": "2026-11-10T03:17:52Z"
+          },
+          {
+            "name": "Record arithmetic contracts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-10T03:17:52Z",
+            "completed_at": "2026-11-10T03:17:53Z"
+          },
+          {
+            "name": "Audit compiled representation",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-10T03:17:53Z",
+            "completed_at": "2026-11-10T03:17:54Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-10T03:17:54Z",
+            "completed_at": "2026-11-10T03:17:55Z"
+          },
+          {
+            "name": "Core linked validation matrix",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 10,
+            "started_at": "2026-11-10T03:17:55Z",
+            "completed_at": "2026-11-10T03:17:55Z"
+          },
+          {
+            "name": "Runtime recovery observer",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 11,
+            "started_at": "2026-11-10T03:17:55Z",
+            "completed_at": "2026-11-10T03:17:55Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 12,
+            "started_at": "2026-11-10T03:17:55Z",
+            "completed_at": "2026-11-10T03:17:55Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 24,
+            "started_at": "2026-11-10T03:17:55Z",
+            "completed_at": "2026-11-10T03:17:55Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 25,
+            "started_at": "2026-11-10T03:17:55Z",
+            "completed_at": "2026-11-10T03:17:55Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/DeadKennedyx/C-SRD/check-runs/129605289601",
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "runner_id": 1000000796,
+        "runner_name": "GitHub Actions 1000000796",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      }
+    ]
+  },
+  {
+    "run": {
+      "id": 42748202852,
+      "head_sha": "1d059db24726879aaf61a71f458aa1d103c48bfc",
+      "name": "C-SRD decompiler reconstruction",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/DeadKennedyx/C-SRD/actions/runs/42748202852"
+    },
+    "jobs": [
+      {
+        "id": 129605289306,
+        "run_id": 42748202852,
+        "workflow_name": "C-SRD decompiler reconstruction",
+        "head_branch": "main",
+        "run_url": "https://api.github.com/repos/DeadKennedyx/C-SRD/actions/runs/42748202852",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOVoel2c8AAAAeLRPFWg",
+        "head_sha": "1d059db24726879aaf61a71f458aa1d103c48bfc",
+        "url": "https://api.github.com/repos/DeadKennedyx/C-SRD/actions/jobs/129605289306",
+        "html_url": "https://github.com/DeadKennedyx/C-SRD/actions/runs/42748202852/job/129605289306",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-10T03:15:12Z",
+        "started_at": "2026-11-10T03:15:14Z",
+        "completed_at": "2026-11-10T03:25:46Z",
+        "name": "linux-x64",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-10T03:15:15Z",
+            "completed_at": "2026-11-10T03:15:16Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-10T03:15:16Z",
+            "completed_at": "2026-11-10T03:15:18Z"
+          },
+          {
+            "name": "Run actions/setup-java@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-10T03:15:18Z",
+            "completed_at": "2026-11-10T03:15:18Z"
+          },
+          {
+            "name": "Dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-10T03:15:18Z",
+            "completed_at": "2026-11-10T03:15:42Z"
+          },
+          {
+            "name": "Build and test including real Ghidra",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-10T03:15:42Z",
+            "completed_at": "2026-11-10T03:17:32Z"
+          },
+          {
+            "name": "Development matrix",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-10T03:17:32Z",
+            "completed_at": "2026-11-10T03:18:47Z"
+          },
+          {
+            "name": "Development reconstruction",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-10T03:18:47Z",
+            "completed_at": "2026-11-10T03:22:11Z"
+          },
+          {
+            "name": "Frozen held-out matrix",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-10T03:22:11Z",
+            "completed_at": "2026-11-10T03:23:06Z"
+          },
+          {
+            "name": "Held-out reconstruction",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-10T03:23:06Z",
+            "completed_at": "2026-11-10T03:25:39Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-10T03:25:39Z",
+            "completed_at": "2026-11-10T03:25:43Z"
+          },
+          {
+            "name": "Post Run actions/setup-java@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-11-10T03:25:43Z",
+            "completed_at": "2026-11-10T03:25:44Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20,
+            "started_at": "2026-11-10T03:25:44Z",
+            "completed_at": "2026-11-10T03:25:44Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21,
+            "started_at": "2026-11-10T03:25:44Z",
+            "completed_at": "2026-11-10T03:25:44Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/DeadKennedyx/C-SRD/check-runs/129605289306",
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "runner_id": 1000000794,
+        "runner_name": "GitHub Actions 1000000794",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      }
+    ]
+  }
+]
