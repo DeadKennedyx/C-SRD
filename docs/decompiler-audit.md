@@ -27,15 +27,20 @@ flowchart LR
 The Java export uses Ghidra's `decompile` simplification style. It preserves
 decompiled text, P-code, sizes, parameters, function address, language and compiler
 specification, status and elapsed time. A separate Python adapter interprets a
-bounded expression DAG: unsigned add/subtract/constant scale, bitwise operations,
+bounded scalar graph: unsigned add/subtract/constant scale, bitwise operations,
 constant logical shifts, byte/halfword truncation and extension, and unsigned
 comparisons. It materializes unsigned C locals and never parses C with regexes.
-P-code graph budgets are 2,048 operations, 4,096 varnodes and recursion depth 128.
-Control flow, phi nodes, effects, unresolved inputs, general multiplication and
-wide data values are conservatively unsupported. Constant shift/subpiece counts
+Schema-2 exports also admit validated branches and phi nodes when complete
+bounded expansion reaches a return on every path. The
+[control-flow specification](pcode-control-flow.md) defines block/edge order,
+SSA validation, simultaneous merges and all expansion budgets. Legacy schema-1
+exports admit only expression DAGs (2,048 operations, 4,096 varnodes, depth 128).
+Effects, unresolved inputs, general multiplication and wide data values remain
+conservatively unsupported. Constant shift/subpiece counts
 may occupy 1/2/4/8-byte fields independently of payload width; they are checked
 without truncating their value. Oversized logical shifts yield zero as specified
-by P-code, never an invalid C shift. SIMD/popcount intrinsics may therefore
+by P-code, never an invalid C shift; subpieces must stay within their source.
+SIMD/popcount intrinsics may therefore
 be unsupported even when a person can easily understand the decompiled C.
 
 The reference is consulted only after reconstruction, for a full-input-domain

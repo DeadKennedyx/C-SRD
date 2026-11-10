@@ -195,12 +195,13 @@ def ghidra(config, directory):
     export = json.loads((directory / "export.json").read_text())
     result = {"status": export["status"], "headless_seconds": exported - start,
               "target_decompile_requests": 1 if "decompile_seconds" in export else 0,
-              "export": {k: v for k, v in export.items() if k not in ("nodes", "operations")},
+              "export": {k: v for k, v in export.items() if k not in ("nodes", "operations", "blocks")},
               "pcode_nodes": len(export.get("nodes", [])), "pcode_operations": len(export.get("operations", [])),
+              "pcode_blocks": len(export.get("blocks", [])), "reconstruction": {},
               "training_queries": 0}
     if export["status"] == "decompiled":
         try:
-            (directory / "candidate.c").write_text(reconstruct(export))
+            (directory / "candidate.c").write_text(reconstruct(export, metrics=result["reconstruction"]))
             result["status"] = "candidate"
         except Unsupported as error:
             result.update(status="unsupported-reconstruction", error=str(error))

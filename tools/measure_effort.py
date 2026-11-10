@@ -22,6 +22,7 @@ from effort_worker import model_source
 from experiment_support import input_vectors, MASK
 from observe_runtime import HELDOUT, score_models
 from pcode_reconstruct import reconstruct
+from pcode_cfg import LIMITS as PCODE_LIMITS
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKER = ROOT / "tools/effort_worker.py"
@@ -146,6 +147,7 @@ def run(args, output):
         bindings[t["path"]] = t["sha256"]
     implementation = [Path(__file__), WORKER, ROOT / "tools/effort_resources.py", ROOT / "tools/effort_statistics.py",
                       ROOT / "tools/observe_runtime.py", ROOT / "tools/gdb_trace.py", ROOT / "tools/pcode_reconstruct.py",
+                      ROOT / "tools/pcode_cfg.py", ROOT / "tools/pcode_values.py",
                       ROOT / "tools/ghidra/ExportCSRD.java", ROOT / "tools/experiment_support.py"]
     bindings.update({str(p): file_hash(p) for p in implementation})
     query_budgets = args.query_budgets if args.observer != "ghidra" else [0]
@@ -160,6 +162,7 @@ def run(args, output):
               "protocol": {**vars(args), "budgets": budgets, "order": "serialized randomized complete blocks",
                            "cache": "fresh observer process and Ghidra project; filesystem caches not flushed",
                            "grading": "reference withheld from fixed observer; frozen answer; grader resources separate",
+                           "pcode_adapter": {"version": "cfg-v2", "limits": PCODE_LIMITS} if args.observer == "ghidra" else None,
                            "human_effort": "unassessed", "binary_lifting_proved": False,
                            "lock_scope": "cooperating effort runs in this checkout only; shared-host noise remains"},
               "application_costs_from_matrix": [{k: r.get(k) for k in ("case", "profile", "variant", "timing", "binary_bytes", "binary_size_ratio")}
