@@ -1,0 +1,33 @@
+[0/1] Re-running CMake...
+-- Using LLVM 23.1.5 from /opt/homebrew/opt/llvm/lib/cmake/llvm
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/admin/C-SRD/build
+ninja: no work to do.
+Test project /Users/admin/C-SRD/build
+      Start  1: representation
+ 1/11 Test  #1: representation ...................   Passed    0.03 sec
+      Start  2: integration
+ 2/11 Test  #2: integration ......................   Passed    5.72 sec
+      Start  3: translation_validation
+ 3/11 Test  #3: translation_validation ...........   Passed    1.04 sec
+      Start  4: representation_planning
+ 4/11 Test  #4: representation_planning ..........   Passed    3.13 sec
+      Start  5: algorithm_candidates
+ 5/11 Test  #5: algorithm_candidates .............   Passed    7.55 sec
+      Start  6: defensive_evaluation
+ 6/11 Test  #6: defensive_evaluation .............   Passed    3.18 sec
+      Start  7: protection_audit
+ 7/11 Test  #7: protection_audit .................   Passed   10.18 sec
+      Start  8: validation_matrix
+ 8/11 Test  #8: validation_matrix ................   Passed   12.21 sec
+      Start  9: differential
+ 9/11 Test  #9: differential .....................   Passed    7.06 sec
+      Start 10: expanded_differential
+10/11 Test #10: expanded_differential ............   Passed   21.79 sec
+      Start 11: rule_contracts
+11/11 Test #11: rule_contracts ...................   Passed    0.19 sec
+
+100% tests passed out of 11
+
+Total Test time (real) =  72.08 sec

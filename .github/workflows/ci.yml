@@ -16,7 +16,7 @@ jobs:
       - name: Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build clang-18 llvm-18-dev libclang-18-dev libclang-cpp18-dev libclang-rt-18-dev gcc g++ python3 z3 libz3-dev
+          sudo apt-get install -y cmake ninja-build clang-18 llvm-18-dev libclang-18-dev libclang-cpp18-dev libclang-rt-18-dev lld-18 gcc g++ python3 z3 libz3-dev gdb
       - name: Configure
         run: >-
           cmake -S . -B build -G Ninja
@@ -45,3 +45,22 @@ jobs:
             build/differential.json
             build/expanded-differential.json
             build/protection-audit/
+      - name: Core linked validation matrix
+        if: matrix.build_type == 'Release'
+        run: >-
+          python3 tools/run_matrix.py --csrd build/csrd
+          --compiler clang=clang-18 --compiler gcc=gcc
+          --objdump llvm-objdump-18 --profdata llvm-profdata-18
+          --tier core --require-selected-profiles --output-dir build/matrix-core
+      - name: Runtime recovery observer
+        if: matrix.build_type == 'Release'
+        run: >-
+          python3 tools/observe_runtime.py --matrix-report build/matrix-core/matrix.json
+          --output-dir build/runtime-observation
+      - uses: actions/upload-artifact@v4
+        if: always() && matrix.build_type == 'Release'
+        with:
+          name: linked-matrix-and-runtime-observer
+          path: |
+            build/matrix-core/
+            build/runtime-observation/

@@ -20,8 +20,8 @@ debugging or provide an isolated execution environment.
 | Defined behavior preserved | Explicit semantic contract, emitted-C validation, compiled differential tests | Implemented for the bounded pure-u32 subset |
 | Source representation changed | Source hashes and AST-aware measurements | Implemented |
 | Compiled representation differs | Paired compiler/flags, raw objects, extracted code-section hashes and disassembly | Initial audit below; byte difference alone is insufficient |
-| Reconstruction requires more effort | Prespecified observer/tools/budget, correctness-scored reconstruction tasks, controls, held-out corpus | Not assessed |
-| Ordinary intermediate values have less exposure | A precise observation model and measurements of optimized execution, including conversion boundaries | Not assessed |
+| Reconstruction requires more effort | Prespecified observer/tools/budget, correctness-scored reconstruction tasks, controls, held-out corpus | Initial fixed black-box observer implemented; no human-effort or general resistance claim |
+| Ordinary intermediate values have less exposure | A precise observation model and measurements of optimized execution, including conversion boundaries | Initial bounded GDB register/stack recovery experiment; no general exposure-reduction claim |
 | Secrets remain inaccessible to a controlling debugger | A separate security model and justified trust boundary | Not provided |
 
 Different instruction bytes can reflect padding or layout changes. Equal raw
@@ -53,7 +53,7 @@ Use actual GNU GCC, rather than an OS-provided alias, when comparing compiler
 families. On Homebrew, paths such as `/opt/homebrew/opt/llvm/bin/clang`, `gcc-16`
 and `/opt/homebrew/opt/llvm/bin/llvm-objdump` identify the installed tools.
 
-`--compiler` may be repeated. `--optimization O0|O1|O2|O3|Os` may be repeated;
+`--compiler` may be repeated. `--optimization O0|O1|O2|O3|Os|Oz|Og` may be repeated;
 the default is O0 and O2. `--timeout-ms` sets the source verifier budget, default
 10000. The output directory must be new. Existing inputs/directories are never
 overwritten. A failed validation or compilation leaves a failed report, rather
@@ -77,6 +77,12 @@ header snapshots are checked against the verification evidence. Objects are
 measurements of the selected builds, not a machine-code equivalence proof.
 
 ## Subsequent work
+
+The [linked matrix and observer suite](validation-matrix.md) now implements a
+separate experiment driver for release linking/LTO/PGO, independent executable
+recognition, cost-based candidate screening and bounded runtime observations.
+The initial object audit above retains its original scope. Missing capabilities
+and failed experiments remain visible; none establishes secrecy.
 
 The [O2 algorithm-survival experiment](journal/2026-11-09-algorithm-survival.md)
 compares each encoded candidate with its unencoded algorithm as well as the

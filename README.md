@@ -34,6 +34,7 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Semantic contract](docs/semantics.md) | Exact accepted language and observations preserved |
 | [Validation record](reports/roadmap-validation.md) | Historical commands, results, raw data and limitations |
 | [Compiled-code audit](reports/protection-audit-validation.md) | Current paired audit, preprocessing controls and observed optimization effects |
+| [Linked validation matrix and observers](docs/validation-matrix.md) | Declared build profiles, compiled candidate selection, independent recovery and bounded runtime observation |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |

@@ -51,13 +51,16 @@ class Runner:
     def __init__(self, report):
         self.report = report
 
-    def __call__(self, args, timeout=120):
+    def __call__(self, args, timeout=120, input=None):
         argv = [str(arg) for arg in args]
         record = {"argv": argv}
+        if input is not None:
+            record["stdin_sha256"] = hashlib.sha256(input.encode()).hexdigest()
+            record["stdin_utf8_bytes"] = len(input.encode())
         self.report["commands"].append(record)
         start = time.perf_counter()
         try:
-            result = subprocess.run(argv, capture_output=True, text=True, timeout=timeout)
+            result = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, input=input)
         except subprocess.TimeoutExpired as error:
             def decoded(value):
                 return value.decode(errors="replace") if isinstance(value, bytes) else value or ""
@@ -211,7 +214,8 @@ def run(args, root):
             for optimization in args.optimization or ["O0", "O2"]:
                 directory = root / f"compiler-{index}-{optimization}"
                 directory.mkdir()
-                flags = ["-std=c11", "-pedantic-errors", "-Wall", "-Wextra", "-Werror", f"-{optimization}"]
+                flags = ["-std=c11", "-pedantic-errors", "-Wall", "-Wextra", "-Werror", f"-{optimization}",
+                         *getattr(args, "compile_flags", [])]
                 config = {"compiler": compiler, "compiler_version": version, "compiler_sha256": file_hash(compiler),
                           "compiler_target": target, "flags": flags, "status": "incomplete", "objects": {}}
                 report["configurations"].append(config)
@@ -259,6 +263,8 @@ def run(args, root):
                     assert_snapshot(snapshot)
                     # .i selects already-preprocessed C in Clang/GCC. This binds
                     # the compiled function to the concrete build's checked input.
+                    if getattr(args, "validation_only", False):
+                        continue
                     command([compiler, *flags, "-c", preprocessed, "-o", obj])
                     assert_snapshot(snapshot)
                     # Shared extractor parses object-tool output, never C source text.
@@ -271,13 +277,16 @@ def run(args, root):
                     (directory / f"{label}.relocations.txt").write_text(relocations)
                     config["objects"][label] = {"path": str(obj.relative_to(root)),
                                                 "object_sha256": file_hash(obj), **metrics}
-                config.update(comparison(config["objects"]["original"], config["objects"]["candidate"]))
-                config["status"] = "completed"
+                if getattr(args, "validation_only", False):
+                    config["status"] = "validated-build-inputs"
+                else:
+                    config.update(comparison(config["objects"]["original"], config["objects"]["candidate"]))
+                    config["status"] = "completed"
         assert_snapshot(snapshot)
         report["summary"] = {
             "configurations": len(report["configurations"]),
-            "identical_code_sections": sum(c["code_section_bytes_identical"] for c in report["configurations"]),
-            "different_code_sections": sum(not c["code_section_bytes_identical"] for c in report["configurations"]),
+            "identical_code_sections": sum(c.get("code_section_bytes_identical") is True for c in report["configurations"]),
+            "different_code_sections": sum(c.get("code_section_bytes_identical") is False for c in report["configurations"]),
         }
         report["status"] = "completed"
     except (AuditError, OSError, ValueError, KeyError, RuntimeError, subprocess.SubprocessError) as error:
@@ -295,7 +304,7 @@ def main():
     parser.add_argument("--csrd", default="build/csrd")
     parser.add_argument("--compiler", action="append", required=True)
     parser.add_argument("--objdump", required=True, help="llvm-objdump executable")
-    parser.add_argument("--optimization", action="append", choices=["O0", "O1", "O2", "O3", "Os"])
+    parser.add_argument("--optimization", action="append", choices=["O0", "O1", "O2", "O3", "Os", "Oz", "Og"])
     parser.add_argument("--timeout-ms", type=int, default=10000)
     parser.add_argument("--output-dir", required=True)
     args = parser.parse_args()

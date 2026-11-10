@@ -1,0 +1,45 @@
+name: C-SRD extended experiments
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "43 10 * * 0"
+permissions:
+  contents: read
+jobs:
+  linux-release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build clang-18 llvm-18-dev libclang-18-dev libclang-cpp18-dev libclang-rt-18-dev lld-18 gcc g++ python3 z3 libz3-dev gdb
+      - name: Build
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH=/usr/lib/llvm-18 -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --parallel 2
+      - name: Extended development matrix
+        run: >-
+          python3 tools/run_matrix.py --csrd build/csrd --tier extended
+          --compiler clang=clang-18 --compiler gcc=gcc --objdump llvm-objdump-18
+          --profdata llvm-profdata-18 --seeds 42 7 --output-dir build/extended
+      - name: Frozen held-out families
+        run: >-
+          python3 tools/run_matrix.py --csrd build/csrd --tier holdout
+          --compiler clang=clang-18 --compiler gcc=gcc --objdump llvm-objdump-18
+          --profdata llvm-profdata-18 --seeds 42 7 --selection build/extended/matrix.json
+          --output-dir build/heldout
+      - name: Runtime observer
+        run: >-
+          python3 tools/observe_runtime.py --matrix-report build/extended/matrix.json
+          --output-dir build/runtime
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: extended-matrix-and-observer
+          retention-days: 14
+          path: |
+            build/extended/
+            build/heldout/
+            build/runtime/
