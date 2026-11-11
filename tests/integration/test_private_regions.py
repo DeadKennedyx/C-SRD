@@ -58,12 +58,13 @@ class PrivateRegions(unittest.TestCase):
         self.call("transform", self.input, "-o", self.output, "--scope", "private-regions", "--strategy", "xor", code=2)
         self.call("verify", self.input, self.output, "--scope", "private-regions", code=2)
 
-    def test_escape_types_macro_and_shadow_boundaries(self):
+    def test_escape_types_macro_and_initialization_boundaries(self):
         cases = [
             ("extern void save(unsigned int*);unsigned int f(unsigned int x){save(&x);x=x+1u;return x;}", "private"),
             ("unsigned int f(unsigned int x){static unsigned int y;y=x+1u;return y;}", "private"),
             ("unsigned int f(volatile unsigned int x){x=x+1u;return x;}", "private"),
-            ("unsigned int f(unsigned int x){unsigned int y=0;{unsigned int y=1;y=y+x;}return y;}", "shadow"),
+            ("unsigned int f(void){unsigned int x=x+1u;return x;}", "private"),
+            ("unsigned int f(unsigned int x){unsigned int a=x+1u,b=a+2u;return b;}", "private"),
             ("#define STEP(x) ((x)+1u)\nunsigned int f(unsigned int x){x=STEP(x);return x;}\n", "macro"),
             ("int f(int x){x=x+1;return x;}", "private"),
             ("unsigned int f(unsigned int x,unsigned int y){x=x*y;return x;}", "private"),
@@ -91,8 +92,45 @@ class PrivateRegions(unittest.TestCase):
         emitted = self.output.read_text()[g["candidate_begin"]:g["candidate_end"]]
         self.assertNotIn(f"unsigned int csrd_frame_{offset}_0 =", emitted)
 
+    def test_declarations_shadowing_and_split_bindings(self):
+        source = (ROOT / "tests/fixtures/private_declarations.c").read_text()
+        r = self.transform(source, "--seed",42)
+        self.assertTrue(all(f["context_bindings_verified"] for f in r["functions"]))
+        frames = [g for f in r["functions"] for g in f["private_regions"]]
+        self.assertTrue(any(g["outputs"].count("x") == 2 for g in frames))
+        output = self.output.read_bytes()
+        for frame in frames:
+            bindings = {b["id"]:b for b in frame["bindings"]}
+            self.assertEqual([bindings[i]["name"] for i in frame["input_ids"]],frame["inputs"])
+            self.assertEqual([bindings[i]["name"] for i in frame["output_ids"]],frame["outputs"])
+            self.assertEqual(len(set(frame["output_ids"])),len(frame["output_ids"]))
+            self.assertEqual(output[frame["candidate_scope_begin"]:frame["candidate_scope_begin"]+1],b"{")
+            for ident in frame["declared_objects"]:
+                b=bindings[ident]; pos=b["candidate_declaration"]
+                self.assertEqual(output[pos:pos+len(b["name"])].decode(),b["name"])
+                self.assertGreaterEqual(pos,frame["candidate_begin"])
+                self.assertLess(pos,frame["candidate_end"])
+        # Force splits at both statement and output budgets. Later frames must
+        # read the actual declarations exported by earlier frames.
+        many = "unsigned int f(unsigned int x){"+"".join(f"unsigned int v{i}="+("x" if i==0 else f"v{i-1}")+"+1u;" for i in range(40))+"return v39;}"
+        r = self.transform(many)
+        self.assertGreaterEqual(len(r["functions"][0]["private_regions"]),3)
+        self.assertTrue(r["functions"][0]["context_bindings_verified"])
+        self.assertEqual(sum(len(g["declared_objects"]) for g in r["functions"][0]["private_regions"]),40)
+        # A later address escape excludes only that declaration, not an inner
+        # private object that happens to have the same spelling.
+        escaped="extern void save(unsigned int*);unsigned int f(unsigned int x){unsigned int y=x+1u;{unsigned int y=x+2u;x=y+1u;}save(&y);return x+y;}"
+        r=self.transform(escaped)
+        frames=r["functions"][0]["private_regions"]
+        self.assertEqual(len(frames),1)
+        self.assertTrue(r["functions"][0]["context_bindings_verified"])
+
     def test_compiled_events_memory_and_return(self):
-        source = (ROOT / "tests/fixtures/private_regions.c").read_text()
+        for fixture in ("private_regions.c", "private_declarations.c"):
+            self.check_compiled_fixture(fixture)
+
+    def check_compiled_fixture(self, fixture):
+        source = (ROOT / "tests/fixtures" / fixture).read_text()
         harness = self.root / "harness.c"; harness.write_text(HARNESS)
         builds = checks = 0
         for strategy, seed in (("identity",0),("affine",0),("affine",42),("affine",18446744073709551615)):
@@ -106,14 +144,15 @@ class PrivateRegions(unittest.TestCase):
                         for prefix, path in (("original",self.input),("candidate",self.output)):
                             command = [*common, f"-Dregion_pipeline={prefix}_pipeline", f"-Dregion_outputs={prefix}_outputs",
                                        "-c", str(path), "-o", str(self.root / (prefix+".o"))]
-                            subprocess.run(command, check=True, capture_output=True, text=True, timeout=60)
+                            compiled = subprocess.run(command, capture_output=True, text=True, timeout=60)
+                            self.assertEqual(compiled.returncode,0,compiled.stdout+compiled.stderr)
                         program = self.root / "check"
                         subprocess.run([*common, str(harness), str(self.root/"original.o"), str(self.root/"candidate.o"), "-o", str(program)],
                                        check=True, capture_output=True, text=True, timeout=60)
                         r = subprocess.run([str(program)], capture_output=True, text=True, timeout=60)
                         self.assertEqual(r.returncode, 0, r.stdout+r.stderr)
                         self.assertIn("checks=3078", r.stdout); builds += 1; checks += 3078
-        print(f"private regions: {builds} compiler/profile/variant cells; {checks} return/memory/event comparisons", flush=True)
+        print(f"{fixture}: {builds} compiler/profile/variant cells; {checks} return/memory/event comparisons", flush=True)
 
 
 HARNESS = r'''#include <stdint.h>

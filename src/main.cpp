@@ -130,13 +130,21 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
     for (const auto &entry : d.metrics.operators) operators[entry.first] = entry.second;
     f["parameter_count"] = d.parameterCount;
     if (!d.privateFrames.empty() || result.options.scope == "private-regions") {
-      f["semantic_model"] = "private-u32-frame-c11-v1";
+      f["semantic_model"] = "private-u32-frame-c11-v2";
+      f["context_bindings_verified"] = d.privateContextVerified;
       llvm::json::Array frames, boundaries;
       for (const auto &frame : d.privateFrames) {
-        llvm::json::Array inputs, outputs;
-        for (const auto &name : frame.inputs) inputs.push_back(name);
-        for (const auto &name : frame.outputs) outputs.push_back(name);
+        llvm::json::Array inputs, outputs, inputIds, outputIds, declarations, bindings;
+        for (const auto &id : frame.inputs) { inputs.push_back(frame.bindings.at(id).name); inputIds.push_back(id); }
+        for (const auto &id : frame.outputs) { outputs.push_back(frame.bindings.at(id).name); outputIds.push_back(id); }
+        for (const auto &id : frame.declarations) declarations.push_back(id);
+        for (const auto &[id, b] : frame.bindings)
+          bindings.push_back(llvm::json::Object{{"id", id}, {"name", b.name}, {"source_declaration", b.declaration},
+            {"candidate_declaration", b.candidateDeclaration}, {"register_storage", b.registerStorage}});
         frames.push_back(llvm::json::Object{{"line", frame.line}, {"column", frame.column},
+          {"bindings", std::move(bindings)}, {"declared_objects", std::move(declarations)},
+          {"input_ids", std::move(inputIds)}, {"output_ids", std::move(outputIds)},
+          {"source_scope_begin", frame.parentBegin}, {"candidate_scope_begin", frame.candidateParentBegin},
           {"source_begin", frame.begin}, {"source_end", frame.end}, {"candidate_begin", frame.candidateBegin},
           {"candidate_end", frame.candidateEnd}, {"inputs", std::move(inputs)}, {"outputs", std::move(outputs)},
           {"operations", frame.original->operations}, {"operations_without_decoding", frame.emission.encodedOperations},

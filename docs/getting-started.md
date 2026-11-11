@@ -47,6 +47,8 @@ build/csrd transform benchmarks/arithmetic/buffer_update.c -o build/buffer-updat
   --seed 42 --report build/buffer-update.json
 build/csrd transform tests/fixtures/private_regions.c -o build/private-regions.c \
   --scope private-regions --seed 42 --report build/private-regions.json
+build/csrd transform tests/fixtures/private_declarations.c -o build/private-declarations.c \
+  --scope private-regions --seed 42 --report build/private-declarations.json
 ```
 
 For `return 3u*(x+y)+11u`, affine mode encodes parameters, performs the three
@@ -60,7 +62,7 @@ Implemented options:
 | Command/option | Behavior |
 | --- | --- |
 | `transform input.c -o output.c` | Default uniform affine strategy; unsupported operations use legal ordinary representation boundaries |
-| `--scope functions\|private-regions` | Transform/analyze scope; default functions; private regions admit affine/identity assignments under a separate contextual contract |
+| `--scope functions\|private-regions` | Transform/analyze scope; default functions; private regions admit affine/identity declarations and assignments under a separate contextual contract |
 | `--strategy identity\|affine\|xor\|independent\|planned\|limbs16` | Identity lowering; uniform supported affine/XOR operations; independent per-operation encoding; graph planning; or experimental fixed two-piece representation |
 | `--seed UINT64` | Deterministic representation parameters; default 0 |
 | `--coverage 0..100` | Minimum percentage of live arithmetic/bitwise graph nodes encoded; planned only; default 50 |
@@ -101,9 +103,11 @@ These are caller preconditions, not inserted bounds checks. Return and whole
 memory equivalence are checked against actual emitted C.
 
 The opt-in [private-region contract](private-regions.md) admits contiguous
-unsigned assignments inside richer functions. Surrounding declarations, calls,
-memory operations, branches and loops remain unchanged boundaries. All written
-private scalars are checked at region exit. A region proof does not certify the
+unsigned assignments and single initialized scalar declarations inside richer
+functions, including shadowed locals. Unsupported declarations, calls, memory
+operations, branches and loops remain unchanged boundaries. All written
+private scalars are checked at region exit, with declaration scope and untouched
+reference bindings checked after rewriting. A region proof does not certify the
 surrounding call, memory, floating-point or concurrency behavior.
 
 General pointers, calls, other external effects, signed/wider arithmetic, general multiplication,

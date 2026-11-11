@@ -23,6 +23,8 @@ struct Decision {
   Metrics metrics;
   std::vector<PrivateFrame> privateFrames;
   std::vector<PrivateBoundary> privateBoundaries;
+  std::vector<PrivateReference> privateReferences;
+  bool privateContextVerified = false;
 };
 struct TransformResult {
   std::string source;

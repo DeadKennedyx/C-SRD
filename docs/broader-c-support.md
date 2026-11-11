@@ -5,7 +5,7 @@ Status: single development sequence; first bounded C1 slice implemented under
 2026-11-10; [buffer evidence](../reports/buffers-validation.md) records actual
 results. The [fourteen-increment breakdown](coverage-increments.md) refines the
 sequence. An opt-in [private-region prototype](private-regions.md) now selects
-assignment arithmetic inside richer functions without modeling or transforming
+declaration/assignment arithmetic inside richer functions without modeling or transforming
 their surrounding effects. This plan does not replace the M0–M5 evidence record.
 
 ## Objective and scope

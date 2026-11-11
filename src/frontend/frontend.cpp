@@ -99,11 +99,17 @@ public:
       if (pp.keywordMacro || hazard || f->getBeginLoc().isMacroID() || f->getEndLoc().isMacroID()) {
         decision.reason = pp.keywordMacro ? "macro definitions for generated C type keywords are unsupported" : "function contains macro expansions or preprocessor directives";
       } else if (result.options.scope == "private-regions") {
+        decision.privateReferences = csrd::privateReferences(ctx, *f);
         if (validationSource) {
           const auto original = std::find_if(validationSource->decisions.begin(), validationSource->decisions.end(),
             [&](const Decision &d) { return d.function == decision.function; });
           if (original != validationSource->decisions.end()) {
             decision.privateFrames = original->privateFrames;
+            std::vector<const PrivateFrame *> edits;
+            for (const auto &d : validationSource->decisions)
+              for (const auto &frame : d.privateFrames) edits.push_back(&frame);
+            decision.privateContextVerified = privateContextMatches(original->privateReferences,
+              decision.privateReferences, edits, decision.reason);
             for (auto &frame : decision.privateFrames)
               frame.verification = validatePrivateFrame(ctx, *f, frame, result.options.timeoutMs);
             decision.status = "checked-regions";
@@ -206,16 +212,7 @@ public:
     if (rewrite && result.options.scope == "private-regions") {
       std::vector<PrivateFrame *> frames;
       for (auto &d : result.decisions) for (auto &frame : d.privateFrames) frames.push_back(&frame);
-      std::sort(frames.begin(), frames.end(), [](const PrivateFrame *a, const PrivateFrame *b) { return a->begin < b->begin; });
-      int64_t delta = 0;
-      unsigned previousEnd = 0;
-      for (auto *frame : frames) {
-        if (frame->begin < previousEnd) throw std::logic_error("private source regions overlap");
-        frame->candidateBegin = unsigned(int64_t(frame->begin) + delta);
-        frame->candidateEnd = frame->candidateBegin + unsigned(frame->emission.body.size());
-        delta += int64_t(frame->emission.body.size()) - int64_t(frame->end-frame->begin);
-        previousEnd = frame->end;
-      }
+      preparePrivateFrames(std::move(frames));
     }
     llvm::raw_string_ostream output(result.source);
     rewriter.getEditBuffer(file).write(output);
@@ -281,9 +278,15 @@ bool validatePrivateCandidate(const std::string &path, TransformResult &result, 
     const auto match = std::find_if(generated.decisions.begin(), generated.decisions.end(),
       [&](const Decision &d) { return d.function == decision.function; });
     if (match == generated.decisions.end() || match->privateFrames.size() != decision.privateFrames.size()) return false;
+    decision.privateContextVerified = match->privateContextVerified;
+    if (!decision.privateContextVerified) {
+      decision.verification.status = "unsupported"; decision.verification.reason = match->reason;
+      llvm::errs() << "csrd: private context binding validation failed: " << match->reason << "\n";
+      return false;
+    }
     decision.verification.status = "proved-under-model";
     decision.verification.strategy = "contextual-private-frames";
-    decision.verification.reason = "pointwise private scalar frame equivalence with byte-identical surrounding source; not a whole-C or binary proof";
+    decision.verification.reason = "pointwise private scalar frame equivalence with byte-identical surrounding source and unchanged reference bindings; not a whole-C or binary proof";
     for (unsigned i = 0; i < decision.privateFrames.size(); ++i) {
       auto &frame = decision.privateFrames[i]; frame.verification = match->privateFrames[i].verification;
       if (frame.verification.status != "proved-under-model") {

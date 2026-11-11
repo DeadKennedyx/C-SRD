@@ -46,7 +46,11 @@ def main():
                 require(proof["scope"] == "private-regions" and proof["output_written"] and len(proof["functions"]) == 2, "wrong proof scope")
                 source = Path(original["source"]).read_bytes();candidate = Path(build["source"]).read_bytes()
                 frames = sorted([g for f in proof["functions"] for g in f["private_regions"]],key=lambda g:g["candidate_begin"])
-                require(len(frames) == 3, "unexpected frame coverage")
+                expected_frames = 3 if r["protocol"].get("fixture","private_regions.c") == "private_regions.c" else 6
+                require(len(frames) == expected_frames, "unexpected frame coverage")
+                if r["protocol"].get("fixture") == "private_declarations.c":
+                    require(all(f.get("context_bindings_verified") for f in proof["functions"]), "unchecked context bindings")
+                    require(sum(len(g.get("declared_objects",[])) for g in frames) == 7, "unexpected declaration coverage")
                 restored = candidate
                 import hashlib
                 for frame in reversed(frames):

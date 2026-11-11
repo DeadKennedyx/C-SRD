@@ -1,0 +1,3899 @@
+{
+  "hosts": {
+    "native": {
+      "report_sha256": "9eff5d7be0e331df7ab3c494f48ca8c539c0ef049f4be60a47654f96a1595b20",
+      "checks": {
+        "status": "checked",
+        "report_sha256": "9eff5d7be0e331df7ab3c494f48ca8c539c0ef049f4be60a47654f96a1595b20",
+        "builds": 40,
+        "samples": 280,
+        "bound_frame_obligations": 120,
+        "scope": "evidence identity and arithmetic summary checks; not independent binary equivalence or a solver replay"
+      },
+      "tools": {
+        "csrd": {
+          "path": "/Users/admin/C-SRD/build/csrd",
+          "sha256": "e7fcce5bc3e39d6c50ab4653d72f437af9a8b5b34f46e6c034314460cf8190b9",
+          "version": "C-SRD 0.6.1"
+        },
+        "objdump": {
+          "path": "/opt/homebrew/opt/llvm/bin/llvm-objdump",
+          "sha256": "b2443b7624fb19e571918b958160ffc6a7c476879057cf9a471c685c43e650c8",
+          "version": "Homebrew LLVM version 23.1.5"
+        },
+        "clang": {
+          "path": "/opt/homebrew/opt/llvm/bin/clang",
+          "sha256": "89f9a1735eb8c596efb614c3af472303d2feddbed30495bca94e164a0bbab271",
+          "version": "Homebrew clang version 23.1.5"
+        },
+        "gcc": {
+          "path": "/opt/homebrew/bin/gcc-16",
+          "sha256": "406040ac6e22d01468e601a5aaa548e60af1c151efb056aa45d485d6804f0cd4",
+          "version": "gcc-16 (Homebrew GCC 16.2.0) 16.2.0"
+        }
+      },
+      "profiles": [
+        {
+          "profile": {
+            "id": "clang-O0",
+            "compiler": "clang",
+            "optimization": "O0",
+            "tiers": [
+              "core",
+              "extended"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O0"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-O0",
+            "compiler": "gcc",
+            "optimization": "O0",
+            "tiers": [
+              "core",
+              "extended"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O0"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "clang-O2",
+            "compiler": "clang",
+            "optimization": "O2",
+            "tiers": [
+              "core",
+              "extended"
+            ],
+            "selection_required": true
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O2"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-O2",
+            "compiler": "gcc",
+            "optimization": "O2",
+            "tiers": [
+              "core",
+              "extended"
+            ],
+            "selection_required": true
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O2"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "clang-O2-lto",
+            "compiler": "clang",
+            "optimization": "O2",
+            "lto": "full",
+            "tiers": [
+              "core",
+              "extended"
+            ],
+            "selection_required": true
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O2",
+            "-flto"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-O2-lto",
+            "compiler": "gcc",
+            "optimization": "O2",
+            "lto": "full",
+            "tiers": [
+              "core",
+              "extended"
+            ],
+            "selection_required": true
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O2",
+            "-flto"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "clang-O3",
+            "compiler": "clang",
+            "optimization": "O3",
+            "tiers": [
+              "extended",
+              "holdout"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O3"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-O3",
+            "compiler": "gcc",
+            "optimization": "O3",
+            "tiers": [
+              "extended",
+              "holdout"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O3"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "clang-Os",
+            "compiler": "clang",
+            "optimization": "Os",
+            "tiers": [
+              "extended"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-Os"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-Os",
+            "compiler": "gcc",
+            "optimization": "Os",
+            "tiers": [
+              "extended"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-Os"
+          ],
+          "status": "available"
+        }
+      ],
+      "paired_results": [
+        {
+          "profile": "clang-O0",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O0",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.529526893582193,
+                2.0408771229384848,
+                2.0494780406448827,
+                1.9613108513991733,
+                2.036896381375818,
+                1.9925277929651906,
+                1.9611249703017342
+              ],
+              "median": 1.9925277929651906,
+              "min": 1.529526893582193,
+              "max": 2.0494780406448827
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.4946017172490011,
+                1.973195203039658,
+                1.9789146731177016,
+                1.944310490079307,
+                2.0041260539376906,
+                1.9538245037966517,
+                1.931958881626307
+              ],
+              "median": 1.9538245037966517,
+              "min": 1.4946017172490011,
+              "max": 2.0041260539376906
+            }
+          },
+          "linked_text_ratio": 1.1805555555555556,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O0",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.9786488265750937,
+                2.814716992721354,
+                2.8339922169374265,
+                2.714931453891219,
+                2.824410275410646,
+                2.7743757973391654,
+                2.7116001425516747
+              ],
+              "median": 2.7743757973391654,
+              "min": 1.9786488265750937,
+              "max": 2.8339922169374265
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.9540253336733824,
+                2.752463785324151,
+                2.769017113161903,
+                2.6773378264532433,
+                2.7628714943491004,
+                2.7026298044504378,
+                2.6581819228886525
+              ],
+              "median": 2.7026298044504378,
+              "min": 1.9540253336733824,
+              "max": 2.769017113161903
+            }
+          },
+          "linked_text_ratio": 1.7743055555555556,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O0",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9511058128569649,
+                0.996376032677129,
+                1.0026252393600594,
+                0.9804323906384751,
+                1.0047857231073238,
+                0.983931717392625,
+                0.9733012592064623
+              ],
+              "median": 0.983931717392625,
+              "min": 0.9511058128569649,
+              "max": 1.0047857231073238
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9706877497237099,
+                1.0009795772975543,
+                1.0043604217065376,
+                0.9886994160880807,
+                1.0060096872570712,
+                0.9804450438300739,
+                0.9769357021509403
+              ],
+              "median": 0.9886994160880807,
+              "min": 0.9706877497237099,
+              "max": 1.0060096872570712
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O0",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O0",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.4374238114587565,
+                1.82490766730684,
+                1.8108917712608212,
+                1.8615535189963521,
+                1.9085308772459608,
+                1.8062370062370063,
+                1.8150076479585835
+              ],
+              "median": 1.8150076479585835,
+              "min": 1.4374238114587565,
+              "max": 1.9085308772459608
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.4254702071863983,
+                1.8004347080020588,
+                1.7861910842814022,
+                1.8368480105871858,
+                1.8722052178982656,
+                1.7713410268892642,
+                1.7841152146014545
+              ],
+              "median": 1.7861910842814022,
+              "min": 1.4254702071863983,
+              "max": 1.8722052178982656
+            }
+          },
+          "linked_text_ratio": 1.1903114186851211,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O0",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.8577629197296,
+                2.5323386024523566,
+                2.569900847736872,
+                2.54367233146484,
+                2.5958930998037144,
+                2.556786456786457,
+                2.5355041769619957
+              ],
+              "median": 2.54367233146484,
+              "min": 1.8577629197296,
+              "max": 2.5958930998037144
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.8075580486618852,
+                2.4800091517474114,
+                2.5155560715114924,
+                2.494375557409592,
+                2.535140650051013,
+                2.4915094069471087,
+                2.4822187366319697
+              ],
+              "median": 2.4915094069471087,
+              "min": 1.8075580486618852,
+              "max": 2.535140650051013
+            }
+          },
+          "linked_text_ratio": 1.8581314878892734,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O0",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9629862214177533,
+                1.0049638055842813,
+                1.0081778150555671,
+                1.0037963045348044,
+                1.0158538426694852,
+                1.005969705969706,
+                0.9889104600541242
+              ],
+              "median": 1.0049638055842813,
+              "min": 0.9629862214177533,
+              "max": 1.0158538426694852
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9860544276757959,
+                1.0018589486930158,
+                1.0008416531228232,
+                1.004890819643833,
+                1.0123888645969976,
+                1.000715901606483,
+                0.9909026094396124
+              ],
+              "median": 1.0008416531228232,
+              "min": 0.9860544276757959,
+              "max": 1.0123888645969976
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.1372607955114717,
+                1.0271499324628546,
+                0.9797294198578307,
+                1.001241409886943,
+                0.9650979509119568,
+                1.0015218052958825,
+                0.9820145510416196
+              ],
+              "median": 1.001241409886943,
+              "min": 0.9650979509119568,
+              "max": 1.1372607955114717
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.1399412929210184,
+                1.0260218275197948,
+                0.9695137749373866,
+                1.0018140398245021,
+                0.968808911739503,
+                0.9893734870553482,
+                0.9824719293734465
+              ],
+              "median": 0.9893734870553482,
+              "min": 0.968808911739503,
+              "max": 1.1399412929210184
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0878168520188358,
+                0.9973885637100406,
+                1.0456317358404035,
+                0.9699401463090225,
+                0.9710875928844854,
+                0.9422583590590895,
+                1.0423878168918614
+              ],
+              "median": 0.9973885637100406,
+              "min": 0.9422583590590895,
+              "max": 1.0878168520188358
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0600040958427195,
+                0.9957628932163493,
+                1.0327316694015027,
+                0.9696675666554168,
+                0.9784061696658097,
+                0.9399335330078366,
+                1.0356132681923373
+              ],
+              "median": 0.9957628932163493,
+              "min": 0.9399335330078366,
+              "max": 1.0600040958427195
+            }
+          },
+          "linked_text_ratio": 1.235632183908046,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O2",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.015003506662659,
+                0.9822602431337235,
+                1.0039440495299243,
+                0.970782531589448,
+                0.972888988966449,
+                0.965128918648637,
+                0.9751005467938
+              ],
+              "median": 0.9751005467938,
+              "min": 0.965128918648637,
+              "max": 1.015003506662659
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9738093612760825,
+                0.979156858549112,
+                0.9843250712496762,
+                0.9693300708741139,
+                0.9701799485861181,
+                0.9582734993640504,
+                1.0013713893888747
+              ],
+              "median": 0.9738093612760825,
+              "min": 0.9582734993640504,
+              "max": 1.0013713893888747
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9244765644970139,
+                1.009584378359011,
+                0.9878747501665557,
+                1.0101930848675347,
+                1.030419107706174,
+                1.0101633232735665,
+                1.0064642418172713
+              ],
+              "median": 1.009584378359011,
+              "min": 0.9244765644970139,
+              "max": 1.030419107706174
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9641042487954445,
+                1.018418478029691,
+                0.992647990873368,
+                0.9997035029014361,
+                1.0255608837129646,
+                1.0052883404683959,
+                1.0052745352356247
+              ],
+              "median": 1.0052745352356247,
+              "min": 0.9641042487954445,
+              "max": 1.0255608837129646
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.033323263541933,
+                1.3361698316015764,
+                1.3317788141239175,
+                1.3508307139649751,
+                1.3527715187021179,
+                1.3366767264335166,
+                1.3711931533664132
+              ],
+              "median": 1.3366767264335166,
+              "min": 1.033323263541933,
+              "max": 1.3711931533664132
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0599430573806397,
+                1.319749883023523,
+                1.3252207715384288,
+                1.3218687788555212,
+                1.3337044014386026,
+                1.3085704692352893,
+                1.3536532641591008
+              ],
+              "median": 1.3218687788555212,
+              "min": 1.0599430573806397,
+              "max": 1.3536532641591008
+            }
+          },
+          "linked_text_ratio": 1.7619047619047619,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O2",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9559175516464108,
+                0.9866535292010032,
+                0.9879635798356651,
+                0.9912438257745846,
+                1.0037854889589903,
+                1.005059470974614,
+                1.0117904128920654
+              ],
+              "median": 0.9912438257745846,
+              "min": 0.9559175516464108,
+              "max": 1.0117904128920654
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9389618922470434,
+                0.9877919094814751,
+                0.987704398529598,
+                0.9832690922953111,
+                1.0025261174858708,
+                0.9963065558633425,
+                1.0115866839602248
+              ],
+              "median": 0.9877919094814751,
+              "min": 0.9389618922470434,
+              "max": 1.0115866839602248
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2-lto",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2-lto",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.2086907266547986,
+                1.0069958847736626,
+                0.9971243709561466,
+                1.0060774618871033,
+                0.9983542480970993,
+                1.0238993710691824,
+                1.005447630794532
+              ],
+              "median": 1.0060774618871033,
+              "min": 0.9971243709561466,
+              "max": 1.2086907266547986
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.1472119212057292,
+                1.0000912908526567,
+                1.0023835716905023,
+                0.9836139779105558,
+                0.9887988343502413,
+                0.9995339733432751,
+                1.0057032471713734
+              ],
+              "median": 1.0000912908526567,
+              "min": 0.9836139779105558,
+              "max": 1.1472119212057292
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2-lto",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.2260479041916168,
+                1.5415637860082305,
+                1.5387696415733798,
+                1.5512978986402968,
+                1.5376465747788521,
+                1.5783018867924528,
+                1.5491828553808202
+              ],
+              "median": 1.5415637860082305,
+              "min": 1.2260479041916168,
+              "max": 1.5783018867924528
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.1096519579491715,
+                1.4763556691619502,
+                1.4812981298129813,
+                1.463516204961072,
+                1.4678990984427647,
+                1.524000372821325,
+                1.4889154631588628
+              ],
+              "median": 1.4763556691619502,
+              "min": 1.1096519579491715,
+              "max": 1.524000372821325
+            }
+          },
+          "linked_text_ratio": 1.2923076923076924,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O2-lto",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9503965042887199,
+                1.0099794238683129,
+                1.001951319708329,
+                1.0055624227441287,
+                0.9987656860728246,
+                1.018448637316562,
+                0.9978415047795252
+              ],
+              "median": 1.001951319708329,
+              "min": 0.9503965042887199,
+              "max": 1.018448637316562
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9084816112679891,
+                1.004199379222202,
+                1.0041254125412542,
+                0.9897700525076951,
+                0.991804025134323,
+                1.0089477118091155,
+                1.0022996964400699
+              ],
+              "median": 1.0022996964400699,
+              "min": 0.9084816112679891,
+              "max": 1.0089477118091155
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2-lto",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2-lto",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9818765986649197,
+                0.9898963041744218,
+                0.9975186104218362,
+                1.005761389824499,
+                1.0001769128704112,
+                0.999293036408625,
+                1.006909380813181
+              ],
+              "median": 0.999293036408625,
+              "min": 0.9818765986649197,
+              "max": 1.006909380813181
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.003839732888147,
+                0.9832214765100671,
+                0.997694020356234,
+                1.008518845937475,
+                1.0049599999999999,
+                1.0032802624209936,
+                1.0156772242559289
+              ],
+              "median": 1.003839732888147,
+              "min": 0.9832214765100671,
+              "max": 1.0156772242559289
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O2-lto",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.4369580136003492,
+                2.5003102011876277,
+                2.5042538107054235,
+                2.5085091295869524,
+                2.497832817337461,
+                2.4699540473665604,
+                2.495172291611303
+              ],
+              "median": 2.497832817337461,
+              "min": 1.4369580136003492,
+              "max": 2.5085091295869524
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.4047857540345021,
+                2.342841163310962,
+                2.3442270992366407,
+                2.3633368158804147,
+                2.3524,
+                2.3021041683334666,
+                2.3207862486073534
+              ],
+              "median": 2.342841163310962,
+              "min": 1.4047857540345021,
+              "max": 2.3633368158804147
+            }
+          },
+          "linked_text_ratio": 1.92,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O2-lto",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0142866055274815,
+                1.003988300983781,
+                1.0015951790145337,
+                1.0078000354547065,
+                0.9973463069438301,
+                0.9999116295510782,
+                1.0049605810966427
+              ],
+              "median": 1.003988300983781,
+              "min": 0.9973463069438301,
+              "max": 1.0142866055274815
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.989259877573734,
+                0.9986417385746245,
+                0.9911736641221373,
+                1.0083581129952583,
+                1.0048,
+                1.0039203136250898,
+                0.9982492439917237
+              ],
+              "median": 0.9986417385746245,
+              "min": 0.989259877573734,
+              "max": 1.0083581129952583
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O3",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O3",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.1004630851548816,
+                1.0251754796443613,
+                1.0359620557836613,
+                1.0176370100189298,
+                0.99523182416784,
+                0.9841276978417267,
+                1.0126477487007313
+              ],
+              "median": 1.0176370100189298,
+              "min": 0.9841276978417267,
+              "max": 1.1004630851548816
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.1371415302449785,
+                1.0304114490161003,
+                1.031818181818182,
+                1.0166204986149585,
+                1.0013382257716383,
+                0.9790844682024523,
+                1.013897993968795
+              ],
+              "median": 1.0166204986149585,
+              "min": 0.9790844682024523,
+              "max": 1.1371415302449785
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O3",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0464524797850134,
+                1.0376696303228825,
+                1.0515833687290574,
+                1.010157440325038,
+                1.0263839062712865,
+                1.0046762589928058,
+                1.0622269236075979
+              ],
+              "median": 1.0376696303228825,
+              "min": 1.0046762589928058,
+              "max": 1.0622269236075979
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0982468361778706,
+                1.0385957066189626,
+                1.0426916221033868,
+                1.013718506793299,
+                1.0174832721778544,
+                0.9943574731661787,
+                1.0620165202569818
+              ],
+              "median": 1.0385957066189626,
+              "min": 0.9943574731661787,
+              "max": 1.0982468361778706
+            }
+          },
+          "linked_text_ratio": 1.2342857142857142,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O3",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.8057921635434413,
+                1.0144127281235376,
+                1.0409646514701025,
+                1.0303338104252273,
+                0.9873756868443758,
+                0.9959532374100719,
+                0.9977004093271399
+              ],
+              "median": 0.9977004093271399,
+              "min": 0.8057921635434413,
+              "max": 1.0409646514701025
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.8466039707419017,
+                1.0188729874776388,
+                1.0337344028520499,
+                1.0415512465373962,
+                0.9859270451111589,
+                0.9959271986763396,
+                0.9979458939731656
+              ],
+              "median": 0.9979458939731656,
+              "min": 0.8466039707419017,
+              "max": 1.0415512465373962
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O3",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O3",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9100229658792651,
+                1.0192710336281674,
+                0.976749137674062,
+                0.9958062120484032,
+                1.0383513827978161,
+                1.0336532083314907,
+                0.9680635200705779
+              ],
+              "median": 0.9958062120484032,
+              "min": 0.9100229658792651,
+              "max": 1.0383513827978161
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.936376872677114,
+                1.0153042633304992,
+                0.9794422959495219,
+                0.9985386221294363,
+                1.0341673049102202,
+                1.0335783071464775,
+                0.9726159929331594
+              ],
+              "median": 0.9985386221294363,
+              "min": 0.936376872677114,
+              "max": 1.0341673049102202
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O3",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9599532480314962,
+                1.2777421698072897,
+                1.2765830600860197,
+                1.3079376174042199,
+                1.3418061398013066,
+                1.4019369389289347,
+                1.32311424790472
+              ],
+              "median": 1.3079376174042199,
+              "min": 0.9599532480314962,
+              "max": 1.4019369389289347
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9629870876278784,
+                1.2611441758775659,
+                1.2762874007734584,
+                1.297035490605428,
+                1.3297591694323887,
+                1.3121726643014024,
+                1.3064400790813107
+              ],
+              "median": 1.297035490605428,
+              "min": 0.9629870876278784,
+              "max": 1.3297591694323887
+            }
+          },
+          "linked_text_ratio": 1.7619047619047619,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O3",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.8737901902887139,
+                0.9703029526129128,
+                0.9643997785632159,
+                0.9950198768074788,
+                1.003401056117426,
+                1.0634148498651217,
+                0.9839876488751654
+              ],
+              "median": 0.9839876488751654,
+              "min": 0.8737901902887139,
+              "max": 1.0634148498651217
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.8986742787079964,
+                0.9638446900684239,
+                0.9751272135151638,
+                0.9931106471816284,
+                1.0045528040166793,
+                1.068719378273357,
+                0.9818281243427418
+              ],
+              "median": 0.9818281243427418,
+              "min": 0.8986742787079964,
+              "max": 1.068719378273357
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-Os",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-Os",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.2852909729647166,
+                1.0120845921450152,
+                1.0020985401459854,
+                1.072042664705071,
+                1.0209530873354347,
+                0.9692451486558662,
+                0.9625856314772526
+              ],
+              "median": 1.0120845921450152,
+              "min": 0.9625856314772526,
+              "max": 1.2852909729647166
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.24248854184349,
+                1.0031697730442501,
+                1.007427355253442,
+                1.063902905863929,
+                1.0158660202732481,
+                0.9672842105263157,
+                0.9663305275439619
+              ],
+              "median": 1.007427355253442,
+              "min": 0.9663305275439619,
+              "max": 1.24248854184349
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-Os",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.4415151978005194,
+                0.9705882352941176,
+                1.0270985401459853,
+                1.0553997517355524,
+                1.0381976636380492,
+                0.9645273277550294,
+                1.0183558756367468
+              ],
+              "median": 1.0270985401459853,
+              "min": 0.9645273277550294,
+              "max": 1.4415151978005194
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.4313642279182932,
+                0.9674147331051096,
+                1.0246709811927202,
+                1.046981033582739,
+                1.034861172322609,
+                0.9597473684210526,
+                1.013709475789649
+              ],
+              "median": 1.0246709811927202,
+              "min": 0.9597473684210526,
+              "max": 1.4313642279182932
+            }
+          },
+          "linked_text_ratio": 1.239766081871345,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-Os",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.3929127844814417,
+                0.9694330904567264,
+                1.0316149635036498,
+                0.9631281320399062,
+                1.0227146300760244,
+                0.9613227701620083,
+                0.9734322852626032
+              ],
+              "median": 0.9734322852626032,
+              "min": 0.9613227701620083,
+              "max": 1.3929127844814417
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.3963390482657159,
+                0.9695701787751998,
+                1.0295356817095946,
+                0.9642857142857143,
+                1.0188629352137506,
+                0.9567999999999999,
+                0.9734144512042668
+              ],
+              "median": 0.9734144512042668,
+              "min": 0.9567999999999999,
+              "max": 1.3963390482657159
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-Os",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-Os",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0161397622422121,
+                1.0336541075409125,
+                1.0083859667745874,
+                1.0030563002680966,
+                1.0022404779686334,
+                1.006774778619439,
+                1.0050642358334665
+              ],
+              "median": 1.006774778619439,
+              "min": 1.0022404779686334,
+              "max": 1.0336541075409125
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0866681284946829,
+                1.0320575391728743,
+                1.0038051369348622,
+                0.9968430547203848,
+                0.9947481618566499,
+                1.004168340699076,
+                0.9948551448551447
+              ],
+              "median": 1.0038051369348622,
+              "min": 0.9947481618566499,
+              "max": 1.0866681284946829
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-Os",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.279842651780291,
+                1.627738813679117,
+                1.5916883392601242,
+                1.6082037533512064,
+                1.597940894057399,
+                1.6086098367651767,
+                1.6056292979369902
+              ],
+              "median": 1.6056292979369902,
+              "min": 1.279842651780291,
+              "max": 1.627738813679117
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.3386415963161935,
+                1.59845877215515,
+                1.5552996545336204,
+                1.5605832832230906,
+                1.55754514079928,
+                1.5672961028525512,
+                1.5595904095904096
+              ],
+              "median": 1.5595904095904096,
+              "min": 1.3386415963161935,
+              "max": 1.59845877215515
+            }
+          },
+          "linked_text_ratio": 1.8421052631578947,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-Os",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.141844792178868,
+                1.0214755613548632,
+                0.9912955787909347,
+                1.0023056300268098,
+                0.9983463138802945,
+                0.9996799317187667,
+                1.0001066154912308
+              ],
+              "median": 1.0001066154912308,
+              "min": 0.9912955787909347,
+              "max": 1.141844792178868
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.1671143514965465,
+                1.022810172103776,
+                0.9944424973714516,
+                0.9989476849067948,
+                1.0008002800980345,
+                1.000401767778224,
+                0.9950549450549452
+              ],
+              "median": 1.000401767778224,
+              "min": 0.9944424973714516,
+              "max": 1.1671143514965465
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        }
+      ]
+    },
+    "linux": {
+      "report_sha256": "520cb36738606999d89f0682dca104b413e61ac319674f77199140589f142e8f",
+      "checks": {
+        "status": "checked",
+        "report_sha256": "520cb36738606999d89f0682dca104b413e61ac319674f77199140589f142e8f",
+        "builds": 40,
+        "samples": 280,
+        "bound_frame_obligations": 120,
+        "scope": "evidence identity and arithmetic summary checks; not independent binary equivalence or a solver replay"
+      },
+      "tools": {
+        "csrd": {
+          "path": "/work/build-linux-regions/csrd",
+          "sha256": "ae522056248081989d5361f605495c4070bbbe95d510b0782678f7331f79d8a5",
+          "version": "C-SRD 0.6.1"
+        },
+        "objdump": {
+          "path": "/usr/bin/llvm-objdump-18",
+          "sha256": "32b78ffb3f9f14a19716cb7d3d6a5baa59ea98bc502fb183d3ff429df0f20a21",
+          "version": "Ubuntu LLVM version 18.1.3"
+        },
+        "clang": {
+          "path": "/usr/bin/clang-18",
+          "sha256": "6d99f6207153b8b2063ace5d2a6177debaf6a6b6f31649e03afac07b98ba0b4d",
+          "version": "Ubuntu clang version 18.1.3 (1ubuntu1)"
+        },
+        "gcc": {
+          "path": "/usr/bin/gcc",
+          "sha256": "a20520ee21543f243d40636a9181a142c45ecd989de31ab86b99a8ea5ada870d",
+          "version": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+        }
+      },
+      "profiles": [
+        {
+          "profile": {
+            "id": "clang-O0",
+            "compiler": "clang",
+            "optimization": "O0",
+            "tiers": [
+              "core",
+              "extended"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O0"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-O0",
+            "compiler": "gcc",
+            "optimization": "O0",
+            "tiers": [
+              "core",
+              "extended"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O0"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "clang-O2",
+            "compiler": "clang",
+            "optimization": "O2",
+            "tiers": [
+              "core",
+              "extended"
+            ],
+            "selection_required": true
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O2"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-O2",
+            "compiler": "gcc",
+            "optimization": "O2",
+            "tiers": [
+              "core",
+              "extended"
+            ],
+            "selection_required": true
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O2"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "clang-O2-lto",
+            "compiler": "clang",
+            "optimization": "O2",
+            "lto": "full",
+            "tiers": [
+              "core",
+              "extended"
+            ],
+            "selection_required": true
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O2",
+            "-flto"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-O2-lto",
+            "compiler": "gcc",
+            "optimization": "O2",
+            "lto": "full",
+            "tiers": [
+              "core",
+              "extended"
+            ],
+            "selection_required": true
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O2",
+            "-flto"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "clang-O3",
+            "compiler": "clang",
+            "optimization": "O3",
+            "tiers": [
+              "extended",
+              "holdout"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O3"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-O3",
+            "compiler": "gcc",
+            "optimization": "O3",
+            "tiers": [
+              "extended",
+              "holdout"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O3"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "clang-Os",
+            "compiler": "clang",
+            "optimization": "Os",
+            "tiers": [
+              "extended"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-Os"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-Os",
+            "compiler": "gcc",
+            "optimization": "Os",
+            "tiers": [
+              "extended"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-Os"
+          ],
+          "status": "available"
+        }
+      ],
+      "paired_results": [
+        {
+          "profile": "clang-O0",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O0",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.790493264024578,
+                1.5827253591346548,
+                1.7926893465064078,
+                1.7812987260444275,
+                1.768694215589466,
+                1.8149925979812445,
+                1.7790712749877973
+              ],
+              "median": 1.7812987260444275,
+              "min": 1.5827253591346548,
+              "max": 1.8149925979812445
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.7826923570310695,
+                1.7884303478104167,
+                1.78738209370651,
+                1.7741119991828604,
+                1.7611458440094292,
+                1.8101067986454804,
+                1.7734190837347545
+              ],
+              "median": 1.7826923570310695,
+              "min": 1.7611458440094292,
+              "max": 1.8101067986454804
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                0.7,
+                1.0,
+                1.0,
+                1.0,
+                0.7
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.1511627906976745,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O0",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                2.4401919546710946,
+                2.161955762523073,
+                2.4482761851922783,
+                2.4342542541790326,
+                2.4215045409367937,
+                2.4697898413138213,
+                2.4311371894841853
+              ],
+              "median": 2.4342542541790326,
+              "min": 2.161955762523073,
+              "max": 2.4697898413138213
+            },
+            "cpu_seconds": {
+              "samples": [
+                2.4317674526002513,
+                2.4406714208480293,
+                2.438972217926911,
+                2.423073976660453,
+                2.4086809470124013,
+                2.4606407918728834,
+                2.422081582453623
+              ],
+              "median": 2.4317674526002513,
+              "min": 2.4086809470124013,
+              "max": 2.4606407918728834
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                0.7,
+                1.4285714285714286,
+                1.0,
+                1.0,
+                0.7
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.5290697674418605,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O0",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.001072083960819,
+                0.8592971285147875,
+                1.0024356748888756,
+                0.9933571221000105,
+                0.9875712847018819,
+                1.0171391689947122,
+                0.9992906195501847
+              ],
+              "median": 0.9992906195501847,
+              "min": 0.8592971285147875,
+              "max": 1.0171391689947122
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0013341201221233,
+                0.9734829956491519,
+                1.0024225555383743,
+                0.9924159240060263,
+                0.9870349492671928,
+                1.0170356863766605,
+                0.9995387926616787
+              ],
+              "median": 0.9995387926616787,
+              "min": 0.9734829956491519,
+              "max": 1.0170356863766605
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                0.7,
+                1.0,
+                1.4285714285714286,
+                1.0,
+                0.7
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O0",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O0",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.6610569267025592,
+                1.6410359525009452,
+                1.6953612813404013,
+                1.4994191489242172,
+                1.6789916033678223,
+                1.6922487403999518,
+                1.6717287418424636
+              ],
+              "median": 1.6717287418424636,
+              "min": 1.4994191489242172,
+              "max": 1.6953612813404013
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.6569554411048761,
+                1.6374660679402286,
+                1.6628945342571209,
+                1.6856519253754612,
+                1.6704168394856909,
+                1.6886731391585759,
+                1.667355585408701
+              ],
+              "median": 1.667355585408701,
+              "min": 1.6374660679402286,
+              "max": 1.6886731391585759
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.4285714285714286,
+                1.0,
+                1.0,
+                0.7,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.1482479784366577,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O0",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                2.195419842759957,
+                2.1666367004774734,
+                2.1888725519758525,
+                1.9680266798240504,
+                2.207234033243715,
+                2.222445114331323,
+                2.210630826070853
+              ],
+              "median": 2.195419842759957,
+              "min": 1.9680266798240504,
+              "max": 2.222445114331323
+            },
+            "cpu_seconds": {
+              "samples": [
+                2.1884336484997564,
+                2.1577999340386125,
+                2.180754426481909,
+                2.212778672764122,
+                2.1949398589796765,
+                2.2156634304207117,
+                2.202619613516586
+              ],
+              "median": 2.1949398589796765,
+              "min": 2.1577999340386125,
+              "max": 2.2156634304207117
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.4285714285714286,
+                1.0,
+                0.7,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.6684636118598384,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O0",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9839220873309136,
+                0.9811853479468152,
+                0.9915636570383096,
+                0.8947496968528926,
+                0.9872742068194381,
+                1.0131734988047467,
+                1.000302380251503
+              ],
+              "median": 0.9872742068194381,
+              "min": 0.8947496968528926,
+              "max": 1.0131734988047467
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9840110692597432,
+                0.9804652814775351,
+                0.9908134462406979,
+                1.008210777945227,
+                0.9854572791372874,
+                1.0122459546925566,
+                1.000361682339568
+              ],
+              "median": 0.9908134462406979,
+              "min": 0.9804652814775351,
+              "max": 1.0122459546925566
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                0.7,
+                1.4285714285714286,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0029887801297526,
+                1.0988642905883625,
+                0.9979607013122248,
+                1.015637019137704,
+                1.030945939937384,
+                0.9800446786611495,
+                0.9859292985766591
+              ],
+              "median": 1.0029887801297526,
+              "min": 0.9800446786611495,
+              "max": 1.0988642905883625
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.001718213058419,
+                1.0970035778175313,
+                0.9970155355682747,
+                1.0170014819693727,
+                1.029543913190912,
+                0.9794194817973105,
+                0.9854912988547906
+              ],
+              "median": 1.001718213058419,
+              "min": 0.9794194817973105,
+              "max": 1.0970035778175313
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.4285714285714286,
+                1.4285714285714286,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.4285714285714286
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9595037178767258,
+                1.060303977345708,
+                0.959601092937998,
+                0.9855181502170589,
+                0.9978164885585821,
+                0.9815980645605409,
+                0.9769449246391697
+              ],
+              "median": 0.9815980645605409,
+              "min": 0.9595037178767258,
+              "max": 1.060303977345708
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9579037800687284,
+                1.0593023255813954,
+                0.9578086672117743,
+                0.986291783303145,
+                0.9982197355035605,
+                0.9806903902918989,
+                0.9765252475852794
+              ],
+              "median": 0.9806903902918989,
+              "min": 0.9578086672117743,
+              "max": 1.0593023255813954
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.4285714285714286,
+                0.7,
+                1.0,
+                1.4285714285714286,
+                0.7,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.209205020920502,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O2",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.993326597855728,
+                1.09489425292137,
+                0.965546472101804,
+                1.0000208146123242,
+                1.026641620691153,
+                0.9836006837402682,
+                1.0040611656668919
+              ],
+              "median": 1.0000208146123242,
+              "min": 0.965546472101804,
+              "max": 1.09489425292137
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9916953035509736,
+                1.095304114490161,
+                0.9666394112837285,
+                1.0,
+                1.0257290606985419,
+                0.9840521482453262,
+                1.0034234013938135
+              ],
+              "median": 1.0,
+              "min": 0.9666394112837285,
+              "max": 1.095304114490161
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.4285714285714286,
+                1.0,
+                0.7,
+                1.4285714285714286,
+                1.0,
+                1.4285714285714286
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9652805127106137,
+                1.0070314675577832,
+                1.02647950658578,
+                0.9667254369698959,
+                0.9942075245142004,
+                1.0043614092756075,
+                0.9774788184923578
+              ],
+              "median": 0.9942075245142004,
+              "min": 0.9652805127106137,
+              "max": 1.02647950658578
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9643351074975903,
+                1.0095314750487163,
+                1.0276089598888696,
+                0.9663028198131149,
+                0.9922784757293711,
+                1.0033415108704846,
+                0.9808514204307384
+              ],
+              "median": 0.9922784757293711,
+              "min": 0.9643351074975903,
+              "max": 1.0276089598888696
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                0.7,
+                1.0,
+                1.4285714285714286,
+                1.0,
+                0.7,
+                1.0,
+                1.4285714285714286
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.2756521437469233,
+                1.2901405650879336,
+                1.3211238425466216,
+                1.2593141028644876,
+                1.2820781551208429,
+                1.293937416684958,
+                1.28160110847106
+              ],
+              "median": 1.2820781551208429,
+              "min": 1.2593141028644876,
+              "max": 1.3211238425466216
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.2706089434642305,
+                1.2867491315767179,
+                1.3199340163222784,
+                1.2558091457868188,
+                1.276430568888518,
+                1.2889349462820405,
+                1.2788904718008882
+              ],
+              "median": 1.2788904718008882,
+              "min": 1.2558091457868188,
+              "max": 1.3199340163222784
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                0.7,
+                0.7,
+                1.0,
+                0.7,
+                0.7,
+                0.7,
+                1.0
+              ],
+              "median": 0.7,
+              "min": 0.7,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.2247191011235956,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O2",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9640509128562397,
+                0.9964315918000127,
+                1.0499979263668202,
+                0.9845142203493082,
+                0.9812127243652122,
+                1.0160215427938177,
+                0.9896199971136744
+              ],
+              "median": 0.9896199971136744,
+              "min": 0.9640509128562397,
+              "max": 1.0499979263668202
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.962700641213696,
+                0.997373549097687,
+                1.051918735891648,
+                0.9837509302902505,
+                0.9793814432989691,
+                1.014973352508248,
+                0.9888125366630353
+              ],
+              "median": 0.9888125366630353,
+              "min": 0.962700641213696,
+              "max": 1.051918735891648
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.4285714285714286,
+                0.7,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2-lto",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2-lto",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.001946301698991,
+                1.004541645580772,
+                1.0006239551933958,
+                1.0883797853058383,
+                1.0030897018900626,
+                1.0054180516121367,
+                0.996678172538897
+              ],
+              "median": 1.0030897018900626,
+              "min": 0.996678172538897,
+              "max": 1.0883797853058383
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.003191383265184,
+                1.0054835493519443,
+                1.0012895546076777,
+                1.106081616481775,
+                1.0083267248215702,
+                1.009336511720302,
+                0.9984047856430709
+              ],
+              "median": 1.0054835493519443,
+              "min": 0.9984047856430709,
+              "max": 1.106081616481775
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2-lto",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.9910927581105804,
+                1.9902466383791282,
+                1.9767099173730518,
+                1.9742243934391546,
+                1.9507125677823531,
+                1.9812709579001753,
+                1.9892745869490922
+              ],
+              "median": 1.9812709579001753,
+              "min": 1.9507125677823531,
+              "max": 1.9910927581105804
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.9662910142614938,
+                1.963110667996012,
+                1.9551631782561252,
+                1.9504754358161647,
+                1.9303132434575732,
+                1.9553039332538737,
+                1.9622133599202392
+              ],
+              "median": 1.9553039332538737,
+              "min": 1.9303132434575732,
+              "max": 1.9662910142614938
+            }
+          },
+          "linked_text_ratio": 1.28125,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O2-lto",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0059325275248914,
+                0.9968840340679762,
+                0.9969608033894265,
+                0.995622102473031,
+                0.9949834233974354,
+                0.9956069934549399,
+                1.0083941802181315
+              ],
+              "median": 0.9968840340679762,
+              "min": 0.9949834233974354,
+              "max": 1.0083941802181315
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.00299192181111,
+                0.992123629112662,
+                0.9964289257018153,
+                0.9962361331220285,
+                0.9956383822363203,
+                0.992947953913389,
+                1.011764705882353
+              ],
+              "median": 0.9962361331220285,
+              "min": 0.992123629112662,
+              "max": 1.011764705882353
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2-lto",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2-lto",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.001967826195048,
+                1.0011335264034023,
+                1.0126834251536676,
+                0.9972611833564753,
+                1.0109770190704876,
+                0.993816895471227,
+                0.9898917016453821
+              ],
+              "median": 1.0011335264034023,
+              "min": 0.9898917016453821,
+              "max": 1.0126834251536676
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0054775420774822,
+                1.0001989851756043,
+                1.006447133505257,
+                0.9978113808197372,
+                1.0093896713615025,
+                0.9863202440704655,
+                0.9953935509713598
+              ],
+              "median": 1.0001989851756043,
+              "min": 0.9863202440704655,
+              "max": 1.0093896713615025
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2-lto",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                2.7367448249748936,
+                2.730961502035499,
+                2.7305888051263842,
+                2.72180167356908,
+                2.7349473453800566,
+                2.7248904763108395,
+                2.7446026713409264
+              ],
+              "median": 2.730961502035499,
+              "min": 2.72180167356908,
+              "max": 2.7446026713409264
+            },
+            "cpu_seconds": {
+              "samples": [
+                2.6941539687282146,
+                2.684608496666998,
+                2.668518151160484,
+                2.674691603660963,
+                2.6897412845869546,
+                2.657710855230784,
+                2.7043861405968355
+              ],
+              "median": 2.684608496666998,
+              "min": 2.657710855230784,
+              "max": 2.7043861405968355
+            }
+          },
+          "linked_text_ratio": 1.2990654205607477,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O2-lto",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9982495035966751,
+                1.0001064694564594,
+                0.9982418101960056,
+                1.0050558522527409,
+                0.9975488897622564,
+                0.9993460785504795,
+                1.0156634664655744
+              ],
+              "median": 0.9993460785504795,
+              "min": 0.9975488897622564,
+              "max": 1.0156634664655744
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9979085748431431,
+                0.9993035518853846,
+                0.9931561198174965,
+                1.0070632709908476,
+                0.9964039556487864,
+                0.9918315126463931,
+                1.017123973562988
+              ],
+              "median": 0.9979085748431431,
+              "min": 0.9918315126463931,
+              "max": 1.017123973562988
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O3",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O3",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0666101757088564,
+                1.012435378264972,
+                1.0116902215710593,
+                0.9994927000001167,
+                1.011140230236747,
+                1.003584992473204,
+                1.0281988328311662
+              ],
+              "median": 1.0116902215710593,
+              "min": 0.9994927000001167,
+              "max": 1.0666101757088564
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0222525947123393,
+                1.018724592452675,
+                1.0119758014733116,
+                1.0001237113402064,
+                1.007174738247195,
+                1.0025837673789115,
+                1.0229020464764467
+              ],
+              "median": 1.0119758014733116,
+              "min": 1.0001237113402064,
+              "max": 1.0229020464764467
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                0.7,
+                0.7,
+                1.0,
+                1.4285714285714286,
+                1.0,
+                1.0,
+                0.7
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O3",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0150467232097602,
+                0.9895856094776302,
+                0.980718654121825,
+                0.9842184544624136,
+                0.990051252467578,
+                0.9759491007981634,
+                1.0892456582679324
+              ],
+              "median": 0.9895856094776302,
+              "min": 0.9759491007981634,
+              "max": 1.0892456582679324
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0152052278648613,
+                0.9930604032357409,
+                0.9808222560599202,
+                0.9840412371134021,
+                0.9909898635965462,
+                0.9757618012549728,
+                1.0617304702273396
+              ],
+              "median": 0.9909898635965462,
+              "min": 0.9757618012549728,
+              "max": 1.0617304702273396
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                0.7,
+                1.4285714285714286,
+                1.4285714285714286,
+                1.0,
+                1.4285714285714286,
+                0.7
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.2083333333333333,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O3",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0418582097410005,
+                0.9483414803207835,
+                1.0030326877850921,
+                1.0103611865925033,
+                1.0109044172714434,
+                0.999395027075266,
+                1.0311565586348908
+              ],
+              "median": 1.0103611865925033,
+              "min": 0.9483414803207835,
+              "max": 1.0418582097410005
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0404903258873275,
+                0.9515049480556811,
+                1.003374624470143,
+                1.0102680412371134,
+                1.0119300880156843,
+                0.9992617807488824,
+                1.025003151657772
+              ],
+              "median": 1.0102680412371134,
+              "min": 0.9515049480556811,
+              "max": 1.0404903258873275
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                0.7,
+                0.7,
+                1.0,
+                1.0,
+                1.4285714285714286,
+                1.4285714285714286,
+                0.7
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O3",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O3",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9811149011269812,
+                0.9682607924690952,
+                0.9832873449272759,
+                1.0087161278575802,
+                1.015160936087866,
+                1.037772958847807,
+                1.0469519913985874
+              ],
+              "median": 1.0087161278575802,
+              "min": 0.9682607924690952,
+              "max": 1.0469519913985874
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9808735004055842,
+                0.969775402855473,
+                0.9804280074797423,
+                1.0059956088498565,
+                1.015237464287193,
+                1.0387127064748816,
+                1.042417630373118
+              ],
+              "median": 1.0059956088498565,
+              "min": 0.969775402855473,
+              "max": 1.042417630373118
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                0.7,
+                0.7,
+                1.0,
+                0.7,
+                1.0,
+                1.0,
+                1.4285714285714286
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O3",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.2997029699078135,
+                1.27287688810871,
+                1.3398901423084315,
+                1.2890527298475436,
+                1.2480277996122742,
+                1.3012693944742786,
+                1.3367674672767724
+              ],
+              "median": 1.2997029699078135,
+              "min": 1.2480277996122742,
+              "max": 1.3398901423084315
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.2959057336805704,
+                1.2708524672288553,
+                1.2699355911074173,
+                1.2850869785509202,
+                1.2448345824189473,
+                1.2966409151052116,
+                1.328212960942614
+              ],
+              "median": 1.2850869785509202,
+              "min": 1.2448345824189473,
+              "max": 1.328212960942614
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                0.7,
+                0.7,
+                1.4285714285714286,
+                0.7,
+                0.7,
+                0.7,
+                1.0
+              ],
+              "median": 0.7,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.2247191011235956,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O3",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0042533029634797,
+                0.9872364690975607,
+                0.9952038988209878,
+                0.9940135016063915,
+                1.047205358919781,
+                1.0926924955805084,
+                1.0503843233371097
+              ],
+              "median": 1.0042533029634797,
+              "min": 0.9872364690975607,
+              "max": 1.0926924955805084
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0039277633095676,
+                0.9878934624697335,
+                0.9935175566174943,
+                0.9929910488093227,
+                0.9712227236967413,
+                1.0075547398523197,
+                1.0480034911629936
+              ],
+              "median": 0.9935175566174943,
+              "min": 0.9712227236967413,
+              "max": 1.0480034911629936
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.4285714285714286,
+                1.0,
+                0.7,
+                0.7,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-Os",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-Os",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0087484956448174,
+                0.8889399939313382,
+                0.9778505945720058,
+                1.0033728958039827,
+                0.937906363745482,
+                1.0016407481220557,
+                1.0309813348196548
+              ],
+              "median": 1.0016407481220557,
+              "min": 0.8889399939313382,
+              "max": 1.0309813348196548
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0081684073637582,
+                1.034522537919248,
+                0.9772689632328585,
+                1.003733792877072,
+                0.975658566469267,
+                0.9786435304913657,
+                1.031159296568209
+              ],
+              "median": 1.003733792877072,
+              "min": 0.975658566469267,
+              "max": 1.034522537919248
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                0.7,
+                1.0,
+                1.0,
+                1.4285714285714286,
+                1.4285714285714286,
+                0.7,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-Os",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9664904241038688,
+                0.8833542524463689,
+                0.9734696016494746,
+                0.9648430422199075,
+                0.9275378234157408,
+                0.9909309995247634,
+                1.0418756158832656
+              ],
+              "median": 0.9664904241038688,
+              "min": 0.8833542524463689,
+              "max": 1.0418756158832656
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.966594871378063,
+                1.0317453535569323,
+                0.9722590261676052,
+                0.9641802067946824,
+                0.9645088829895854,
+                0.991907900225244,
+                1.0429827556769677
+              ],
+              "median": 0.9722590261676052,
+              "min": 0.9641802067946824,
+              "max": 1.0429827556769677
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                0.7,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.4285714285714286
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.209205020920502,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-Os",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9839462857372954,
+                0.9058165915370496,
+                1.0061026390765777,
+                1.0053419811883428,
+                0.9385489226298214,
+                1.0239131388999327,
+                1.0549498236978843
+              ],
+              "median": 1.0053419811883428,
+              "min": 0.9058165915370496,
+              "max": 1.0549498236978843
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9834599910594546,
+                1.0535355693227944,
+                1.0040162305399138,
+                1.0095191203019858,
+                0.975576883806412,
+                1.0240677400517229,
+                1.0554464743042513
+              ],
+              "median": 1.0095191203019858,
+              "min": 0.975576883806412,
+              "max": 1.0554464743042513
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.4285714285714286,
+                1.0,
+                1.0,
+                1.0,
+                0.7,
+                1.4285714285714286
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-Os",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-Os",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9458723035546776,
+                1.002648734147064,
+                1.0018498187881038,
+                0.9974364109419496,
+                0.9971903407731207,
+                1.0015647505738203,
+                0.9992251523736273
+              ],
+              "median": 0.9992251523736273,
+              "min": 0.9458723035546776,
+              "max": 1.002648734147064
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9474985456660849,
+                1.004283626467772,
+                1.001182336914615,
+                0.9971723818826795,
+                0.9964146691251793,
+                1.000357818330522,
+                0.9990278346295539
+              ],
+              "median": 0.9990278346295539,
+              "min": 0.9474985456660849,
+              "max": 1.004283626467772
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-Os",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.4740206327120131,
+                1.5347231179455068,
+                1.5590988183097043,
+                1.5795660241235356,
+                1.540540177166599,
+                1.5517606076338268,
+                1.5494043147850036
+              ],
+              "median": 1.5494043147850036,
+              "min": 1.4740206327120131,
+              "max": 1.5795660241235356
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.4699437657552838,
+                1.524315879655294,
+                1.5517914974554055,
+                1.5749832913474886,
+                1.5342143003482893,
+                1.541736952410162,
+                1.538784281620958
+              ],
+              "median": 1.538784281620958,
+              "min": 1.4699437657552838,
+              "max": 1.5749832913474886
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.2490421455938698,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-Os",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9460319052046737,
+                0.9948839188725536,
+                1.0146856853049717,
+                1.003899556403365,
+                0.9860987145802549,
+                1.0099611439552374,
+                1.0057787623807712
+              ],
+              "median": 1.003899556403365,
+              "min": 0.9460319052046737,
+              "max": 1.0146856853049717
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9467713787085514,
+                0.9861412084866199,
+                1.015164756078754,
+                1.0051411238496735,
+                0.9870928088506452,
+                1.00940551040229,
+                1.0049119934506754
+              ],
+              "median": 1.0049119934506754,
+              "min": 0.9467713787085514,
+              "max": 1.015164756078754
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        }
+      ]
+    }
+  },
+  "test_scope": "macOS and Linux full 31/31, followed by three report-ID/scope checks per host after a reporting-only change; optional skips and initial unused-variable failures retained"
+}

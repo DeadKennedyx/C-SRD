@@ -22,7 +22,8 @@ verified compiler, cryptographic confidentiality and research novelty are not
 claimed. Transformation covers admitted pure functions and the first bounded
 [pointer/buffer extension](docs/buffer-contract.md), with separate contracts.
 An opt-in [private-region prototype](docs/private-regions.md) also transforms
-unsigned assignments inside richer functions while preserving surrounding code.
+unsigned declarations and assignments inside richer functions while checking
+surrounding code and declaration bindings.
 
 **Software-protection objective:** automate diversification of legitimate
 software and measure the effort needed to reconstruct its implementation.
@@ -65,6 +66,7 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Fourteen coverage increments](docs/coverage-increments.md) | Authorized development sequence, current status and acceptance gates |
 | [Private computation regions](docs/private-regions.md) | Partial transformation inside richer functions, private-state proof and unchanged effect boundaries |
 | [Private-region evidence](reports/private-regions.md) | Actual frame/event validation, matched linked-build costs and explicit protection measurement gaps |
+| [Private declaration extension](reports/private-declarations.md) | Scope and shadowing validation, compiler controls and matched declaration-workload evidence |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |
@@ -270,7 +272,7 @@ functions may be copied unchanged successfully.
 | Interface | Behavior |
 | --- | --- |
 | `csrd transform input.c -o output.c` | Transform admitted functions; default strategy `affine` and seed `0` |
-| `--scope functions\|private-regions` | Transform/analyze scope; default whole functions; private regions support affine/identity assignment arithmetic with separate contextual validation |
+| `--scope functions\|private-regions` | Transform/analyze scope; default whole functions; private regions support affine/identity declaration and assignment arithmetic with separate contextual validation |
 | `--strategy identity\|affine\|xor\|independent\|planned\|limbs16\|limbs8\|limbs4` | Select an implemented representation; [16-bit](docs/limb-representation.md) and [8/4-bit](docs/positional-widths.md) positional splits are fixed experiments |
 | `--seed UINT64` | Select deterministic affine/XOR parameters |
 | `--coverage 0..100` | Planned-only minimum encoded percentage of eligible live arithmetic/bitwise nodes; default 50 |

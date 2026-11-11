@@ -47,6 +47,7 @@ causal explanations and estimates.
 | [2026-11-10 — bounded buffers](2026-11-10-bounded-buffers.md) | Memory contract, ordered emitter and independent validation | Alias-aware post-state obligations, whole-buffer tests, CBMC harness correction, compiler audit and cost pilot |
 | [2026-11-10 — buffer reconstruction](2026-11-10-buffer-reconstruction.md) | Memory-aware observer and protection measurements | Complete static and revised runtime recovery; failed protocols, costs and remaining calibration gaps preserved |
 | [2026-11-10 — private regions](2026-11-10-private-regions.md) | Contextual composition prototype | Private assignment regions inside richer functions; actual emitted-frame validation, event controls and explicit unchanged boundaries |
+| [2026-11-10 — private declarations](2026-11-10-private-declarations.md) | Declaration and scope extension | Declaration identities, unchanged reference bindings, nested shadowing and emitted-C compiler validation |
 
 Future work is tracked in [the backlog](../backlog.md). External issue numbers
 and review outcomes belong here only after those events actually occur.

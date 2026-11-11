@@ -68,7 +68,7 @@ def run(args, root):
         implementation = ["experiments/measure_private_regions.py", "tools/effort_resources.py", "tools/audit_protection.py",
                           "tools/evaluate.py", "tools/experiment_support.py", "tools/run_matrix.py", "experiments/matrix.json"]
         report["implementation"] = {p: file_hash(ROOT/p) for p in implementation}
-        source = ROOT / "tests/fixtures/private_regions.c"
+        source = ROOT / "tests/fixtures" / args.fixture
         report["source"] = {"path": str(source), "sha256": file_hash(source)}
         harness = root / "harness.c"; harness.write_text(HARNESS)
         guard = root / "model-guard.c"; guard.write_text(MODEL_GUARD)
@@ -163,6 +163,7 @@ def main():
     p.add_argument("--csrd",required=True);p.add_argument("--compiler",action="append",required=True)
     p.add_argument("--objdump",default="llvm-objdump");p.add_argument("--profile",action="append")
     p.add_argument("--output-dir",required=True);p.add_argument("--iterations",type=int,default=1000000)
+    p.add_argument("--fixture",choices=("private_regions.c","private_declarations.c"),default="private_regions.c")
     p.add_argument("--repetitions",type=int,default=7);p.add_argument("--order-seed",type=int,default=20261110)
     args = p.parse_args()
     if args.iterations < 1 or args.repetitions < 2: p.error("positive iterations and at least two repetitions required")

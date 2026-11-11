@@ -1,5 +1,9 @@
 # Private-region prototype: correctness and matched application costs
 
+Historical version 0.6.0 assignment-only evidence. The
+[declaration extension](private-declarations.md) records subsequent work separately;
+the raw results below are unchanged.
+
 Status: first assignment-region prototype validated on macOS ARM64 and Linux
 ARM64. The [contract](../docs/private-regions.md) supports partial transformation
 inside richer functions. It does not establish a protection advantage or close

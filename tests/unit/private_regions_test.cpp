@@ -20,7 +20,7 @@ const clang::FunctionDecl &function(clang::ASTUnit &ast) {
 }
 csrd::Verification grade(const std::string &source, csrd::PrivateFrame frame, const std::string &body) {
   const auto candidate = source.substr(0, frame.begin) + body + source.substr(frame.end);
-  frame.candidateBegin = frame.begin; frame.candidateEnd = frame.begin + unsigned(body.size());
+  frame.emission.body = body; csrd::preparePrivateFrames({&frame});
   auto ast = parse(candidate);
   return csrd::validatePrivateFrame(ast->getASTContext(), function(*ast), frame, 10000);
 }
@@ -31,8 +31,9 @@ int main() {
     auto ast = parse(source);
     auto discovery = csrd::discoverPrivateRegions(ast->getASTContext(), function(*ast));
     require(discovery.frames.size() == 1, "one arithmetic frame required");
-    const auto frame = discovery.frames[0];
-    require(frame.inputs == std::vector<std::string>({"x", "y"}) && frame.outputs == frame.inputs, "frame must track both outputs");
+    auto frame = discovery.frames[0];
+    require(frame.inputs.size() == 2 && frame.bindings.at(frame.inputs[0]).name == "x" &&
+            frame.bindings.at(frame.inputs[1]).name == "y" && frame.outputs == frame.inputs, "frame must track both outputs");
     for (const auto seed : {uint64_t(0), uint64_t(42), UINT64_MAX}) {
       const auto affine = csrd::Affine::fromSeed(seed, "f");
       const auto emitted = csrd::emitPrivateFrame(frame, affine, {"x", "y"});
@@ -55,6 +56,60 @@ int main() {
     auto d = csrd::discoverPrivateRegions(other->getASTContext(), function(*other));
     require(d.frames.size() == 1 && d.frames[0].inputs.empty(), "overwritten uninitialized locals must not be captured");
     require(grade(overwrite, d.frames[0], csrd::emitPrivateFrame(d.frames[0], csrd::Affine::fromSeed(42,"f"), {}).body).status == "proved-under-model", "write-only initialization frame failed");
-    std::cout << "PASS private frame proofs, scalar-state counterexample and six effect/initialization controls\n";
+    // Declarations remain visible across effects and later frames; same-spelled
+    // outer and inner objects have distinct output identities.
+    const std::string declarations = "extern void sink(unsigned int);unsigned int f(unsigned int x,unsigned int y){"
+      "register unsigned int total=x+y;total=3u*total+11u;sink(total);"
+      "{x=x+1u;unsigned int x=total-y;x=5u*x+7u;sink(x);total=total+x;}"
+      "total=total+x;return total;}\n";
+    auto original = parse(declarations);
+    auto regions = csrd::discoverPrivateRegions(original->getASTContext(), function(*original));
+    require(regions.frames.size() == 4, "declarations/effects/scope must delimit four regions");
+    require(regions.frames[1].outputs.size() == 2 && regions.frames[1].outputs[0] != regions.frames[1].outputs[1] &&
+            regions.frames[1].bindings.at(regions.frames[1].outputs[0]).name == "x" &&
+            regions.frames[1].bindings.at(regions.frames[1].outputs[1]).name == "x", "shadowed output identity lost");
+    for (const auto seed : {uint64_t(0), uint64_t(42), UINT64_MAX}) {
+      std::vector<csrd::PrivateFrame *> edits;
+      for (auto &r : regions.frames) {
+        r.emission = csrd::emitPrivateFrame(r, csrd::Affine::fromSeed(seed,"f"), {"x","y","total"}); edits.push_back(&r);
+      }
+      csrd::preparePrivateFrames(edits);
+      auto candidate = declarations;
+      for (auto it=edits.rbegin(); it!=edits.rend(); ++it) candidate.replace((*it)->begin, (*it)->end-(*it)->begin, (*it)->emission.body);
+      auto generated = parse(candidate);
+      std::string reason;
+      require(csrd::privateContextMatches(csrd::privateReferences(original->getASTContext(),function(*original)),
+        csrd::privateReferences(generated->getASTContext(),function(*generated)), {edits.begin(),edits.end()}, reason), reason);
+      for (const auto *r : edits) {
+        const auto proof = csrd::validatePrivateFrame(generated->getASTContext(),function(*generated),*r,10000);
+        require(proof.status == "proved-under-model", "declaration frame proof failed: " + proof.reason);
+      }
+    }
+    // A wrapping block leaves every outside byte unchanged but redirects y to
+    // the global object. Both structural validation and reference audit reject.
+    const std::string scope = "unsigned int y;extern void sink(unsigned int);unsigned int f(unsigned int x){unsigned int y=x+1u;sink(y);return y;}\n";
+    auto scoped = parse(scope);
+    auto scopeRegions = csrd::discoverPrivateRegions(scoped->getASTContext(),function(*scoped));
+    auto badScope = scopeRegions.frames.at(0);
+    badScope.emission = csrd::emitPrivateFrame(badScope,identity,{"x","y"});
+    auto wrongDeclaration = badScope.emission.body;
+    const auto constant = wrongDeclaration.find("1u");
+    require(constant != std::string::npos, "identity fixture constant missing");
+    wrongDeclaration[constant]='2';
+    require(grade(scope,badScope,wrongDeclaration).status == "counterexample", "wrong initializer must fail output proof");
+    require(grade(scope,badScope,badScope.emission.body+"(void)sink(y);").status == "unsupported", "discarded call admitted");
+    badScope.emission.body = "{" + badScope.emission.body + "}";
+    for (auto &[id, offset] : badScope.emittedDeclarations) ++offset;
+    csrd::preparePrivateFrames({&badScope});
+    auto badText=scope; badText.replace(badScope.begin,badScope.end-badScope.begin,badScope.emission.body);
+    auto badAst=parse(badText); std::string reason;
+    require(!csrd::privateContextMatches(csrd::privateReferences(scoped->getASTContext(),function(*scoped)),
+      csrd::privateReferences(badAst->getASTContext(),function(*badAst)),{&badScope},reason), "context audit missed scope redirection");
+    require(reason.find("different declaration") != std::string::npos, "wrong context rejection");
+    require(csrd::validatePrivateFrame(badAst->getASTContext(),function(*badAst),badScope,10000).status == "unsupported",
+            "frame validator accepted hidden output declaration");
+    auto self = parse("unsigned int f(void){unsigned int x=x+1u;return x;}\n");
+    require(csrd::discoverPrivateRegions(self->getASTContext(),function(*self)).frames.empty(), "self initializer admitted");
+    std::cout << "PASS private frame proofs, shadow/declaration composition, scalar-state counterexample and scope/effect/initialization controls\n";
   } catch (const std::exception &e) { std::cerr << e.what() << '\n'; return 1; }
 }

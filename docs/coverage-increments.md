@@ -13,7 +13,7 @@ unsupported observer outcomes are measurement gaps, not protection wins.
 | Increment | Deliverable | Current evidence/status |
 | --- | --- | --- |
 | 1 | Buffer reconstruction, resource costs and runtime observation | Development checkpoint complete: [112/112 reconstructed artifacts and complete runtime recovery](../reports/buffer-reconstruction.md); no established protection advantage; calibration/application-cost followups remain explicit |
-| 2 | Effect-aware selection and composition of regions in larger functions | [Private-assignment prototype validated](../reports/private-regions.md): frame proofs, 72 event-test cells and 80 linked variants with cost measurements; declarations and call/loop reconstruction observers remain open |
+| 2 | Effect-aware selection and composition of regions in larger functions | [Declarations and shadowed locals validated](../reports/private-declarations.md): frame/scope/binding checks, 144 event-test cells across two fixtures and a new 80-variant cost pilot; call/loop reconstruction and runtime-value observers remain open |
 | 3 | Broader integer types, promotions and operators | Proposed; signed/platform-sized interfaces move earlier to enable I/O |
 | 4 | Byte/string buffers, runtime indexes and richer pointers | Proposed; only fixed-index uint32 buffers exist |
 | 5 | Known direct calls and explicit effect contracts | Proposed |

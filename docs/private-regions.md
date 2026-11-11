@@ -1,6 +1,6 @@
-# Private scalar regions: private-u32-frame-c11-v1
+# Private scalar regions: private-u32-frame-c11-v2
 
-This opt-in prototype transforms arithmetic assignments inside richer C11
+This opt-in prototype transforms arithmetic declarations and assignments inside richer C11
 functions. The original whole-function mode remains the default. This is partial
 transformation support, not a new general verifier for surrounding C features.
 
@@ -16,8 +16,8 @@ scope. Private-frame validation is mandatory during transformation.
 
 ## Source and context contract
 
-Eligible regions are contiguous plain assignment statements that are direct
-children of a compound block. Targets and references must be unqualified,
+Eligible regions are contiguous plain assignments and single initialized scalar
+declarations that are direct children of a compound block. Targets and references must be unqualified,
 automatic `unsigned int` objects (including compatible uint32 typedefs) or
 parameters on the existing 32-bit-int target model. Registers are ordinary
 private scalars. Supported expressions are literals, parentheses, references,
@@ -25,14 +25,14 @@ unsigned addition/subtraction and literal multiplication, with checked implicit
 conversions. General multiplication, signed arithmetic, explicit casts and other
 operators remain boundaries for this prototype.
 
-Initialized declarations, loads/stores, calls, returns, conditions and loop
-control are left unchanged. Regions can occur inside compound loop/branch
+Uninitialized/multiple declarations, loads/stores, calls, returns, conditions and
+loop control are left unchanged. Regions can occur inside compound loop/branch
 bodies. No evaluation crosses those statements. Every address-taken scalar is
 excluded throughout its function, even if its address escapes only later.
-Globals, statics, qualified/atomic variables, attributed objects and shadowed
-local names are excluded. Functions with macro expansions, directives or inline
+Globals, statics, qualified/atomic variables and attributed objects are excluded.
+Shadowed local names use distinct declaration identities. Functions with macro expansions, directives or inline
 assembly are conservatively excluded, as are function attributes. Diagnostics
-record unchanged statement boundaries. Regions split at 32 assignments, 16
+record unchanged statement boundaries. Regions split at 32 statements, 16
 written scalars or a cumulative arithmetic budget of 256 (a single admitted
 expression remains subject to the parser/depth/solver limits).
 
@@ -56,17 +56,28 @@ itself being transformed or formally modeled.
 ## Operation and validation
 
 1. Clang identifies private objects by declaration identity and scans compound
-   blocks for eligible assignment sequences. A reference read before its first
+   blocks for eligible sequences. A reference read before its first
    write becomes a region input. Every written scalar becomes an output,
-   including values unrelated to the enclosing function's return.
+   including values unrelated to the enclosing function's return. A declaration
+   initializer may not read its own uninitialized object.
 2. The emitter captures inputs once, computes with affine temporaries, and
-   decodes every output at the region exit. New identifiers avoid the raw lexer
+   decodes every output at the region exit. Newly introduced source objects are
+   declared in their original enclosing block, after writes to pre-existing
+   objects that their names might shadow. New identifiers avoid the raw lexer
    and preprocessor identifier sets. It preserves physical newline counts.
+   Discarded reads of initialized exported scalars suppress unused-variable
+   warnings when encoded temporaries replaced all their internal uses. This
+   conservative prototype decodes even outputs that are dead after the region;
+   reducing such conversions requires a separately validated liveness analysis.
 3. Outside-region source bytes must be exactly the original bytes. Source
    offsets and fragment hashes bind the replacement to the selected statements.
+   Every unchanged declaration reference must still bind to the mapped original
+   declaration. Byte equality alone would not detect accidental shadowing.
 4. Clang reparses the actual emitted translation unit with the same target and
    headers. An independent frame reader accepts only its declared input/output
-   objects, initialized local temporaries and supported arithmetic. Extra calls,
+   objects, initialized local temporaries and supported arithmetic. Exported
+   declarations must preserve their type, register storage and enclosing scope.
+   Extra calls,
    memory operations, outputs, missing outputs and unknown statements fail.
 5. Original and candidate frames place all outputs in a synthetic output vector.
    The existing SMT memory engine checks equality of the entire vector for every
@@ -81,6 +92,13 @@ termination, C pointer provenance, the C compiler or the emitted binary.
 The Clang frontend, eligibility analysis and model implementation are trusted.
 Finite differential event tests are additional empirical evidence.
 
+The scope/lifetime rationale follows C11 sections 6.2.1 and 6.2.4: non-VLA
+automatic objects have enclosing-block lifetime, while declarations determine
+identifier visibility and initialization. The inference permitting movement
+within these finite private regions depends on the stated no-observation and
+defined-execution assumptions ([WG14 N1570](https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf)).
+This is not a license to move arbitrary declarations or initializers.
+
 ## Measurements and next prototype
 
 The [first validation and cost report](../reports/private-regions.md) records
@@ -93,7 +111,12 @@ model arbitrary calls/loops; an unsupported observation is a measurement gap.
 Reconstruction cost, application cost and runtime visibility need appropriate
 matched artifacts before closing this increment's protection evaluation.
 
-The next prototype can extend initialized declarations and lifetime-preserving
-scope handling, or stronger effect summaries, after the current frame and event
-tests hold. The [fourteen increments](coverage-increments.md) retain separate
+JSON `input_ids`/`output_ids` identify the ordered scalar state unambiguously;
+`inputs`/`outputs` retain human-readable spellings, which can repeat. `bindings`
+maps each ID to its original/generated declaration position and storage class.
+`declared_objects` records which outputs were introduced in that region.
+
+The declaration extension and its evidence are tracked in the
+[research journal](journal/2026-11-10-private-declarations.md). Stronger effect
+summaries and richer integer semantics remain next work. The [fourteen increments](coverage-increments.md) retain separate
 milestones for transforming memory, direct calls, loops and external I/O.
