@@ -59,8 +59,10 @@ class Consumer final : public clang::ASTConsumer {
   uint64_t seed;
   TransformResult &result;
   bool rewrite;
+  const TransformResult *validationSource;
 public:
-  Consumer(clang::CompilerInstance &c, Preprocessing &p, uint64_t s, TransformResult &r, bool w) : ci(c), pp(p), seed(s), result(r), rewrite(w) {}
+  Consumer(clang::CompilerInstance &c, Preprocessing &p, uint64_t s, TransformResult &r, bool w, const TransformResult *v)
+      : ci(c), pp(p), seed(s), result(r), rewrite(w), validationSource(v) {}
   void HandleTranslationUnit(clang::ASTContext &ctx) override {
     if (ci.getDiagnostics().hasErrorOccurred()) return;
     auto &sm = ctx.getSourceManager();
@@ -96,6 +98,37 @@ public:
       const bool hazard = std::any_of(pp.hazards.begin(), pp.hazards.end(), [=](unsigned pos) { return pos >= first && pos <= last; });
       if (pp.keywordMacro || hazard || f->getBeginLoc().isMacroID() || f->getEndLoc().isMacroID()) {
         decision.reason = pp.keywordMacro ? "macro definitions for generated C type keywords are unsupported" : "function contains macro expansions or preprocessor directives";
+      } else if (result.options.scope == "private-regions") {
+        if (validationSource) {
+          const auto original = std::find_if(validationSource->decisions.begin(), validationSource->decisions.end(),
+            [&](const Decision &d) { return d.function == decision.function; });
+          if (original != validationSource->decisions.end()) {
+            decision.privateFrames = original->privateFrames;
+            for (auto &frame : decision.privateFrames)
+              frame.verification = validatePrivateFrame(ctx, *f, frame, result.options.timeoutMs);
+            decision.status = "checked-regions";
+          }
+        } else {
+          auto discovery = discoverPrivateRegions(ctx, *f);
+          decision.privateFrames = std::move(discovery.frames);
+          decision.privateBoundaries = std::move(discovery.boundaries);
+          decision.reason = discovery.reason;
+          decision.status = decision.privateFrames.empty() ? "unchanged" : rewrite ? "regions-transformed" : "supported-regions";
+          for (auto &frame : decision.privateFrames) {
+            if (!rewrite) continue;
+            const auto affine = Affine::fromSeed(seed, decision.function + ":" + std::to_string(frame.begin));
+            Identity identity;
+            const Representation &rep = result.options.strategy == "identity" ?
+              static_cast<const Representation &>(identity) : static_cast<const Representation &>(affine);
+            frame.emission = emitPrivateFrame(frame, rep, reserved);
+            const auto start = sm.getLocForStartOfFile(file);
+            if (rewriter.ReplaceText(clang::CharSourceRange::getCharRange(start.getLocWithOffset(frame.begin),
+                  start.getLocWithOffset(frame.end)), frame.emission.body))
+              throw std::runtime_error("private source range could not be replaced");
+            decision.operations += frame.emission.operations;
+            decision.conversions += frame.emission.boundaryConversions;
+          }
+        }
       } else {
         auto analysis = analyze(ctx, *f);
         if (!analysis.region) { decision.reason = analysis.reason; loc = analysis.location; }
@@ -170,6 +203,20 @@ public:
       }
       result.decisions.push_back(std::move(decision));
     }
+    if (rewrite && result.options.scope == "private-regions") {
+      std::vector<PrivateFrame *> frames;
+      for (auto &d : result.decisions) for (auto &frame : d.privateFrames) frames.push_back(&frame);
+      std::sort(frames.begin(), frames.end(), [](const PrivateFrame *a, const PrivateFrame *b) { return a->begin < b->begin; });
+      int64_t delta = 0;
+      unsigned previousEnd = 0;
+      for (auto *frame : frames) {
+        if (frame->begin < previousEnd) throw std::logic_error("private source regions overlap");
+        frame->candidateBegin = unsigned(int64_t(frame->begin) + delta);
+        frame->candidateEnd = frame->candidateBegin + unsigned(frame->emission.body.size());
+        delta += int64_t(frame->emission.body.size()) - int64_t(frame->end-frame->begin);
+        previousEnd = frame->end;
+      }
+    }
     llvm::raw_string_ostream output(result.source);
     rewriter.getEditBuffer(file).write(output);
     result.outputHash = sha256(result.source);
@@ -180,38 +227,79 @@ class Action final : public clang::ASTFrontendAction {
   uint64_t seed;
   TransformResult &result;
   bool rewrite;
+  const TransformResult *validationSource;
 public:
-  Action(uint64_t s, TransformResult &r, bool w) : seed(s), result(r), rewrite(w) {}
+  Action(uint64_t s, TransformResult &r, bool w, const TransformResult *v) : seed(s), result(r), rewrite(w), validationSource(v) {}
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance &ci, llvm::StringRef) override {
     ci.getPreprocessor().addPPCallbacks(std::make_unique<Callbacks>(ci.getSourceManager(), pp));
-    return std::make_unique<Consumer>(ci, pp, seed, result, rewrite);
+    return std::make_unique<Consumer>(ci, pp, seed, result, rewrite, validationSource);
   }
 };
 class Factory final : public clang::tooling::FrontendActionFactory {
   uint64_t seed;
   TransformResult &result;
   bool rewrite;
+  const TransformResult *validationSource;
 public:
-  Factory(uint64_t s, TransformResult &r, bool w) : seed(s), result(r), rewrite(w) {}
-  std::unique_ptr<clang::FrontendAction> create() override { return std::make_unique<Action>(seed, result, rewrite); }
+  Factory(uint64_t s, TransformResult &r, bool w, const TransformResult *v) : seed(s), result(r), rewrite(w), validationSource(v) {}
+  std::unique_ptr<clang::FrontendAction> create() override { return std::make_unique<Action>(seed, result, rewrite, validationSource); }
 };
-bool parse(const std::string &path, uint64_t seed, TransformResult &result, bool rewrite, const std::string *contents) {
+bool parse(const std::string &path, uint64_t seed, TransformResult &result, bool rewrite, const std::string *contents,
+           const TransformResult *validationSource = nullptr) {
   std::vector<std::string> flags = {"-x", "c", "-std=c11", "-pedantic-errors", "-Wno-keyword-macro", "-fsyntax-only", "-resource-dir=" CSRD_RESOURCE_DIR};
   if (std::string(CSRD_SYSROOT).size()) { flags.push_back("-isysroot"); flags.push_back(CSRD_SYSROOT); }
   clang::tooling::FixedCompilationDatabase db(std::filesystem::current_path().string(), flags);
   const auto absolute = std::filesystem::absolute(path).lexically_normal().string();
   clang::tooling::ClangTool tool(db, {absolute});
   if (contents) tool.mapVirtualFile(absolute, *contents);
-  Factory factory(seed, result, rewrite);
+  Factory factory(seed, result, rewrite, validationSource);
   return tool.run(&factory) == 0;
 }
 }
 bool inspect(const std::string &path, TransformResult &result, const std::string *contents) {
   return parse(path, 0, result, false, contents);
 }
+bool validatePrivateCandidate(const std::string &path, TransformResult &result, const std::string &candidate) {
+  std::vector<PrivateFrame *> frames;
+  for (auto &d : result.decisions) for (auto &frame : d.privateFrames) frames.push_back(&frame);
+  std::sort(frames.begin(), frames.end(), [](const PrivateFrame *a, const PrivateFrame *b) { return a->candidateBegin < b->candidateBegin; });
+  std::string restored = candidate;
+  for (auto it = frames.rbegin(); it != frames.rend(); ++it) {
+    const auto &frame = **it;
+    if (frame.candidateBegin > frame.candidateEnd || frame.candidateEnd > restored.size()) return false;
+    restored.replace(frame.candidateBegin, frame.candidateEnd-frame.candidateBegin, frame.originalText);
+  }
+  if (sha256(restored) != result.inputHash) {
+    llvm::errs() << "csrd: private validation rejected a change outside the selected regions\n"; return false;
+  }
+  TransformResult generated; generated.options = result.options;
+  if (!parse(path, 0, generated, false, &candidate, &result)) return false;
+  result.candidateDependencies = generated.dependencies;
+  if (result.target != generated.target || result.dependencies != generated.dependencies) return false;
+  for (auto &decision : result.decisions) {
+    if (decision.privateFrames.empty()) continue;
+    const auto match = std::find_if(generated.decisions.begin(), generated.decisions.end(),
+      [&](const Decision &d) { return d.function == decision.function; });
+    if (match == generated.decisions.end() || match->privateFrames.size() != decision.privateFrames.size()) return false;
+    decision.verification.status = "proved-under-model";
+    decision.verification.strategy = "contextual-private-frames";
+    decision.verification.reason = "pointwise private scalar frame equivalence with byte-identical surrounding source; not a whole-C or binary proof";
+    for (unsigned i = 0; i < decision.privateFrames.size(); ++i) {
+      auto &frame = decision.privateFrames[i]; frame.verification = match->privateFrames[i].verification;
+      if (frame.verification.status != "proved-under-model") {
+        decision.verification = frame.verification;
+        llvm::errs() << "csrd: private frame validation failed for " << decision.function << ": "
+                     << frame.verification.status << ": " << frame.verification.reason << "\n";
+        return false;
+      }
+    }
+  }
+  return true;
+}
 bool transform(const std::string &path, uint64_t seed, TransformResult &result, const PlanOptions &options) {
   result.options = options;
   if (!parse(path, seed, result, true, nullptr)) return false;
+  if (options.scope == "private-regions") return validatePrivateCandidate(path, result, result.source);
   TransformResult generated;
   if (!inspect(path, generated, &result.source)) return false;
   result.candidateDependencies = generated.dependencies;

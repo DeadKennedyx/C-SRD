@@ -5,6 +5,7 @@ namespace csrd {
 enum class Encoding : unsigned { Identity = 0, Affine = 1, Xor = 2, Limbs16 = 3, Limbs8 = 4, Limbs4 = 5 };
 unsigned limbBits(const std::string &strategy);
 struct PlanOptions {
+  std::string scope = "functions";
   std::string strategy = "affine", objective = "balanced";
   std::string algorithm = "none";
   std::string controlFlow = "none";

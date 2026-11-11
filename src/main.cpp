@@ -18,8 +18,9 @@ void usage() {
     "       [--strategy affine|xor|identity|independent|planned|limbs16|limbs8|limbs4] [--coverage 0..100] [--objective balanced|runtime|size]\n"
     "       [--algorithm popcount8-serial|popcount8-swar]\n"
     "       [--control-flow none|split-scale] (experimental)\n"
+    "       [--scope functions|private-regions] (private-regions: affine/identity assignments only)\n"
     "       csrd verify original.c candidate.c [--function NAME] [--report report.json] [--timeout-ms UINT]\n"
-    "       csrd analyze input.c [--function NAME] [--report report.json]\n"
+    "       csrd analyze input.c [--function NAME] [--report report.json] [--scope functions|private-regions]\n"
     "Transformations are checked against reparsed emitted C before output is written.\n";
 }
 bool samePath(const std::string &a, const std::string &b) {
@@ -128,6 +129,27 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
     llvm::json::Object operators;
     for (const auto &entry : d.metrics.operators) operators[entry.first] = entry.second;
     f["parameter_count"] = d.parameterCount;
+    if (!d.privateFrames.empty() || result.options.scope == "private-regions") {
+      f["semantic_model"] = "private-u32-frame-c11-v1";
+      llvm::json::Array frames, boundaries;
+      for (const auto &frame : d.privateFrames) {
+        llvm::json::Array inputs, outputs;
+        for (const auto &name : frame.inputs) inputs.push_back(name);
+        for (const auto &name : frame.outputs) outputs.push_back(name);
+        frames.push_back(llvm::json::Object{{"line", frame.line}, {"column", frame.column},
+          {"source_begin", frame.begin}, {"source_end", frame.end}, {"candidate_begin", frame.candidateBegin},
+          {"candidate_end", frame.candidateEnd}, {"inputs", std::move(inputs)}, {"outputs", std::move(outputs)},
+          {"operations", frame.original->operations}, {"operations_without_decoding", frame.emission.encodedOperations},
+          {"boundary_conversions", frame.emission.boundaryConversions}, {"temporaries", frame.emission.temporaries},
+          {"original_fragment_sha256", csrd::sha256(frame.originalText)},
+          {"emitted_fragment_sha256", csrd::sha256(frame.emission.body)}, {"proof", proof(frame.verification)}});
+      }
+      for (const auto &boundary : d.privateBoundaries)
+        boundaries.push_back(llvm::json::Object{{"line", boundary.line}, {"column", boundary.column},
+          {"statement", boundary.statement}, {"reason", boundary.reason}});
+      f["private_regions"] = std::move(frames); f["unchanged_boundaries"] = std::move(boundaries);
+      f["operations_transformed"] = d.operations; f["boundary_conversions"] = d.conversions;
+    }
     if (d.region) {
       const auto &region = *d.region;
       f["semantic_model"] = region.buffers.empty() ? "pure-u32-c11-v2" : "buffers-u32-c11-v1";
@@ -186,6 +208,7 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
     {"candidate_dependencies", std::move(candidateDependencies)},
     {"model", "per-function semantic_model; identical target, headers and compilation environment required"}, {"functions", std::move(functions)}};
   root["strategy"] = result.options.strategy;
+  root["scope"] = result.options.scope;
   root["control_flow"] = result.options.controlFlow;
   root["objective"] = result.options.objective;
   root["coverage_percent"] = result.options.coverage;
@@ -209,7 +232,7 @@ int main(int argc, char **argv) {
     unsigned timeout = 10000;
     bool seedSet = false, timeoutSet = false;
     csrd::PlanOptions options;
-    bool strategySet = false, coverageSet = false, objectiveSet = false, algorithmSet = false, controlFlowSet = false;
+    bool strategySet = false, coverageSet = false, objectiveSet = false, algorithmSet = false, controlFlowSet = false, scopeSet = false;
     if (action == "verify") output = argv[3];
     for (int i = action == "verify" ? 4 : 3; i < argc; ++i) {
       const std::string key = argv[i];
@@ -219,6 +242,10 @@ int main(int argc, char **argv) {
       else if (key == "--report" && reportPath.empty()) reportPath = value;
       else if (key == "--function" && action != "transform" && function.empty()) function = value;
       else if (key == "--seed" && action == "transform" && !seedSet) { seed = number(value); seedSet = true; }
+      else if (key == "--scope" && action != "verify" && !scopeSet) {
+        if (value != "functions" && value != "private-regions") throw std::runtime_error("unknown transformation scope");
+        options.scope = value; scopeSet = true;
+      }
       else if (key == "--control-flow" && action == "transform" && !controlFlowSet) {
         if (value != "none" && value != "split-scale") throw std::runtime_error("unknown control-flow candidate");
         options.controlFlow = value; controlFlowSet = true;
@@ -247,6 +274,9 @@ int main(int argc, char **argv) {
     if (output.empty() && action != "analyze") throw std::runtime_error("an output/candidate file is required");
     if ((coverageSet || objectiveSet) && options.strategy != "planned") throw std::runtime_error("coverage/objective require --strategy planned");
     if (csrd::limbBits(options.strategy) && options.controlFlow != "none") throw std::runtime_error(options.strategy + " requires --control-flow none");
+    if (options.scope == "private-regions" && ((options.strategy != "affine" && options.strategy != "identity") ||
+        options.algorithm != "none" || options.controlFlow != "none"))
+      throw std::runtime_error("private regions support affine/identity without algorithm or control-flow candidates");
     options.timeoutMs = timeout;
     if ((action == "transform" && samePath(input, output)) ||
         (!reportPath.empty() && (samePath(input, reportPath) || (!output.empty() && samePath(output, reportPath)))))

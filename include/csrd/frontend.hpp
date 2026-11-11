@@ -7,6 +7,7 @@
 #include "csrd/verification.hpp"
 #include "csrd/graph_emitter.hpp"
 #include "csrd/metrics.hpp"
+#include "csrd/private_regions.hpp"
 namespace csrd {
 struct Decision {
   std::string function, status, reason;
@@ -20,6 +21,8 @@ struct Decision {
   uint32_t xorMask = 0;
   unsigned parameterCount = 0;
   Metrics metrics;
+  std::vector<PrivateFrame> privateFrames;
+  std::vector<PrivateBoundary> privateBoundaries;
 };
 struct TransformResult {
   std::string source;
@@ -33,5 +36,7 @@ struct TransformResult {
 };
 bool transform(const std::string &path, uint64_t seed, TransformResult &result, const PlanOptions &options = {});
 bool inspect(const std::string &path, TransformResult &result, const std::string *contents = nullptr);
+// Reparse actual C, enforce unchanged surrounding bytes, then check every frame.
+bool validatePrivateCandidate(const std::string &path, TransformResult &result, const std::string &candidate);
 std::string sha256(const std::string &data);
 }

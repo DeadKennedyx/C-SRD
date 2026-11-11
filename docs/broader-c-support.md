@@ -3,7 +3,10 @@
 Status: single development sequence; first bounded C1 slice implemented under
 [buffers-u32-c11-v1](buffer-contract.md). Later stages remain proposed. Recorded
 2026-11-10; [buffer evidence](../reports/buffers-validation.md) records actual
-results. This plan does not replace the existing M0–M5 evidence record.
+results. The [fourteen-increment breakdown](coverage-increments.md) refines the
+sequence. An opt-in [private-region prototype](private-regions.md) now selects
+assignment arithmetic inside richer functions without modeling or transforming
+their surrounding effects. This plan does not replace the M0–M5 evidence record.
 
 ## Objective and scope
 

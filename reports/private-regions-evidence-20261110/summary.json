@@ -1,0 +1,3899 @@
+{
+  "hosts": {
+    "native": {
+      "report_sha256": "d955715b1206bcb183c3acb67babef267ca10126054055d09cd23c148bc64456",
+      "checks": {
+        "status": "checked",
+        "report_sha256": "d955715b1206bcb183c3acb67babef267ca10126054055d09cd23c148bc64456",
+        "builds": 40,
+        "samples": 280,
+        "bound_frame_obligations": 60,
+        "scope": "evidence identity and arithmetic summary checks; not independent binary equivalence or a solver replay"
+      },
+      "tools": {
+        "csrd": {
+          "path": "/Users/admin/C-SRD/build/csrd",
+          "sha256": "ab6243ffd414bcd0bca5027ab4cca7899f2557569493e7dc4b1218e011854dd2",
+          "version": "C-SRD 0.6.0"
+        },
+        "objdump": {
+          "path": "/opt/homebrew/opt/llvm/bin/llvm-objdump",
+          "sha256": "b2443b7624fb19e571918b958160ffc6a7c476879057cf9a471c685c43e650c8",
+          "version": "Homebrew LLVM version 23.1.5"
+        },
+        "clang": {
+          "path": "/opt/homebrew/opt/llvm/bin/clang",
+          "sha256": "89f9a1735eb8c596efb614c3af472303d2feddbed30495bca94e164a0bbab271",
+          "version": "Homebrew clang version 23.1.5"
+        },
+        "gcc": {
+          "path": "/opt/homebrew/bin/gcc-16",
+          "sha256": "406040ac6e22d01468e601a5aaa548e60af1c151efb056aa45d485d6804f0cd4",
+          "version": "gcc-16 (Homebrew GCC 16.2.0) 16.2.0"
+        }
+      },
+      "profiles": [
+        {
+          "profile": {
+            "id": "clang-O0",
+            "compiler": "clang",
+            "optimization": "O0",
+            "tiers": [
+              "core",
+              "extended"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O0"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-O0",
+            "compiler": "gcc",
+            "optimization": "O0",
+            "tiers": [
+              "core",
+              "extended"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O0"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "clang-O2",
+            "compiler": "clang",
+            "optimization": "O2",
+            "tiers": [
+              "core",
+              "extended"
+            ],
+            "selection_required": true
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O2"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-O2",
+            "compiler": "gcc",
+            "optimization": "O2",
+            "tiers": [
+              "core",
+              "extended"
+            ],
+            "selection_required": true
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O2"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "clang-O2-lto",
+            "compiler": "clang",
+            "optimization": "O2",
+            "lto": "full",
+            "tiers": [
+              "core",
+              "extended"
+            ],
+            "selection_required": true
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O2",
+            "-flto"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-O2-lto",
+            "compiler": "gcc",
+            "optimization": "O2",
+            "lto": "full",
+            "tiers": [
+              "core",
+              "extended"
+            ],
+            "selection_required": true
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O2",
+            "-flto"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "clang-O3",
+            "compiler": "clang",
+            "optimization": "O3",
+            "tiers": [
+              "extended",
+              "holdout"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O3"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-O3",
+            "compiler": "gcc",
+            "optimization": "O3",
+            "tiers": [
+              "extended",
+              "holdout"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O3"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "clang-Os",
+            "compiler": "clang",
+            "optimization": "Os",
+            "tiers": [
+              "extended"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-Os"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-Os",
+            "compiler": "gcc",
+            "optimization": "Os",
+            "tiers": [
+              "extended"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-Os"
+          ],
+          "status": "available"
+        }
+      ],
+      "paired_results": [
+        {
+          "profile": "clang-O0",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O0",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.1062897258324635,
+                1.256819942055592,
+                1.2564014533802537,
+                1.2562122901832946,
+                1.2313958421722528,
+                1.2407005933363762,
+                1.2523919686973408
+              ],
+              "median": 1.2523919686973408,
+              "min": 1.1062897258324635,
+              "max": 1.256819942055592
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.07547703180212,
+                1.2452714900708233,
+                1.252707581227437,
+                1.2668390869222985,
+                1.2203811554972248,
+                1.2327929622662388,
+                1.2439206780036558
+              ],
+              "median": 1.2439206780036558,
+              "min": 1.07547703180212,
+              "max": 1.2668390869222985
+            }
+          },
+          "linked_text_ratio": 1.0846153846153845,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O0",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.4114600132814723,
+                1.702217377585267,
+                1.7024575859010673,
+                1.7012953590117526,
+                1.6896337151746572,
+                1.6901243724326793,
+                1.7171621968982949
+              ],
+              "median": 1.7012953590117526,
+              "min": 1.4114600132814723,
+              "max": 1.7171621968982949
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.3798409893992933,
+                1.676017219830579,
+                1.6809775062482646,
+                1.702265827054987,
+                1.6594482268340034,
+                1.6699955737523513,
+                1.6850108015288316
+              ],
+              "median": 1.676017219830579,
+              "min": 1.3798409893992933,
+              "max": 1.702265827054987
+            }
+          },
+          "linked_text_ratio": 1.4038461538461537,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O0",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9373683711222844,
+                1.0128797223258081,
+                0.9921609017823936,
+                1.0070058048096993,
+                0.9846132088813465,
+                1.0031948881789137,
+                1.005540799131751
+              ],
+              "median": 1.0031948881789137,
+              "min": 0.9373683711222844,
+              "max": 1.0128797223258081
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9589575971731448,
+                1.0112762116372724,
+                0.9960011108025549,
+                1.023782750477904,
+                0.9815437617914856,
+                1.0043985836007525,
+                1.0093890212153105
+              ],
+              "median": 1.0043985836007525,
+              "min": 0.9589575971731448,
+              "max": 1.023782750477904
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O0",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O0",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.1294753393215378,
+                1.2279841455358504,
+                1.2202931513773059,
+                1.2308985758324629,
+                1.225234117944824,
+                1.2324216756811919,
+                1.235166240409207
+              ],
+              "median": 1.2279841455358504,
+              "min": 1.1294753393215378,
+              "max": 1.235166240409207
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.1156316916488223,
+                1.2187345526445874,
+                1.217002839518261,
+                1.2150061500615006,
+                1.2170914249376314,
+                1.2253716895430513,
+                1.2263185352644523
+              ],
+              "median": 1.2170914249376314,
+              "min": 1.1156316916488223,
+              "max": 1.2263185352644523
+            }
+          },
+          "linked_text_ratio": 1.0836501901140685,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O0",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.2063761724892015,
+                1.3034452970171249,
+                1.298180439727066,
+                1.307508088965886,
+                1.296962794229309,
+                1.3093938156954792,
+                1.312071611253197
+              ],
+              "median": 1.3034452970171249,
+              "min": 1.2063761724892015,
+              "max": 1.312071611253197
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.188285083208282,
+                1.297923875432526,
+                1.2842455693723684,
+                1.2875768757687576,
+                1.2790441715990803,
+                1.299362108764179,
+                1.3070827019104165
+              ],
+              "median": 1.2875768757687576,
+              "min": 1.188285083208282,
+              "max": 1.3070827019104165
+            }
+          },
+          "linked_text_ratio": 1.4106463878326996,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O0",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0029639804088124,
+                0.9963158697088267,
+                0.9880464998736416,
+                0.9974268171511553,
+                0.9934700075930144,
+                1.0097969180528623,
+                1.0100511508951406
+              ],
+              "median": 0.9974268171511553,
+              "min": 0.9880464998736416,
+              "max": 1.0100511508951406
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9819083107116964,
+                0.99755313890262,
+                0.988152354841868,
+                0.9913653136531366,
+                0.9848358851440592,
+                1.0075206632083198,
+                1.0057387027053886
+              ],
+              "median": 0.9913653136531366,
+              "min": 0.9819083107116964,
+              "max": 1.0075206632083198
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.1266091259905147,
+                0.9838919199792153,
+                0.9939616697295879,
+                1.0054467187911797,
+                0.9894599303135887,
+                1.0157625924621345,
+                1.0033438929954241
+              ],
+              "median": 1.0033438929954241,
+              "min": 0.9838919199792153,
+              "max": 1.1266091259905147
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0927709595567292,
+                0.9849210712322312,
+                1.0039610235284797,
+                0.9970845481049562,
+                0.9895808852330592,
+                0.9873487348734874,
+                1.0207665169980755
+              ],
+              "median": 0.9970845481049562,
+              "min": 0.9849210712322312,
+              "max": 1.0927709595567292
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9551948625799042,
+                1.0765566813891054,
+                1.0762229806598407,
+                1.0860932970218746,
+                1.0665505226480836,
+                1.083656216977809,
+                1.0917810630059837
+              ],
+              "median": 1.0765566813891054,
+              "min": 0.9551948625799042,
+              "max": 1.0917810630059837
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9657190202475273,
+                1.0810492421267572,
+                1.0596530143389051,
+                1.0688677015207628,
+                1.0581276929103016,
+                1.053983969825554,
+                1.0982200128287363
+              ],
+              "median": 1.0596530143389051,
+              "min": 0.9657190202475273,
+              "max": 1.0982200128287363
+            }
+          },
+          "linked_text_ratio": 1.1132075471698113,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O2",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.129024656081539,
+                0.9818134580410496,
+                1.0052507219742715,
+                1.0065009224281822,
+                0.9893728222996515,
+                1.0198133145473758,
+                0.9970960929250264
+              ],
+              "median": 1.0052507219742715,
+              "min": 0.9818134580410496,
+              "max": 1.129024656081539
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0841230386826162,
+                0.9788737925076573,
+                1.0104571021151865,
+                0.9944842801985658,
+                0.981825303564434,
+                1.00990099009901,
+                1.0063341885824246
+              ],
+              "median": 1.0063341885824246,
+              "min": 0.9788737925076573,
+              "max": 1.0841230386826162
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9072731457506187,
+                1.0041135667043073,
+                1.005382043545625,
+                1.0058446302459614,
+                1.0122574884325026,
+                0.9437305147897499,
+                1.0114812419146184
+              ],
+              "median": 1.005382043545625,
+              "min": 0.9072731457506187,
+              "max": 1.0122574884325026
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9378943785510434,
+                1.0017653549098935,
+                1.0034119566829847,
+                1.0039048110218818,
+                1.02389965115416,
+                0.944721150473518,
+                1.0142593276690064
+              ],
+              "median": 1.0034119566829847,
+              "min": 0.9378943785510434,
+              "max": 1.02389965115416
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0026181023073826,
+                1.0740442006775286,
+                1.0409361493924816,
+                1.0163974348567253,
+                1.0468382173877748,
+                0.9449471523078093,
+                1.0116429495472186
+              ],
+              "median": 1.0163974348567253,
+              "min": 0.9449471523078093,
+              "max": 1.0740442006775286
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.034692221087634,
+                1.069878631849945,
+                1.0451713395638629,
+                1.0069991895675237,
+                1.0532917687226304,
+                0.9581199579095054,
+                1.0090136682674549
+              ],
+              "median": 1.034692221087634,
+              "min": 0.9581199579095054,
+              "max": 1.069878631849945
+            }
+          },
+          "linked_text_ratio": 1.2105263157894737,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O2",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.8807756487715058,
+                0.9938699790288756,
+                1.0075837886324717,
+                1.0011364558811593,
+                1.0056011039857131,
+                0.9457075507565965,
+                1.0133408796895214
+              ],
+              "median": 1.0011364558811593,
+              "min": 0.8807756487715058,
+              "max": 1.0133408796895214
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9296991595318513,
+                0.9949246046340566,
+                1.0020768431983385,
+                0.9943269726663228,
+                1.0089067022934757,
+                0.9518765345492809,
+                1.0085703731067603
+              ],
+              "median": 0.9949246046340566,
+              "min": 0.9296991595318513,
+              "max": 1.0089067022934757
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2-lto",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2-lto",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.204452891664404,
+                0.9937607858754812,
+                0.9970705725699067,
+                1.0022727272727274,
+                0.998805890938039,
+                0.996148738379814,
+                1.0014719657433429
+              ],
+              "median": 0.998805890938039,
+              "min": 0.9937607858754812,
+              "max": 1.204452891664404
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.1197894191766637,
+                0.9926537070524414,
+                1.0210926694329185,
+                1.02095149901609,
+                0.9946328651364624,
+                0.9965525166628361,
+                1.016048955086018
+              ],
+              "median": 1.016048955086018,
+              "min": 0.9926537070524414,
+              "max": 1.1197894191766637
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2-lto",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.2173771382025522,
+                1.2583300146024161,
+                1.25525965379494,
+                1.2667112299465242,
+                1.2528857635664057,
+                1.2648074369189906,
+                1.280074936437843
+              ],
+              "median": 1.2583300146024161,
+              "min": 1.2173771382025522,
+              "max": 1.280074936437843
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.093337360835419,
+                1.214511754068716,
+                1.2382434301521439,
+                1.266929042713277,
+                1.2205093068402422,
+                1.2438519880487244,
+                1.2381942039025517
+              ],
+              "median": 1.2381942039025517,
+              "min": 1.093337360835419,
+              "max": 1.266929042713277
+            }
+          },
+          "linked_text_ratio": 1.1610169491525424,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O2-lto",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.3493890849850665,
+                0.9881853179344219,
+                0.9970705725699067,
+                1.0128342245989306,
+                0.9952235637521559,
+                0.9938911022576361,
+                0.9995985547972702
+              ],
+              "median": 0.9970705725699067,
+              "min": 0.9881853179344219,
+              "max": 1.3493890849850665
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.2183049969793736,
+                0.9728752260397829,
+                1.0068003688335638,
+                1.0130802176177798,
+                0.99052186821971,
+                0.9924155366582394,
+                1.001616441519455
+              ],
+              "median": 1.001616441519455,
+              "min": 0.9728752260397829,
+              "max": 1.2183049969793736
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2-lto",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2-lto",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.4109235352532272,
+                0.9997761862130707,
+                1.0060524546065905,
+                1.0042335115864527,
+                1.0084061869535978,
+                0.9987773702345225,
+                0.9938657149230427
+              ],
+              "median": 1.0042335115864527,
+              "min": 0.9938657149230427,
+              "max": 1.4109235352532272
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.2847902940703841,
+                1.0023384975153464,
+                1.0023348574764082,
+                1.0025301673803035,
+                0.9816706443914083,
+                0.994386372435153,
+                1.010497128144187
+              ],
+              "median": 1.0023384975153464,
+              "min": 0.9816706443914083,
+              "max": 1.2847902940703841
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2-lto",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0519860973187687,
+                1.1995299910474486,
+                1.2019726518717777,
+                1.1960784313725492,
+                1.2051109616677875,
+                1.2004001333777927,
+                1.197970109301807
+              ],
+              "median": 1.1995299910474486,
+              "min": 1.0519860973187687,
+              "max": 1.2051109616677875
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0073517596014783,
+                1.1574588326999902,
+                1.1576028796575542,
+                1.156675749318801,
+                1.1441527446300719,
+                1.160762679055362,
+                1.1842939195880373
+              ],
+              "median": 1.1574588326999902,
+              "min": 1.0073517596014783,
+              "max": 1.1842939195880373
+            }
+          },
+          "linked_text_ratio": 1.2153846153846153,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O2-lto",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.3275074478649453,
+                0.9989928379588182,
+                1.0,
+                0.9988859180035651,
+                1.0013449899125757,
+                0.9992219628765144,
+                1.0032344412223957
+              ],
+              "median": 1.0,
+              "min": 0.9988859180035651,
+              "max": 1.3275074478649453
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.2169371685682147,
+                1.0054564942024748,
+                0.9813211401887344,
+                0.9880303620085635,
+                0.982529832935561,
+                0.9809330236159505,
+                0.9992077639136462
+              ],
+              "median": 0.9880303620085635,
+              "min": 0.9809330236159505,
+              "max": 1.2169371685682147
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O3",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O3",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.053998613197735,
+                1.0022053634438954,
+                1.0059041240747268,
+                1.000528680941052,
+                0.9978993435448578,
+                1.0005265467310223,
+                1.014190093708166
+              ],
+              "median": 1.0022053634438954,
+              "min": 0.9978993435448578,
+              "max": 1.053998613197735
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9943175921120913,
+                1.0012780573528237,
+                0.9992046448739362,
+                0.9723363037582331,
+                0.9990545225338796,
+                0.9919163100332856,
+                1.0175751194622173
+              ],
+              "median": 0.9990545225338796,
+              "min": 0.9723363037582331,
+              "max": 1.0175751194622173
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O3",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0896509880966139,
+                1.0808927311220888,
+                1.077987310539302,
+                1.1228302053044321,
+                1.076586433260394,
+                1.0866169372531813,
+                1.1029897367246766
+              ],
+              "median": 1.0866169372531813,
+              "min": 1.076586433260394,
+              "max": 1.1228302053044321
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.070965230928905,
+                1.0800383417205848,
+                1.0680823987910602,
+                1.0540100736148779,
+                1.0704380712259691,
+                1.0870185449358059,
+                1.0900623633271238
+              ],
+              "median": 1.070965230928905,
+              "min": 1.0540100736148779,
+              "max": 1.0900623633271238
+            }
+          },
+          "linked_text_ratio": 1.1125,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O3",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.8661157979891368,
+                1.0055575158786167,
+                1.0107507930912936,
+                1.0026434047052604,
+                0.9927352297592998,
+                0.9947345326897761,
+                1.0209727800089246
+              ],
+              "median": 1.0026434047052604,
+              "min": 0.8661157979891368,
+              "max": 1.0209727800089246
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.8686559418785677,
+                1.005990893841361,
+                1.0122484689413822,
+                0.9685393258426965,
+                1.0048849669082887,
+                0.9947693770803613,
+                1.017737102130072
+              ],
+              "median": 1.0048849669082887,
+              "min": 0.8686559418785677,
+              "max": 1.017737102130072
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O3",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O3",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0230512053492873,
+                1.003096727184407,
+                1.0264488999939059,
+                0.9969111501423292,
+                1.0035942735303076,
+                1.0044425511197663,
+                1.0004251442453689
+              ],
+              "median": 1.0035942735303076,
+              "min": 0.9969111501423292,
+              "max": 1.0264488999939059
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0078475915122103,
+                1.0034639409426462,
+                1.0309676686175353,
+                0.9974580579562786,
+                0.995464979564414,
+                1.0041602553142988,
+                1.003452960489075
+              ],
+              "median": 1.0034639409426462,
+              "min": 0.995464979564414,
+              "max": 1.0309676686175353
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O3",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0822335620857526,
+                0.9868237294310521,
+                0.9848863428606252,
+                1.0079341045363697,
+                0.9835516296070668,
+                0.9836903602726389,
+                0.9680534467051319
+              ],
+              "median": 0.9848863428606252,
+              "min": 0.9680534467051319,
+              "max": 1.0822335620857526
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0607930197738655,
+                0.9923339011925043,
+                0.9917608955054265,
+                1.006270123707846,
+                0.979788365713006,
+                0.9872342850629738,
+                0.9704517151590625
+              ],
+              "median": 0.9917608955054265,
+              "min": 0.9704517151590625,
+              "max": 1.0607930197738655
+            }
+          },
+          "linked_text_ratio": 1.2105263157894737,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O3",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0421432342072847,
+                0.9995749590139049,
+                1.004570662441343,
+                1.0298588819574828,
+                1.0063356685957965,
+                1.0006085686465434,
+                0.9967203158214393
+              ],
+              "median": 1.004570662441343,
+              "min": 0.9967203158214393,
+              "max": 1.0421432342072847
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0035365790696475,
+                1.0034639409426462,
+                1.0006818569236888,
+                1.0276789244760776,
+                0.9913778623817256,
+                0.9868353564711916,
+                1.0024340541152494
+              ],
+              "median": 1.0024340541152494,
+              "min": 0.9868353564711916,
+              "max": 1.0276789244760776
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-Os",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-Os",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.5325513196480938,
+                1.0067120021195797,
+                1.0444542642509942,
+                0.9861803551123939,
+                1.0021190181882396,
+                1.0355824986821298,
+                1.0180457746478873
+              ],
+              "median": 1.0180457746478873,
+              "min": 0.9861803551123939,
+              "max": 1.5325513196480938
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.4955012089262358,
+                0.9805103318722606,
+                1.039467351195251,
+                0.9961868446139182,
+                0.9914197187574482,
+                1.0282490396927015,
+                0.99677850239648
+              ],
+              "median": 0.99677850239648,
+              "min": 0.9805103318722606,
+              "max": 1.4955012089262358
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-Os",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.7386420031581322,
+                1.087167711737172,
+                1.087317719840919,
+                1.0544039184815883,
+                1.088204132085467,
+                1.0824986821296785,
+                1.0784330985915493
+              ],
+              "median": 1.087167711737172,
+              "min": 1.0544039184815883,
+              "max": 1.7386420031581322
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.7086289587379604,
+                1.0543988728866627,
+                1.0831862666452752,
+                1.044248490625993,
+                1.081194883610074,
+                1.0829065300896286,
+                1.0572012257405516
+              ],
+              "median": 1.081194883610074,
+              "min": 1.044248490625993,
+              "max": 1.7086289587379604
+            }
+          },
+          "linked_text_ratio": 1.1153846153846154,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-Os",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.4221520415068802,
+                1.001501368895169,
+                1.0030048608042421,
+                0.9823318464095162,
+                1.0022073106127496,
+                0.9981549815498155,
+                0.9988556338028168
+              ],
+              "median": 1.001501368895169,
+              "min": 0.9823318464095162,
+              "max": 1.4221520415068802
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.4039399104205477,
+                0.9805103318722606,
+                1.0072998556072519,
+                1.0030981887511916,
+                0.9953126241360133,
+                1.0037612035851473,
+                0.9845996699929285
+              ],
+              "median": 1.0030981887511916,
+              "min": 0.9805103318722606,
+              "max": 1.4039399104205477
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-Os",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-Os",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9602621511817562,
+                1.0177309142318567,
+                1.0112948299953424,
+                0.9774694719944963,
+                0.9943914426134721,
+                0.9744822062020825,
+                0.9793838048333524
+              ],
+              "median": 0.9793838048333524,
+              "min": 0.9602621511817562,
+              "max": 1.0177309142318567
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0275675827730737,
+                0.9990722043333515,
+                1.004929577464789,
+                0.979031130705952,
+                0.9955610891571481,
+                0.9617912029676736,
+                0.9813240043057051
+              ],
+              "median": 0.9955610891571481,
+              "min": 0.9617912029676736,
+              "max": 1.0275675827730737
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-Os",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0946294593873254,
+                1.2350966069745521,
+                1.223567768979972,
+                1.1801868944562288,
+                1.173576178086152,
+                1.2088339626959606,
+                1.2079945023479557
+              ],
+              "median": 1.2079945023479557,
+              "min": 1.0946294593873254,
+              "max": 1.2350966069745521
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.1678246926777125,
+                1.2145391038585385,
+                1.2016251354279524,
+                1.1757083714178183,
+                1.1595301250473664,
+                1.1770005299417066,
+                1.2034983853606027
+              ],
+              "median": 1.1770005299417066,
+              "min": 1.1595301250473664,
+              "max": 1.2145391038585385
+            }
+          },
+          "linked_text_ratio": 1.253968253968254,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-Os",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.927107737018475,
+                1.027509425070688,
+                1.0011061946902653,
+                0.9824571461331193,
+                0.9828852269442034,
+                0.9847236525918297,
+                0.985167792921773
+              ],
+              "median": 0.9847236525918297,
+              "min": 0.927107737018475,
+              "max": 1.027509425070688
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0068637655067654,
+                1.0153359166075424,
+                0.9947995666305526,
+                0.9885477713855585,
+                0.9857088724083798,
+                0.9838367779544253,
+                0.988751345532831
+              ],
+              "median": 0.988751345532831,
+              "min": 0.9838367779544253,
+              "max": 1.0153359166075424
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        }
+      ]
+    },
+    "linux": {
+      "report_sha256": "3b9f36b2f688f1977ab94712239d8ee3371e83474287f5195d3611c07cfaa525",
+      "checks": {
+        "status": "checked",
+        "report_sha256": "3b9f36b2f688f1977ab94712239d8ee3371e83474287f5195d3611c07cfaa525",
+        "builds": 40,
+        "samples": 280,
+        "bound_frame_obligations": 60,
+        "scope": "evidence identity and arithmetic summary checks; not independent binary equivalence or a solver replay"
+      },
+      "tools": {
+        "csrd": {
+          "path": "/work/build-linux-regions/csrd",
+          "sha256": "934c681a55e55cb618039422fc1d44aeba06e9c629e0427ac4e4b4de13307ef9",
+          "version": "C-SRD 0.6.0"
+        },
+        "objdump": {
+          "path": "/usr/bin/llvm-objdump-18",
+          "sha256": "32b78ffb3f9f14a19716cb7d3d6a5baa59ea98bc502fb183d3ff429df0f20a21",
+          "version": "Ubuntu LLVM version 18.1.3"
+        },
+        "clang": {
+          "path": "/usr/bin/clang-18",
+          "sha256": "6d99f6207153b8b2063ace5d2a6177debaf6a6b6f31649e03afac07b98ba0b4d",
+          "version": "Ubuntu clang version 18.1.3 (1ubuntu1)"
+        },
+        "gcc": {
+          "path": "/usr/bin/gcc",
+          "sha256": "a20520ee21543f243d40636a9181a142c45ecd989de31ab86b99a8ea5ada870d",
+          "version": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+        }
+      },
+      "profiles": [
+        {
+          "profile": {
+            "id": "clang-O0",
+            "compiler": "clang",
+            "optimization": "O0",
+            "tiers": [
+              "core",
+              "extended"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O0"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-O0",
+            "compiler": "gcc",
+            "optimization": "O0",
+            "tiers": [
+              "core",
+              "extended"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O0"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "clang-O2",
+            "compiler": "clang",
+            "optimization": "O2",
+            "tiers": [
+              "core",
+              "extended"
+            ],
+            "selection_required": true
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O2"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-O2",
+            "compiler": "gcc",
+            "optimization": "O2",
+            "tiers": [
+              "core",
+              "extended"
+            ],
+            "selection_required": true
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O2"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "clang-O2-lto",
+            "compiler": "clang",
+            "optimization": "O2",
+            "lto": "full",
+            "tiers": [
+              "core",
+              "extended"
+            ],
+            "selection_required": true
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O2",
+            "-flto"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-O2-lto",
+            "compiler": "gcc",
+            "optimization": "O2",
+            "lto": "full",
+            "tiers": [
+              "core",
+              "extended"
+            ],
+            "selection_required": true
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O2",
+            "-flto"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "clang-O3",
+            "compiler": "clang",
+            "optimization": "O3",
+            "tiers": [
+              "extended",
+              "holdout"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O3"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-O3",
+            "compiler": "gcc",
+            "optimization": "O3",
+            "tiers": [
+              "extended",
+              "holdout"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O3"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "clang-Os",
+            "compiler": "clang",
+            "optimization": "Os",
+            "tiers": [
+              "extended"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-Os"
+          ],
+          "status": "available"
+        },
+        {
+          "profile": {
+            "id": "gcc-Os",
+            "compiler": "gcc",
+            "optimization": "Os",
+            "tiers": [
+              "extended"
+            ]
+          },
+          "flags": [
+            "-std=c11",
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-Os"
+          ],
+          "status": "available"
+        }
+      ],
+      "paired_results": [
+        {
+          "profile": "clang-O0",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O0",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.4182688166079014,
+                1.4063411271166613,
+                1.2771945826869877,
+                1.4271792093577373,
+                1.415885167831545,
+                1.4178624775011424,
+                1.4324492045445933
+              ],
+              "median": 1.4178624775011424,
+              "min": 1.2771945826869877,
+              "max": 1.4324492045445933
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.4162667196773917,
+                1.4014961185603387,
+                1.4040661456563597,
+                1.4250448960976025,
+                1.4134675538872776,
+                1.4155877561519334,
+                1.430708075955159
+              ],
+              "median": 1.4155877561519334,
+              "min": 1.4014961185603387,
+              "max": 1.430708075955159
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.4285714285714286,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.0696202531645569,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O0",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.6333078159319594,
+                1.623782486606135,
+                1.4733519248932456,
+                1.6349563681295478,
+                1.7790359233344637,
+                1.6694048679291245,
+                1.6449131811182105
+              ],
+              "median": 1.6349563681295478,
+              "min": 1.4733519248932456,
+              "max": 1.7790359233344637
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.6295686252236388,
+                1.617529992942837,
+                1.619322686600974,
+                1.6285453664376726,
+                1.6296422680998692,
+                1.636828717596959,
+                1.6400995195607413
+              ],
+              "median": 1.6295686252236388,
+              "min": 1.617529992942837,
+              "max": 1.6400995195607413
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                0.7,
+                1.0,
+                1.0,
+                0.7
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.268987341772152,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O0",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0041510996494591,
+                0.9880749355749497,
+                0.9041446981646375,
+                1.0038214777590122,
+                1.024258124234883,
+                1.0143110368406763,
+                1.004158051546837
+              ],
+              "median": 1.0041510996494591,
+              "min": 0.9041446981646375,
+              "max": 1.024258124234883
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0038906085820578,
+                0.9879181369089627,
+                0.9965737909162985,
+                1.003335138679057,
+                1.026104760279816,
+                1.0174912115236217,
+                1.005176161061542
+              ],
+              "median": 1.0038906085820578,
+              "min": 0.9879181369089627,
+              "max": 1.026104760279816
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                0.7
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O0",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O0",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.2910190072401684,
+                1.3051984622927892,
+                1.297238829153169,
+                1.29710010815852,
+                1.2811700657581429,
+                1.3183484719505618,
+                1.2849218841683643
+              ],
+              "median": 1.29710010815852,
+              "min": 1.2811700657581429,
+              "max": 1.3183484719505618
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.2898162229038328,
+                1.3024577132580992,
+                1.2953496169817647,
+                1.2939830290563126,
+                1.277085549308616,
+                1.318392022114863,
+                1.28296239447429
+              ],
+              "median": 1.2939830290563126,
+              "min": 1.277085549308616,
+              "max": 1.318392022114863
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.4285714285714286,
+                0.7,
+                1.0,
+                1.4285714285714286,
+                1.4285714285714286
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.063768115942029,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O0",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.3786006594847702,
+                1.3981793258044193,
+                1.3889196153436294,
+                1.3850455755393352,
+                1.374440148048269,
+                1.3785684746798017,
+                1.3896174907735863
+              ],
+              "median": 1.3850455755393352,
+              "min": 1.374440148048269,
+              "max": 1.3981793258044193
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.3771425625692708,
+                1.395684015741875,
+                1.38601016223466,
+                1.380791977372075,
+                1.3693460973509601,
+                1.3779936445604153,
+                1.3870299309286263
+              ],
+              "median": 1.380791977372075,
+              "min": 1.3693460973509601,
+              "max": 1.395684015741875
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                0.7,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.3130434782608695,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O0",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.003709102097503,
+                1.0121839206115122,
+                0.9845162302732373,
+                0.9898641347642209,
+                0.979394565493143,
+                1.005268966592804,
+                0.9865994432139984
+              ],
+              "median": 0.9898641347642209,
+              "min": 0.979394565493143,
+              "max": 1.0121839206115122
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0036858519988658,
+                1.0065156767181842,
+                0.9860462716979186,
+                0.9902288506042684,
+                0.9779415489034089,
+                1.0059420776603716,
+                0.9864159631619339
+              ],
+              "median": 0.9902288506042684,
+              "min": 0.9779415489034089,
+              "max": 1.0065156767181842
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                0.7,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9881589625178617,
+                0.9989694036429863,
+                0.9997374972202703,
+                0.9941876827210151,
+                1.0356793966034745,
+                1.0191377751506687,
+                1.0097887375400678
+              ],
+              "median": 0.9997374972202703,
+              "min": 0.9881589625178617,
+              "max": 1.0356793966034745
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.987618060354757,
+                0.9991230634317451,
+                0.9978366368473366,
+                0.9927675707203265,
+                1.0363953488372093,
+                1.019220564825187,
+                1.010574104936498
+              ],
+              "median": 0.9991230634317451,
+              "min": 0.987618060354757,
+              "max": 1.0363953488372093
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9732832237410429,
+                1.0221495574036343,
+                0.989793064469696,
+                0.9865112984406559,
+                0.9688115466049796,
+                0.9874983884816751,
+                0.9620729577588615
+              ],
+              "median": 0.9865112984406559,
+              "min": 0.9620729577588615,
+              "max": 1.0221495574036343
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9729325040313292,
+                1.0212803273896522,
+                0.9901186926270243,
+                0.9881598133566637,
+                0.9697093023255814,
+                0.9883851188019572,
+                0.9651169473018792
+              ],
+              "median": 0.9881598133566637,
+              "min": 0.9651169473018792,
+              "max": 1.0212803273896522
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0848214285714286,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O2",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0144781492314976,
+                0.9959718510566495,
+                1.0044682538375724,
+                1.0049434966572328,
+                1.0095205658554207,
+                1.0182748871398504,
+                0.9821670391437133
+              ],
+              "median": 1.0049434966572328,
+              "min": 0.9821670391437133,
+              "max": 1.0182748871398504
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0141096521538817,
+                0.9932768196433791,
+                1.0036835642869673,
+                1.005832604257801,
+                1.0150000000000001,
+                1.0199280702788749,
+                0.9849433940578126
+              ],
+              "median": 1.005832604257801,
+              "min": 0.9849433940578126,
+              "max": 1.0199280702788749
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0532204898693507,
+                0.9965671247881304,
+                1.013331102022837,
+                0.9934805702604697,
+                1.0217254137437406,
+                0.9981875209350972,
+                1.0094644240708717
+              ],
+              "median": 1.0094644240708717,
+              "min": 0.9934805702604697,
+              "max": 1.0532204898693507
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0301409087483988,
+                0.9946516007532957,
+                1.0112418892409838,
+                0.9937851435335897,
+                1.0204651865277148,
+                0.9963787250094304,
+                1.0082613309079884
+              ],
+              "median": 1.0082613309079884,
+              "min": 0.9937851435335897,
+              "max": 1.0301409087483988
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.951694403621528,
+                0.9661325306408726,
+                0.9579086236649785,
+                0.948656733196954,
+                0.958915185985818,
+                0.9553627283501882,
+                0.9546004579223464
+              ],
+              "median": 0.9553627283501882,
+              "min": 0.948656733196954,
+              "max": 0.9661325306408726
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.950945671011981,
+                0.9673069679849342,
+                0.9549569941149841,
+                0.9451021012133767,
+                0.9590696269445703,
+                0.9529234251225953,
+                0.9564195846596939
+              ],
+              "median": 0.9549569941149841,
+              "min": 0.9451021012133767,
+              "max": 0.9673069679849342
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.4285714285714286,
+                1.0,
+                1.4285714285714286
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.0637450199203187,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O2",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9952839874936739,
+                0.9996189536951117,
+                1.006863442098651,
+                0.9734878639348202,
+                1.022667390476784,
+                1.0156889730393355,
+                1.0101470954777754
+              ],
+              "median": 1.006863442098651,
+              "min": 0.9734878639348202,
+              "max": 1.022667390476784
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9961570341345791,
+                1.001581920903955,
+                1.0043005885015843,
+                0.9712192956496004,
+                1.0210693248753966,
+                0.9988683515654471,
+                1.0119751402152493
+              ],
+              "median": 1.001581920903955,
+              "min": 0.9712192956496004,
+              "max": 1.0210693248753966
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2-lto",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2-lto",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9964414180292619,
+                1.0019563614405305,
+                1.0044348054792855,
+                0.9866798888929027,
+                1.0003988318762378,
+                0.9992684332416177,
+                0.9875901082178434
+              ],
+              "median": 0.9992684332416177,
+              "min": 0.9866798888929027,
+              "max": 1.0044348054792855
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9968533668974199,
+                1.000505689001264,
+                1.0050530570995453,
+                0.96781693587861,
+                1.0027883396704689,
+                1.0025377490166223,
+                0.9869883779686712
+              ],
+              "median": 1.000505689001264,
+              "min": 0.96781693587861,
+              "max": 1.0050530570995453
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O2-lto",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.2611148476229046,
+                1.268739348283488,
+                1.2637000141782857,
+                1.2426897416007723,
+                1.2605735679615024,
+                1.2703037620325894,
+                1.2625130913937326
+              ],
+              "median": 1.2625130913937326,
+              "min": 1.2426897416007723,
+              "max": 1.2703037620325894
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.2547514159848965,
+                1.2554993678887483,
+                1.2512632642748862,
+                1.2107195301027902,
+                1.2496831432192648,
+                1.2572008628346658,
+                1.2601061141990906
+              ],
+              "median": 1.2547514159848965,
+              "min": 1.2107195301027902,
+              "max": 1.2601061141990906
+            }
+          },
+          "linked_text_ratio": 1.1049723756906078,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O2-lto",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9955340063574886,
+                1.001092944481358,
+                1.002236582045996,
+                0.9927545773801271,
+                1.0021579138234709,
+                1.002986542997859,
+                1.0016184775206025
+              ],
+              "median": 1.0016184775206025,
+              "min": 0.9927545773801271,
+              "max": 1.002986542997859
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9920704845814979,
+                0.995575221238938,
+                1.0051793835270337,
+                0.9706314243759179,
+                1.005576679340938,
+                0.9986042380408579,
+                0.9992420414350683
+              ],
+              "median": 0.9986042380408579,
+              "min": 0.9706314243759179,
+              "max": 1.005576679340938
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2-lto",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2-lto",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9942998686144076,
+                0.9944833846051103,
+                1.00420219519835,
+                1.006041744838995,
+                0.9968244690650514,
+                0.9995321400707079,
+                0.9951825095482321
+              ],
+              "median": 0.9968244690650514,
+              "min": 0.9942998686144076,
+              "max": 1.006041744838995
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.991606113755951,
+                0.998743244941561,
+                1.002768340254184,
+                1.0093659030502466,
+                0.996842637029553,
+                0.9965913394773388,
+                0.9886093378395294
+              ],
+              "median": 0.996842637029553,
+              "min": 0.9886093378395294,
+              "max": 1.0093659030502466
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O2-lto",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.2001387259326162,
+                1.1959591854394303,
+                1.1993297517528232,
+                1.200034847184654,
+                1.2081296009784934,
+                1.2040772889456177,
+                1.1972937983768202
+              ],
+              "median": 1.200034847184654,
+              "min": 1.1959591854394303,
+              "max": 1.2081296009784934
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.1948133299924832,
+                1.1935402789996232,
+                1.196300490751227,
+                1.1974433615997975,
+                1.1962616822429906,
+                1.1989647771745993,
+                1.18863437226186
+              ],
+              "median": 1.1962616822429906,
+              "min": 1.18863437226186,
+              "max": 1.1989647771745993
+            }
+          },
+          "linked_text_ratio": 1.0808080808080809,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O2-lto",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9974504985000372,
+                0.9988954815828929,
+                1.003334583932443,
+                0.9954863107337812,
+                1.0093627308882736,
+                1.0076659561063033,
+                1.009234271201263
+              ],
+              "median": 1.003334583932443,
+              "min": 0.9954863107337812,
+              "max": 1.0093627308882736
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9927336507141069,
+                1.0026391856227221,
+                1.0008808355354222,
+                1.0025313251487153,
+                1.0095983834301592,
+                1.0058073475571268,
+                1.006258605582676
+              ],
+              "median": 1.0026391856227221,
+              "min": 0.9927336507141069,
+              "max": 1.0095983834301592
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O3",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O3",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.996949449139466,
+                1.0020151359123923,
+                0.9860292405205783,
+                1.0025274292916238,
+                1.0158443192307214,
+                0.9982205624595085,
+                0.9949879817906206
+              ],
+              "median": 0.9982205624595085,
+              "min": 0.9860292405205783,
+              "max": 1.0158443192307214
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9942464627487817,
+                1.000527766375418,
+                0.9872876459031551,
+                1.0021741685274417,
+                1.0170367759370227,
+                0.9998237781954885,
+                0.9977170286249489
+              ],
+              "median": 0.9998237781954885,
+              "min": 0.9872876459031551,
+              "max": 1.0170367759370227
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-O3",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9880017990887131,
+                0.9824448033693459,
+                0.967865132258458,
+                1.034613177881277,
+                0.993169112025131,
+                0.9889932183625089,
+                0.986417738050985
+              ],
+              "median": 0.9880017990887131,
+              "min": 0.967865132258458,
+              "max": 1.034613177881277
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9893735689543827,
+                0.9803553626927815,
+                0.9672945799144805,
+                1.0360206839816666,
+                0.9950652097285865,
+                0.9919525375939848,
+                0.9888192940350058
+              ],
+              "median": 0.9893735689543827,
+              "min": 0.9672945799144805,
+              "max": 1.0360206839816666
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0844444444444445,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-O3",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0044874590055748,
+                1.0074071794680963,
+                0.9948885960700706,
+                0.998679059526205,
+                1.040955617960904,
+                1.0012012022386307,
+                1.0034123003037905
+              ],
+              "median": 1.0034123003037905,
+              "min": 0.9948885960700706,
+              "max": 1.040955617960904
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0056948276874302,
+                1.0069196035888113,
+                0.9939327400901421,
+                0.9990010577036079,
+                1.042180707319939,
+                1.0040531015037593,
+                1.0048586313879297
+              ],
+              "median": 1.0048586313879297,
+              "min": 0.9939327400901421,
+              "max": 1.042180707319939
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O3",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O3",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0034732771048789,
+                0.9912359700853958,
+                1.0016268137270612,
+                1.0500812591706146,
+                0.9861858288825992,
+                0.9977855958281009,
+                1.0433747067626167
+              ],
+              "median": 1.0016268137270612,
+              "min": 0.9861858288825992,
+              "max": 1.0500812591706146
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.003676746454566,
+                0.9877557115126175,
+                1.0014283566380995,
+                1.0057440858589675,
+                0.9792684732711389,
+                0.9969184517098836,
+                1.0481588557516737
+              ],
+              "median": 1.0014283566380995,
+              "min": 0.9792684732711389,
+              "max": 1.0481588557516737
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                0.7,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-O3",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9483516402541533,
+                0.96846859433792,
+                0.9645386734881243,
+                0.9507281332038285,
+                0.9541325547258677,
+                0.9499600640355839,
+                0.989138690937069
+              ],
+              "median": 0.9541325547258677,
+              "min": 0.9483516402541533,
+              "max": 0.989138690937069
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9501763337585353,
+                0.9659549051814244,
+                0.9694030972786047,
+                0.9550298541304512,
+                0.9425440544942989,
+                0.9508455467869222,
+                0.9934570906877662
+              ],
+              "median": 0.9550298541304512,
+              "min": 0.9425440544942989,
+              "max": 0.9934570906877662
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                0.7,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0637450199203187,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-O3",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.013503026778698,
+                1.0096961509790288,
+                1.066567164018502,
+                0.9998071920822477,
+                1.005696077584846,
+                1.0032625938245925,
+                1.0055452746287465
+              ],
+              "median": 1.005696077584846,
+              "min": 0.9998071920822477,
+              "max": 1.066567164018502
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0123058452765064,
+                1.0076153501567866,
+                1.063148398737032,
+                1.0012848613105585,
+                0.9976306826595588,
+                1.0018789928598273,
+                1.0092818015824712
+              ],
+              "median": 1.0076153501567866,
+              "min": 0.9976306826595588,
+              "max": 1.063148398737032
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                0.7,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 0.7,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-Os",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-Os",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0257337525032197,
+                0.9998694502768742,
+                0.9893006586640013,
+                1.0191559506471373,
+                0.9868345531448464,
+                1.0006236623396219,
+                0.9520388377764586
+              ],
+              "median": 0.9998694502768742,
+              "min": 0.9520388377764586,
+              "max": 1.0257337525032197
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0059685924552357,
+                0.9985475249825705,
+                0.9904292343387472,
+                1.0162114537444935,
+                0.9868877079482439,
+                1.0006430492224951,
+                0.9513974632394206
+              ],
+              "median": 0.9985475249825705,
+              "min": 0.9513974632394206,
+              "max": 1.0162114537444935
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "clang-Os",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9774817147289171,
+                0.9949718253831232,
+                0.998524135297224,
+                0.9948844550975419,
+                0.9762023824873465,
+                0.9794814555645781,
+                0.9483731774466808
+              ],
+              "median": 0.9794814555645781,
+              "min": 0.9483731774466808,
+              "max": 0.998524135297224
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9751984701860116,
+                0.9930281199163375,
+                0.999245939675174,
+                0.9931277533039649,
+                0.9767791127541587,
+                0.980766982345376,
+                0.9506117409361319
+              ],
+              "median": 0.980766982345376,
+              "min": 0.9506117409361319,
+              "max": 0.999245939675174
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0848214285714286,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "clang-Os",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9885297545151032,
+                0.9870760504167896,
+                1.1378826686971937,
+                1.0273952088105598,
+                0.9836135928483674,
+                1.0384356939914212,
+                0.9661502807197814
+              ],
+              "median": 0.9885297545151032,
+              "min": 0.9661502807197814,
+              "max": 1.1378826686971937
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9879469200903981,
+                0.9858238438298863,
+                1.0162412993039445,
+                1.023906020558003,
+                0.9830753234750461,
+                1.0391090845317432,
+                0.9634639128970702
+              ],
+              "median": 0.9879469200903981,
+              "min": 0.9634639128970702,
+              "max": 1.0391090845317432
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-Os",
+          "variant": "original",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "cpu_seconds": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-Os",
+          "variant": "identity",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9998345221930489,
+                1.2362744257200582,
+                1.0034304541415437,
+                0.9590530142033272,
+                0.9967865966905737,
+                0.9947938789160884,
+                1.212289494147496
+              ],
+              "median": 0.9998345221930489,
+              "min": 0.9590530142033272,
+              "max": 1.2362744257200582
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9998866791319623,
+                1.0164697864606997,
+                0.9970432705976005,
+                0.9617816255624536,
+                0.9953263037902537,
+                0.99682125219958,
+                1.142726440988106
+              ],
+              "median": 0.9970432705976005,
+              "min": 0.9617816255624536,
+              "max": 1.142726440988106
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.4285714285714286,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.4285714285714286
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        },
+        {
+          "profile": "gcc-Os",
+          "variant": "affine",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9901480557278604,
+                1.010494677861513,
+                1.0093974674759516,
+                1.007229196378705,
+                0.9962889128946084,
+                1.005926585583817,
+                1.011079517058143
+              ],
+              "median": 1.007229196378705,
+              "min": 0.9901480557278604,
+              "max": 1.011079517058143
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9893478384044423,
+                1.01152885052249,
+                1.001535224882015,
+                1.0072335820470466,
+                0.9951553149045314,
+                1.0045978316398931,
+                1.0083485818847209
+              ],
+              "median": 1.0045978316398931,
+              "min": 0.9893478384044423,
+              "max": 1.01152885052249
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0607287449392713,
+          "linked_text_identical": false,
+          "named_opcode_sequences_identical": false
+        },
+        {
+          "profile": "gcc-Os",
+          "variant": "original-copy",
+          "paired_ratios": {
+            "application_wall": {
+              "samples": [
+                0.9979950421122314,
+                1.0098886629383088,
+                1.0080334840232994,
+                1.0096284818009824,
+                0.9958274696173987,
+                0.9965852714487313,
+                0.9970344257461224
+              ],
+              "median": 0.9979950421122314,
+              "min": 0.9958274696173987,
+              "max": 1.0098886629383088
+            },
+            "cpu_seconds": {
+              "samples": [
+                0.9969403365629782,
+                1.0094843253066788,
+                1.0010803434354922,
+                1.0078031554365778,
+                0.9947563408378456,
+                0.9986376795141055,
+                0.9971408966148215
+              ],
+              "median": 0.9986376795141055,
+              "min": 0.9947563408378456,
+              "max": 1.0094843253066788
+            },
+            "peak_sampled_tree_rss_bytes": {
+              "samples": [
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "median": 1.0,
+              "min": 1.0,
+              "max": 1.0
+            }
+          },
+          "linked_text_ratio": 1.0,
+          "linked_text_identical": true,
+          "named_opcode_sequences_identical": true
+        }
+      ]
+    }
+  },
+  "test_scope": "macOS full 31/31; Linux 29/31 initially then both new groups and CLI regression passed after test-fixture newline correction; optional checks remain explicit in raw logs"
+}
