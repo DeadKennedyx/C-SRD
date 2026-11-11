@@ -13,8 +13,8 @@ unsupported observer outcomes are measurement gaps, not protection wins.
 | Increment | Deliverable | Current evidence/status |
 | --- | --- | --- |
 | 1 | Buffer reconstruction, resource costs and runtime observation | Development checkpoint complete: [112/112 reconstructed artifacts and complete runtime recovery](../reports/buffer-reconstruction.md); no established protection advantage; calibration/application-cost followups remain explicit |
-| 2 | Effect-aware selection and composition of regions in larger functions | [Declarations and shadowed locals validated](../reports/private-declarations.md): frame/scope/binding checks, 144 event-test cells across two fixtures and a new 80-variant cost pilot; call/loop reconstruction and runtime-value observers remain open |
-| 3 | Broader integer types, promotions and operators | Proposed; signed/platform-sized interfaces move earlier to enable I/O |
+| 2 | Effect-aware selection and composition of regions in larger functions | [Declarations and shadowed locals validated](../reports/private-declarations.md); [call/loop observer pilot measured](../reports/private-region-observers.md): 192/192 tested reconstructions, 134/136 original versus 132/136 affine runtime target cases, stack/resource/application costs; wider profiles and stronger runtime observers remain follow-ups, no broad protection advantage established |
+| 3 | Broader integer types, promotions and operators | Isolated unfinished prototype; next validation and measurement gate, not released support; signed/platform-sized interfaces enable later I/O work |
 | 4 | Byte/string buffers, runtime indexes and richer pointers | Proposed; only fixed-index uint32 buffers exist |
 | 5 | Known direct calls and explicit effect contracts | Proposed |
 | 6 | Structs/unions, globals and persistent local state | Proposed; each admitted layout/state pattern needs a contract |

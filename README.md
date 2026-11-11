@@ -67,6 +67,7 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Private computation regions](docs/private-regions.md) | Partial transformation inside richer functions, private-state proof and unchanged effect boundaries |
 | [Private-region evidence](reports/private-regions.md) | Actual frame/event validation, matched linked-build costs and explicit protection measurement gaps |
 | [Private declaration extension](reports/private-declarations.md) | Scope and shadowing validation, compiler controls and matched declaration-workload evidence |
+| [Private-region observer checkpoint](reports/private-region-observers.md) | 192 tested reconstructions, call/loop runtime recovery, stack depth, costs and explicit observer limits |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |

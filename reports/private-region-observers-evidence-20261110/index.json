@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "baseline": "592ed99",
+  "transformer_version": "0.6.1",
+  "docker_image": "sha256:880358a74512e1deac327db13818f10e5b0cf8538f3490996952b8d379541f00",
+  "archive_paths": "repository-relative experiments/runs paths; replay with repository mounted at /work",
+  "archives": {
+    "build.tar.gz": {
+      "sha256": "b9595a84a2def1250036061907f536613998b775d5457d91b529415dab939348",
+      "files": 833,
+      "bytes": 1987702
+    },
+    "reconstruction.tar.gz": {
+      "sha256": "524c3c393b0fd31adca470b6552c5c38d5ed79a414f62771025380b4db5371cf",
+      "files": 6437,
+      "bytes": 27656200
+    },
+    "runtime.tar.gz": {
+      "sha256": "a4323ffcaca05775dfec6caad68d974f6500a50e0c3ea2d2dbaa9e96f3f85e6a",
+      "files": 9793,
+      "bytes": 5542913
+    },
+    "costs.tar.gz": {
+      "sha256": "afa41fbd86806f54e8d055ddd06910f87b08a28afdf326ab8ac4c43ccecbe201",
+      "files": 929,
+      "bytes": 225968
+    },
+    "verification.tar.gz": {
+      "sha256": "91de837a68a255b416dc4c1155c10a8070563c166c227c1ebda586d078560e29",
+      "files": 364,
+      "bytes": 32801
+    },
+    "binaries.tar.gz": {
+      "sha256": "576fe6f4f8433dcb35a577ee1464b598c1127501a009a900de1b2309754b482b",
+      "files": 97,
+      "bytes": 31285
+    },
+    "development.tar.gz": {
+      "sha256": "24b78a0fc91c816d9f136edb4de55e110ddcffc65bd573b6b1a16994220540e9",
+      "files": 12551,
+      "bytes": 9966394
+    },
+    "tests.tar.gz": {
+      "sha256": "cf6c0859ca688dff65f3c6c68604ac6b9f9e17d413074ec5c1b2b9e415dd02d9",
+      "files": 3,
+      "bytes": 1098
+    },
+    "implementation.tar.gz": {
+      "sha256": "acb054ae918783faee76e40abea24f80a1ff3f1a83e221ba1cbe258eef275beb",
+      "files": 137,
+      "bytes": 267970
+    }
+  },
+  "scope": "Final raw reports, binaries, inputs, recovered C, Ghidra exports, GDB traces, resource samples, frame queries and tests. Development runs retained separately. Source snapshots in implementation.tar.gz; earlier runtime observer sources also retained in that development directory."
+}

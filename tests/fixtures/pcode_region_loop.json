@@ -1,0 +1,1025 @@
+{
+  "schema_version": 5,
+  "memory_model": "ordered-u32-regions-v1",
+  "ghidra_version": "12.2",
+  "language": "AARCH64:LE:64:v8A",
+  "compiler_spec": "default",
+  "function": "region_pipeline",
+  "arity": 3,
+  "address_space": {
+    "id": 433,
+    "name": "ram",
+    "pointer_bytes": 8,
+    "addressable_unit_bytes": 1
+  },
+  "entry": "00100668",
+  "parameters": [
+    {
+      "kind": "uint32-buffer",
+      "read_only": false
+    },
+    {
+      "kind": "uint32",
+      "read_only": false
+    },
+    {
+      "kind": "int32",
+      "read_only": false
+    }
+  ],
+  "setup_seconds": 0.227575778,
+  "decompile_seconds": 0.017127478,
+  "message": "",
+  "entry_block": 0,
+  "operation_order": "basic-block-live-order",
+  "blocks": [
+    {
+      "id": 0,
+      "incoming": [],
+      "outgoing": [
+        {
+          "block": 3,
+          "reverse_index": 0
+        },
+        {
+          "block": 1,
+          "reverse_index": 0
+        }
+      ],
+      "operations": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ]
+    },
+    {
+      "id": 1,
+      "incoming": [
+        {
+          "block": 0,
+          "reverse_index": 1
+        }
+      ],
+      "outgoing": [
+        {
+          "block": 2,
+          "reverse_index": 0
+        }
+      ],
+      "operations": [
+        14,
+        15,
+        16,
+        17
+      ]
+    },
+    {
+      "id": 2,
+      "incoming": [
+        {
+          "block": 1,
+          "reverse_index": 0
+        },
+        {
+          "block": 2,
+          "reverse_index": 1
+        }
+      ],
+      "outgoing": [
+        {
+          "block": 3,
+          "reverse_index": 1
+        },
+        {
+          "block": 2,
+          "reverse_index": 1
+        }
+      ],
+      "operations": [
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42
+      ]
+    },
+    {
+      "id": 3,
+      "incoming": [
+        {
+          "block": 0,
+          "reverse_index": 0
+        },
+        {
+          "block": 2,
+          "reverse_index": 0
+        }
+      ],
+      "outgoing": [],
+      "operations": [
+        43,
+        44,
+        45
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00049000"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:000001b1",
+      "constant": "433"
+    },
+    {
+      "size": 8,
+      "input": true,
+      "storage": "register:00004000",
+      "parameter": 0
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00055f00"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:f25f23c7",
+      "constant": "4066321351"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00023e00"
+    },
+    {
+      "size": 4,
+      "input": true,
+      "storage": "register:00004008",
+      "parameter": 1
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00051300"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:f25f23c7",
+      "constant": "4066321351"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00051500"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00023e00"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:3d0da4f5",
+      "constant": "1024304373"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:10000034"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:00000003",
+      "constant": "3"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:10000024"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:0da0dc39",
+      "constant": "228645945"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00079b00"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00051300"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:0ec1adf7",
+      "constant": "247574007"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00051500"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:55f5d3e2",
+      "constant": "1442173922"
+    },
+    {
+      "size": 8,
+      "input": false,
+      "storage": "00100570"
+    },
+    {
+      "size": 1,
+      "input": false,
+      "storage": "unique:00002400"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:00000000",
+      "constant": "0"
+    },
+    {
+      "size": 4,
+      "input": true,
+      "storage": "register:00004010",
+      "parameter": 2
+    },
+    {
+      "size": 1,
+      "input": false,
+      "storage": "001007a0"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00055f00"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:042c51b5",
+      "constant": "70013365"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00051300"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:6c4d73e9",
+      "constant": "1817015273"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00051500"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:81b150ca",
+      "constant": "2175881418"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00023000"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:00000001",
+      "constant": "1"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "register:000040c8"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00078d00"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "register:000040c0"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00023e00"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "register:000040a0"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00055f00"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "register:00004000"
+    },
+    {
+      "size": 8,
+      "input": false,
+      "storage": "00100550"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00051300"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:14dd9889",
+      "constant": "350066825"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00051500"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00051300"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:fbd3ae4b",
+      "constant": "4224953931"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00051500"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00023e00"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00023e00"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:3357fd48",
+      "constant": "861404488"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00051300"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:2188d49d",
+      "constant": "562615453"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00051500"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:cf0a0ad8",
+      "constant": "3473541848"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00023e00"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:cca802b8",
+      "constant": "3433562808"
+    },
+    {
+      "size": 8,
+      "input": false,
+      "storage": "00100570"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00055f00"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:e5f2046b",
+      "constant": "3857843307"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00051300"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:94ed519f",
+      "constant": "2498580895"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00051500"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:11f08843",
+      "constant": "300976195"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "unique:00023000"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:cf0a0adf",
+      "constant": "3473541855"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:000001b1",
+      "constant": "433"
+    },
+    {
+      "size": 8,
+      "input": false,
+      "storage": "00100570"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:00000001",
+      "constant": "1"
+    },
+    {
+      "size": 1,
+      "input": false,
+      "storage": "unique:00001d00"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "const:00000001",
+      "constant": "1"
+    },
+    {
+      "size": 1,
+      "input": false,
+      "storage": "00100718"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "register:000040a0"
+    },
+    {
+      "size": 4,
+      "input": false,
+      "storage": "register:00004000"
+    },
+    {
+      "size": 8,
+      "input": false,
+      "storage": "const:00000000",
+      "constant": "0"
+    }
+  ],
+  "operations": [
+    {
+      "opcode": "LOAD",
+      "block": 0,
+      "address": "00100684",
+      "output": 0,
+      "inputs": [
+        1,
+        2
+      ]
+    },
+    {
+      "opcode": "INT_MULT",
+      "block": 0,
+      "address": "0010069c",
+      "output": 3,
+      "inputs": [
+        0,
+        4
+      ]
+    },
+    {
+      "opcode": "INT_ADD",
+      "block": 0,
+      "address": "001006a0",
+      "output": 5,
+      "inputs": [
+        0,
+        6
+      ]
+    },
+    {
+      "opcode": "INT_MULT",
+      "block": 0,
+      "address": "001006a8",
+      "output": 7,
+      "inputs": [
+        6,
+        8
+      ]
+    },
+    {
+      "opcode": "INT_ADD",
+      "block": 0,
+      "address": "001006a8",
+      "output": 9,
+      "inputs": [
+        3,
+        7
+      ]
+    },
+    {
+      "opcode": "INT_ADD",
+      "block": 0,
+      "address": "001006b0",
+      "output": 10,
+      "inputs": [
+        9,
+        11
+      ]
+    },
+    {
+      "opcode": "INT_MULT",
+      "block": 0,
+      "address": "001006b8",
+      "output": 12,
+      "inputs": [
+        10,
+        13
+      ]
+    },
+    {
+      "opcode": "INT_MULT",
+      "block": 0,
+      "address": "001006c0",
+      "output": 14,
+      "inputs": [
+        0,
+        15
+      ]
+    },
+    {
+      "opcode": "INT_ADD",
+      "block": 0,
+      "address": "001006c0",
+      "output": 16,
+      "inputs": [
+        12,
+        14
+      ]
+    },
+    {
+      "opcode": "INT_MULT",
+      "block": 0,
+      "address": "001006cc",
+      "output": 17,
+      "inputs": [
+        16,
+        18
+      ]
+    },
+    {
+      "opcode": "INT_ADD",
+      "block": 0,
+      "address": "001006cc",
+      "output": 19,
+      "inputs": [
+        17,
+        20
+      ]
+    },
+    {
+      "opcode": "CALL",
+      "block": 0,
+      "address": "001006d0",
+      "callee": "record_event",
+      "inputs": [
+        21,
+        5
+      ]
+    },
+    {
+      "opcode": "INT_SLESS",
+      "block": 0,
+      "address": "001006d8",
+      "output": 22,
+      "inputs": [
+        23,
+        24
+      ]
+    },
+    {
+      "opcode": "CBRANCH",
+      "block": 0,
+      "address": "001006d8",
+      "inputs": [
+        25,
+        22
+      ]
+    },
+    {
+      "opcode": "INT_MULT",
+      "block": 1,
+      "address": "001006f4",
+      "output": 26,
+      "inputs": [
+        5,
+        27
+      ]
+    },
+    {
+      "opcode": "INT_MULT",
+      "block": 1,
+      "address": "00100704",
+      "output": 28,
+      "inputs": [
+        10,
+        29
+      ]
+    },
+    {
+      "opcode": "INT_ADD",
+      "block": 1,
+      "address": "00100704",
+      "output": 30,
+      "inputs": [
+        28,
+        31
+      ]
+    },
+    {
+      "opcode": "INT_ADD",
+      "block": 1,
+      "address": "00100708",
+      "output": 32,
+      "inputs": [
+        24,
+        33
+      ]
+    },
+    {
+      "opcode": "MULTIEQUAL",
+      "block": 2,
+      "address": "00100718",
+      "output": 34,
+      "inputs": [
+        32,
+        35
+      ]
+    },
+    {
+      "opcode": "MULTIEQUAL",
+      "block": 2,
+      "address": "00100718",
+      "output": 36,
+      "inputs": [
+        30,
+        37
+      ]
+    },
+    {
+      "opcode": "MULTIEQUAL",
+      "block": 2,
+      "address": "00100718",
+      "output": 38,
+      "inputs": [
+        19,
+        39
+      ]
+    },
+    {
+      "opcode": "CALL",
+      "block": 2,
+      "address": "0010071c",
+      "callee": "next_value",
+      "output": 40,
+      "inputs": [
+        41,
+        38
+      ]
+    },
+    {
+      "opcode": "INT_MULT",
+      "block": 2,
+      "address": "00100738",
+      "output": 42,
+      "inputs": [
+        40,
+        43
+      ]
+    },
+    {
+      "opcode": "INT_ADD",
+      "block": 2,
+      "address": "00100738",
+      "output": 44,
+      "inputs": [
+        36,
+        42
+      ]
+    },
+    {
+      "opcode": "INT_MULT",
+      "block": 2,
+      "address": "00100744",
+      "output": 45,
+      "inputs": [
+        40,
+        46
+      ]
+    },
+    {
+      "opcode": "INT_ADD",
+      "block": 2,
+      "address": "00100744",
+      "output": 47,
+      "inputs": [
+        26,
+        45
+      ]
+    },
+    {
+      "opcode": "INT_ADD",
+      "block": 2,
+      "address": "0010074c",
+      "output": 48,
+      "inputs": [
+        40,
+        38
+      ]
+    },
+    {
+      "opcode": "INT_ADD",
+      "block": 2,
+      "address": "00100750",
+      "output": 49,
+      "inputs": [
+        44,
+        50
+      ]
+    },
+    {
+      "opcode": "INT_MULT",
+      "block": 2,
+      "address": "0010075c",
+      "output": 51,
+      "inputs": [
+        49,
+        52
+      ]
+    },
+    {
+      "opcode": "INT_ADD",
+      "block": 2,
+      "address": "0010075c",
+      "output": 53,
+      "inputs": [
+        51,
+        54
+      ]
+    },
+    {
+      "opcode": "INT_ADD",
+      "block": 2,
+      "address": "00100768",
+      "output": 55,
+      "inputs": [
+        47,
+        56
+      ]
+    },
+    {
+      "opcode": "INT_ADD",
+      "block": 2,
+      "address": "00100770",
+      "output": 37,
+      "inputs": [
+        55,
+        49
+      ]
+    },
+    {
+      "opcode": "CALL",
+      "block": 2,
+      "address": "00100774",
+      "callee": "record_event",
+      "inputs": [
+        57,
+        53
+      ]
+    },
+    {
+      "opcode": "INT_MULT",
+      "block": 2,
+      "address": "00100778",
+      "output": 58,
+      "inputs": [
+        48,
+        59
+      ]
+    },
+    {
+      "opcode": "INT_MULT",
+      "block": 2,
+      "address": "00100780",
+      "output": 60,
+      "inputs": [
+        37,
+        61
+      ]
+    },
+    {
+      "opcode": "INT_ADD",
+      "block": 2,
+      "address": "00100780",
+      "output": 62,
+      "inputs": [
+        58,
+        60
+      ]
+    },
+    {
+      "opcode": "INT_MULT",
+      "block": 2,
+      "address": "00100784",
+      "output": 39,
+      "inputs": [
+        62,
+        63
+      ]
+    },
+    {
+      "opcode": "INT_ADD",
+      "block": 2,
+      "address": "00100788",
+      "output": 64,
+      "inputs": [
+        51,
+        65
+      ]
+    },
+    {
+      "opcode": "STORE",
+      "block": 2,
+      "address": "0010078c",
+      "inputs": [
+        66,
+        2,
+        64
+      ]
+    },
+    {
+      "opcode": "CALL",
+      "block": 2,
+      "address": "00100790",
+      "callee": "record_event",
+      "inputs": [
+        67,
+        40
+      ]
+    },
+    {
+      "opcode": "INT_SUB",
+      "block": 2,
+      "address": "00100794",
+      "output": 35,
+      "inputs": [
+        34,
+        68
+      ]
+    },
+    {
+      "opcode": "INT_LESS",
+      "block": 2,
+      "address": "0010079c",
+      "output": 69,
+      "inputs": [
+        70,
+        35
+      ]
+    },
+    {
+      "opcode": "CBRANCH",
+      "block": 2,
+      "address": "0010079c",
+      "inputs": [
+        71,
+        69
+      ]
+    },
+    {
+      "opcode": "MULTIEQUAL",
+      "block": 3,
+      "address": "001007a0",
+      "output": 72,
+      "inputs": [
+        19,
+        39
+      ]
+    },
+    {
+      "opcode": "COPY",
+      "block": 3,
+      "address": "001007bc",
+      "output": 73,
+      "inputs": [
+        72
+      ]
+    },
+    {
+      "opcode": "RETURN",
+      "block": 3,
+      "address": "001007bc",
+      "inputs": [
+        74,
+        73
+      ]
+    }
+  ],
+  "status": "decompiled",
+  "seconds": 0.247480266
+}

@@ -48,6 +48,7 @@ causal explanations and estimates.
 | [2026-11-10 — buffer reconstruction](2026-11-10-buffer-reconstruction.md) | Memory-aware observer and protection measurements | Complete static and revised runtime recovery; failed protocols, costs and remaining calibration gaps preserved |
 | [2026-11-10 — private regions](2026-11-10-private-regions.md) | Contextual composition prototype | Private assignment regions inside richer functions; actual emitted-frame validation, event controls and explicit unchanged boundaries |
 | [2026-11-10 — private declarations](2026-11-10-private-declarations.md) | Declaration and scope extension | Declaration identities, unchanged reference bindings, nested shadowing and emitted-C compiler validation |
+| [2026-11-10 — private-region observers](2026-11-10-private-region-observers.md) | Measure before expanding coverage | Call/loop reconstruction, held-out value fitting, stack sampling, controls and matched costs on fixed 0.6.1 artifacts |
 
 Future work is tracked in [the backlog](../backlog.md). External issue numbers
 and review outcomes belong here only after those events actually occur.

@@ -1,0 +1,22 @@
+{
+  "origin": "real high P-code export, development prototype before explicit signed-return metadata",
+  "baseline": "592ed99",
+  "fixture": "private_declarations.c",
+  "strategy": "affine",
+  "seed": 42,
+  "compiler": "clang-18",
+  "flags": [
+    "-std=c11",
+    "-O2",
+    "-fPIC",
+    "-shared"
+  ],
+  "function": "region_pipeline",
+  "public_abi": "p,u,s",
+  "ghidra": "12.2",
+  "library_sha256": "d5ec44834fda3f2be6551de1d14ed3e5a5004eb9f7d4263f64168d4f7ef07683",
+  "input_sha256": "a0cb6b591f25a7d872d21d143d529aefa655fa3b784c326a670fc46f1bc1c98a",
+  "candidate_sha256": "1a4f414066c4076d01a633b6f4d4625f80cbbc891afd4bb8c8699db7115261c6",
+  "export_sha256": "1f60cae25c73d3a35aaa51788ea40f650a11ddc66c2e1aa0f3e216737cb18659",
+  "platform": "Linux AArch64"
+}
