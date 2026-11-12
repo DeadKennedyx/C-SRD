@@ -44,7 +44,7 @@ class Lowerer {
   }
 public:
   Graph run(const Region &r) {
-    if (!r.buffers.empty()) throw std::invalid_argument("memory effects cannot be lowered through the pure graph");
+    if (r.ordered()) throw std::invalid_argument("memory/call effects cannot be lowered through the pure graph");
     Environment env;
     for (const auto &name : r.parameters) { Node n; n.kind = Expr::Kind::Reference; n.parameter = name; env[name] = add(std::move(n)); }
     statements(r.statements, env);

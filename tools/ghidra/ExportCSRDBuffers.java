@@ -19,9 +19,28 @@ public class ExportCSRDBuffers extends HeadlessScript {
         if (!ids.containsKey(node)) { ids.put(node, nodes.size()); nodes.add(node); }
         return ids.get(node);
     }
+    private void configureCall(Function function, JsonObject contracts) throws Exception {
+        if (!contracts.has(function.getName())) return;
+        JsonObject contract = contracts.getAsJsonObject(function.getName());
+        function.setReturnType(contract.get("returns").getAsString().equals("void") ?
+            VoidDataType.dataType : UnsignedIntegerDataType.dataType, SourceType.USER_DEFINED);
+        List<Variable> parameters = new ArrayList<>();
+        for (JsonElement value : contract.getAsJsonArray("parameters")) {
+            String kind = value.getAsJsonObject().get("kind").getAsString();
+            DataType type = UnsignedIntegerDataType.dataType;
+            if (kind.equals("unsigned-char-buffer")) type = UnsignedCharDataType.dataType;
+            else if (kind.equals("signed-char-buffer")) type = SignedCharDataType.dataType;
+            else if (kind.equals("char-buffer")) type = CharDataType.dataType;
+            else if (!kind.equals("uint32") && !kind.equals("uint32-buffer")) throw new IllegalArgumentException("unknown call ABI");
+            if (!kind.equals("uint32")) type = new PointerDataType(type, currentProgram.getDefaultPointerSize());
+            parameters.add(new ParameterImpl("arg" + parameters.size(), type, currentProgram));
+        }
+        function.replaceParameters(parameters, Function.FunctionUpdateType.DYNAMIC_STORAGE_ALL_PARAMS, true, SourceType.USER_DEFINED);
+        function.setVarArgs(false);
+    }
     public void run() throws Exception {
         String[] args = getScriptArgs();
-        if (args.length != 4) throw new IllegalArgumentException("function public-buffer-ABI timeout-seconds output-directory");
+        if (args.length != 4 && args.length != 5) throw new IllegalArgumentException("function public-buffer-ABI timeout-seconds output-directory [public-call-contracts]");
         Path out = Paths.get(args[3]);
         JsonObject report = new JsonObject();
         report.addProperty("schema_version", 5);
@@ -30,6 +49,27 @@ public class ExportCSRDBuffers extends HeadlessScript {
         report.addProperty("language", currentProgram.getLanguageID().toString());
         report.addProperty("compiler_spec", currentProgram.getCompilerSpec().getCompilerSpecID().toString());
         report.addProperty("function", args[0]);
+        JsonObject contracts = new JsonObject();
+        if (args.length == 5) {
+            JsonObject input = JsonParser.parseString(Files.readString(Paths.get(args[4]))).getAsJsonObject();
+            if (!input.get("model").getAsString().equals("opaque-sequenced-v1")) throw new IllegalArgumentException("unknown call model");
+            for (JsonElement value : input.getAsJsonArray("functions")) {
+                JsonObject contract = value.getAsJsonObject(), publicContract = new JsonObject();
+                publicContract.add("returns", contract.get("returns"));
+                JsonArray parameters = new JsonArray();
+                for (JsonElement p : contract.getAsJsonArray("parameters")) {
+                    JsonObject arg = p.getAsJsonObject(), item = new JsonObject();
+                    item.add("kind", arg.get("kind"));
+                    item.addProperty("read_only", arg.has("read_only") && arg.get("read_only").getAsBoolean());
+                    parameters.add(item);
+                }
+                publicContract.add("parameters", parameters);
+                contracts.add(contract.get("name").getAsString(), publicContract);
+            }
+            report.addProperty("schema_version", 7);
+            report.addProperty("memory_model", "ordered-calls-buffers-v1");
+            report.add("call_signatures", contracts);
+        }
         String[] abi = args[1].split(",", -1);
         if (abi.length < 1 || abi.length > 8) throw new IllegalArgumentException("one to eight parameters required");
         report.addProperty("arity", abi.length);
@@ -75,6 +115,8 @@ public class ExportCSRDBuffers extends HeadlessScript {
             target.setReturnType(UnsignedIntegerDataType.dataType, SourceType.USER_DEFINED);
             target.replaceParameters(parameters, Function.FunctionUpdateType.DYNAMIC_STORAGE_ALL_PARAMS, true, SourceType.USER_DEFINED);
             target.setVarArgs(false);
+            for (Function f : currentProgram.getFunctionManager().getFunctions(true)) configureCall(f, contracts);
+            for (Function f : currentProgram.getFunctionManager().getExternalFunctions()) configureCall(f, contracts);
             decompiler.setSimplificationStyle("decompile");
             decompiler.toggleCCode(true); decompiler.toggleSyntaxTree(true);
             if (!decompiler.openProgram(currentProgram)) throw new IllegalStateException(decompiler.getLastMessage());
@@ -114,6 +156,13 @@ public class ExportCSRDBuffers extends HeadlessScript {
                     item.addProperty("opcode", op.getMnemonic());
                     item.addProperty("block", block.getIndex());
                     item.addProperty("address", op.getSeqnum().getTarget().toString());
+                    if (op.getOpcode() == PcodeOp.CALL) {
+                        Function callee = currentProgram.getFunctionManager().getFunctionAt(op.getInput(0).getAddress());
+                        if (callee != null) {
+                            if (callee.isThunk()) callee = callee.getThunkedFunction(true);
+                            item.addProperty("callee", callee.getName());
+                        }
+                    }
                     if (op.getOutput() != null) item.addProperty("output", id(op.getOutput()));
                     JsonArray inputs = new JsonArray();
                     for (int i = 0; i < op.getNumInputs(); ++i) inputs.add(id(op.getInput(i)));

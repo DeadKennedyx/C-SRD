@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import shutil
 import struct
 
 from audit_protection import file_hash, write_json
@@ -71,5 +72,55 @@ def run(args):
     report["status"]="completed";write_json(root/"binaries.json",report)
 
 
+def run_buffer_matrix(args):
+    manifest=Path(args.reconstruction_report).resolve();matrix=json.loads(manifest.read_text())
+    if matrix["status"] not in ("completed","completed-with-gaps"):raise ValueError("requires finished reconstruction matrix")
+    root=Path(args.output).resolve();root.mkdir(parents=True,exist_ok=False)
+    objdump=shutil.which("objdump")
+    if not objdump:raise ValueError("objdump unavailable")
+    report={"schema_version":1,"status":"running","matrix_sha256":file_hash(manifest),"records":[],
+            "implementation_sha256":file_hash(__file__),"objdump":objdump,"objdump_sha256":file_hash(objdump),
+            "scope":"raw function bytes include relocations/PC-relative operands; opcode sequences discard operands/nops; equality of opcode sequences is only structural"}
+    cache={}
+    try:
+        for gi,group in enumerate(matrix["groups"]):
+            baseline=None
+            for variant in group["variants"]:
+                path=variant["binary"]
+                if file_hash(path)!=variant["binary_sha256"]:raise ValueError("observed library changed")
+                if path not in cache:
+                    assembly=command([objdump,"-d","--no-show-raw-insn",path],root/str(len(cache)))
+                    functions={};current=None
+                    for line in assembly.splitlines():
+                        match=re.match(r"^\s*([0-9a-fA-F]+) <([^>]+)>:",line)
+                        if match:current=match[2];functions[current]=[];continue
+                        match=re.match(r"^\s*[0-9a-fA-F]+:\s+([A-Za-z][A-Za-z0-9.]*)",line)
+                        if current and match and match[1] not in ("nop","nopl","nopw"):functions[current].append(match[1])
+                    cache[path]=functions
+                ops=cache[path].get(group["function"])
+                if not ops:raise ValueError("missing function disassembly")
+                code=elf_functions(Path(path).read_bytes(),[group["function"]])[group["function"]]
+                record={"group":gi,"function":group["function"],"profile":group["profile"],"variant":variant["variant"],
+                        "binary":path,"binary_sha256":variant["binary_sha256"],"code":code,"instructions":len(ops),
+                        "opcode_sha256":hashlib.sha256(json.dumps(ops).encode()).hexdigest()}
+                if variant["variant"]=="original":baseline=record
+                if baseline is None:raise ValueError("original must precede candidates")
+                record["exact_bytes_equal"]=code["sha256"]==baseline["code"]["sha256"]
+                record["opcode_sequence_equal"]=record["opcode_sha256"]==baseline["opcode_sha256"]
+                if variant["variant"]=="original-copy" and not(record["exact_bytes_equal"] and record["opcode_sequence_equal"]):
+                    raise ValueError("identical-copy control differs")
+                report["records"].append(record)
+        if file_hash(manifest)!=report["matrix_sha256"] or file_hash(__file__)!=report["implementation_sha256"] or file_hash(objdump)!=report["objdump_sha256"]:
+            raise ValueError("measurement input/tool changed")
+        for row in report["records"]:
+            if file_hash(row["binary"])!=row["binary_sha256"]:raise ValueError("library changed")
+        report["status"]="completed"
+    except Exception as error:report.update(status="failed",error=str(error));raise
+    finally:write_json(root/"binaries.json",report)
+
+
 if __name__=="__main__":
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument("--build",required=True);p.add_argument("--output",required=True);run(p.parse_args())
+    p=argparse.ArgumentParser(description=__doc__)
+    group=p.add_mutually_exclusive_group(required=True);group.add_argument("--build");group.add_argument("--reconstruction-report")
+    p.add_argument("--output",required=True);args=p.parse_args()
+    (run_buffer_matrix if args.reconstruction_report else run)(args)

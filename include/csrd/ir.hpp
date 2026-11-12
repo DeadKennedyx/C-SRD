@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "csrd/calls.hpp"
 
 namespace csrd {
 // Validated fixed-width IR. Memory regions retain statement order; they must
@@ -19,13 +20,21 @@ struct Expr {
   explicit Expr(Kind k) : kind(k) {}
 };
 struct Statement {
-  enum class Kind { Declare, Assign, Return, If, Repeat, Store } kind;
+  enum class Kind { Declare, Assign, Return, If, Repeat, Store, Call } kind;
   std::string name;
   std::unique_ptr<Expr> expression;
   std::vector<Statement> thenBranch, elseBranch;
   unsigned repetitions = 0;
   uint32_t index = 0; // Fixed Store index; Load uses Expr::value.
   std::unique_ptr<Expr> dynamicIndex; // If present, index is its proven upper bound.
+  struct Argument {
+    std::string buffer; // Empty for uint32; otherwise an original buffer parameter.
+    std::unique_ptr<Expr> value; // Scalar value or captured pointer offset.
+    uint32_t bound = 0;
+  };
+  std::string callee;
+  std::vector<Argument> arguments;
+  bool declaresCallResult = false;
   Statement(Kind k, std::string n, std::unique_ptr<Expr> e)
       : kind(k), name(std::move(n)), expression(std::move(e)) {}
 };
@@ -43,5 +52,8 @@ struct Region {
   std::vector<Statement> statements;
   unsigned operations = 0;
   bool extendedMemory = false, littleEndian = true;
+  bool orderedCalls = false;
+  CallContracts calls;
+  bool ordered() const { return !buffers.empty() || orderedCalls; }
 };
 } // namespace csrd

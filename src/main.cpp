@@ -19,6 +19,7 @@ void usage() {
     "       [--algorithm popcount8-serial|popcount8-swar]\n"
     "       [--control-flow none|split-scale] (experimental)\n"
     "       [--scope functions|private-regions] (private-regions: affine/identity integer declarations and assignments)\n"
+    "       [--call-contracts contracts.json] (transform/analyze/verify, functions scope)\n"
     "       csrd verify original.c candidate.c [--function NAME] [--report report.json] [--timeout-ms UINT]\n"
     "       csrd analyze input.c [--function NAME] [--report report.json] [--scope functions|private-regions]\n"
     "Transformations are checked against reparsed emitted C before output is written.\n";
@@ -193,7 +194,7 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
     }
     if (d.region) {
       const auto &region = *d.region;
-      f["semantic_model"] = region.buffers.empty() ? "pure-u32-c11-v2" :
+      f["semantic_model"] = region.orderedCalls ? "ordered-calls-byte-c11-v1" : region.buffers.empty() ? "pure-u32-c11-v2" :
         region.extendedMemory ? "buffers-byte-c11-v2" : "buffers-u32-c11-v1";
       if (!region.buffers.empty()) f["byte_order"] = region.littleEndian ? "little" : "big";
       llvm::json::Array parameters;
@@ -206,6 +207,24 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
           {"loads", buffer->second.loads}, {"stores", buffer->second.stores}});
       }
       f["parameters"] = std::move(parameters);
+      if (region.orderedCalls) {
+        llvm::json::Array calls;
+        for (const auto &s : region.statements) if (s.kind == csrd::Statement::Kind::Call) {
+          const auto &spec = region.calls.at(s.callee);
+          llvm::json::Array args;
+          for (const auto &p : spec.parameters) {
+            llvm::json::Object arg{{"kind", p.kind}};
+            if (p.kind != "uint32") { arg["read_only"] = p.readOnly; arg["minimum_elements"] = p.minimumElements; }
+            args.push_back(std::move(arg));
+          }
+          calls.push_back(llvm::json::Object{{"callee", s.callee}, {"returns", spec.returnsVoid ? "void" : "uint32"},
+            {"parameters", std::move(args)}, {"result_used", !s.name.empty()}});
+        }
+        f["ordered_calls"] = std::move(calls);
+        f["call_contract_model"] = "opaque-sequenced-v1";
+        f["call_assumptions"] = "synchronous; no callbacks/reentry, nonlocal jumps, retained pointers, frame introspection, async effects or invalidation of caller buffers; matching environment choices";
+        f["observations_checked"] = "callee, argument values, entire pre-call memory at each event; return and entire final memory";
+      }
     }
     f["source_metrics"] = llvm::json::Object{{"ast_nodes", d.metrics.astNodes}, {"expressions", d.metrics.expressions},
       {"branches", d.metrics.branches}, {"loops", d.metrics.loops}, {"cfg_blocks", d.metrics.cfgBlocks},
@@ -258,6 +277,7 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
   root["coverage_percent"] = result.options.coverage;
   root["timeout_ms"] = result.options.timeoutMs;
   root["output_written"] = result.outputWritten;
+  if (!result.options.callContractsHash.empty()) root["call_contracts_sha256"] = result.options.callContractsHash;
   std::string out;
   llvm::raw_string_ostream stream(out);
   stream << llvm::formatv("{0:2}\n", llvm::json::Value(std::move(root)));
@@ -271,7 +291,7 @@ int main(int argc, char **argv) {
     const std::string action = argv[1], input = argv[2];
     if (action != "transform" && action != "verify" && action != "analyze") { usage(); return 2; }
     if (action == "verify" && argc < 4) { usage(); return 2; }
-    std::string output, reportPath, function;
+    std::string output, reportPath, function, contractsPath;
     uint64_t seed = 0;
     unsigned timeout = 10000;
     bool seedSet = false, timeoutSet = false;
@@ -285,6 +305,7 @@ int main(int argc, char **argv) {
       if (key == "-o" && action == "transform" && output.empty()) output = value;
       else if (key == "--report" && reportPath.empty()) reportPath = value;
       else if (key == "--function" && action != "transform" && function.empty()) function = value;
+      else if (key == "--call-contracts" && contractsPath.empty()) contractsPath = value;
       else if (key == "--seed" && action == "transform" && !seedSet) { seed = number(value); seedSet = true; }
       else if (key == "--scope" && action != "verify" && !scopeSet) {
         if (value != "functions" && value != "private-regions") throw std::runtime_error("unknown transformation scope");
@@ -322,6 +343,18 @@ int main(int argc, char **argv) {
         options.algorithm != "none" || options.controlFlow != "none"))
       throw std::runtime_error("private regions support affine/identity without algorithm or control-flow candidates");
     options.timeoutMs = timeout;
+    if (!contractsPath.empty()) {
+      if (options.scope != "functions") throw std::runtime_error("call contracts require functions scope");
+      if (samePath(contractsPath, input) || (!output.empty() && samePath(contractsPath, output)) ||
+          (!reportPath.empty() && samePath(contractsPath, reportPath)))
+        throw std::runtime_error("call-contract path must be distinct from input/output/report");
+      if (std::filesystem::file_size(contractsPath) > 1024 * 1024) throw std::runtime_error("call-contract file exceeds 1 MiB");
+      std::ifstream stream(contractsPath, std::ios::binary);
+      if (!stream) throw std::runtime_error("cannot read call contracts");
+      const std::string contents((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+      options.callContracts = csrd::parseCallContracts(contents);
+      options.callContractsHash = csrd::sha256(contents);
+    }
     if ((action == "transform" && samePath(input, output)) ||
         (!reportPath.empty() && (samePath(input, reportPath) || (!output.empty() && samePath(output, reportPath)))))
       throw std::runtime_error("input, output and report paths must be distinct");
@@ -336,6 +369,7 @@ int main(int argc, char **argv) {
       result.outputWritten = true;
     } else if (action == "verify") {
       csrd::TransformResult candidate;
+      candidate.options = options;
       if (!csrd::inspect(input, result) || !csrd::inspect(output, candidate)) return 1;
       result.outputHash = candidate.inputHash;
       result.candidateDependencies = candidate.dependencies;

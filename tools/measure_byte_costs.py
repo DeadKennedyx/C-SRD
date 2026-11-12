@@ -13,8 +13,12 @@ from effort_resources import environment, measurement_lock
 from inspect_region_binaries import elf_functions
 
 
-def harness(function,parameters):
-    byte_type,declaration=signature(function,parameters)
+def harness(function,parameters,corpus="byte"):
+    from call_observation_cases import signature as call_signature, ENVIRONMENT, INITIAL_STATE
+    byte_type,declaration=(call_signature if corpus=="call" else signature)(function,parameters)
+    environment=("#define CSRD_RECORD_CALLS 0\n"+ENVIRONMENT.read_text()+"\n") if corpus=="call" else ""
+    reset=f" reset(memory,{INITIAL_STATE}u);\n" if corpus=="call" else ""
+    offset="4*(i&3u)" if byte_type=="uint32_t" else "(i&3u)"
     return r'''#define _POSIX_C_SOURCE 200809L
 #include <stdint.h>
 #include <inttypes.h>
@@ -22,20 +26,22 @@ def harness(function,parameters):
 #include <stdlib.h>
 #include <time.h>
 #include <sys/resource.h>
-'''+declaration+r'''
+'''+environment+declaration+r'''
 static uint32_t next(uint32_t*s){*s^=*s<<13;*s^=*s>>17;*s^=*s<<5;return *s;}
 static double elapsed(struct timespec a,struct timespec b){return (double)(b.tv_sec-a.tv_sec)+(double)(b.tv_nsec-a.tv_nsec)*1e-9;}
 int main(int argc,char**argv){
  if(argc!=3)return 2;
  unsigned long n=strtoul(argv[1],0,10);uint32_t state=(uint32_t)strtoul(argv[2],0,10);
  uint32_t memory[64];for(unsigned i=0;i<64;++i)memory[i]=next(&state);
+'''+reset+r'''
  uint64_t checksum=0;struct timespec a,b,c,d;
  if(clock_gettime(CLOCK_MONOTONIC,&a)||clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&c))return 3;
  for(unsigned long i=0;i<n;++i){
   uint32_t x=next(&state);memory[4]=x;memory[5]=next(&state);
-'''+f"  checksum+={function}(({byte_type}*)((unsigned char*)memory+16+(i&3u)),memory+4,x);\n"+r'''
+'''+f"  checksum+={function}(({byte_type}*)((unsigned char*)memory+16+{offset}),memory+4,x);\n"+r'''
  }
  if(clock_gettime(CLOCK_MONOTONIC,&b)||clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&d))return 3;
+'''+(" checksum+=external_state;\n" if corpus=="call" else "")+r'''
  for(unsigned i=0;i<64;++i)checksum=(checksum*33u)^memory[i];
  struct rusage usage;if(getrusage(RUSAGE_SELF,&usage))return 3;
  printf("%.9f %.9f %lu %" PRIu64 "\n",elapsed(a,b),elapsed(c,d),(unsigned long)usage.ru_maxrss*1024ul,checksum);
@@ -48,10 +54,17 @@ def run(args,root):
     path=Path(args.reconstruction_report).resolve();matrix=json.loads(path.read_text())
     if matrix["status"] not in ("completed","completed-with-gaps"):raise ValueError("requires finished reconstruction run")
     report={"schema_version":1,"status":"running","environment":environment(),"matrix":str(path),"matrix_sha256":file_hash(path),
-            "implementation_sha256":file_hash(__file__),
+            "implementation_sha256":file_hash(__file__), "corpus":args.corpus,
             "iterations":args.iterations,"repetitions":args.repetitions,"commands":[],"records":[],
             "scope":"application loop includes PRNG, two word resets, shared-library calls and return checksum; RSS is whole-process peak; function bytes include PC-relative operands"}
     command=Runner(report)
+    dependencies=("tools/inspect_region_binaries.py","tools/byte_observation_cases.py","tools/call_observation_cases.py")
+    source_root=Path(__file__).resolve().parents[1]
+    report["dependencies"]={p:file_hash(source_root/p) for p in dependencies}
+    if args.corpus=="call":
+        from call_observation_cases import ENVIRONMENT
+        report["environment_source_sha256"]=file_hash(ENVIRONMENT)
+        report["scope"]+="; includes stateful benign callees with event logging disabled"
     try:
         for gi,group in enumerate(matrix["groups"]):
             profile=next(p for p in matrix["profiles"] if p["id"]==group["profile"])
@@ -60,7 +73,7 @@ def run(args,root):
             for variant in group["variants"]:
                 if file_hash(variant["binary"])!=variant["binary_sha256"]:raise ValueError("library changed")
                 folder=root/f"{gi}-{variant['variant']}";folder.mkdir()
-                source=folder/"driver.c";source.write_text(harness(group["function"],group["parameters"]))
+                source=folder/"driver.c";source.write_text(harness(group["function"],group["parameters"],args.corpus))
                 binary=folder/"run"
                 command([compiler["path"],"-std=c11","-Wall","-Wextra","-Werror","-O2","-Wl,-z,now",source,variant["binary"],"-o",binary])
                 code=elf_functions(Path(variant["binary"]).read_bytes(),[group["function"]])[group["function"]]
@@ -92,6 +105,9 @@ def run(args,root):
             if file_hash(row["binary"])!=row["sha256"] or file_hash(row["library"])!=row["library_sha256"]:raise ValueError("binary changed")
         if file_hash(path)!=report["matrix_sha256"]:raise ValueError("matrix changed")
         if file_hash(__file__)!=report["implementation_sha256"]:raise ValueError("measurement code changed")
+        for name,digest in report["dependencies"].items():
+            if file_hash(source_root/name)!=digest:raise ValueError("measurement dependency changed")
+        if args.corpus=="call" and file_hash(ENVIRONMENT)!=report["environment_source_sha256"]:raise ValueError("callee environment changed")
         report["status"]="completed"
     except Exception as error:report.update(status="failed",error=str(error));raise
     finally:write_json(root/"costs.json",report)
@@ -99,6 +115,7 @@ def run(args,root):
 
 if __name__=="__main__":
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("--reconstruction-report",required=True);p.add_argument("--output-dir",required=True)
+    p.add_argument("--corpus",choices=("byte","call"),default="byte")
     p.add_argument("--iterations",type=int,default=1000000);p.add_argument("--repetitions",type=int,default=7);args=p.parse_args()
     if args.iterations<1 or args.repetitions<3:p.error("positive iterations and at least three repetitions required")
     root=Path(args.output_dir).resolve();root.mkdir(parents=True,exist_ok=False)

@@ -15,6 +15,9 @@ class Analyzer {
   clang::ASTContext &ctx;
   Analysis result;
   Region region;
+  const CallContracts &contracts;
+  const clang::FunctionDecl *currentFunction = nullptr;
+  unsigned callCount = 0;
   std::unordered_set<const clang::ValueDecl *> initialized;
   std::unordered_set<const clang::ValueDecl *> loopIndices;
   std::unordered_set<std::string> names;
@@ -157,7 +160,7 @@ class Analyzer {
     return UINT32_MAX;
   }
   std::unique_ptr<Expr> expression(const clang::Expr *e) {
-    if (!region.buffers.empty() && ++memoryExpressions > 4096) {
+    if (region.ordered() && ++memoryExpressions > 4096) {
       fail(e->getExprLoc(), "buffer region exceeds 4096 expression visits"); return nullptr;
     }
     if (e->getBeginLoc().isMacroID() || e->getEndLoc().isMacroID()) {
@@ -323,8 +326,83 @@ class Analyzer {
     }
     return statement(s, false, output, true);
   }
+  static bool containsCall(const clang::Stmt *s) {
+    if (!s) return false;
+    if (llvm::isa<clang::CallExpr>(s)) return true;
+    for (const auto *child : s->children()) if (containsCall(child)) return true;
+    return false;
+  }
+  const clang::CallExpr *directCall(const clang::Expr *e) const {
+    return llvm::dyn_cast<clang::CallExpr>(e->IgnoreParens());
+  }
+  bool call(const clang::CallExpr *e, const std::string &target, bool declare,
+            std::vector<Statement> &output) {
+    const auto *callee = e->getDirectCallee();
+    const auto *reference = llvm::dyn_cast<clang::DeclRefExpr>(e->getCallee()->IgnoreParenImpCasts());
+    if (!callee || !reference || reference->getDecl() != callee || callee->getBuiltinID() ||
+        callee->getCanonicalDecl() == currentFunction->getCanonicalDecl())
+      return fail(e->getExprLoc(), "calls require a direct nonrecursive function name (no builtins or function pointers)");
+    if (e->getBeginLoc().isMacroID() || e->getEndLoc().isMacroID())
+      return fail(e->getExprLoc(), "macro calls are unsupported");
+    const auto name = callee->getNameAsString();
+    auto contract = contracts.find(name);
+    if (contract == contracts.end()) return fail(e->getExprLoc(), "direct call requires an explicit --call-contracts entry: " + name);
+    const auto &spec = contract->second;
+    if (++callCount > 64) return fail(e->getExprLoc(), "ordered call regions are limited to 64 calls");
+    if (callee->isVariadic() || !callee->hasPrototype() || callee->getNumParams() != spec.parameters.size() ||
+        e->getNumArgs() != spec.parameters.size() ||
+        (spec.returnsVoid ? !callee->getReturnType()->isVoidType() : !u32(callee->getReturnType())) ||
+        (spec.returnsVoid && !target.empty()))
+      return fail(e->getExprLoc(), "callee signature does not match its call contract");
+    for (const auto *decl : callee->redecls()) if (decl->hasAttrs())
+      return fail(e->getExprLoc(), "callee attributes are unsupported by the synchronous call contract");
+    Statement out(Statement::Kind::Call, target, nullptr);
+    out.callee = name; out.declaresCallResult = declare;
+    for (unsigned i = 0; i < e->getNumArgs(); ++i) {
+      const auto &expected = spec.parameters[i];
+      const auto *parameter = callee->getParamDecl(i);
+      const auto type = parameter->getType();
+      if (parameter->hasAttrs() || parameter->getOriginalType()->isArrayType() || type.hasQualifiers())
+        return fail(e->getArg(i)->getExprLoc(), "call parameter attributes, qualifiers and array declarators are unsupported");
+      Statement::Argument arg;
+      if (expected.kind == "uint32") {
+        if (!u32(type)) return fail(e->getExprLoc(), "call scalar parameter must be uint32_t");
+        arg.value = expression(e->getArg(i));
+      } else {
+        if (!type->isPointerType()) return fail(e->getExprLoc(), "call contract requires a buffer pointer");
+        const auto element = type->getPointeeType(), unqualified = element.getUnqualifiedType();
+        const bool valid = expected.kind == "uint32-buffer" ? u32(unqualified) :
+          expected.kind == "char-buffer" ? ctx.hasSameType(unqualified, ctx.CharTy) :
+          expected.kind == "signed-char-buffer" ? ctx.hasSameType(unqualified, ctx.SignedCharTy) :
+          ctx.hasSameType(unqualified, ctx.UnsignedCharTy);
+        if (!valid || element.isConstQualified() != expected.readOnly ||
+            (element.hasQualifiers() && element.getQualifiers() != clang::Qualifiers::fromCVRMask(clang::Qualifiers::Const)))
+          return fail(e->getExprLoc(), "call buffer type/constness does not match its contract");
+        arg.value = pointerOffset(e->getArg(i), arg.buffer);
+        if (!arg.value) return false;
+        auto &buffer = region.buffers.at(arg.buffer);
+        if (buffer.elementType + "-buffer" != expected.kind || (buffer.readOnly && !expected.readOnly))
+          return fail(e->getExprLoc(), "call cannot reinterpret or remove constness from a buffer");
+        arg.bound = upperBound(*arg.value);
+        const auto needed = uint64_t(arg.bound) + std::max(expected.minimumElements,
+          unsigned(arg.value->kind != Expr::Kind::Constant || arg.value->value != 0));
+        if (needed > 256) return fail(e->getExprLoc(), "call buffer footprint exceeds 256 elements");
+        buffer.minimumElements = std::max(buffer.minimumElements, unsigned(needed));
+      }
+      if (!arg.value) return false;
+      out.arguments.push_back(std::move(arg));
+    }
+    region.calls.emplace(name, spec);
+    output.push_back(std::move(out));
+    if (!target.empty()) loopBounds[target] = UINT32_MAX;
+    return true;
+  }
   bool statement(const clang::Stmt *s, bool final, std::vector<Statement> &output, bool nested = false) {
+    if (const auto *e = llvm::dyn_cast<clang::Expr>(s))
+      if (const auto *invoke = directCall(e)) return call(invoke, "", false, output);
     if (const auto *discard = llvm::dyn_cast<clang::CStyleCastExpr>(s)) {
+      if (discard->getCastKind() == clang::CK_ToVoid)
+        if (const auto *invoke = directCall(discard->getSubExpr())) return call(invoke, "", false, output);
       const auto *ref = llvm::dyn_cast<clang::DeclRefExpr>(discard->getSubExpr()->IgnoreParenImpCasts());
       if (discard->getCastKind() == clang::CK_ToVoid && ref &&
           (pointers.count(ref->getDecl()) || pointerOrigins.count(ref->getDecl()))) return true;
@@ -334,7 +412,7 @@ class Analyzer {
       return fail(s->getBeginLoc(), "only a discarded pure uint32_t reference is accepted as a void cast statement");
     }
     if (auto *branch = llvm::dyn_cast<clang::IfStmt>(s)) {
-      if (!region.buffers.empty()) return fail(s->getBeginLoc(), "buffer regions currently require straight-line statements");
+      if (region.ordered()) return fail(s->getBeginLoc(), "buffer/call regions currently require straight-line statements");
       auto condition = expression(branch->getCond());
       if (!condition) return false;
       const auto before = loopBounds;
@@ -346,7 +424,7 @@ class Analyzer {
       output.push_back(std::move(out)); return true;
     }
     if (auto *loop = llvm::dyn_cast<clang::ForStmt>(s)) {
-      if (!region.buffers.empty()) return fail(s->getBeginLoc(), "buffer regions currently require straight-line statements");
+      if (region.ordered()) return fail(s->getBeginLoc(), "buffer/call regions currently require straight-line statements");
       const auto *decl = llvm::dyn_cast_or_null<clang::DeclStmt>(loop->getInit());
       const auto *index = decl && decl->isSingleDecl() ? llvm::dyn_cast<clang::VarDecl>(decl->getSingleDecl()) : nullptr;
       if (!index || !u32(index->getType()) || !index->hasInit() || index->hasAttrs() || index->getStorageClass() != clang::SC_None)
@@ -406,7 +484,7 @@ class Analyzer {
         region.extendedMemory = true; return true;
       }
       if (v && ctx.getAsConstantArrayType(v->getType())) {
-        if (!region.buffers.empty()) return fail(s->getBeginLoc(), "local arrays are not supported inside buffer regions");
+        if (region.ordered()) return fail(s->getBeginLoc(), "local arrays are not supported inside buffer/call regions");
         const auto *type = ctx.getAsConstantArrayType(v->getType());
         const auto count = type->getSize().getLimitedValue(17);
         const auto *init = llvm::dyn_cast_or_null<clang::InitListExpr>(v->getInit());
@@ -431,6 +509,10 @@ class Analyzer {
           v->hasAttrs() || v->isImplicit() || v->getName().empty())
         return fail(s->getBeginLoc(), "locals must be unqualified automatic uint32_t objects without attributes");
       if (!v->hasInit()) return fail(v->getLocation(), "local declarations require an initializer");
+      if (const auto *invoke = directCall(v->getInit())) {
+        if (!call(invoke, v->getNameAsString(), true, output)) return false;
+        initialized.insert(v); names.insert(v->getNameAsString()); return true;
+      }
       auto expr = expression(v->getInit());
       if (!expr) return false;
       initialized.insert(v);
@@ -453,6 +535,7 @@ class Analyzer {
       if (!ref || !u32(ref->getType()) || !initialized.count(ref->getDecl()))
         return fail(a->getExprLoc(), "assignment must target an initialized local uint32_t object or parameter");
       if (loopIndices.count(ref->getDecl())) return fail(a->getExprLoc(), "loop indices cannot be modified in the body");
+      if (const auto *invoke = directCall(a->getRHS())) return call(invoke, ref->getDecl()->getNameAsString(), false, output);
       auto expr = expression(a->getRHS());
       if (!expr) return false;
       loopBounds[ref->getDecl()->getNameAsString()] = upperBound(*expr);
@@ -461,6 +544,13 @@ class Analyzer {
     }
     if (auto *r = llvm::dyn_cast<clang::ReturnStmt>(s)) {
       if (!final || !r->getRetValue()) return fail(s->getBeginLoc(), "require a single final return with a value");
+      if (const auto *invoke = directCall(r->getRetValue())) {
+        std::string name = "csrd_call_return";
+        while (!names.insert(name).second) name += "_";
+        if (!call(invoke, name, true, output)) return false;
+        auto value = std::make_unique<Expr>(Expr::Kind::Reference); value->name = name;
+        output.push_back({Statement::Kind::Return, "", std::move(value)}); return true;
+      }
       auto expr = expression(r->getRetValue());
       if (!expr) return false;
       output.push_back({Statement::Kind::Return, "", std::move(expr)});
@@ -469,8 +559,11 @@ class Analyzer {
     return fail(s->getBeginLoc(), "unsupported statement: " + std::string(s->getStmtClassName()));
   }
 public:
-  explicit Analyzer(clang::ASTContext &context) : ctx(context) {}
+  explicit Analyzer(clang::ASTContext &context, const CallContracts &specs) : ctx(context), contracts(specs) {}
   Analysis run(const clang::FunctionDecl &f) {
+    currentFunction = &f;
+    region.orderedCalls = containsCall(f.getBody());
+    region.extendedMemory = region.orderedCalls;
     region.name = f.getNameAsString();
     region.littleEndian = ctx.getTargetInfo().isLittleEndian();
     if (ctx.getTypeSize(ctx.IntTy) != 32 || ctx.getTypeSize(ctx.UnsignedIntTy) != 32 || !u32(f.getReturnType()) ||
@@ -518,7 +611,7 @@ public:
   }
 };
 }
-Analysis analyze(clang::ASTContext &context, const clang::FunctionDecl &function) {
-  return Analyzer(context).run(function);
+Analysis analyze(clang::ASTContext &context, const clang::FunctionDecl &function, const CallContracts &contracts) {
+  return Analyzer(context, contracts).run(function);
 }
 } // namespace csrd

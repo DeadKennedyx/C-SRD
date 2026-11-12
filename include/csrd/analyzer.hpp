@@ -9,5 +9,6 @@ struct Analysis {
   std::string reason;
   clang::SourceLocation location;
 };
-Analysis analyze(clang::ASTContext &context, const clang::FunctionDecl &function);
+Analysis analyze(clang::ASTContext &context, const clang::FunctionDecl &function,
+                 const CallContracts &contracts = {});
 }

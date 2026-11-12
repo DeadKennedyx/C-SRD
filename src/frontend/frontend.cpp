@@ -135,12 +135,12 @@ public:
           }
         }
       } else {
-        auto analysis = analyze(ctx, *f);
+        auto analysis = analyze(ctx, *f, result.options.callContracts);
         if (!analysis.region) { decision.reason = analysis.reason; loc = analysis.location; }
         else {
           decision.region = std::make_shared<Region>(std::move(*analysis.region));
           try {
-          const bool memory = !decision.region->buffers.empty();
+          const bool memory = decision.region->ordered();
           if (!memory) decision.graph = std::make_shared<Graph>(lower(*decision.region));
           if (!rewrite) {
             decision.status = "supported";
@@ -148,7 +148,7 @@ public:
           const auto &region = *decision.region;
           if (memory && ((result.options.strategy != "affine" && result.options.strategy != "identity") ||
                          result.options.algorithm != "none" || result.options.controlFlow != "none"))
-            throw std::invalid_argument("buffer regions support only affine/identity with no algorithm or control-flow candidate");
+            throw std::invalid_argument("buffer/call regions support only affine/identity with no algorithm or control-flow candidate");
           if (result.options.algorithm != "none")
             decision.graph = std::make_shared<Graph>(algorithmCandidate(region, result.options.algorithm));
           const auto rep = Affine::fromSeed(seed, region.name);
@@ -303,6 +303,7 @@ bool transform(const std::string &path, uint64_t seed, TransformResult &result, 
   if (!parse(path, seed, result, true, nullptr)) return false;
   if (options.scope == "private-regions") return validatePrivateCandidate(path, result, result.source);
   TransformResult generated;
+  generated.options = options;
   if (!inspect(path, generated, &result.source)) return false;
   result.candidateDependencies = generated.dependencies;
   if (result.target != generated.target || result.dependencies != generated.dependencies) {

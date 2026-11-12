@@ -148,7 +148,7 @@ a!={cell['original']}u || b!={cell['candidate']}u || a==b; }}
                               ("--algorithm", "popcount8-serial")):
             d = self.transform(source, option, value)
             self.assertEqual(d["status"], "unchanged")
-            self.assertIn("buffer regions support", d["reason"])
+            self.assertIn("regions support only affine/identity", d["reason"])
 
     def test_names_macros_and_line_preservation(self):
         d = self.transform("#define csrd_mem_0 collision\nuint32_t f(uint32_t*p,uint32_t csrd_mem_1){\nuint32_t csrd_mem_2=*p+csrd_mem_1;\np[0]=csrd_mem_2;\nreturn *p;\n}\nint line=__LINE__;")

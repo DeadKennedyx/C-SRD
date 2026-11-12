@@ -26,10 +26,10 @@ IMPLEMENTATION = ["tools/audit_buffer_reconstruction.py", "tools/pcode_memory.py
                   "tools/ghidra/ExportCSRDBuffers.java", "tools/run_matrix.py", "tools/audit_protection.py"]
 
 
-def grade(command, csrd, reference, candidate, function, output, timeout_ms):
+def grade(command, csrd, reference, candidate, function, output, timeout_ms, call_contracts=None):
     try:
         command([csrd, "verify", reference, candidate, "--function", function, "--report", output,
-                 "--timeout-ms", timeout_ms], timeout=timeout_ms / 1000 + 30)
+                 "--timeout-ms", timeout_ms, *(["--call-contracts",call_contracts] if call_contracts else [])], timeout=timeout_ms / 1000 + 30)
     except AuditError:
         if not output.is_file(): raise
     functions = json.loads(output.read_text())["functions"]
@@ -39,6 +39,12 @@ def grade(command, csrd, reference, candidate, function, output, timeout_ms):
 
 
 def prepare(args, root, report, command):
+    contract_flags=[]
+    if getattr(args,"call_contracts",None):
+        path=root/"call-contracts.json";shutil.copyfile(args.call_contracts,path)
+        report["call_contracts"]={"path":str(path),"sha256":file_hash(path)}
+        contract_flags=["--call-contracts",path]
+    contract_path=report.get("call_contracts",{}).get("path")
     csrd, headless = executable(args.csrd), executable(args.headless)
     compilers = {}
     for item in args.compiler:
@@ -74,11 +80,11 @@ def prepare(args, root, report, command):
         source = Path(source_name).resolve(strict=True)
         directory = root / f"source-{source_index}"; directory.mkdir()
         analysis_path = directory / "analysis.json"
-        command([csrd, "analyze", source, "--report", analysis_path])
+        command([csrd, "analyze", source, "--report", analysis_path, *contract_flags])
         analysis = json.loads(analysis_path.read_text())
         functions = [f for f in analysis["functions"] if not args.function or f["function"] in args.function]
         if not functions: continue
-        if any(f["status"] != "supported" or f.get("semantic_model") not in ("buffers-u32-c11-v1","buffers-byte-c11-v2") for f in functions):
+        if any(f["status"] != "supported" or f.get("semantic_model") not in ("buffers-u32-c11-v1","buffers-byte-c11-v2","ordered-calls-byte-c11-v1") for f in functions):
             raise ValueError("selected source functions must use the admitted buffer contract")
         if seen_functions & {f["function"] for f in functions}: raise ValueError("duplicate selected function symbol")
         seen_functions.update(f["function"] for f in functions)
@@ -88,7 +94,7 @@ def prepare(args, root, report, command):
         for strategy in ("identity", "affine"):
             candidate = directory / f"{strategy}.c"
             command([csrd, "transform", source, "-o", candidate, "--strategy", strategy, "--seed", 42,
-                     "--timeout-ms", args.timeout_ms, "--report", directory / f"{strategy}.json"])
+                     "--timeout-ms", args.timeout_ms, "--report", directory / f"{strategy}.json", *contract_flags])
             transformed = json.loads((directory / f"{strategy}.json").read_text())
             for function in functions:
                 decision = next(f for f in transformed["functions"] if f["function"] == function["function"])
@@ -106,7 +112,7 @@ def prepare(args, root, report, command):
                 command([compiler, *flags, "-E", "-P", source_path, "-o", frozen])
                 for function in functions:
                     proof = grade(command, csrd, folder / "original.i", frozen, function["function"],
-                                  folder / f"{variant}-{function['function']}-source-proof.json", args.timeout_ms)
+                                  folder / f"{variant}-{function['function']}-source-proof.json", args.timeout_ms, contract_path)
                     if proof["verification"] != "proved-under-model":
                         raise ValueError("compiler-specific input did not pass validation")
                 command([compiler, *flags, "-shared", "-x", "c", frozen, "-o", binary])
@@ -160,7 +166,8 @@ def observe(args, root, report, command, csrd, headless):
             item["decompiler_resources"] = measure(
                 [headless, project, "buffer", "-import", variant["binary"], "-deleteProject", "-max-cpu", "2",
                  "-analysisTimeoutPerFile", "30", "-scriptPath", ROOT / "tools/ghidra", "-postScript",
-                 "ExportCSRDBuffers.java", group["function"], abi, "15", export_dir],
+                 "ExportCSRDBuffers.java", group["function"], abi, "15", export_dir,
+                 *([report["call_contracts"]["path"]] if "call_contracts" in report else [])],
                 directory / "decompiler-resources", wall_seconds=args.process_seconds)
             if item["decompiler_resources"]["status"] != "completed":
                 item["status"] = item["decompiler_resources"]["status"]; continue
@@ -193,7 +200,7 @@ def observe(args, root, report, command, csrd, headless):
         group = report["groups"][item["group"]]
         directory = root / f"attempt-{item['attempt']}"
         proof = grade(command, csrd, group["reference"], item["recovered_path"], group["function"],
-                      directory / "verification.json", args.timeout_ms)
+                      directory / "verification.json", args.timeout_ms, report.get("call_contracts",{}).get("path"))
         item["verification"] = proof["verification"]
         item["verification_wall_seconds"] = report["commands"][-1]["elapsed_seconds"]
         item["status"] = {"proved-under-model": "recovered-under-source-model", "counterexample": "false-reconstruction"}.get(
@@ -202,10 +209,15 @@ def observe(args, root, report, command, csrd, headless):
         item["controls"] = {}
         controls = {"return-plus-one": {"result_offset": 1}}
         if item["adapter"]["metrics"]["stores"]: controls["last-store-plus-one"] = {"final_store_offset": 1}
+        if item["adapter"]["metrics"].get("calls"):
+            scalar_site=any(p["kind"]=="uint32" for op in export["operations"] if op["opcode"]=="CALL"
+                            for p in export["call_signatures"][op["callee"]]["parameters"])
+            if scalar_site: controls["call-argument-plus-one"] = {"call_argument_offset": 1}
+            else: item["control_skips"]={"call-argument-plus-one":"no scalar call argument to mutate"}
         for label, mutation in controls.items():
             wrong = directory / f"{label}.c"; wrong.write_text(reconstruct(export, **mutation))
             control = grade(command, csrd, item["recovered_path"], wrong, group["function"],
-                            directory / f"{label}.json", args.timeout_ms)
+                            directory / f"{label}.json", args.timeout_ms, report.get("call_contracts",{}).get("path"))
             item["controls"][label] = control["verification"]
             if control["verification"] != "counterexample":
                 item.update(status="control-failure", reason=f"{label} was not rejected")
@@ -259,6 +271,8 @@ def run(args, root):
             if file_hash(tool["path"]) != tool["sha256"]: raise ValueError("tool changed during experiment")
         for path, expected in report["ghidra_components"].items():
             if file_hash(path) != expected: raise ValueError("Ghidra component changed")
+        if "call_contracts" in report and file_hash(report["call_contracts"]["path"])!=report["call_contracts"]["sha256"]:
+            raise ValueError("call contracts changed")
         summarize(report)
         outcomes = report["outcomes"]
         report["status"] = "failed" if any(outcomes.get(k) for k in ("error", "control-failure", "false-reconstruction")) else (
@@ -276,6 +290,7 @@ def main():
     p.add_argument("--headless", required=True)
     p.add_argument("--compiler", action="append", required=True)
     p.add_argument("--source", action="append", required=True)
+    p.add_argument("--call-contracts")
     p.add_argument("--function", action="append")
     p.add_argument("--profile", action="append")
     p.add_argument("--repetitions", type=int, default=3)

@@ -38,7 +38,8 @@ def linearize(export):
     graph.definitions={}
     for oi,op in enumerate(ops):
         code=op["opcode"]
-        if code not in SCALAR|CONTROL|{"LOAD","STORE","PTRADD","PTRSUB","MULTIEQUAL"}:
+        calls={"CALL"} if export.get("schema_version")==7 and export.get("memory_model")=="ordered-calls-buffers-v1" else set()
+        if code not in SCALAR|CONTROL|{"LOAD","STORE","PTRADD","PTRSUB","MULTIEQUAL"}|calls:
             raise Unsupported("unsupported memory CFG instruction: "+code)
         if not isinstance(op["inputs"],list):raise Unsupported("invalid CFG instruction inputs")
         for value in op["inputs"]:index(value,len(nodes),"varnode")

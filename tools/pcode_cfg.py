@@ -154,7 +154,7 @@ class Graph:
         for oi, op in enumerate(self.ops):
             bid, pos = positions[oi]
             code = op["opcode"]
-            inputs = op["inputs"][1:] if code in CONTROL else op["inputs"]
+            inputs = op["inputs"][1:] if code in CONTROL | {"CALL"} else op["inputs"]
             for slot, v in enumerate(inputs):
                 if v in self.initial:
                     continue

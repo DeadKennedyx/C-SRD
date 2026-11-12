@@ -97,18 +97,69 @@ def byte_diamond():
 
 
 class MemoryReconstruction(unittest.TestCase):
-    def grade(self, reference, candidate, expected="proved-under-model"):
+    def grade(self, reference, candidate, expected="proved-under-model", calls=False):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp)
             (p / "a.c").write_text(reference + "\n")
             (p / "b.c").write_text(candidate)
-            process = subprocess.run([TOOL, "verify", p / "a.c", p / "b.c", "--report", p / "report.json"],
+            process = subprocess.run([TOOL, "verify", p / "a.c", p / "b.c", "--report", p / "report.json",
+                                      *(["--call-contracts",ROOT/"tests/fixtures/calls.json"] if calls else [])],
                                      capture_output=True, text=True)
             report = json.loads((p / "report.json").read_text())
             f, = report["functions"]
             self.assertEqual(f["verification"], expected, process.stderr + str(f))
             self.assertEqual(process.returncode, 0 if expected == "proved-under-model" else 3)
             return f
+
+    def test_ordered_call_dynamic_word_pointer_and_effect_control(self):
+        e=Export()
+        e.data.update(schema_version=7,memory_model="ordered-calls-buffers-v1",call_signatures={
+            "effect_mix":{"returns":"uint32","parameters":[{"kind":k,"read_only":False} for k in ("uint32-buffer","uint32-buffer","uint32")]}})
+        before=e.load(e.p)
+        mask=e.op("INT_AND",[e.x,e.constant(3)])
+        wide=e.op("INT_ZEXT",[mask],size=8)
+        pointer=e.op("PTRADD",[e.p,wide,e.constant(4,8)],size=8)
+        e.op("CALL",[e.destination,pointer,e.q,e.x],size=None)
+        e.data["operations"][-1]["callee"]="effect_mix"
+        after=e.load(e.p);data=e.finish(e.op("INT_ADD",[before,after]));metrics={}
+        source=reconstruct(data,metrics=metrics)
+        reference="unsigned int effect_mix(unsigned int*,unsigned int*,unsigned int);\nunsigned int f(unsigned int*p,unsigned int*q,unsigned int x){unsigned int b=p[0];effect_mix(p+(x&3u),q,x);return b+p[0];}"
+        self.grade(reference,source,calls=True)
+        self.assertEqual(metrics["calls"],1)
+        self.grade(source,reconstruct(data,call_argument_offset=1),"counterexample",calls=True)
+        for mutation in ("unknown_symbol","wrong_return","wrong_kind"):
+            wrong=copy.deepcopy(data)
+            if mutation=="unknown_symbol":wrong["operations"][4]["callee"]="unknown"
+            elif mutation=="wrong_return":wrong["call_signatures"]["effect_mix"]["returns"]="float"
+            else:wrong["call_signatures"]["effect_mix"]["parameters"][0]["kind"]="unsigned-char-buffer"
+            with self.assertRaises(Unsupported):reconstruct(wrong)
+
+    def test_call_pointer_bound_propagates_through_a_scaled_branch(self):
+        e=Export()
+        e.data.update(schema_version=7,memory_model="ordered-calls-buffers-v1",call_signatures={
+            "effect_mix":{"returns":"uint32","parameters":[{"kind":k,"read_only":False} for k in ("uint32-buffer","uint32-buffer","uint32")]}})
+        condition=e.op("INT_LESS",[e.x,e.constant(4)],size=1)
+        e.op("CBRANCH",[e.destination,condition],size=None)
+        first=len(e.data["operations"])
+        no=e.op("COPY",[e.constant(12,8)],size=8);e.op("BRANCH",[e.destination],size=None)
+        second=len(e.data["operations"])
+        wide=e.op("INT_ZEXT",[e.x],size=8)
+        yes=e.op("INT_LEFT",[wide,e.constant(2,8)],size=8);e.op("BRANCH",[e.destination],size=None)
+        join=len(e.data["operations"])
+        merged=e.op("MULTIEQUAL",[no,yes],size=8)
+        pointer=e.op("INT_ADD",[e.p,merged],size=8)
+        result=e.op("CALL",[e.destination,pointer,e.q,e.x]);e.data["operations"][-1]["callee"]="effect_mix"
+        data=e.finish(result)
+        edge=lambda block,reverse:{"block":block,"reverse_index":reverse}
+        ranges=[(0,first),(first,second),(second,join),(join,len(data["operations"]))]
+        incoming=[[],[edge(0,0)],[edge(0,1)],[edge(1,0),edge(2,0)]]
+        outgoing=[[edge(1,0),edge(2,0)],[edge(3,0)],[edge(3,1)],[]]
+        data["blocks"]=[]
+        for i,(begin,end) in enumerate(ranges):
+            for op in data["operations"][begin:end]:op["block"]=i
+            data["blocks"].append({"id":i,"operations":list(range(begin,end)),"incoming":incoming[i],"outgoing":outgoing[i]})
+        reference="unsigned int effect_mix(unsigned int*,unsigned int*,unsigned int);\nunsigned int f(unsigned int*p,unsigned int*q,unsigned int x){return effect_mix(p+(x<=3u?x:3u),q,x);}"
+        self.grade(reference,reconstruct(data),calls=True)
 
     def test_aliasing_load_snapshots_preserved(self):
         reference = "unsigned int f(unsigned int*p,unsigned int*q,unsigned int x){unsigned int v=p[0];q[0]=x;return v+p[0];}"

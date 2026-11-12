@@ -87,6 +87,25 @@ class BufferRuntime(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "incomplete"):
                     fit({"traces": [{"path": str(path), "sha256": file_hash(path)}], "targets": {}})
 
+    def test_literal_and_return_recovery_without_an_odd_training_difference(self):
+        targets=[2,6,10,14,3,99]
+        with tempfile.TemporaryDirectory() as temp:
+            config={"fit_protocol":"affine-literal-boundaries-v2","traces":[],"targets":{"reply":targets}}
+            for i,value in enumerate(targets):
+                trace={"status":"completed","stack_read_failures":0,"return_value":value,
+                       "samples":[{"offset":4,"visit":0,"values":{"reg:x1":value,"reg:x2":value if i<4 else 0}}]}
+                path=Path(temp)/f"{i}.json";path.write_text(json.dumps(trace))
+                config["traces"].append({"path":str(path),"sha256":file_hash(path),"split":"training" if i<4 else "heldout"})
+            current=fit(config)["targets"]["reply"]
+            self.assertFalse(current["training_has_odd_difference"])
+            self.assertTrue(current["negative_control_informative"])
+            self.assertEqual(current["recovery"]["validated_models"],2)
+            self.assertEqual(current["recovery"]["false_models"],1)
+            self.assertEqual(current["by_scope"]["public-return"]["validated_locations"],1)
+            self.assertEqual(current["negative_control"]["validated_models"],0)
+            legacy=fit({**config,"fit_protocol":"affine-v1"})["targets"]["reply"]
+            self.assertEqual(legacy["recovery"]["validated_models"],0)
+
 
 if __name__ == "__main__":
     unittest.main()

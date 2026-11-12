@@ -37,10 +37,20 @@ def collect(config):
         raise RuntimeError("observer requires little-endian target")
     memory_address = int(gdb.parse_and_eval("(unsigned long)&csrd_observation_memory"))
     entry = int(gdb.parse_and_eval("$pc"))
+    call_scope = config.get("call_scope",False)
+    function_bytes = config.get("function_bytes",0)
+    if call_scope and (type(function_bytes) is not int or function_bytes<1):raise ValueError("missing function extent")
+    tail_transfers=0
     visits, samples, failures = collections.Counter(), [], 0
     for _ in range(config["step_limit"]):
         pc = int(gdb.parse_and_eval("$pc"))
         if pc == return_address: break
+        if call_scope and not entry<=pc<entry+function_bytes:
+            # A tail transfer leaves the caller permanently under this corpus's
+            # no-reentry contract. Do not mix ASLR-dependent external PCs into
+            # the caller's location-fitting task.
+            gdb.Breakpoint("*"+str(return_address),temporary=True)
+            gdb.execute("continue",to_string=True);tail_transfers+=1;break
         offset = pc - entry; visit = visits[offset]; visits[offset] += 1
         values = {"reg:" + name: int(gdb.parse_and_eval("$" + name)) & 0xffffffff for name in registers}
         memory = gdb.selected_inferior().read_memory(memory_address, 64*4).tobytes()
@@ -54,16 +64,29 @@ def collect(config):
         except gdb.MemoryError:
             failures += 1
         samples.append({"offset": offset, "visit": visit, "values": values})
-        gdb.execute("stepi", to_string=True)
+        gdb.execute("nexti" if call_scope else "stepi", to_string=True)
     complete = int(gdb.parse_and_eval("$pc")) == return_address
     result = {"status": "completed" if complete else "step-limit", "architecture": architecture,
               "samples": samples, "steps": len(samples), "stack_read_failures": failures,
               "scope": "low32 general registers, 64 bytes at SP, all64 caller words before each instruction; no SIMD coverage" +
                        ("; all256 caller bytes also sampled" if config.get("sample_bytes") else "")}
+    if call_scope:
+        result.update(tail_transfers_skipped=tail_transfers,
+                      call_observation_scope="caller instructions only; nexti steps over callees; tail transfers run to caller return; callee interiors unmeasured")
     if complete:
         memory = gdb.selected_inferior().read_memory(memory_address, 64*4).tobytes()
         result["final_memory"] = [int.from_bytes(memory[4*i:4*i+4], "little") for i in range(64)]
         result["return_value"] = int(gdb.parse_and_eval("$x0" if "aarch64" in architecture else "$rax")) & 0xffffffff
+        if call_scope:
+            def word_symbol(name):
+                at=int(gdb.parse_and_eval("(unsigned long)&"+name))
+                return int.from_bytes(gdb.selected_inferior().read_memory(at,4).tobytes(),"little")
+            count=word_symbol("event_count")
+            if count>8:raise ValueError("call event budget exceeded")
+            at=int(gdb.parse_and_eval("(unsigned long)&events"))
+            raw=gdb.selected_inferior().read_memory(at,count*69*4).tobytes() if count else b""
+            result["external_state"]=word_symbol("external_state")
+            result["events"]=[[int.from_bytes(raw[(i*69+j)*4:(i*69+j+1)*4],"little") for j in range(69)] for i in range(count)]
         gdb.execute("continue", to_string=True)
     return result
 

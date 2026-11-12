@@ -5,6 +5,15 @@
 namespace csrd {
 namespace {
 using verification_detail::Environment;
+struct CallEvent {
+  std::string callee;
+  z3::expr memory;
+  std::vector<z3::expr> arguments;
+};
+struct Execution {
+  z3::expr first, second;
+  std::vector<CallEvent> events;
+};
 class MemoryModel {
   z3::context &ctx;
   bool bytes, littleEndian;
@@ -65,9 +74,31 @@ public:
   default: throw std::invalid_argument("unmodeled expression in buffer verification");
   }
   }
-  std::pair<z3::expr, z3::expr> execute(const Region &r, Environment scalars,
+  Execution execute(const Region &r, Environment scalars,
                                      const Environment &bases, z3::expr memory) const {
+  std::vector<CallEvent> events;
   for (const auto &s : r.statements) {
+    if (s.kind == Statement::Kind::Call) {
+      const auto &contract = r.calls.at(s.callee);
+      if (s.arguments.size() != contract.parameters.size()) throw std::invalid_argument("call IR arity mismatch");
+      CallEvent event{s.callee, memory, {}};
+      for (const auto &arg : s.arguments) {
+        const auto v = value(r, *arg.value, scalars, bases, memory);
+        event.arguments.push_back(arg.buffer.empty() ? v :
+          address(bases.at(arg.buffer), v, r.buffers.at(arg.buffer).elementBits));
+      }
+      const auto id = std::to_string(events.size());
+      events.push_back(std::move(event));
+      // Couple the environment choices at the same event number. Equivalence
+      // also requires equal event prefixes, arguments and pre-call memory.
+      // Havoc is deliberately broader than a callee's actual write footprint.
+      memory = ctx.constant(("call_memory_" + id).c_str(), memory.get_sort());
+      if (!s.name.empty()) {
+        if (contract.returnsVoid) throw std::invalid_argument("void call used as a value");
+        scalars.insert_or_assign(s.name, ctx.bv_const(("call_result_" + id).c_str(), 32));
+      }
+      continue;
+    }
     if (!s.expression) throw std::invalid_argument("unmodeled memory statement");
     const auto result = value(r, *s.expression, scalars, bases, memory);
     switch (s.kind) {
@@ -78,7 +109,7 @@ public:
       const auto index = s.dynamicIndex ? value(r,*s.dynamicIndex,scalars,bases,memory) : ctx.bv_val(s.index,32);
       memory = store(memory, address(bases.at(s.name),index,bits), result, bits); break;
     }
-    case Statement::Kind::Return: return {result, memory};
+    case Statement::Kind::Return: return {result, memory, std::move(events)};
     default: throw std::invalid_argument("unmodeled control flow in buffer verification");
     }
   }
@@ -90,6 +121,7 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
   Verification proof;
   const bool bytes = original.extendedMemory || candidate.extendedMemory;
   proof.strategy = std::string(bytes ? "shared-byte-memory" : "shared-word-memory") +
+                   (original.orderedCalls || candidate.orderedCalls ? "/ordered-opaque-calls" : "") +
                    "/simplify/blast-term-ite/simplify/smt";
   proof.memoryAddressUnit = bytes ? "byte" : "word32";
   try {
@@ -126,7 +158,25 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
     solver.set("timeout", timeoutMs);
     if (bytes) for (const auto &[name, buffer] : original.buffers)
       if (buffer.elementBits == 32) solver.add(leftBases.at(name) % ctx.int_val(4) == 0);
-    solver.add(left.first != right.first || left.second != right.second);
+    auto mismatch = left.first != right.first || left.second != right.second ||
+                    ctx.bool_val(left.events.size() != right.events.size());
+    for (unsigned i = 0; i < std::min(left.events.size(), right.events.size()); ++i) {
+      const auto &a = left.events[i], &b = right.events[i];
+      if (a.callee != b.callee || a.arguments.size() != b.arguments.size()) {
+        mismatch = ctx.bool_val(true); continue;
+      }
+      const auto &ac = original.calls.at(a.callee), &bc = candidate.calls.at(b.callee);
+      if (ac.returnsVoid != bc.returnsVoid || ac.parameters.size() != bc.parameters.size())
+        throw std::invalid_argument("call contracts differ");
+      for (unsigned j = 0; j < ac.parameters.size(); ++j) {
+        const auto &ap = ac.parameters[j], &bp = bc.parameters[j];
+        if (ap.kind != bp.kind || ap.readOnly != bp.readOnly || ap.minimumElements != bp.minimumElements)
+          throw std::invalid_argument("call parameter contracts differ");
+        mismatch = mismatch || a.arguments[j] != b.arguments[j];
+      }
+      mismatch = mismatch || a.memory != b.memory;
+    }
+    solver.add(mismatch);
     proof.obligation = solver.to_smt2();
     const auto answer = solver.check();
     if (answer == z3::unsat) proof.status = "proved-under-model";
@@ -137,6 +187,13 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
       auto word = [&](const z3::expr &e) { return uint32_t(model.eval(e, true).get_numeral_uint64()); };
       for (const auto &input : inputs) proof.inputs.push_back(word(input));
       proof.originalOutput = word(left.first); proof.candidateOutput = word(right.first);
+      if (!left.events.empty() || !right.events.empty()) {
+        proof.reason = "return, final memory or ordered call trace differs under shared environment choices";
+        for (unsigned i = 0; i < std::max(left.events.size(), right.events.size()); ++i) {
+          const auto name = "call_result_" + std::to_string(i);
+          proof.localValues.emplace_back(name, word(ctx.bv_const(name.c_str(), 32)));
+        }
+      }
       std::set<std::string> seen;
       for (const auto &[name, buffer] : original.buffers) {
         proof.pointerBases.emplace_back(name, model.eval(leftBases.at(name), true).to_string());

@@ -25,7 +25,7 @@ def locations(trace):
             for s in trace["samples"] for location, value in s["values"].items()}
 
 
-def fit_affine(traces, targets):
+def fit_affine(traces, targets, *, identity_fallback=False):
     """Fit observed = a * target + b modulo 2^32; only invertible maps qualify."""
     if len(traces) != len(targets) or len(traces) < 3:
         raise ValueError("at least three paired training observations required")
@@ -33,12 +33,20 @@ def fit_affine(traces, targets):
     common = set.intersection(*(set(r) for r in rows))
     pair = next(((i, j) for i in range(len(targets)) for j in range(i)
                  if (targets[i] - targets[j]) & 1), None)
-    if pair is None:
+    if pair is None and not identity_fallback:
         return [], len(common)
-    i, j = pair
-    inverse = pow((targets[i] - targets[j]) % MOD, -1, MOD)
+    if pair is not None:
+        i, j = pair
+        inverse = pow((targets[i] - targets[j]) % MOD, -1, MOD)
     models = []
     for location in sorted(common):
+        if pair is None:
+            # Observed plaintext is a candidate even when affine parameters
+            # cannot be uniquely inferred from this training basis. Held-out
+            # validation still decides whether the location is useful.
+            if identity_fallback and all(row[location]==t for row,t in zip(rows,targets)):
+                models.append({"location":location,"a":1,"b":0,"inverse":1,"method":"literal-identity"})
+            continue
         a = ((rows[i][location] - rows[j][location]) * inverse) % MOD
         b = (rows[i][location] - a * targets[i]) % MOD
         if a & 1 and all((a * t + b) % MOD == row[location] for row, t in zip(rows, targets)):

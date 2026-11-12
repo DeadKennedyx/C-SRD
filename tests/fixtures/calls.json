@@ -1,0 +1,16 @@
+{
+  "model": "opaque-sequenced-v1",
+  "functions": [
+    {"name": "effect_value", "returns": "uint32", "parameters": [{"kind": "uint32"}]},
+    {"name": "effect_note", "returns": "void", "parameters": [{"kind": "uint32"}]},
+    {"name": "effect_mix", "returns": "uint32", "parameters": [
+      {"kind": "uint32-buffer", "read_only": false, "minimum_elements": 2},
+      {"kind": "uint32-buffer", "read_only": false, "minimum_elements": 2},
+      {"kind": "uint32"}
+    ]},
+    {"name": "effect_bytes", "returns": "void", "parameters": [
+      {"kind": "unsigned-char-buffer", "read_only": false, "minimum_elements": 2},
+      {"kind": "uint32"}
+    ]}
+  ]
+}

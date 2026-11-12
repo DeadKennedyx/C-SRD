@@ -11,33 +11,42 @@ from observe_runtime import fit_affine, locations, score_models
 
 
 def location_scope(location):
-    return "caller-memory" if ":caller:" in location or ":caller-byte:" in location else "register" if ":reg:" in location else "stack"
+    return "public-return" if ":boundary:return" in location else "caller-memory" if ":caller:" in location or ":caller-byte:" in location else "register" if ":reg:" in location else "stack"
 
 
 def run(config):
+    protocol=config.get("fit_protocol","affine-v1")
+    if protocol not in ("affine-v1","affine-literal-boundaries-v2"):raise ValueError("unknown fit protocol")
+    complete=protocol=="affine-literal-boundaries-v2"
     traces = []
     for entry in config["traces"]:
         if file_hash(entry["path"]) != entry["sha256"]: raise ValueError("trace changed before fitting")
         trace = json.loads(Path(entry["path"]).read_text())
         if trace["status"] != "completed" or trace["stack_read_failures"]:
             raise ValueError("cannot score incomplete traces")
+        if complete:
+            if type(trace.get("return_value")) is not int or not 0<=trace["return_value"]<=0xffffffff:
+                raise ValueError("return-boundary protocol requires a captured uint32 return")
+            trace={**trace,"samples":[*trace["samples"],{"offset":"exit","visit":0,
+                    "values":{"boundary:return":trace["return_value"]}}]}
         traces.append(trace)
     training = [i for i, entry in enumerate(config["traces"]) if entry["split"] == "training"]
     heldout = [i for i, entry in enumerate(config["traces"]) if entry["split"] == "heldout"]
     if len(training) < 3 or not heldout or len(training)+len(heldout) != len(traces):
         raise ValueError("invalid training/heldout partition")
-    result = {"status": "completed", "targets": {}, "training_traces": len(training), "heldout_traces": len(heldout),
+    result = {"status": "completed", "fit_protocol":protocol, "targets": {}, "training_traces": len(training), "heldout_traces": len(heldout),
               "scope": "known-intermediate affine fitting with finite heldout validation; no universal recovery proof"}
     for target, values in config["targets"].items():
         if len(values) != len(traces): raise ValueError("target/trace lengths differ")
         train_targets = [values[i] for i in training]
         train = [traces[i] for i in training]; test = [traces[i] for i in heldout]
-        models, searched = fit_affine(train, train_targets)
-        negative, _ = fit_affine(train, train_targets[1:] + train_targets[:1])
+        models, searched = fit_affine(train, train_targets,identity_fallback=complete)
+        negative_labels=train_targets[1:] + train_targets[:1]
+        negative, _ = fit_affine(train, negative_labels,identity_fallback=complete)
         score = score_models(models, test, [values[i] for i in heldout])
         controls = score_models(negative, test, [values[i] for i in heldout])
-        by_scope = {key: {"validated_locations": 0, "false_locations": 0, "inconclusive_locations": 0}
-                    for key in ("register", "stack", "caller-memory")}
+        scopes=("register", "stack", "caller-memory")+(("public-return",) if complete else ())
+        by_scope = {key: {"validated_locations": 0, "false_locations": 0, "inconclusive_locations": 0} for key in scopes}
         for model in score["models"]:
             label = "validated_locations" if model["correct"] == model["total"] else (
                 "false_locations" if model["available"] == model["total"] else "inconclusive_locations")
@@ -49,6 +58,8 @@ def run(config):
                 if observed == value: count[location_scope(location)] += 1
             presence.append(count)
         result["targets"][target] = {"recovery": score, "negative_control": controls,
+                                     "negative_control_informative":negative_labels!=train_targets,
+                                     "training_has_odd_difference":len({v&1 for v in train_targets})==2,
                                      "locations_searched": searched, "by_scope": by_scope,
                                      "literal_presence": presence}
     return result

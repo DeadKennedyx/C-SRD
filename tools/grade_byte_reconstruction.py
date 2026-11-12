@@ -19,9 +19,10 @@ from effort_resources import environment, measurement_lock
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def batch_driver(function, parameters):
+def batch_driver(function, parameters, corpus="byte"):
     # Rename our own generated entry point, leaving recovered C untouched.
-    return "#define main csrd_one_case\n" + driver(function, parameters) + r'''
+    from call_observation_cases import driver as call_driver
+    return "#define main csrd_one_case\n" + (call_driver if corpus=="call" else driver)(function, parameters) + r'''
 #undef main
 #include <ctype.h>
 int main(void) {
@@ -45,15 +46,18 @@ def run(args, root):
     if replay["status"] != "completed" or file_hash(matrix_path) != replay["input_sha256"]:
         raise ValueError("requires unchanged, completed observer replay")
     rng = random.Random(args.seed)
+    from call_observation_cases import expected as call_expected, LAYOUTS as call_layouts
+    layouts=call_layouts if args.corpus=="call" else LAYOUTS
     vectors = cases() + [{"x": rng.getrandbits(32), "memory": [rng.getrandbits(32) for _ in range(64)]}
                          for _ in range(args.random_cases)]
     report = {"schema_version": 1, "status": "running", "commands": [], "records": [],
-              "reference_checks": [], "environment": environment(), "seed": args.seed,
+              "reference_checks": [], "environment": environment(), "seed": args.seed, "corpus":args.corpus,
               "replay_report": str(path), "replay_sha256": file_hash(path),
               "matrix_sha256": file_hash(matrix_path),
               "implementation_hashes": {name: file_hash(ROOT/name) for name in
-                  ("tools/grade_byte_reconstruction.py", "tools/byte_observation_cases.py")},
-              "cases_per_answer": len(vectors)*len(LAYOUTS), "observer_target_queries": 0,
+                  ("tools/grade_byte_reconstruction.py", "tools/byte_observation_cases.py",
+                   "tools/call_observation_cases.py", "tests/fixtures/call_environment.h")},
+              "cases_per_answer": len(vectors)*len(layouts), "observer_target_queries": 0,
               "scope": "finite return and whole shared-memory execution grading; not a proof of lifting or C compilers"}
     command = Runner(report)
     artifacts = {path: report["replay_sha256"], matrix_path: report["matrix_sha256"]}
@@ -81,16 +85,19 @@ def run(args, root):
             bind(row["recovered_path"], row["recovered_sha256"])
             bind(group["reference"], group["reference_sha256"])
             folder = root/str(len(seen)-1); folder.mkdir()
-            harness = folder/"driver.c"; harness.write_text(batch_driver(row["function"], group["parameters"]))
+            harness = folder/"driver.c"; harness.write_text(batch_driver(row["function"], group["parameters"],args.corpus))
             bind(harness, file_hash(harness))
             if row["group"] not in corpus:
                 inputs, wanted = [], []
-                for p, q in LAYOUTS:
+                for p, q in layouts:
                     for vector in vectors:
-                        answer = expected(row["function"], vector["memory"], p, q, vector["x"],
-                                          plain_char_signed=group["parameters"][0]["element_signed"])
+                        answer = (call_expected if args.corpus=="call" else expected)(row["function"], vector["memory"], p, q, vector["x"],
+                                          plain_char_signed=group["parameters"][0].get("element_signed",False))
                         inputs.append(" ".join(map(str, [p, q, vector["x"], *vector["memory"]])))
                         wanted.extend([answer["return_value"], *answer["final_memory"]])
+                        if args.corpus=="call":
+                            wanted.extend([answer["external_state"],len(answer["events"])])
+                            wanted.extend(v for event in answer["events"] for v in event)
                 inputs = "\n".join(inputs)+"\n"
                 corpus[row["group"]] = inputs, wanted
                 reference = next(v for v in group["variants"] if v["variant"] == "original")
@@ -120,6 +127,7 @@ def run(args, root):
         for file, digest in artifacts.items():
             if file_hash(file) != digest: raise ValueError(f"artifact changed during grading: {file}")
         report.update(status="completed", distinct_answers=len(seen),
+                      grader_reference_executions=len(corpus)*report["cases_per_answer"],
                       answer_executions=sum(r["cases"] for r in report["records"]))
     except Exception as error:
         report.update(status="failed", error=str(error)); raise
@@ -130,6 +138,7 @@ def run(args, root):
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--replay-report", required=True); p.add_argument("--output-dir", required=True)
+    p.add_argument("--corpus",choices=("byte","call"),default="byte")
     p.add_argument("--random-cases", type=int, default=256); p.add_argument("--seed", type=int, default=20261113)
     args = p.parse_args()
     if args.random_cases < 1: p.error("positive random case count required")

@@ -23,17 +23,18 @@ TYPES = {"uint32": "unsigned int", "uint32-buffer": "unsigned int",
          "unsigned-char-buffer": "unsigned char", "signed-char-buffer": "signed char", "char-buffer": "char"}
 
 
-def reconstruct(export, *, metrics=None, result_offset=0, store_offset=0, final_store_offset=0):
+def reconstruct(export, *, metrics=None, result_offset=0, store_offset=0, final_store_offset=0, call_argument_offset=0):
     try:
-        return _reconstruct(export, {} if metrics is None else metrics, result_offset, store_offset, final_store_offset)
+        return _reconstruct(export, {} if metrics is None else metrics, result_offset, store_offset, final_store_offset, call_argument_offset)
     except Unsupported:
         raise
     except (KeyError, TypeError, ValueError, IndexError, AttributeError) as error:
         raise Unsupported(f"malformed memory P-code: {error}") from error
 
 
-def _reconstruct(export, metrics, result_offset, store_offset, final_store_offset):
-    extended = export.get("schema_version") == 5 and export.get("memory_model") == "ordered-byte-buffers-v2"
+def _reconstruct(export, metrics, result_offset, store_offset, final_store_offset, call_argument_offset):
+    calls = export.get("schema_version") == 7 and export.get("memory_model") == "ordered-calls-buffers-v1"
+    extended = calls or (export.get("schema_version") == 5 and export.get("memory_model") == "ordered-byte-buffers-v2")
     if not extended and (export.get("schema_version") != 4 or export.get("memory_model") != "ordered-u32-buffers-v1"):
         raise Unsupported("requires ordered buffer export schema 4 or 5")
     name, arity, parameters = export["function"], export["arity"], export["parameters"]
@@ -46,8 +47,22 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             raise Unsupported("invalid parameter kind or constness")
         if p["kind"] == "uint32" and p["read_only"]:
             raise Unsupported("const scalar parameters are outside the contract")
-    if not any(p["kind"] != "uint32" for p in parameters):
+    if not calls and not any(p["kind"] != "uint32" for p in parameters):
         raise Unsupported("buffer observer requires at least one pointer")
+    signatures = export.get("call_signatures", {}) if calls else {}
+    if not isinstance(signatures,dict) or len(signatures)>64:raise Unsupported("invalid call signatures")
+    declarations=[]
+    for callee,spec in signatures.items():
+        if (not isinstance(callee,str) or not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*",callee) or
+            re.fullmatch(r"[pv][0-9]+",callee) or callee==name):raise Unsupported("invalid or conflicting external call symbol")
+        if spec["returns"] not in ("void","uint32") or not isinstance(spec["parameters"],list) or len(spec["parameters"])>8:
+            raise Unsupported("invalid call ABI")
+        types=[]
+        for p in spec["parameters"]:
+            if p["kind"] not in TYPES or type(p["read_only"]) is not bool or (p["kind"]=="uint32" and p["read_only"]):
+                raise Unsupported("invalid call parameter type")
+            types.append(("const " if p["read_only"] else "")+TYPES[p["kind"]]+("*" if p["kind"]!="uint32" else ""))
+        declarations.append(("void" if spec["returns"]=="void" else "unsigned int")+" "+callee+"("+(",".join(types) or "void")+");")
     space = export["address_space"]
     if type(space["pointer_bytes"]) is not int or space["pointer_bytes"] not in (4, 8) or space["addressable_unit_bytes"] != 1:
         raise Unsupported("requires byte-addressed 32/64-bit pointers")
@@ -74,12 +89,17 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
         raise Unsupported("inconsistent straight-line block membership")
     if not ops or ops[-1]["opcode"] != "RETURN" or any(o["opcode"] == "RETURN" for o in ops[:-1]):
         raise Unsupported("requires one final return")
-    metrics.update(observer="ordered-byte-buffers-v2" if extended else "ordered-u32-buffers-v1", evaluated_operations=0,
+    metrics.update(observer="ordered-calls-buffers-v1" if calls else "ordered-byte-buffers-v2" if extended else "ordered-u32-buffers-v1", evaluated_operations=0,
                    emitted_statements=0, loads=0, stores=0, pointer_operations=0,
+                   calls=0,
                    scalar_diamonds=diamonds,
                    footprint_elements={str(i): 0 for i, p in enumerate(parameters) if p["kind"] != "uint32"})
     builder, values, definitions = Builder(metrics), {}, set()
-    bounds, predicates = {}, {}
+    bounds, predicates, multiples, origins = {}, {}, {}, {}
+
+    def multiple(value):
+        if value.known is not None:return (value.known & -value.known) if value.known else (1<<value.bits)
+        return multiples.get(value,1)
 
     def bound(value):
         if value.known is not None: return value.known
@@ -105,6 +125,14 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
         elif code in ("INT_RIGHT","SUBPIECE") and args[1].known is not None:
             maximum=min(maximum,a >> (args[1].known*(8 if code=="SUBPIECE" else 1)))
         bounds[value]=maximum
+        m=1
+        if code in ("COPY","CAST","INT_ZEXT","INT_SEXT"):m=multiple(args[0])
+        elif code=="INT_MULT":m=multiple(args[0])*multiple(args[1])
+        elif code in ("INT_ADD","INT_SUB","INT_OR","INT_XOR"):m=min(multiple(args[0]),multiple(args[1]))
+        elif code=="INT_AND":m=max(multiple(args[0]),multiple(args[1]))
+        elif code=="INT_LEFT" and args[1].known is not None:m=multiple(args[0])<<min(args[1].known,bits)
+        multiples[value]=min(1<<bits,m)
+        if value.known is None and value not in args:origins[value]=(code,bits,tuple(args))
         if value.known is None:
             if code in COMPARE:predicates[value]=(code,args[0],args[1],False)
             elif code=="BOOL_NEGATE" and args[0] in predicates:
@@ -118,17 +146,41 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             if len(yes.parts)!=len(no.parts):raise Unsupported("inconsistent wide scalar merge")
             result=Value(yes.bits,"",parts=tuple(select(condition,a,b) for a,b in zip(yes.parts,no.parts)))
         else:result=builder.emit(yes.bits,f"({condition.atom} ? {yes.atom} : {no.atom})")
-        def branch_bound(value,truth):
+        cache={}
+        def branch_bound(value,truth,depth=0):
+            key=(value,truth)
+            if key in cache:return cache[key]
             maximum=bound(value)
-            if condition not in predicates:return maximum
-            code,a,b,negated=predicates[condition];truth=truth!=negated
-            if code in ("INT_LESS","INT_LESSEQUAL"):
-                if value==a and b.known is not None and truth:
-                    maximum=min(maximum,max(0,b.known-(code=="INT_LESS")))
-                if value==b and a.known is not None and not truth:
-                    maximum=min(maximum,max(0,a.known-(code=="INT_LESSEQUAL")))
+            if condition in predicates:
+                code,a,b,negated=predicates[condition];holds=truth!=negated
+                if code in ("INT_LESS","INT_LESSEQUAL"):
+                    if value==a and b.known is not None and holds:
+                        maximum=min(maximum,max(0,b.known-(code=="INT_LESS")))
+                    if value==b and a.known is not None and not holds:
+                        maximum=min(maximum,max(0,a.known-(code=="INT_LESSEQUAL")))
+            # A compiler may move widening/scaling into a branch before its
+            # phi. Propagate the condition through those total operations.
+            # Depth exhaustion only loses precision; it never invents a bound.
+            if value in origins and depth<64:
+                code,bits,args=origins[value];mask=(1<<bits)-1
+                a=branch_bound(args[0],truth,depth+1)
+                b=branch_bound(args[1],truth,depth+1) if len(args)>1 else 0
+                inferred=mask
+                if code in ("COPY","CAST","INT_ZEXT"):inferred=min(mask,a)
+                elif code=="INT_SEXT" and a<(1<<(args[0].bits-1)):inferred=a
+                elif code=="INT_AND":inferred=min(a,b)
+                elif code=="INT_ADD" and a+b<=mask:inferred=a+b
+                elif code=="INT_MULT" and a*b<=mask:inferred=a*b
+                elif code in ("INT_LEFT","INT_RIGHT","SUBPIECE") and args[1].known is not None:
+                    shift=args[1].known*(8 if code=="SUBPIECE" else 1)
+                    if shift>=args[0].bits:inferred=0
+                    elif code!="INT_LEFT":inferred=a>>shift
+                    elif a<<shift<=mask:inferred=a<<shift
+                maximum=min(maximum,inferred)
+            cache[key]=maximum
             return maximum
         bounds[result]=max(branch_bound(yes,True),branch_bound(no,False))
+        multiples[result]=min(multiple(yes),multiple(no))
         return result
     for i, node in enumerate(nodes):
         size = node["size"]
@@ -157,7 +209,7 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             raise Unsupported("requires a constant pointer offset/stride")
         return value.known
 
-    def address(pointer, bits=32, write=False):
+    def address(pointer, bits=32, write=False, argument=False):
         if not isinstance(pointer, Pointer) or pointer.bits != pointer_bits:
             raise Unsupported("memory address is not derived from a public pointer")
         element_bytes = 4 if parameters[pointer.slot]["kind"] == "uint32-buffer" else 1
@@ -169,9 +221,10 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             expression = str(element)
         else:
             maximum=bound(pointer.offset)
-            if element_bytes!=1 or maximum>255:
-                raise Unsupported("dynamic observer offsets currently require a bounded byte pointer")
+            if maximum>255*element_bytes or multiple(pointer.offset)<element_bytes:
+                raise Unsupported("dynamic observer offset must be bounded and element-aligned")
             low=pointer.offset.parts[0] if pointer.offset.parts else pointer.offset
+            if element_bytes==4:low=operation("INT_RIGHT",32,[low,literal(32,2)]);maximum//=4
             # Abstract interval reasoning proves this clamp is a no-op in the
             # P-code. Source grading checks it independently before crediting it.
             captured=builder.emit(32,low.atom)
@@ -181,6 +234,7 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             raise Unsupported("store through a read-only public parameter")
         footprint = metrics["footprint_elements"]
         footprint[str(pointer.slot)] = max(footprint[str(pointer.slot)], element + 1)
+        if argument:return f"p{pointer.slot}" if isinstance(pointer.offset,int) and pointer.offset==0 else f"(p{pointer.slot}+{expression})"
         return f"p{pointer.slot}[{expression}]"
 
     result = None
@@ -200,15 +254,37 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
         if code in ("STORE", "RETURN"):
             if out is not None or len(inputs) != (3 if code == "STORE" else 2):
                 raise Unsupported("invalid store/return interface")
-        elif out is None:
+        elif out is None and not (calls and code=="CALL"):
             raise Unsupported("missing data instruction output")
         bits = nodes[out]["size"] * 8 if out is not None else None
         # Return input 0 is an instruction address, not a value computation.
-        args = [read(i) for i in inputs[1:]] if code == "RETURN" else [read(i) for i in inputs]
+        args = [read(i) for i in inputs[1:]] if code in ("RETURN","CALL") else [read(i) for i in inputs]
         if code == "RETURN":
             result = args[0]
             if not isinstance(result, Value) or result.bits != 32:
                 raise Unsupported("return must be uint32")
+        elif calls and code=="CALL":
+            spec=signatures.get(op.get("callee"))
+            if not spec or len(args)!=len(spec["parameters"]) or not inputs:
+                raise Unsupported("unknown or mismatched direct call ABI")
+            if (spec["returns"]=="void" and out is not None) or (out is not None and bits!=32):
+                raise Unsupported("call return storage disagrees with public ABI")
+            arguments=[]
+            for value,p in zip(args,spec["parameters"]):
+                if p["kind"]=="uint32":
+                    if not isinstance(value,Value) or value.bits!=32:raise Unsupported("call scalar argument is not uint32")
+                    atom=value.atom
+                    if call_argument_offset:
+                        atom=f"({atom}+{call_argument_offset & 0xffffffff}u)";call_argument_offset=0
+                    arguments.append(atom)
+                else:
+                    if not isinstance(value,Pointer) or parameters[value.slot]["kind"]!=p["kind"] or (parameters[value.slot]["read_only"] and not p["read_only"]):
+                        raise Unsupported("call pointer argument type/constness mismatch")
+                    arguments.append(address(value,32 if p["kind"]=="uint32-buffer" else 8,argument=True))
+            invocation=op["callee"]+"("+", ".join(arguments)+")"
+            if out is not None:values[out]=builder.emit(32,invocation)
+            else:builder.lines.append("    "+invocation+";")
+            metrics["calls"]+=1
         elif code in ("LOAD", "STORE"):
             if len(args) != (2 if code == "LOAD" else 3) or constant(args[0]) != space["id"]:
                 raise Unsupported("invalid load/store address space or arity")
@@ -292,7 +368,7 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
                           (" *" if p["kind"] != "uint32" else " ") + f"p{i}"
                           for i, p in enumerate(parameters))
     lines = builder.lines + [f"    (void)v{i};" for i in range(builder.serial)] + [f"    (void)p{i};" for i in range(arity)] + [f"    return {expression};"]
-    source = f"unsigned int {name}({signature}) {{\n" + "\n".join(lines) + "\n}\n"
+    source = ("\n".join(declarations)+"\n" if declarations else "")+f"unsigned int {name}({signature}) {{\n" + "\n".join(lines) + "\n}\n"
     if len(source.encode()) > LIMITS["generated_bytes"]:
         raise Unsupported("generated source budget exceeded")
     metrics.update(generated_bytes=len(source.encode()), emitted_statements=len(builder.lines))

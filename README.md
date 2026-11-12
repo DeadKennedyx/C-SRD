@@ -35,7 +35,7 @@ build/csrd --help
 
 `--scope functions` is the default. It admits pure `uint32_t` arithmetic,
 selected bitwise operations, selections, bounded loops and lookup tables, plus
-a separate ordered byte/`uint32_t` buffer path. `--scope private-regions` selects
+a separate ordered byte/`uint32_t` buffer and direct-call path. `--scope private-regions` selects
 private integer declarations/assignments inside richer functions. Calls, loops
 and memory boundaries outside those frames remain unchanged and are reported.
 Unsupported syntax is diagnosed; failed translation validation prevents output.
@@ -49,12 +49,21 @@ covers LP64 ARM64. This is not support for arbitrary C11 programs.
 
 The buffer path admits 8-bit character types, bounded runtime indexes (0..255),
 captured local pointer views and byte/word aliases. Reports state the required
-initialized, live, aligned buffer prefixes. Arithmetic stays `uint32_t`; only
+initialized, live, aligned prefixes of ordinary storage. Arithmetic stays `uint32_t`; only
 provably nonnegative, nonoverflowing byte promotions are admitted. Character
 signedness and word byte order follow the frontend target. Signed byte narrowing
 assumes modulo conversion. String literals and their storage are unchanged.
 Verification compares the return and entire shared byte memory. Buffer loops,
 pointer reinterpretation and unbounded indexing remain unsupported.
+
+`--call-contracts tests/fixtures/calls.json` enables declared direct calls in
+straight-line `uint32_t` functions. Callees may return `uint32_t` or `void` and take scalar or
+bounded buffer arguments. Verification compares callees, arguments and all
+pre-call memory at each event, then allows arbitrary shared memory/return values
+before continuing encoded computation. Contracts assert synchronous execution,
+no callbacks/reentry, retained pointers, nonlocal jumps, frame inspection or
+invalidation of caller buffers. Callee implementations are not proved by their
+declarations. Nested call expressions, varargs and indirect calls remain unsupported.
 
 For `n`-bit integers, affine encoding is `E(x) = a*x+b mod 2^n`, with odd `a`.
 Addition, subtraction and constant scaling can remain encoded. The seed selects
@@ -75,7 +84,7 @@ not a promise of universal C support.
 | 2 | Private regions inside larger functions | Scoped checkpoint measured |
 | 3 | Integer widths, promotions and operators | Scoped checkpoint measured |
 | 4 | Byte/string buffers, runtime indexes, richer pointers | Scoped checkpoint measured |
-| 5 | Direct calls and effect contracts | Pending |
+| 5 | Direct calls and effect contracts | Scoped checkpoint measured |
 | 6 | Structs/unions, globals, persistent state | Pending |
 | 7 | Branches, exits, input-dependent loops | Pending |
 | 8 | Allocation, failure and lifetime | Pending |
@@ -93,20 +102,25 @@ bounded GDB value-recovery tooling. Write generated measurements to ignored
 `build*/` directories. CPU/RSS, recovery correctness and application costs are
 separate measurements; fingerprints and finite tests are not equivalence proofs.
 
-The byte-buffer checkpoint passed 36 Linux test groups and 11,136,620 native/Linux
-differential comparisons. Across Clang/GCC `-O0`/`-O2`, the revised observer
-reconstructed all 112 saved binary cases (three adapter repetitions); all 62
-distinct answers passed source-model checks and 132,928 compiled execution cases.
-The 5,376 runtime traces recovered 146/160 affine target cases versus 147/160
-originals and 146/160 identity controls, with no successful negative controls.
-At `-O2`, 5/14 affine functions had identical code bytes to their originals.
-No useful protection advantage was established. These are ARM64 observations
-under the declared protocols, not general security guarantees.
+The direct-call checkpoint passed all 39 Linux test groups and 12,726,560
+native/Linux differential comparisons.
+Across Clang/GCC `-O0`/`-O2`, the revised observer reconstructed all 112 binary
+cases (three adapter repetitions); 45 distinct answers passed source-model
+checks and 96,480 compiled checks of returns, memory and call events.
+The 5,376 runtime traces recovered 224/224 target cases for every variant, with
+zero successful negative controls. Fitting includes literal matches and captured
+return boundaries; three fitting repetitions agreed. The earlier scorer's
+172/224 result missed those observations. Callee interiors are not sampled.
+At `-O2`, 9/14 affine cases have the original opcode sequence (operands excluded),
+and application CPU costs were close to baseline. No useful protection advantage
+was established. These are scoped ARM64 observations, not security guarantees.
 
-Reproduce byte measurements with `tools/audit_buffer_reconstruction.py`,
+Reproduce buffer/call measurements with `tools/audit_buffer_reconstruction.py`,
 `tools/replay_buffer_observers.py`, `tools/grade_byte_reconstruction.py`,
-`tools/observe_buffer_runtime.py --corpus byte` and `tools/measure_byte_costs.py`;
-each exposes `--help`. Ghidra ARM64 signed-byte lifting requires the checked
+`tools/observe_buffer_runtime.py`, `tools/replay_buffer_fits.py` and
+`tools/measure_byte_costs.py`; use `--corpus call` for call execution tools and
+`--call-contracts tests/fixtures/calls.json` for call reconstruction. Each exposes
+`--help`. Ghidra ARM64 signed-byte lifting requires the checked
 overlay produced by `tools/patch_ghidra_signed_byte.py`. Generated artifacts stay
 under ignored `build*/` paths; the repository keeps no measurement archives.
 

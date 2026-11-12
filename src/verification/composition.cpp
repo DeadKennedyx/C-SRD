@@ -325,7 +325,7 @@ Verification verifyLimbsComposition(const Region &original, const Region &candid
 }
 
 Verification verify(const Region &original, const Region &candidate, unsigned timeoutMs) {
-  if (!original.buffers.empty() || !candidate.buffers.empty()) return verifyMemory(original, candidate, timeoutMs);
+  if (original.ordered() || candidate.ordered()) return verifyMemory(original, candidate, timeoutMs);
   const auto deadline = Clock::now() + std::chrono::milliseconds(timeoutMs);
   std::vector<Verification> attempts;
   try {

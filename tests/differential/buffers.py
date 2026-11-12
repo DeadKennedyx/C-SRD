@@ -54,7 +54,7 @@ int main(void){{
 '''
 
 
-def run_fixture(args, source, names, driver_text, model, comparisons, metadata):
+def run_fixture(args, source, names, driver_text, model, comparisons, metadata, *, transform_flags=()):
     catalog = ROOT / "benchmarks/matrix.json"
     profiles = json.loads(catalog.read_text())["profiles"]
     records, capabilities, transformations = [], [], []
@@ -89,7 +89,7 @@ def run_fixture(args, source, names, driver_text, model, comparisons, metadata):
                 directory = root / f"{strategy}-{seed}"; directory.mkdir()
                 variant = directory / "candidate.c"; manifest = directory / "transformation.json"
                 execute([args.csrd, "transform", source, "-o", variant, "--strategy", strategy,
-                         "--seed", str(seed), "--report", manifest])
+                         "--seed", str(seed), "--report", manifest, *transform_flags])
                 data = json.loads(manifest.read_text())
                 if {f["function"] for f in data["functions"] if f["status"] == "transformed" and
                     f["verification"] == "proved-under-model"} != set(names):

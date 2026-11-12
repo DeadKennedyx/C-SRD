@@ -96,18 +96,39 @@ class MemoryEmitter {
     const auto name = temporary(value);
     values.insert_or_assign(source, name);
   }
+  void call(const Statement &s) {
+    std::string invocation = s.callee + "(";
+    for (unsigned i = 0; i < s.arguments.size(); ++i) {
+      if (i) invocation += ", ";
+      const auto &arg = s.arguments[i];
+      if (arg.buffer.empty()) invocation += decode(expression(*arg.value));
+      else if (arg.value->kind == Expr::Kind::Constant && arg.value->value == 0) invocation += arg.buffer;
+      else invocation += "(" + arg.buffer + " + " + index(arg.value.get(), arg.bound) + ")";
+    }
+    invocation += ")";
+    if (s.name.empty()) result.body += " " + invocation + ";";
+    else {
+      // The call itself is a full expression and executes once. Its ordinary
+      // result crosses the ABI boundary before subsequent encoded arithmetic.
+      const auto ordinary = temporary(invocation);
+      const auto value = encode(ordinary);
+      if (s.declaresCallResult) declare(s.name, value);
+      else result.body += " " + values.at(s.name) + " = " + value + ";";
+    }
+  }
 public:
   MemoryEmitter(const Representation &r, const std::set<std::string> &names)
       : rep(r), encoded(std::string(r.name()) != "identity-u32"), reserved(names) {}
   Emission run(const Region &input, unsigned newlines) {
     region = &input;
-    if (region->buffers.empty()) throw std::invalid_argument("ordered memory emission requires buffer parameters");
+    if (!region->ordered()) throw std::invalid_argument("ordered emission requires memory or calls");
     result.body = "{";
     for (const auto &name : region->parameters) {
       if (region->buffers.count(name)) result.body += " (void)" + name + ";";
       else declare(name, encode(name));
     }
     for (const auto &s : region->statements) {
+      if (s.kind == Statement::Kind::Call) { call(s); continue; }
       if (!s.expression) throw std::invalid_argument("unmodeled memory statement");
       const auto value = expression(*s.expression);
       switch (s.kind) {

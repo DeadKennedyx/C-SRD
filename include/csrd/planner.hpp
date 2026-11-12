@@ -10,6 +10,8 @@ struct PlanOptions {
   std::string algorithm = "none";
   std::string controlFlow = "none";
   unsigned coverage = 50, timeoutMs = 10000;
+  CallContracts callContracts;
+  std::string callContractsHash;
 };
 struct Plan {
   std::vector<Encoding> labels;
