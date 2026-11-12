@@ -35,16 +35,52 @@ int main() {
     require(frame.inputs.size() == 2 && frame.bindings.at(frame.inputs[0]).name == "x" &&
             frame.bindings.at(frame.inputs[1]).name == "y" && frame.outputs == frame.inputs, "frame must track both outputs");
     for (const auto seed : {uint64_t(0), uint64_t(42), UINT64_MAX}) {
-      const auto affine = csrd::Affine::fromSeed(seed, "f");
+      const auto affine = csrd::IntegerCodec::fromSeed(seed, "f");
       const auto emitted = csrd::emitPrivateFrame(frame, affine, {"x", "y"});
-      require(grade(source, frame, emitted.body).status == "proved-under-model", "reparsed affine frame failed");
+      const auto proof=grade(source,frame,emitted.body);
+      require(proof.status == "proved-under-model" && proof.strategy=="typed-integer-inductive-fragments", "reparsed compositional affine frame failed");
       require(emitted.encodedOperations == 3 && emitted.boundaryConversions == 4, "multi-operation encoded accounting");
     }
-    csrd::Identity identity;
+    const auto identity=csrd::IntegerCodec::identity();
     require(grade(source, frame, csrd::emitPrivateFrame(frame, identity, {}).body).status == "proved-under-model", "identity frame failed");
+    const auto hintBody=frame.emission.body.empty() ? csrd::emitPrivateFrame(frame,identity,{}).body : frame.emission.body;
+    auto wrongHint=frame;wrongHint.witness.offset+=1;
+    const auto recoveredHint=grade(source,wrongHint,hintBody);
+    require(recoveredHint.status=="proved-under-model" && !recoveredHint.priorAttempts.empty() &&
+      recoveredHint.priorAttempts[0].status!="proved-under-model","untrusted representation hint bypassed checking");
+    wrongHint=frame;wrongHint.witness.checkpoints[1].encoded.erase(wrongHint.witness.checkpoints[1].encoded.begin());
+    const auto missingHint=grade(source,wrongHint,hintBody);
+    require(missingHint.status=="proved-under-model" && !missingHint.priorAttempts.empty() &&
+      missingHint.priorAttempts[0].status=="unsupported","omitted invariant value bypassed checking");
     const auto wrong = grade(source, frame, "{x=x+y;y=3u*x+12u;}");
-    require(wrong.status == "counterexample" && wrong.originalOutput == wrong.candidateOutput, "wrong scalar output needs memory-only counterexample");
-    require(!wrong.memoryCells.empty(), "counterexample must report frame output state");
+    require(wrong.status == "counterexample", "wrong scalar output needs a counterexample");
+    require(!wrong.integerOutputs.empty(), "counterexample must report typed scalar output state");
+    bool differing=false;
+    for(const auto &value:wrong.integerOutputs) differing=differing || value.original!=value.candidate;
+    require(differing,"typed counterexample must identify a differing output");
+
+    const auto checkTyped=[&](const std::string &input,const std::string &mutant,bool candidateDefined) {
+      auto typed=parse(input);auto found=csrd::discoverPrivateRegions(typed->getASTContext(),function(*typed));
+      require(found.frames.size()==1,"one typed frame required");auto region=found.frames[0];
+      auto emitted=csrd::emitPrivateFrame(region,csrd::IntegerCodec::fromSeed(42,"typed"),{});
+      const auto good=grade(input,region,emitted.body);
+      require(good.status=="proved-under-model","typed emitted frame: "+good.status+" "+good.reason);
+      if(!mutant.empty()) {
+        const auto bad=grade(input,region,mutant);
+        require(bad.status=="counterexample","typed mutation needs counterexample: "+bad.status+" "+bad.reason);
+        require(bad.candidateDefined==candidateDefined,"wrong candidate-definedness classification");
+      }
+    };
+    checkTyped("int f(int x){x=x+0;return x;}\n","{x=(x+1)-1;}",false);
+    checkTyped("int f(int x){x=x<0;return x;}\n","{x=(unsigned int)x<0u;}",true);
+    checkTyped("unsigned char f(unsigned char x){x=x+1;return x;}\n","{x=(unsigned char)((unsigned int)x+2u);}",true);
+    checkTyped("unsigned long long f(unsigned long long x){x=3ULL*x+11ULL;return x;}\n","",true);
+    checkTyped("long long f(long long x){x=x>>17;return x;}\n","{x=(long long)((unsigned long long)x>>17);}",true);
+    checkTyped("_Bool f(_Bool x,_Bool y){x=x+y;return x;}\n","{x=(x+y)&1;}",true);
+    checkTyped("int f(int x,unsigned int y){x=x<y;return x;}\n","{x=(long long)x<(long long)y;}",true);
+    checkTyped("long long f(long long x){x=3LL*x-11LL;return x;}\n","",true);
+    checkTyped("int f(int x){x=x<<3;return x;}\n","{x=x<<2;}",true);
+    checkTyped("unsigned long long f(unsigned long long x){x=(x^37ULL)&~11ULL;return x;}\n","",true);
     for (const auto &bad : {"{x=x+y;}", "{x=x+y;y=3u*x+11u;global=x;}",
                            "{x=x+y;y=3u*x+11u;sink(y);}", "{x=x+y;y=3u*x+11u;return 0;}",
                            "{unsigned int t;t=t+1u;x=x+y;y=t;}",
@@ -55,7 +91,7 @@ int main() {
     auto other = parse(overwrite);
     auto d = csrd::discoverPrivateRegions(other->getASTContext(), function(*other));
     require(d.frames.size() == 1 && d.frames[0].inputs.empty(), "overwritten uninitialized locals must not be captured");
-    require(grade(overwrite, d.frames[0], csrd::emitPrivateFrame(d.frames[0], csrd::Affine::fromSeed(42,"f"), {}).body).status == "proved-under-model", "write-only initialization frame failed");
+    require(grade(overwrite, d.frames[0], csrd::emitPrivateFrame(d.frames[0], csrd::IntegerCodec::fromSeed(42,"f"), {}).body).status == "proved-under-model", "write-only initialization frame failed");
     // Declarations remain visible across effects and later frames; same-spelled
     // outer and inner objects have distinct output identities.
     const std::string declarations = "extern void sink(unsigned int);unsigned int f(unsigned int x,unsigned int y){"
@@ -71,7 +107,7 @@ int main() {
     for (const auto seed : {uint64_t(0), uint64_t(42), UINT64_MAX}) {
       std::vector<csrd::PrivateFrame *> edits;
       for (auto &r : regions.frames) {
-        r.emission = csrd::emitPrivateFrame(r, csrd::Affine::fromSeed(seed,"f"), {"x","y","total"}); edits.push_back(&r);
+        r.emission = csrd::emitPrivateFrame(r, csrd::IntegerCodec::fromSeed(seed,"f"), {"x","y","total"}); edits.push_back(&r);
       }
       csrd::preparePrivateFrames(edits);
       auto candidate = declarations;
@@ -93,7 +129,7 @@ int main() {
     auto badScope = scopeRegions.frames.at(0);
     badScope.emission = csrd::emitPrivateFrame(badScope,identity,{"x","y"});
     auto wrongDeclaration = badScope.emission.body;
-    const auto constant = wrongDeclaration.find("1u");
+    const auto constant = wrongDeclaration.find("1ULL");
     require(constant != std::string::npos, "identity fixture constant missing");
     wrongDeclaration[constant]='2';
     require(grade(scope,badScope,wrongDeclaration).status == "counterexample", "wrong initializer must fail output proof");

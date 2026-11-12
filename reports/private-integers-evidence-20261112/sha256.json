@@ -1,0 +1,13 @@
+{
+  "archive-validation.json": "fc79450dd9560e9adb8d99815e4d18b3bc11790d59d43763a6b9418029b19571",
+  "binaries.tar.gz": "3389136b510189158a795e03153b6e1e1450ad56e024ee7e96114fc812e3f4aa",
+  "build.tar.gz": "903b42f37ff929e2312ddbcdfb60a40a2df0f65c71484d6fe3e4dca8c61c8740",
+  "costs.tar.gz": "f6d2d8c75628171e30b8ba4fcba5289a97814799823718eb47ac6ea781b68ce2",
+  "development-and-tests.tar.gz": "88bd7fcb753d8e8271d775e50e1b04506d4d3e74f197d0bd32ec542cb6fb9ff8",
+  "file-manifests.json.gz": "b0a450d6dc9287d9c859b0847916fad93998529e9f816a4491ffedf81272aa1a",
+  "index.json": "71c86c6ccc5b6d9c1c2b82ae4233ee1cd14b3bad65dc1b08917e67af8731e61b",
+  "reconstruction.tar.gz": "4720a675473cccbeeb9c40fb2c9fda2dbf72a2e9c121cd97b30a39177b359393",
+  "runtime.tar.gz": "2169651a2cdbfeb2e3045231e1af6a04c9db7f469cd938677f85cd1731785db2",
+  "summary.json": "327c31d8e3307718ce2585a3d36696b77a6a2aa7b275c7e33bead219e8de26f7",
+  "verification.tar.gz": "ac67037acbcd5858490002a511804dee658103dcf8432975ead33ccff62846c5"
+}

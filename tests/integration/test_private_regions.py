@@ -1,6 +1,7 @@
 """Private scalar regions: context preservation, exclusions and event differential tests."""
 import hashlib
 import json
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -66,7 +67,7 @@ class PrivateRegions(unittest.TestCase):
             ("unsigned int f(void){unsigned int x=x+1u;return x;}", "private"),
             ("unsigned int f(unsigned int x){unsigned int a=x+1u,b=a+2u;return b;}", "private"),
             ("#define STEP(x) ((x)+1u)\nunsigned int f(unsigned int x){x=STEP(x);return x;}\n", "macro"),
-            ("int f(int x){x=x+1;return x;}", "private"),
+            ("float f(float x){x=x+1.0f;return x;}", "private"),
             ("unsigned int f(unsigned int x,unsigned int y){x=x*y;return x;}", "private"),
         ]
         for source, reason in cases:
@@ -90,7 +91,7 @@ class PrivateRegions(unittest.TestCase):
         g = r["functions"][0]["private_regions"][0]
         self.assertEqual(g["source_begin"], offset)
         emitted = self.output.read_text()[g["candidate_begin"]:g["candidate_end"]]
-        self.assertNotIn(f"unsigned int csrd_frame_{offset}_0 =", emitted)
+        self.assertNotIn(f"unsigned long long csrd_frame_{offset}_0 =", emitted)
 
     def test_declarations_shadowing_and_split_bindings(self):
         source = (ROOT / "tests/fixtures/private_declarations.c").read_text()
@@ -126,8 +127,37 @@ class PrivateRegions(unittest.TestCase):
         self.assertTrue(r["functions"][0]["context_bindings_verified"])
 
     def test_compiled_events_memory_and_return(self):
-        for fixture in ("private_regions.c", "private_declarations.c"):
+        for fixture in ("private_regions.c", "private_declarations.c", "private_integers.c"):
             self.check_compiled_fixture(fixture)
+
+    def test_typed_integer_contract_and_compositional_evidence(self):
+        source=(ROOT/"tests/fixtures/private_integers.c").read_text()
+        r=self.transform(source,"--seed",42)
+        self.assertTrue(r["output_written"])
+        frames=[g for f in r["functions"] for g in f["private_regions"]]
+        self.assertEqual(len(frames),3)
+        for frame in frames:
+            proof=frame["proof"]
+            self.assertEqual(proof["solver_strategy"],"typed-integer-inductive-fragments")
+            self.assertTrue(proof["integer_composition"]["checkpoints"])
+            self.assertTrue(all(s["status"]=="proved-under-model" for s in proof["steps"]))
+            self.assertEqual(proof["steps"][-1]["label"],"output-restoration")
+            self.assertIn("defined_domain_smtlib",proof)
+            solver=shutil.which("z3")
+            if solver:
+                for item,query,expected in [(s,s["smtlib"],"unsat") for s in proof["steps"]]:
+                    self.assertEqual(hashlib.sha256(query.encode()).hexdigest(),item["obligation_sha256"])
+                    replay=subprocess.run([solver,"-in"],input=query,capture_output=True,text=True,timeout=15)
+                    self.assertEqual(replay.returncode,0,replay.stderr)
+                    self.assertEqual(replay.stdout.strip(),expected)
+                replay=subprocess.run([solver,"-in"],input=proof["defined_domain_smtlib"],capture_output=True,text=True,timeout=15)
+                self.assertEqual(replay.stdout.strip(),"sat")
+        self.assertGreater(sum(g["internal_conversions"] for g in frames),0)
+        self.assertGreater(sum(g["operations_without_decoding"] for g in frames),0)
+        # An empty original defined-input domain must not yield a vacuous proof.
+        self.input.write_text("int f(int x){x=x+(2147483647+1);return x;}\n")
+        self.call("transform",self.input,"-o",self.output,"--scope","private-regions","--report",self.report,code=1)
+        self.assertFalse(json.loads(self.report.read_text())["output_written"])
 
     def check_compiled_fixture(self, fixture):
         source = (ROOT / "tests/fixtures" / fixture).read_text()

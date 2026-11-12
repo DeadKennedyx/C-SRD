@@ -5,77 +5,124 @@
 #include <stdexcept>
 
 namespace csrd {
-Emission emitPrivateFrame(PrivateFrame &frame, const Representation &rep, const std::set<std::string> &reserved) {
-  Emission out;
-  frame.emittedDeclarations.clear();
-  const bool encoded = std::string(rep.name()) != "identity-u32";
-  auto names = reserved;
-  std::map<std::string, std::string> values;
-  unsigned sequence = 0;
-  auto fresh = [&]() {
-    std::string name;
-    do { name = "csrd_frame_" + std::to_string(frame.begin) + "_" + std::to_string(sequence++); }
-    while (!names.insert(name).second);
-    return name;
+Emission emitPrivateFrame(PrivateFrame &frame,const IntegerCodec &rep,const std::set<std::string> &reserved) {
+  Emission out; frame.emittedDeclarations.clear();
+  frame.witness={rep.multiplier(),rep.offset(),{}};
+  auto names=reserved; unsigned serial=0;
+  std::map<std::string,std::string> values;
+  auto fresh=[&]() {
+    std::string n;
+    do { n="csrd_frame_"+std::to_string(frame.begin)+"_"+std::to_string(serial++); } while(!names.insert(n).second);
+    return n;
   };
-  auto declare = [&](const std::string &original, const std::string &value) {
-    const auto name = fresh(); values.emplace(original, name);
-    if (!out.body.empty()) out.body += " ";
-    out.body += "unsigned int " + name + " = " + value + ";"; ++out.temporaries;
+  auto append=[&](const std::string &s) { if(!out.body.empty()) out.body+=" "; out.body+=s; };
+  auto temporary=[&](const std::string &value) {
+    const auto n=fresh();append("unsigned long long "+n+" = "+value+"; (void)"+n+";");++out.temporaries;return n;
   };
-  std::function<std::string(const Expr &)> expression = [&](const Expr &e) -> std::string {
-    if (e.kind == Expr::Kind::Constant) return rep.constant(e.value);
-    if (e.kind == Expr::Kind::Reference) return values.at(e.name);
-    const auto left = expression(*e.left);
+  auto encode=[&](const std::string &value,unsigned bits,bool boundary) {
+    if(rep.encoded()) { ++out.encodings; if(boundary) ++out.boundaryConversions;else ++out.internalConversions; }
+    return rep.entry(value,bits);
+  };
+  auto decode=[&](const std::string &value,unsigned bits,bool boundary) {
+    if(rep.encoded()) { ++out.decodings; if(boundary) ++out.boundaryConversions;else ++out.internalConversions; }
+    return temporary(rep.exit(value,bits));
+  };
+  std::function<std::string(const IntegerExpr &)> expression=[&](const IntegerExpr &e)->std::string {
+    using K=IntegerExpr::Kind;
+    const auto n=e.type.bits;
+    if(e.kind==K::Constant) return integerLiteral(rep.encode(e.value,n));
+    if(e.kind==K::Reference) return values.at(e.name);
+    const auto left=expression(*e.left);
+    if(e.kind==K::Convert) {
+      if(!e.type.isBool && n<=e.left->type.bits) return n==e.left->type.bits ? left : temporary(integerTruncate(left,n));
+      auto raw=decode(left,e.left->type.bits,false);
+      if(e.type.isBool) raw="("+raw+" != 0ULL)";
+      else if(e.left->type.isSigned && n>e.left->type.bits) {
+        raw="(unsigned long long)"+integerRestore(raw,e.left->type);
+      }
+      return temporary(encode(raw,n,false));
+    }
     ++out.operations;
-    if (encoded) ++out.encodedOperations; else ++out.ordinaryIntermediates;
-    if (e.kind == Expr::Kind::Scale) {
-      out.estimatedOperations += rep.cost(Operation::Scale); return rep.times(left, e.value);
+    if(e.kind==K::Add || e.kind==K::Subtract || e.kind==K::Scale || e.kind==K::Negate) {
+      if(rep.encoded()) ++out.encodedOperations;else ++out.ordinaryIntermediates;
+      out.estimatedOperations+=2;
+      if(e.kind==K::Scale || e.kind==K::Negate) return temporary(rep.times(left,e.kind==K::Negate ? UINT64_MAX : e.value,n));
+      const auto right=expression(*e.right);
+      return temporary(rep.binary(e.kind==K::Add,left,right,n));
     }
-    const auto right = expression(*e.right);
-    const auto operation = e.kind == Expr::Kind::Add ? Operation::Add : Operation::Subtract;
-    if (e.kind != Expr::Kind::Add && e.kind != Expr::Kind::Subtract)
-      throw std::invalid_argument("unmodeled private arithmetic");
-    out.estimatedOperations += rep.cost(operation); return rep.binary(operation, left, right);
-  };
-  const std::set<std::string> declarations(frame.declarations.begin(), frame.declarations.end());
-  // Export original declarations in the same enclosing scope. A new block
-  // would hide them from later unchanged statements.
-  out.body = declarations.empty() ? "{" : "";
-  for (const auto &name : frame.inputs) {
-    declare(name, rep.entry(frame.bindings.at(name).name));
-    if (encoded) { ++out.encodings; ++out.boundaryConversions; out.estimatedOperations += 2; }
-  }
-  for (const auto &s : frame.original->statements) {
-    // Synthetic frame stores/return are proof devices, never runtime accesses.
-    if (s.kind != Statement::Kind::Assign && s.kind != Statement::Kind::Declare) continue;
-    const auto value = expression(*s.expression);
-    if (values.count(s.name)) out.body += " " + values.at(s.name) + " = " + value + ";";
-    else declare(s.name, value);
-  }
-  auto decode = [&](const std::string &id, bool declaration) {
-    const auto &binding = frame.bindings.at(id);
-    out.body += " ";
-    if (declaration) {
-      if (binding.registerStorage) out.body += "register ";
-      out.body += "unsigned int ";
-      frame.emittedDeclarations.emplace(id, unsigned(out.body.size()));
+    if(e.kind==K::Select) {
+      // Generated branch arithmetic is total and unsigned, so eager evaluation
+      // is safe. The original model retains conditional definedness.
+      const auto condition=decode(left,e.left->type.bits,false);
+      const auto yes=expression(*e.right), no=expression(*e.third);
+      ++out.ordinaryIntermediates;
+      return temporary("("+condition+" ? "+yes+" : "+no+")");
     }
-    out.body += binding.name + " = " + rep.exit(values.at(id)) + ";";
-    // A source local used only by this region still has a declared output, but
-    // encoded temporaries replaced its internal uses. Keep warning-clean C.
-    if (declaration) out.body += " (void)" + binding.name + ";";
-    if (encoded) { ++out.decodings; ++out.boundaryConversions; out.estimatedOperations += 2; }
+    const auto a=decode(left,e.left->type.bits,false);
+    ++out.ordinaryIntermediates;
+    std::string ordinary;
+    if(e.kind==K::BitNot) ordinary="~("+a+")";
+    else if(e.kind==K::LogicalNot) ordinary="!("+a+")";
+    else if(e.kind==K::ShiftLeft) ordinary="("+a+" << "+std::to_string(e.value)+"u)";
+    else if(e.kind==K::ShiftRight) {
+      ordinary="("+a+" >> "+std::to_string(e.value)+"u)";
+      if(e.type.isSigned && e.value) {
+        ordinary="((unsigned long long)("+integerRestore(a,e.type)+" >> "+std::to_string(e.value)+"u))";
+      }
+    } else {
+      const auto b=decode(expression(*e.right),e.right->type.bits,false);
+      std::string symbol;
+      switch(e.kind) {
+      case K::BitAnd:symbol="&";break;case K::BitOr:symbol="|";break;case K::BitXor:symbol="^";break;
+      case K::Equal:symbol="==";break;case K::NotEqual:symbol="!=";break;
+      case K::Less:symbol="<";break;case K::LessEqual:symbol="<=";break;
+      case K::Greater:symbol=">";break;case K::GreaterEqual:symbol=">=";break;
+      default:throw std::invalid_argument("unmodeled private integer emission");
+      }
+      const bool ordered=e.kind==K::Less || e.kind==K::LessEqual || e.kind==K::Greater || e.kind==K::GreaterEqual;
+      if(ordered && e.left->type.isSigned) {
+        const auto sign=integerLiteral(UINT64_C(1)<<(e.left->type.bits-1));
+        ordinary="(("+a+" ^ "+sign+") "+symbol+" ("+b+" ^ "+sign+"))";
+      } else ordinary="("+a+" "+symbol+" "+b+")";
+    }
+    return temporary(encode(ordinary,n,false));
   };
-  // Write outer objects before introducing any same-spelled inner objects.
-  for (const auto &name : frame.outputs) if (!declarations.count(name)) decode(name, false);
-  for (const auto &name : frame.declarations) decode(name, true);
-  const auto lines = std::count(frame.originalText.begin(), frame.originalText.end(), '\n');
-  if (declarations.empty()) out.body += std::string(lines, '\n') + "}";
-  else {
-    // Keep both the first token and final semicolon at the recorded boundaries.
-    out.body.insert(out.body.size()-1, std::string(lines, '\n'));
+  const std::set<std::string> declarations(frame.declarations.begin(),frame.declarations.end());
+  out.body=declarations.empty() ? "{" : "";
+  append("_Static_assert((unsigned char)~0u == 255u && ~0 == -1 && ~0L == -1L && ~0LL == -1LL && (-1 >> 1) == -1 && sizeof(short)==2 && sizeof(int)==4 && sizeof(long)=="+
+    std::to_string(frame.longBits/8)+" && sizeof(long long)==8 && (((char)-1 < 0)=="+
+    std::to_string(frame.plainCharSigned ? 1 : 0)+"), \"C-SRD integer data model mismatch\");");
+  std::string anchor;
+  for(const auto &id:frame.inputs) {
+    const auto &b=frame.bindings.at(id);
+    anchor=temporary(encode("(unsigned long long)("+b.name+")",b.type.bits,true));
+    values.emplace(id,anchor);
   }
+  frame.witness.checkpoints.push_back({0,0,anchor,values});
+  unsigned sourceEnd=0;
+  for(const auto &s:frame.original->statements) {
+    // A unique copy gives every source step an unambiguous actual-C cut,
+    // including constant/reference-only assignments. Optimizers may remove it.
+    const auto value=temporary(expression(*s.expression));
+    values.insert_or_assign(s.name,value);
+    frame.witness.checkpoints.push_back({++sourceEnd,0,value,values});
+  }
+  std::map<std::string,std::string> restored;
+  for(const auto &id:frame.outputs) {
+    const auto &b=frame.bindings.at(id);
+    const auto raw=decode(values.at(id),b.type.bits,true);
+    restored.emplace(id,integerRestore(raw,b.type));
+  }
+  for(const auto &id:frame.outputs) if(!declarations.count(id)) append(frame.bindings.at(id).name+" = "+restored.at(id)+";");
+  for(const auto &id:frame.declarations) {
+    const auto &b=frame.bindings.at(id);
+    append((b.registerStorage ? "register " : "")+b.type.spelling+" ");
+    frame.emittedDeclarations.emplace(id,unsigned(out.body.size()));
+    out.body+=b.name+" = "+restored.at(id)+"; (void)"+b.name+";";
+  }
+  const auto lines=std::count(frame.originalText.begin(),frame.originalText.end(),'\n');
+  if(declarations.empty()) out.body+=std::string(lines,'\n')+"}";
+  else out.body.insert(out.body.size()-1,std::string(lines,'\n'));
   return out;
 }
 } // namespace csrd

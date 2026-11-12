@@ -50,7 +50,8 @@ public:
   void PragmaDirective(clang::SourceLocation loc, clang::PragmaIntroducerKind) override { record(loc); }
   void MacroDefined(const clang::Token &token, const clang::MacroDirective *) override {
     const auto name = token.getIdentifierInfo()->getName();
-    if (name == "unsigned" || name == "int" || name == "void") data.keywordMacro = true;
+    if (name == "unsigned" || name == "int" || name == "void" || name == "signed" || name == "long" ||
+        name == "short" || name == "char" || name == "_Bool" || name == "_Static_assert" || name == "sizeof") data.keywordMacro = true;
   }
 };
 class Consumer final : public clang::ASTConsumer {
@@ -122,10 +123,8 @@ public:
           decision.status = decision.privateFrames.empty() ? "unchanged" : rewrite ? "regions-transformed" : "supported-regions";
           for (auto &frame : decision.privateFrames) {
             if (!rewrite) continue;
-            const auto affine = Affine::fromSeed(seed, decision.function + ":" + std::to_string(frame.begin));
-            Identity identity;
-            const Representation &rep = result.options.strategy == "identity" ?
-              static_cast<const Representation &>(identity) : static_cast<const Representation &>(affine);
+            const auto rep = result.options.strategy == "identity" ? IntegerCodec::identity() :
+              IntegerCodec::fromSeed(seed, decision.function + ":" + std::to_string(frame.begin));
             frame.emission = emitPrivateFrame(frame, rep, reserved);
             const auto start = sm.getLocForStartOfFile(file);
             if (rewriter.ReplaceText(clang::CharSourceRange::getCharRange(start.getLocWithOffset(frame.begin),

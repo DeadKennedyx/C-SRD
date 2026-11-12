@@ -26,23 +26,27 @@ def run(config):
     result = {"status":"completed", "observer":"affine-congruence-v2", "targets":{},
               "training_traces":len(train), "heldout_traces":len(test),
               "scope":"known intermediates, fixed loop count; finite heldout scoring, not parameter recovery proof"}
+    if config.get("target_widths"): result["observer"]="affine-congruence-widths-v3"
     for name, values in config["targets"].items():
         if len(values)!=len(traces): raise ValueError("target/trace count mismatch")
+        bits=config.get("target_widths",{}).get(name,32)
+        iswide=lambda location:":reg64:" in location or ":stack64+" in location
+        selected=[{location:value&((1<<bits)-1) for location,value in row.items() if iswide(location)==(bits==64)} for row in train_rows]
         labels = [values[i] for i in train]
-        fitted, meta = fit_rows(train_rows, labels)
-        negative, negative_meta = fit_rows(train_rows, labels[1:]+labels[:1])
+        fitted, meta = fit_rows(selected, labels,bits)
+        negative, negative_meta = fit_rows(selected, labels[1:]+labels[:1],bits)
         score = score_models(fitted, tests, [values[i] for i in test])
         controls = score_models(negative, tests, [values[i] for i in test])
         scopes = {}
         for model in score["models"]:
             location = model["location"]
-            area = "register" if ":reg:" in location else "stack" if ":stack+" in location else "caller-memory"
+            area = "register" if ":reg:" in location or ":reg64:" in location else "stack" if ":stack+" in location or ":stack64+" in location else "caller-memory"
             code = "target" if location.startswith(config["function"]+" +") or location.startswith(config["function"]+":") else "callback-or-plt"
             key = code+"/"+area
             scope = scopes.setdefault(key, {"validated":0,"false":0,"inconclusive":0})
             category = "validated" if model["correct"]==model["total"] else "false" if model["available"]==model["total"] else "inconclusive"
             scope[category]+=1
-        result["targets"][name] = {"fit":meta,"recovery":score,"negative_control":controls,
+        result["targets"][name] = {"bits":bits,"fit":meta,"recovery":score,"negative_control":controls,
                                    "negative_fit":negative_meta,"by_scope":scopes}
     return result
 

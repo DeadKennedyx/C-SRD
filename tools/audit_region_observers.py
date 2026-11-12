@@ -42,7 +42,8 @@ def prepare(args):
               "environment": environment(), "csrd": {"path": str(tool), "sha256": file_hash(tool)}, "artifacts": [],
               "script_hashes": {p.name: file_hash(p) for p in [Path(__file__), ROOT/"tools/region_observation_cases.py"]}}
     try:
-        for fixture, source_name in FIXTURES.items():
+        for fixture in args.fixture or list(FIXTURES):
+            source_name=FIXTURES[fixture]
             source = ROOT/"tests/fixtures"/source_name
             for compiler_name in args.compiler:
                 compiler = shutil.which(compiler_name)
@@ -108,12 +109,12 @@ def checked_artifacts(build):
     return build["artifacts"]
 
 
-def grade(record, function, source, directory, cases_count, reference=None):
+def grade(record, function, source, directory, cases_count, reference=None,seed=0x43535244):
     harness = directory/"driver.c"; harness.write_text(driver(function))
     binary = directory/"graded"
     # Grade reconstructed C independently under both compilers. Sanitizers are
     # useful here but run separately from measured analysis commands.
-    cases = vectors(function, cases_count, seed=0x43535244)
+    cases = vectors(function, cases_count, seed=seed)
     expected = [effects(oracle(record["fixture"], function, v)) for v in cases]
     result = {"status": "running", "comparisons": 0, "compilers": []}
     if reference is not None:
@@ -147,6 +148,14 @@ def reconstruct_all(args):
               "environment": environment(), "records": [], "claims": {"whole_function_proof": False, "human_effort": "unmeasured"},
               "observer_hashes": {p.name: file_hash(p) for p in [ROOT/"tools/ghidra/ExportCSRDRegions.java", ROOT/"tools/pcode_regions.py", ROOT/"tools/pcode_cfg.py", ROOT/"tools/pcode_values.py"]},
               "grader_hashes":{p.name:file_hash(p) for p in [Path(__file__), ROOT/"tools/region_observation_cases.py"]}}
+    report["grading_protocol"]={"cases":args.grade_cases,"seed":args.grade_seed}
+    headless=Path(args.ghidra).resolve()
+    if not headless.is_file(): raise ValueError("Ghidra headless executable unavailable: "+str(headless))
+    distribution=headless.parent.parent
+    report["decompiler_files"]={str(path.relative_to(distribution)):file_hash(path) for path in [
+        headless,distribution/"Ghidra/Features/Decompiler/os/linux_arm_64/decompile",
+        distribution/"Ghidra/Processors/AARCH64/data/languages/AARCH64base.sinc",
+        distribution/"Ghidra/Processors/AARCH64/data/languages/AARCH64.sla"] if path.is_file()}
     jobs = [(r, f, n) for r in records for f in FUNCTIONS for n in range(args.repetitions)]
     random.Random(20261110).shuffle(jobs)
     try:
@@ -183,7 +192,7 @@ def reconstruct_all(args):
             if file_hash(directory/"recovered.c") != item["recovered_sha256"]: raise ValueError("recovered file changed")
             original = lookup[item["artifact"].rsplit("/",1)[0]+"/original"]
             reference = original["drivers"][item["function"]]["path"]
-            item["grading"] = grade(lookup[item["artifact"]], item["function"], directory/"recovered.c", grading, args.grade_cases, reference)
+            item["grading"] = grade(lookup[item["artifact"]], item["function"], directory/"recovered.c", grading, args.grade_cases, reference,args.grade_seed)
             item["status"] = item["grading"]["status"]
             write_json(root/"reconstruction.json", report)
         report["controls"] = []
@@ -198,7 +207,7 @@ def reconstruct_all(args):
                 if mutation == "branch" and item["function"] != "region_pipeline": continue
                 control_dir = directory/("control-"+mutation); control_dir.mkdir()
                 source = control_dir/"mutant.c"; source.write_text(reconstruct(export, mutation=mutation))
-                result = grade(lookup[item["artifact"]], item["function"], source, control_dir, args.grade_cases)
+                result = grade(lookup[item["artifact"]], item["function"], source, control_dir, args.grade_cases,seed=args.grade_seed)
                 report["controls"].append({"artifact":item["artifact"], "function":item["function"], "mutation":mutation,
                                            "directory":str(control_dir), "result":result})
         checked_artifacts(build)
@@ -212,12 +221,15 @@ def main():
     p = argparse.ArgumentParser(description=__doc__); sub = p.add_subparsers(dest="stage", required=True)
     a = sub.add_parser("prepare"); a.add_argument("--csrd", required=True); a.add_argument("--compiler", action="append", required=True)
     a.add_argument("--profile", choices=("O0", "O2", "O3", "Os", "O2-lto"), action="append", required=True)
+    a.add_argument("--fixture",choices=tuple(FIXTURES),action="append")
     b = sub.add_parser("reconstruct"); b.add_argument("--build", required=True); b.add_argument("--ghidra", required=True)
     b.add_argument("--repetitions", type=int, default=1)
+    b.add_argument("--grade-seed",type=int,default=0x43535244)
     for parser in (a,b):
         parser.add_argument("--output", required=True); parser.add_argument("--grade-cases", type=int, default=256)
     args = p.parse_args()
     if args.grade_cases < 32 or getattr(args, "repetitions", 1) < 1: p.error("at least 32 grading inputs and one repetition required")
+    if not 0<=getattr(args,"grade_seed",0)<2**64:p.error("grading seed must be a uint64")
     with (ROOT/"experiments/runs/effort.lock").open("a") as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         prepare(args) if args.stage == "prepare" else reconstruct_all(args)

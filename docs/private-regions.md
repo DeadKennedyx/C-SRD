@@ -1,5 +1,10 @@
 # Private scalar regions: private-u32-frame-c11-v2
 
+This page records the 0.6 contract and its contextual argument. The current
+private-region type/operator extension is specified separately in
+[private-integer-frame-c11-v3](private-integers.md); the source/context restrictions
+below continue to apply. Historical v2 evidence is not relabeled as v3 evidence.
+
 This opt-in prototype transforms arithmetic declarations and assignments inside richer C11
 functions. The original whole-function mode remains the default. This is partial
 transformation support, not a new general verifier for surrounding C features.

@@ -40,6 +40,9 @@ def run(args):
     gdb=shutil.which(args.gdb)
     if not gdb: raise ValueError("GDB unavailable")
     report["gdb"]={"path":gdb,"sha256":file_hash(gdb)}
+    if any(r["fixture"]=="integers" for r in records):
+        report["protocol"].update(observer="affine-congruence-widths-v3",integer_target_widths=[1,8,16,32,64],
+                                   integer_storage_views="low32/full64 general registers; 4/8-byte stack views; low32 caller memory")
     jobs=[(r,function,n) for r in records for function,n in [("region_pipeline",0),("region_pipeline",2),("region_outputs",None)]]
     random.Random(20261110).shuffle(jobs)
     try:
@@ -52,7 +55,8 @@ def run(args):
             for i,vector in enumerate(cases):
                 input_path=directory/f"{i}.input";input_path.write_text(input_text(vector))
                 config=directory/f"{i}.config.json";output=directory/f"{i}.trace.json.gz"
-                write_json(config,{"function":function,"step_limit":args.step_limit,"input_file":str(input_path),"output":str(output)})
+                write_json(config,{"function":function,"step_limit":args.step_limit,"input_file":str(input_path),"output":str(output),
+                                   "wide_values":record["fixture"]=="integers"})
                 script=directory/f"{i}.gdb"
                 script.write_text("python\nimport sys\nsys.path.insert(0,"+repr(str(ROOT/"tools"))+")\nimport gdb_region_trace\ngdb_region_trace.main("+repr(str(config))+")\nend\n")
                 resource=measure([gdb,"--nx","--batch","-iex","set auto-load off","-x",script,"--args",record["drivers"][function]["path"]],directory/f"{i}-resources",wall_seconds=120)
@@ -79,14 +83,15 @@ def run(args):
             predictions=[oracle(record["fixture"],group["function"],t["input"]) for t in group["traces"]]
             targets={name:[p["targets"][name] for p in predictions] for name in predictions[0]["targets"]}
             config=directory/"fit-config.json";output=directory/"fit.json"
-            write_json(config,{"traces":group["traces"],"targets":targets,"function":group["function"]})
+            widths={name:int(name.rsplit(".u",1)[1]) for name in targets} if record["fixture"]=="integers" else {}
+            write_json(config,{"traces":group["traces"],"targets":targets,"function":group["function"],"target_widths":widths})
             resource=measure([sys.executable,ROOT/"tools/fit_region_traces.py",config,output],directory/"fit-resources",wall_seconds=120)
             resource.pop("samples",None);group["fit_resources"]=resource
             if output.exists():
                 fit=json.loads(output.read_text())
                 group.update(status=fit["status"],fit={"path":str(output),"sha256":file_hash(output)},targets={})
                 for name,t in fit.get("targets",{}).items():
-                    group["targets"][name]={"fit_status":t["fit"]["status"],"parameter_solutions":t["fit"]["parameter_solutions"],
+                    group["targets"][name]={"bits":t.get("bits",32),"fit_status":t["fit"]["status"],"parameter_solutions":t["fit"]["parameter_solutions"],
                          "recovery":{k:v for k,v in t["recovery"].items() if k!="models"},
                          "negative_control":{k:v for k,v in t["negative_control"].items() if k!="models"},"by_scope":t["by_scope"]}
             else:group["status"]="fit-failed"

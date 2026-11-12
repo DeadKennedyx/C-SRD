@@ -1,6 +1,6 @@
 # C-SRD — Verified Semantic and Representation Diversification for C
 
-**Technical specification · implemented baseline 0.6 · reviewed 2026-11-10**
+**Technical specification · implemented baseline 0.7 · reviewed 2026-11-12**
 
 Personal research project maintained by [DeadKennedyx](https://github.com/DeadKennedyx).
 Repository: [DeadKennedyx/C-SRD](https://github.com/DeadKennedyx/C-SRD).
@@ -21,9 +21,15 @@ effectiveness. Failed experiments and inconclusive proofs remain evidence.
 verified compiler, cryptographic confidentiality and research novelty are not
 claimed. Transformation covers admitted pure functions and the first bounded
 [pointer/buffer extension](docs/buffer-contract.md), with separate contracts.
-An opt-in [private-region prototype](docs/private-regions.md) also transforms
-unsigned declarations and assignments inside richer functions while checking
-surrounding code and declaration bindings.
+An opt-in [typed private-region prototype](docs/private-integers.md) also transforms
+standard integer declarations and assignments through 64 bits inside richer
+functions, with explicit signed-arithmetic assumptions, actual emitted-frame
+validation and checks of surrounding code and declaration bindings.
+
+The [integer measurement checkpoint](reports/private-integers.md) passed 96/96
+finite reconstruction grades. The selected runtime observer recovered 141/156
+affine target cases versus 129/156 original cases, with higher application costs.
+This expands validated coverage; it does **not** establish useful protection.
 
 **Software-protection objective:** automate diversification of legitimate
 software and measure the effort needed to reconstruct its implementation.
@@ -68,6 +74,8 @@ excluded; encoded source values do not imply debugger-resistant confidentiality.
 | [Private-region evidence](reports/private-regions.md) | Actual frame/event validation, matched linked-build costs and explicit protection measurement gaps |
 | [Private declaration extension](reports/private-declarations.md) | Scope and shadowing validation, compiler controls and matched declaration-workload evidence |
 | [Private-region observer checkpoint](reports/private-region-observers.md) | 192 tested reconstructions, call/loop runtime recovery, stack depth, costs and explicit observer limits |
+| [Typed private integers](docs/private-integers.md) | Widths, promotions, signed defined-input conditions, compatible affine representations and compositional validation |
+| [Integer validation and measurements](reports/private-integers.md) | Compiler/sanitizer checks, 288 replayed queries, 96 tested reconstructions, 576 runtime traces and matched costs; observer failures retained |
 | [Research journal](docs/journal/README.md) | Questions, observations, decisions, deviations and handoffs |
 | [Experimental protocol](experiments/README.md) | Controls, measurements, decision rules and reporting |
 | [Task backlog](docs/backlog.md) | Dependencies and measurable exit criteria for subsequent work |
@@ -113,8 +121,8 @@ No one metric, such as conversion count or source size, answers all of them.
 
 ## 2. Problem definition and constraints
 
-**Generate alternative C11 implementations of admitted `uint32_t`
-functions, with artifact-bound evidence that each emitted implementation
+**Generate alternative C11 implementations of admitted functions and private
+integer regions, with artifact-bound evidence that each emitted implementation
 preserves the specified behavior.**
 
 Let P be an admitted function and T(P,s) its candidate under configuration s.
@@ -125,19 +133,23 @@ This is why return equality suffices here; it would not suffice for arbitrary C.
 The buffer contract instead requires equal returns and entire final memory
 for every admitted initial state and alias arrangement, under its explicit
 object, bounds, initialization and lifetime preconditions.
+Private-region mode validates scalar outputs on the original frame's defined
+inputs and checks unchanged surrounding code and declaration bindings. Its
+proof scope does not silently expand to the surrounding calls, loops or I/O.
 
 | Constraint | Current boundary |
 | --- | --- |
 | Frontend | Clang C11 parsing and typing; no regex-based C parser |
-| Target types | Host target with 32-bit `int` and `unsigned int`; canonical `uint32_t` must be unsigned int |
-| Values/statements | Unqualified uint32 parameters/return/locals, initialized declarations, assignments and one final return |
+| Whole-function target types | Host target with 32-bit `int` and `unsigned int`; canonical `uint32_t` must be unsigned int |
+| Whole-function values/statements | Unqualified uint32 parameters/return/locals, initialized declarations, assignments and one final return |
 | Operations | Unsigned add/subtract, multiplication by a literal, bitwise operations, literal shifts 0–31, comparisons and uint32 selections |
 | Control | Assignment-only branches and canonical finite loops with literal trip counts 0–32 |
 | Objects | Local literal lookup arrays of 1–16 elements; indexes must have proved static bounds; no writes or escapes |
 | Resource limits | At most 4096 graph nodes before pruning; planned mode at most 512 live nodes; exact optimization at most 16 choice nodes |
 | Preprocessing | Functions containing macros/directives are excluded; generated keyword macros are rejected conservatively |
 | Buffer path | `uint32_t*`/`const uint32_t*` parameters; literal indexes 0–15 or dereference; straight-line add/subtract/literal scale; identity or affine; ordinary external memory |
-| Unsupported | General pointer operations, dynamic indexes/allocation, external calls/I/O, signed/wider arithmetic, floating point, recursion, arbitrary loops, volatile/atomics and concurrency |
+| Opt-in private regions | Standard unqualified scalar integers through 64 bits and `_Bool`; typed declarations/assignments, casts, selected arithmetic/bitwise/comparison/shift/select operations; identity or affine; explicit signed/data-model assumptions |
+| Unmodeled boundaries | General pointer operations, dynamic indexes/allocation, external calls/I/O, floating point, recursion, arbitrary loops, volatile/atomics and concurrency; signed/wider arithmetic remains outside whole-function paths |
 | Environment | Compatible target, headers and preprocessing; output location may change include resolution or untransformed `__FILE__` |
 | Research boundary | Benign programs and defensive analysis; no evasion objectives or confidentiality guarantee |
 
@@ -145,6 +157,8 @@ The complete whitelist, including qualifiers, casts, storage classes, loop-index
 rules and array-bound reasoning, is normative in [semantics](docs/semantics.md).
 Pointer functions use [the separate buffer whitelist](docs/buffer-contract.md),
 which does not yet admit the pure path's branches, loops or bitwise operations.
+`--scope private-regions` instead uses [its own typed contract](docs/private-integers.md),
+keeping unmodeled surrounding statements ordinary and recording boundaries.
 An excluded function MUST stay unchanged with a reason. Invalid C MUST prevent
 output. Any candidate that fails translation validation MUST prevent C output.
 

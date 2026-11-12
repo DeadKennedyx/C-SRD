@@ -7,6 +7,11 @@ results. The [fourteen-increment breakdown](coverage-increments.md) refines the
 sequence. An opt-in [private-region prototype](private-regions.md) now selects
 declaration/assignment arithmetic inside richer functions without modeling or transforming
 their surrounding effects. This plan does not replace the M0–M5 evidence record.
+The [2026-11-12 typed-integer checkpoint](../reports/private-integers.md) extends
+those private frames to standard scalar integer types with explicit signed
+assumptions. Its coverage and measurement evidence do not close the broader
+memory, calls or control-flow stages below; the fourteen-increment breakdown
+defines the current execution order.
 
 ## Objective and scope
 

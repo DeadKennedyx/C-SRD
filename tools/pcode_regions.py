@@ -18,8 +18,12 @@ POINTER = {"PTRADD", "PTRSUB"}
 
 class RegionGraph(Graph):
     def __init__(self, export):
-        if export.get("schema_version") != 5 or export.get("memory_model") != "ordered-u32-regions-v1":
-            raise Unsupported("requires ordered region export schema 5")
+        if export.get("schema_version") not in (5,6) or export.get("memory_model") != "ordered-u32-regions-v1":
+            raise Unsupported("requires ordered region export schema 5 or 6")
+        typed_booleans=export.get("schema_version")==6
+        if typed_booleans and export.get("boolean_constants")!="high-type-nonzero-is-true":
+            raise Unsupported("missing high-level Boolean constant contract")
+        self.normalized_booleans=0
         if export.get("status") != "decompiled" or export.get("operation_order") != "basic-block-live-order":
             raise Unsupported("requires completed ordered decompilation")
         self.nodes, self.ops, self.parameters = export["nodes"], export["operations"], export["parameters"]
@@ -36,12 +40,22 @@ class RegionGraph(Graph):
         for i, node in enumerate(self.nodes):
             size = node["size"]
             if type(size) is not int or size not in (1, 2, 4, 8): raise Unsupported("unsupported varnode width")
+            boolean=node.get("boolean_type",False)
+            if type(boolean) is not bool or (boolean and (not typed_booleans or size!=1)):
+                raise Unsupported("invalid Boolean type annotation")
             if "constant" in node:
                 number = node["constant"]
                 if (not isinstance(number, str) or not number.isascii() or not number.isdecimal() or len(number) > 20
                         or node.get("input") or "parameter" in node): raise Unsupported("invalid constant")
                 number = int(number)
                 if not 0 <= number < 1 << (size*8): raise Unsupported("constant out of range")
+                # High-P-code includes type-directed C constants. Ghidra's
+                # Boolean printer interprets every nonzero literal as true.
+                # Preserve the exported raw bits; normalize ONLY explicit
+                # Boolean-typed literals, never an arbitrary byte value 255.
+                if boolean:
+                    self.normalized_booleans+=number not in (0,1)
+                    number=int(number!=0)
                 self.constants[i] = number
                 self.initial[i] = f"UINT64_C({number})"
             elif "parameter" in node:
@@ -248,6 +262,8 @@ def _reconstruct(export, metrics, mutation):
                    loads=sum(o["opcode"] == "LOAD" for o in graph.ops), stores=sum(o["opcode"] == "STORE" for o in graph.ops),
                    calls=sum(o["opcode"] == "CALL" for o in graph.ops), generated_bytes=len(source),
                    block_entry_budget=10000, mutation=mutation)
+    if export.get("schema_version")==6:
+        metrics.update(observer="ordered-u32-regions-typed-booleans-v2",normalized_boolean_constants=graph.normalized_booleans)
     return source
 
 

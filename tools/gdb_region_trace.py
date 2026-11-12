@@ -53,13 +53,17 @@ def collect(config):
         if offset.startswith("No symbol"):
             raise RuntimeError("instruction location cannot be normalized to a symbol")
         visit = visits[offset]; visits[offset] += 1
-        values = {"reg:" + name: int(gdb.parse_and_eval("$" + name)) & 0xffffffff for name in registers}
+        full = {name: int(gdb.parse_and_eval("$" + name)) & ((1<<64)-1) for name in registers}
+        values = {"reg:" + name: value & 0xffffffff for name,value in full.items()}
+        if config.get("wide_values"): values.update({"reg64:"+name:value for name,value in full.items()})
         memory = gdb.selected_inferior().read_memory(memory_address, 3*4).tobytes()
         values.update({f"caller:{i}": int.from_bytes(memory[4*i:4*i+4], "little") for i in range(3)})
         try:
             sp = int(gdb.parse_and_eval("$sp"))
             stack = gdb.selected_inferior().read_memory(sp, 64).tobytes()
             values.update({f"stack+{i}": int.from_bytes(stack[i:i+4], "little") for i in range(0, 64, 4)})
+            if config.get("wide_values"):
+                values.update({f"stack64+{i}":int.from_bytes(stack[i:i+8],"little") for i in range(0,57,4)})
         except gdb.MemoryError:
             failures += 1
         samples.append({"offset": offset, "visit": visit, "values": values,
@@ -80,6 +84,8 @@ def collect(config):
         result["events"] = [int.from_bytes(raw[4*i:4*i+4], "little") for i in range(count)]
         result["return_value"] = int(gdb.parse_and_eval("$x0" if "aarch64" in architecture else "$rax")) & 0xffffffff
         gdb.execute("continue", to_string=True)
+    if config.get("wide_values"):
+        result["scope"]="low32 and full64 general registers, 4/8-byte views within 64 bytes at SP, all3 caller words; no SIMD/heap coverage"
     return result
 
 

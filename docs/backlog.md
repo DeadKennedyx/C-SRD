@@ -5,12 +5,13 @@ already exist. No dates, staffing commitments or duration estimates have been
 invented. Before starting a task, create a journal entry and record its problem,
 hypothesis, constraints, protocol and stop/acceptance criteria.
 
-Current baseline: v0.6, with fixed-index buffers and opt-in private scalar regions.
+Current baseline: v0.7, with fixed-index buffers and typed private integer regions.
 Further language coverage requires separate, bounded specifications.
 
 The next priority is [broader C-SRD support](broader-c-support.md), informed by
-published Tigress designs. Follow one coverage sequence, starting with bounded
-pointer/buffer transformations. Verification and measurement tasks are acceptance
+published Tigress designs. Follow the [fourteen coverage increments](coverage-increments.md),
+with byte buffers/runtime indexes next after the typed-integer checkpoint.
+Verification and measurement tasks are acceptance
 work inside these milestones; existing experimental results remain unchanged.
 
 | ID | Status | Specific problem / next action | Dependencies | Acceptance evidence |
@@ -44,8 +45,8 @@ work inside these milestones; existing experimental results remain unchanged.
 | COV-03 | Split; no implementation claimed | Former combined signed/allocation/recursion task is replaced by COV-07/08/09 | Separate contracts and acceptance evidence for each feature | Close each replacement only on its own implementation and evidence |
 | COV-04 | Planned C6 | Investigate exact floating-point transformations within a declared model | Rounding/exception/representation contract and solver/tool study | Exceptional values, signed zero and relevant environment behavior preserved; no approximate substitution under an exact contract |
 | COV-05 | Planned C7 | Investigate shared-memory transformations | C11 memory model, synchronization and observable-execution contract | Explicit thread-local/shared boundary, atomic/order preservation, concurrency-specific negative controls |
-| COV-06 | Ordered memory path and private declaration/assignment region prototype implemented | Computation between admitted memory/effect boundaries | MEM-01 and [private scalar frame contract](private-regions.md) | Actual emitted frame outputs validated, unchanged context bytes/bindings, original declaration scopes, address-escape exclusions and event differential checks; richer types and whole-context reconstruction remain later work |
-| COV-07 | Planned C5 | Admit selected signed types and operations | Defined-input domain and C promotion/conversion/overflow/shift semantics | Negative and boundary-value controls; actual emitted-C validation; no new signed overflow or invalid shifts |
+| COV-06 | Ordered memory and private declaration/assignment prototypes implemented and measured | Computation between admitted memory/effect boundaries | MEM-01 and [private scalar frame contract](private-regions.md) | Frame outputs/context bindings validated; [call/loop reconstruction measured](../reports/private-region-observers.md); broader effects and universal whole-context proof remain outside scope |
+| COV-07 | Scoped integer checkpoint implemented and measured | Standard integer private frames, promotions and selected operators | [Defined-input and implementation model](private-integers.md) | [288 replayed queries, compiler matrices and matched observer/cost evidence](../reports/private-integers.md); no established affine protection advantage; wider operators/data-model execution coverage remain open |
 | COV-08 | Planned C3 | Admit selected dynamic allocation/deallocation patterns | C1 memory model and C2 call summaries | Allocation failure, bounds, object identity, aliases, lifetime and release behavior preserved under the declared environment |
 | COV-09 | Planned C4 after loop model | Admit selected recursive calls with separate activation state | COV-01 call contracts and COV-02 state/effect model | Correct per-call state, returns and effects; explicit depth/resource assumptions and failure controls |
 
@@ -59,8 +60,10 @@ flowchart LR
     C6 --> C7["C7: Concurrency"]
 ```
 
-The diagram expresses the proposed development order, not dates or a claim
-that every earlier stage is a semantic prerequisite for every later one. Each
+The diagram preserves the earlier seven-stage grouping; the fourteen-increment
+breakdown now specifies execution order, placing typed integers before richer
+byte memory and effects. It does not supply dates or claim that every earlier
+stage is a semantic prerequisite for every later one. Each
 stage includes correctness validation, compiler checks and scoped measurements.
 Add a dated Gantt or resource plan only when estimates, owners and start
 constraints are known.

@@ -1,0 +1,66 @@
+{
+  "archive_paths": "Repository-relative paths; replay with the repository mounted at /work.",
+  "archives": [
+    {
+      "archive": "build.tar.gz",
+      "bytes": 1640860,
+      "excluded_transient_files": 0,
+      "included_files": 417,
+      "sha256": "903b42f37ff929e2312ddbcdfb60a40a2df0f65c71484d6fe3e4dca8c61c8740"
+    },
+    {
+      "archive": "reconstruction.tar.gz",
+      "bytes": 23509583,
+      "excluded_transient_files": 0,
+      "included_files": 3226,
+      "sha256": "4720a675473cccbeeb9c40fb2c9fda2dbf72a2e9c121cd97b30a39177b359393"
+    },
+    {
+      "archive": "runtime.tar.gz",
+      "bytes": 6205644,
+      "excluded_transient_files": 0,
+      "included_files": 4897,
+      "sha256": "2169651a2cdbfeb2e3045231e1af6a04c9db7f469cd938677f85cd1731785db2"
+    },
+    {
+      "archive": "costs.tar.gz",
+      "bytes": 113617,
+      "excluded_transient_files": 0,
+      "included_files": 465,
+      "sha256": "f6d2d8c75628171e30b8ba4fcba5289a97814799823718eb47ac6ea781b68ce2"
+    },
+    {
+      "archive": "verification.tar.gz",
+      "bytes": 166946,
+      "excluded_transient_files": 0,
+      "included_files": 1444,
+      "sha256": "ac67037acbcd5858490002a511804dee658103dcf8432975ead33ccff62846c5"
+    },
+    {
+      "archive": "binaries.tar.gz",
+      "bytes": 49221,
+      "excluded_transient_files": 0,
+      "included_files": 49,
+      "sha256": "3389136b510189158a795e03153b6e1e1450ad56e024ee7e96114fc812e3f4aa"
+    },
+    {
+      "archive": "development-and-tests.tar.gz",
+      "bytes": 32048700,
+      "excluded_transient_files": 0,
+      "included_files": 7253,
+      "sha256": "88bd7fcb753d8e8271d775e50e1b04506d4d3e74f197d0bd32ec542cb6fb9ff8"
+    }
+  ],
+  "baseline": "3c26935",
+  "created_utc": "2026-11-12T17:16:59.976189+00:00",
+  "docker_image": "sha256:880358a74512e1deac327db13818f10e5b0cf8538f3490996952b8d379541f00",
+  "exclusion_reason": "Transient Ghidra project databases are reproducible from retained binaries and exports; their hashes are retained.",
+  "file_manifests": {
+    "format": "gzip JSON; keyed by archive; per-file SHA256, path and bytes",
+    "path": "file-manifests.json.gz",
+    "sha256": "b0a450d6dc9287d9c859b0847916fad93998529e9f816a4491ffedf81272aa1a"
+  },
+  "schema_version": 1,
+  "scope": "Typed private-frame prototype and development observer follow-up; no whole-program or machine-code proof.",
+  "transformer_version": "0.7.0"
+}

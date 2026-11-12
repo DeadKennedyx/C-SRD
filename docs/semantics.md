@@ -6,6 +6,12 @@ fixed-index loads/stores, straight-line affine arithmetic and equality of return
 plus entire final memory. Each function's report identifies its semantic model.
 The restrictions below remain unchanged for the pure path.
 
+The opt-in `--scope private-regions` path uses the separate
+[typed private-integer contract](private-integers.md), with signed/unsigned
+widths, promotions and explicit implementation assumptions. It proves admitted
+scalar frames and checks unchanged surrounding code/bindings; it does not apply
+this pure-function contract to arbitrary calls, loops or memory effects.
+
 For each accepted function P with n arguments, D is `{0,...,2^32-1}^n`.
 The required relation is equality of returned values for every input in D,
 termination on both sides, and an empty external effect trace. Automatic local

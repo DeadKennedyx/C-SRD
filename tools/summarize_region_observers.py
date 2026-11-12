@@ -73,6 +73,14 @@ def summarize(build,reconstruction,runtime,costs):
             "negative_control_validated_models":sum(t["negative_control"]["validated_models"] for _,_,t in targets),
             "misses":[{"artifact":g["artifact"],"function":g["function"],"loop_count":g["loop_count"],"target":name,"fit_status":t["fit_status"]}
                       for g,name,t in targets if not t["recovery"]["validated_models"]],"paired_groups":[]}
+        widths=defaultdict(list)
+        for _,_,target in targets:widths[target.get("bits",32)].append(target)
+        result["runtime"][variant]["by_width"]={str(bits):{
+            "targets":len(items),"recovered_targets":sum(t["recovery"]["validated_models"]>0 for t in items),
+            "insufficient_variation":sum(t["fit_status"]=="insufficient-variation" for t in items),
+            "false_models":sum(t["recovery"]["false_models"] for t in items),
+            "negative_control_validated_models":sum(t["negative_control"]["validated_models"] for t in items)
+        } for bits,items in sorted(widths.items())}
         for g in rows:
             original=base_groups[(g["artifact"].rsplit("/",1)[0],g["function"],g["loop_count"])]
             item={"artifact":g["artifact"],"function":g["function"],"loop_count":g["loop_count"],

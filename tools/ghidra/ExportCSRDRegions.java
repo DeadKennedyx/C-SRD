@@ -33,7 +33,8 @@ public class ExportCSRDRegions extends HeadlessScript {
         if (args.length != 4) throw new IllegalArgumentException("function p,u,s-ABI timeout-seconds output-directory");
         Path out = Paths.get(args[3]);
         JsonObject report = new JsonObject();
-        report.addProperty("schema_version", 5);
+        report.addProperty("schema_version", 6);
+        report.addProperty("boolean_constants", "high-type-nonzero-is-true");
         report.addProperty("memory_model", "ordered-u32-regions-v1");
         report.addProperty("ghidra_version", Application.getApplicationVersion());
         report.addProperty("language", currentProgram.getLanguageID().toString());
@@ -145,6 +146,10 @@ public class ExportCSRDRegions extends HeadlessScript {
                 JsonObject item = new JsonObject();
                 item.addProperty("size", node.getSize());
                 item.addProperty("input", node.isInput());
+                if (node instanceof VarnodeAST && ((VarnodeAST)node).getHigh() != null) {
+                    DataType type = ((VarnodeAST)node).getHigh().getDataType();
+                    item.addProperty("boolean_type", type instanceof BooleanDataType);
+                }
                 item.addProperty("storage", node.getAddress().toString());
                 if (node.isConstant()) item.addProperty("constant", Long.toUnsignedString(node.getOffset()));
                 if (node.isInput() && node instanceof VarnodeAST && ((VarnodeAST)node).getHigh() instanceof HighParam)

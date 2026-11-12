@@ -18,6 +18,21 @@ from region_observation_cases import driver, vectors, oracle, effects, parse_out
 
 
 class AffineCongruence(unittest.TestCase):
+    def test_widths_and_high_word_recovery(self):
+        for bits in (1,8,16,32,64):
+            modulus=1<<bits;mask=modulus-1
+            labels=[x&mask for x in (0,1,3,7,1<<63,(1<<64)-1)]
+            a=0xf123456789abcdef&mask;b=0x76543210fedcba98&mask
+            rows=[{"f:0:reg64:x0":(a*t+b)&mask} for t in labels]
+            models,_=fit_rows(rows,labels,bits)
+            self.assertEqual(len(models),1)
+            held=[x&mask for x in (19,1<<62,(1<<63)+17)]
+            traces=[{"samples":[{"offset":"f","visit":0,"values":{"reg64:x0":(a*t+b)&mask}}]} for t in held]
+            score=score_models(models,traces,held)
+            self.assertEqual(score["validated_models"],1)
+            traces[-1]["samples"][0]["values"]["reg64:x0"]^=1<<(bits-1)
+            self.assertEqual(score_models(models,traces,held)["false_models"],1)
+
     def test_nonunique_maps_and_heldout_values(self):
         # Values occupy cosets; original multipliers need not be identifiable.
         for shift in (0, 1, 2, 8, 20, 30):
@@ -56,6 +71,49 @@ class AffineCongruence(unittest.TestCase):
 class RegionReconstruction(unittest.TestCase):
     def setUp(self):
         self.export = json.loads((ROOT/"tests/fixtures/pcode_region_loop.json").read_text())
+
+    def test_integer_oracle_known_signed_boundaries(self):
+        zero={"x":0,"arg":0,"memory":[0,0,0],"mode":0}
+        self.assertEqual(effects(oracle("integers","region_pipeline",zero)),
+                         {"return_value":0xfedcba94,"final_memory":[0,0,0],"events":[0xfedcba94]})
+        self.assertEqual(effects(oracle("integers","region_outputs",zero)),
+                         {"return_value":1,"final_memory":[9,0,0],"events":[0]})
+        edge={"x":255,"arg":65535,"memory":[0,0,0],"mode":0}
+        result=oracle("integers","region_outputs",edge)
+        self.assertEqual(effects(result),{"return_value":1,"final_memory":[65544,255,0xffffffff],"events":[255]})
+        self.assertEqual(result["targets"]["extended.u64"],2**64-1)
+
+    def test_typed_boolean_literals_and_numeric_byte_controls(self):
+        compiler=shutil.which("cc")
+        if not compiler:self.skipTest("C compiler unavailable")
+        sources=[];checks=[]
+        for boolean in (False,True):
+            for value in (0,1,2,255):
+                name=f"boolean_probe_{int(boolean)}_{value}"
+                d={"schema_version":6,"boolean_constants":"high-type-nonzero-is-true","memory_model":"ordered-u32-regions-v1",
+                   "status":"decompiled","operation_order":"basic-block-live-order","function":name,"arity":3,"entry_block":0,
+                   "parameters":[{"kind":k,"read_only":False} for k in ("uint32-buffer","uint32","uint32")],
+                   "address_space":{"id":1,"pointer_bytes":8,"addressable_unit_bytes":1},
+                   "nodes":[{"size":4,"input":True,"parameter":1},{"size":4,"constant":"0"},{"size":1,"boolean_type":True},
+                            {"size":1,"constant":str(value),"boolean_type":boolean},{"size":1},{"size":4},{"size":8,"constant":"0"}],
+                   "operations":[{"opcode":"INT_NOTEQUAL","inputs":[0,1],"output":2,"block":0},
+                                 {"opcode":"INT_EQUAL","inputs":[2,3],"output":4,"block":0},
+                                 {"opcode":"INT_ZEXT","inputs":[4],"output":5,"block":0},
+                                 {"opcode":"RETURN","inputs":[6,5],"block":0}],
+                   "blocks":[{"id":0,"operations":[0,1,2,3],"incoming":[],"outgoing":[]}]}
+                sources.append(reconstruct(d))
+                expected=int(value!=0) if boolean else value
+                checks.append(f"if({name}(p,x,0)!=((x!=0)=={expected}u))return 1;")
+                bad=copy.deepcopy(d);bad["nodes"][3]["boolean_type"]="true"
+                with self.assertRaises(Unsupported):reconstruct(bad)
+                bad=copy.deepcopy(d);bad["nodes"][1]["boolean_type"]=True
+                with self.assertRaises(Unsupported):reconstruct(bad)
+        with tempfile.TemporaryDirectory() as temporary:
+            source=Path(temporary)/"bool.c";binary=Path(temporary)/"bool"
+            source.write_text("\n".join(sources)+"\nint main(void){uint32_t p[3]={0};for(uint32_t x=0;x<256;x++){"+"".join(checks)+"}return 0;}\n")
+            p=subprocess.run([compiler,"-std=c11","-O2",source,"-o",binary],capture_output=True,text=True)
+            self.assertEqual(p.returncode,0,p.stderr)
+            self.assertEqual(subprocess.run([binary]).returncode,0)
 
     def test_rejects_unknown_effects_and_invalid_cfg(self):
         variants = []

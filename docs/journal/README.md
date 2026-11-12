@@ -49,6 +49,7 @@ causal explanations and estimates.
 | [2026-11-10 — private regions](2026-11-10-private-regions.md) | Contextual composition prototype | Private assignment regions inside richer functions; actual emitted-frame validation, event controls and explicit unchanged boundaries |
 | [2026-11-10 — private declarations](2026-11-10-private-declarations.md) | Declaration and scope extension | Declaration identities, unchanged reference bindings, nested shadowing and emitted-C compiler validation |
 | [2026-11-10 — private-region observers](2026-11-10-private-region-observers.md) | Measure before expanding coverage | Call/loop reconstruction, held-out value fitting, stack sampling, controls and matched costs on fixed 0.6.1 artifacts |
+| [2026-11-10/12 — typed private integers](2026-11-10-typed-integers.md) | Integer semantics, failed solver prototypes and observer corrections | Actual emitted-C composition, defined-input conditions, mixed-width compiler tests and an explicitly labeled measurement follow-up |
 
 Future work is tracked in [the backlog](../backlog.md). External issue numbers
 and review outcomes belong here only after those events actually occur.

@@ -18,7 +18,7 @@ void usage() {
     "       [--strategy affine|xor|identity|independent|planned|limbs16|limbs8|limbs4] [--coverage 0..100] [--objective balanced|runtime|size]\n"
     "       [--algorithm popcount8-serial|popcount8-swar]\n"
     "       [--control-flow none|split-scale] (experimental)\n"
-    "       [--scope functions|private-regions] (private-regions: affine/identity assignments only)\n"
+    "       [--scope functions|private-regions] (private-regions: affine/identity integer declarations and assignments)\n"
     "       csrd verify original.c candidate.c [--function NAME] [--report report.json] [--timeout-ms UINT]\n"
     "       csrd analyze input.c [--function NAME] [--report report.json] [--scope functions|private-regions]\n"
     "Transformations are checked against reparsed emitted C before output is written.\n";
@@ -54,6 +54,20 @@ llvm::json::Object proof(const csrd::Verification &v) {
     llvm::json::Object values;
     for (const auto &entry : v.localValues) values[entry.first] = entry.second;
     result["local_countermodel"] = std::move(values);
+  }
+  if (v.integerComposition) {
+    llvm::json::Array points;
+    for(const auto &point:v.integerComposition->checkpoints) {
+      llvm::json::Object mapping;
+      for(const auto &[id,name]:point.encoded) mapping[id]=name;
+      points.push_back(llvm::json::Object{{"source_statement_end",point.sourceEnd},
+        {"candidate_statement_end",point.candidateEnd},{"encoded_values",std::move(mapping)}});
+    }
+    result["integer_composition"]=llvm::json::Object{
+      {"invariant","temporary_u64 = zero_extend(a * source_bits + b modulo 2^source_width)"},
+      {"multiplier_decimal",std::to_string(v.integerComposition->multiplier)},
+      {"offset_decimal",std::to_string(v.integerComposition->offset)},
+      {"checkpoints",std::move(points)}};
   }
   if (v.composition) {
     llvm::json::Array graph, declarations, points;
@@ -97,12 +111,27 @@ llvm::json::Object proof(const csrd::Verification &v) {
     result["obligation_sha256"] = csrd::sha256(v.obligation);
     result["smtlib"] = v.obligation;
   }
+  if(!v.definedInputs.empty()) {
+    result["defined_input_condition"]=v.definedInputs;
+    result["defined_domain_smtlib"]=v.definedDomainObligation;
+    result["defined_domain_sha256"]=csrd::sha256(v.definedDomainObligation);
+    result["equivalence_scope"]="defined original inputs under declared C integer implementation model";
+  }
   if (v.status == "counterexample") {
     llvm::json::Array inputs;
     for (auto x : v.inputs) inputs.push_back(x);
     result["inputs"] = std::move(inputs);
     result["original_output"] = v.originalOutput;
     result["candidate_output"] = v.candidateOutput;
+    if(!v.integerInputs.empty() || !v.integerOutputs.empty()) {
+      llvm::json::Array values,outputs;
+      for(const auto &x:v.integerInputs) values.push_back(llvm::json::Object{{"id",x.id},{"raw_bits_decimal",x.bits},
+        {"width",x.type.bits},{"signed",x.type.isSigned},{"c_type",x.type.spelling}});
+      for(const auto &x:v.integerOutputs) outputs.push_back(llvm::json::Object{{"id",x.id},{"original_bits_decimal",x.original},
+        {"candidate_bits_decimal",x.candidate},{"width",x.type.bits},{"signed",x.type.isSigned},{"c_type",x.type.spelling}});
+      result["integer_inputs"]=std::move(values);result["integer_outputs"]=std::move(outputs);
+      result["candidate_arithmetic_defined"]=v.candidateDefined;
+    }
     if (!v.pointerBases.empty()) {
       llvm::json::Object bases;
       llvm::json::Array cells;
@@ -130,7 +159,7 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
     for (const auto &entry : d.metrics.operators) operators[entry.first] = entry.second;
     f["parameter_count"] = d.parameterCount;
     if (!d.privateFrames.empty() || result.options.scope == "private-regions") {
-      f["semantic_model"] = "private-u32-frame-c11-v2";
+      f["semantic_model"] = "private-integer-frame-c11-v3";
       f["context_bindings_verified"] = d.privateContextVerified;
       llvm::json::Array frames, boundaries;
       for (const auto &frame : d.privateFrames) {
@@ -140,15 +169,18 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
         for (const auto &id : frame.declarations) declarations.push_back(id);
         for (const auto &[id, b] : frame.bindings)
           bindings.push_back(llvm::json::Object{{"id", id}, {"name", b.name}, {"source_declaration", b.declaration},
-            {"candidate_declaration", b.candidateDeclaration}, {"register_storage", b.registerStorage}});
+            {"candidate_declaration", b.candidateDeclaration}, {"register_storage", b.registerStorage},
+            {"c_type",b.type.spelling},{"value_bits",b.type.bits},{"signed",b.type.isSigned},{"boolean",b.type.isBool}});
         frames.push_back(llvm::json::Object{{"line", frame.line}, {"column", frame.column},
           {"bindings", std::move(bindings)}, {"declared_objects", std::move(declarations)},
           {"input_ids", std::move(inputIds)}, {"output_ids", std::move(outputIds)},
+          {"long_bits",frame.longBits},{"plain_char_signed",frame.plainCharSigned},
           {"source_scope_begin", frame.parentBegin}, {"candidate_scope_begin", frame.candidateParentBegin},
           {"source_begin", frame.begin}, {"source_end", frame.end}, {"candidate_begin", frame.candidateBegin},
           {"candidate_end", frame.candidateEnd}, {"inputs", std::move(inputs)}, {"outputs", std::move(outputs)},
           {"operations", frame.original->operations}, {"operations_without_decoding", frame.emission.encodedOperations},
           {"boundary_conversions", frame.emission.boundaryConversions}, {"temporaries", frame.emission.temporaries},
+          {"internal_conversions",frame.emission.internalConversions},{"ordinary_intermediates",frame.emission.ordinaryIntermediates},
           {"original_fragment_sha256", csrd::sha256(frame.originalText)},
           {"emitted_fragment_sha256", csrd::sha256(frame.emission.body)}, {"proof", proof(frame.verification)}});
       }

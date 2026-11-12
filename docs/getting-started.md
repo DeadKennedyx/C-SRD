@@ -49,6 +49,8 @@ build/csrd transform tests/fixtures/private_regions.c -o build/private-regions.c
   --scope private-regions --seed 42 --report build/private-regions.json
 build/csrd transform tests/fixtures/private_declarations.c -o build/private-declarations.c \
   --scope private-regions --seed 42 --report build/private-declarations.json
+build/csrd transform tests/fixtures/private_integers.c -o build/private-integers.c \
+  --scope private-regions --seed 42 --report build/private-integers.json
 ```
 
 For `return 3u*(x+y)+11u`, affine mode encodes parameters, performs the three
@@ -102,9 +104,11 @@ prefix is reported; aliases are allowed and caller memory remains ordinary.
 These are caller preconditions, not inserted bounds checks. Return and whole
 memory equivalence are checked against actual emitted C.
 
-The opt-in [private-region contract](private-regions.md) admits contiguous
-unsigned assignments and single initialized scalar declarations inside richer
-functions, including shadowed locals. Unsupported declarations, calls, memory
+The opt-in [typed private-region contract](private-integers.md) admits contiguous
+standard-integer assignments and single initialized scalar declarations inside richer
+functions, including shadowed locals. Selected signed/wider arithmetic, casts,
+promotions, bitwise operations and constant shifts use an explicit integer model
+and defined-input conditions. Unsupported declarations, calls, memory
 operations, branches and loops remain unchanged boundaries. All written
 private scalars are checked at region exit, with declaration scope and untouched
 reference bindings checked after rewriting. A region proof does not certify the

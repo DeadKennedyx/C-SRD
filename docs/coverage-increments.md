@@ -2,7 +2,9 @@
 
 Recorded 2026-11-10 after the user authorized the complete sequence. This refines
 [the broader C roadmap](broader-c-support.md); it does not mark its proposed
-capabilities implemented. The current baseline is commit `ac88803`.
+capabilities implemented. The initial baseline was commit `ac88803`; the latest
+scoped checkpoint is [0.7 typed private integers](../reports/private-integers.md),
+recorded 2026-11-12.
 
 The objective is useful, validated transformation support across every category
 below, accompanied by actual protection measurements. Support and protection
@@ -14,8 +16,8 @@ unsupported observer outcomes are measurement gaps, not protection wins.
 | --- | --- | --- |
 | 1 | Buffer reconstruction, resource costs and runtime observation | Development checkpoint complete: [112/112 reconstructed artifacts and complete runtime recovery](../reports/buffer-reconstruction.md); no established protection advantage; calibration/application-cost followups remain explicit |
 | 2 | Effect-aware selection and composition of regions in larger functions | [Declarations and shadowed locals validated](../reports/private-declarations.md); [call/loop observer pilot measured](../reports/private-region-observers.md): 192/192 tested reconstructions, 134/136 original versus 132/136 affine runtime target cases, stack/resource/application costs; wider profiles and stronger runtime observers remain follow-ups, no broad protection advantage established |
-| 3 | Broader integer types, promotions and operators | Isolated unfinished prototype; next validation and measurement gate, not released support; signed/platform-sized interfaces enable later I/O work |
-| 4 | Byte/string buffers, runtime indexes and richer pointers | Proposed; only fixed-index uint32 buffers exist |
+| 3 | Broader integer types, promotions and operators | [Scoped private-frame checkpoint complete](../reports/private-integers.md): standard integer types through 64 bits, explicit signed model, 288 replayed queries, 96/96 tested reconstructions, runtime and cost comparison; affine protection advantage not established; general multiplication/division and other data-model execution matrices remain outside this slice |
+| 4 | Byte/string buffers, runtime indexes and richer pointers | Next scoped prototype; only fixed-index uint32 buffers exist; specify byte memory, aliasing, bounds and observer coverage before implementation |
 | 5 | Known direct calls and explicit effect contracts | Proposed |
 | 6 | Structs/unions, globals and persistent local state | Proposed; each admitted layout/state pattern needs a contract |
 | 7 | Richer branches, exits and input-dependent loops | Proposed; existing pure branches/fixed unrolling are only a starting point |

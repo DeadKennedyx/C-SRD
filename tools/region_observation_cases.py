@@ -2,7 +2,7 @@
 import random
 
 MASK = 2**32 - 1
-FIXTURES = {"assignments": "private_regions.c", "declarations": "private_declarations.c"}
+FIXTURES = {"assignments": "private_regions.c", "declarations": "private_declarations.c", "integers":"private_integers.c"}
 FUNCTIONS = {"region_pipeline": "p,u,s", "region_outputs": "p,u,u"}
 
 
@@ -25,7 +25,39 @@ def oracle(fixture, function, vector):
             return u(3 * value + memory[1] + 1)
         memory[1] = u(memory[1] - value)
         return u((value >> 3) ^ memory[1])
-    if function == "region_outputs":
+    if fixture=="integers":
+        def signed(value,bits):
+            value &= (1<<bits)-1
+            return value-(1<<bits) if value & (1<<(bits-1)) else value
+        def target(name,value,bits): targets[name+".u"+str(bits)]=value & ((1<<bits)-1)
+        if function=="region_outputs":
+            byte=x&255;half=arg&65535;flag=int(byte+half!=0)
+            small=signed(byte,8);ordered=int(small<half);mixed=u(small+x)
+            extended=signed(half,16);packed=(((mixed<<32)|half)+9)&((1<<64)-1)
+            result=u((packed>>32)+(extended>>3)+flag+ordered)
+            for name,value,bits in [("byte",byte,8),("half",half,16),("flag",flag,1),("small",small,32),
+                                    ("ordered",ordered,32),("mixed",mixed,32),("extended",extended,64),("packed",packed,64),("result",result,32)]:
+                target(name,value,bits)
+            event(result);memory[0]=u(packed);memory[1]=result;memory[2]=u(extended)
+            result=int(flag==ordered)
+        else:
+            if not -1<=arg<=16: raise ValueError("oracle loop-count domain is -1..16")
+            y=memory[0];byte=x&255;small=signed(y,8);half=signed(x>>8,16)
+            delta=byte+small+half;wide=3*delta-5;adjusted=wide+4294967297
+            packed=(7*((x<<32)|y)+0xfedcba9876543210)&((1<<64)-1)
+            negative=int(delta<0);magnitude=abs(delta);result=u((packed>>32)+adjusted+magnitude)
+            for name,value,bits in [("byte",byte,8),("small",small,8),("half",half,16),("delta",delta,32),("wide",wide,64),
+                                    ("adjusted",adjusted,64),("packed",packed,64),("negative",negative,1),("magnitude",magnitude,32),("result",result,32)]:
+                target(name,value,bits)
+            event(result)
+            for iteration in range(max(0,arg)):
+                y=next_value(result);step=signed(y,8);blended=step+magnitude
+                packed=(3*(packed+(y<<17))+11)&((1<<64)-1)
+                shifted=blended>>2;result=u((packed>>32)+shifted)
+                for name,value,bits in [("step",step,32),("blended",blended,64),("packed",packed,64),("shifted",shifted,64),("result",result,32)]:
+                    target(f"loop{iteration}."+name,value,bits)
+                memory[0]=result;memory[2]=u(packed);event(y)
+    elif function == "region_outputs":
         y = arg
         pending = 17 if fixture == "declarations" else u(17 + x)
         mix = u(17 + x)
