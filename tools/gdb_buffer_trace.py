@@ -36,6 +36,16 @@ def collect(config):
     if "little endian" not in gdb.execute("show endian", to_string=True):
         raise RuntimeError("observer requires little-endian target")
     memory_address = int(gdb.parse_and_eval("(unsigned long)&csrd_observation_memory"))
+    globals_=[]
+    for name,size in config.get("persistent_objects",{}).items():
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*",name) or size not in (4,8):raise ValueError("invalid persistent observation extent")
+        globals_.append((name,int(gdb.parse_and_eval("(unsigned long)&"+name)),size))
+    def global_words():
+        words={}
+        for name,at,size in globals_:
+            raw=gdb.selected_inferior().read_memory(at,size).tobytes()
+            words.update({f"global:{name}:{i//4}":int.from_bytes(raw[i:i+4],"little") for i in range(0,size,4)})
+        return words
     entry = int(gdb.parse_and_eval("$pc"))
     call_scope = config.get("call_scope",False)
     function_bytes = config.get("function_bytes",0)
@@ -55,6 +65,7 @@ def collect(config):
         values = {"reg:" + name: int(gdb.parse_and_eval("$" + name)) & 0xffffffff for name in registers}
         memory = gdb.selected_inferior().read_memory(memory_address, 64*4).tobytes()
         values.update({f"caller:{i}": int.from_bytes(memory[4*i:4*i+4], "little") for i in range(64)})
+        values.update(global_words())
         if config.get("sample_bytes"):
             values.update({f"caller-byte:{i}":value for i,value in enumerate(memory)})
         try:
@@ -77,6 +88,9 @@ def collect(config):
         memory = gdb.selected_inferior().read_memory(memory_address, 64*4).tobytes()
         result["final_memory"] = [int.from_bytes(memory[4*i:4*i+4], "little") for i in range(64)]
         result["return_value"] = int(gdb.parse_and_eval("$x0" if "aarch64" in architecture else "$rax")) & 0xffffffff
+        if globals_:
+            result["persistent_state"]=list(global_words().values())
+            result["scope"]+="; declared persistent globals sampled before every instruction and at return"
         if call_scope:
             def word_symbol(name):
                 at=int(gdb.parse_and_eval("(unsigned long)&"+name))

@@ -84,7 +84,7 @@ def prepare(args, root, report, command):
         analysis = json.loads(analysis_path.read_text())
         functions = [f for f in analysis["functions"] if not args.function or f["function"] in args.function]
         if not functions: continue
-        if any(f["status"] != "supported" or f.get("semantic_model") not in ("buffers-u32-c11-v1","buffers-byte-c11-v2","ordered-calls-byte-c11-v1") for f in functions):
+        if any(f["status"] != "supported" or f.get("semantic_model") not in ("buffers-u32-c11-v1","buffers-byte-c11-v2","ordered-calls-byte-c11-v1","records-state-byte-c11-v1") for f in functions):
             raise ValueError("selected source functions must use the admitted buffer contract")
         if seen_functions & {f["function"] for f in functions}: raise ValueError("duplicate selected function symbol")
         seen_functions.update(f["function"] for f in functions)
@@ -105,7 +105,7 @@ def prepare(args, root, report, command):
             folder = directory / profile["id"]; folder.mkdir()
             compiler = compilers[profile["compiler"]]
             flags = ["-std=c11", "-pedantic-errors", "-Wall", "-Wextra", "-Werror", "-" + profile["optimization"],
-                     *flags_for(profile, profile["compiler"]), "-fPIC"]
+                     *flags_for(profile, profile["compiler"]), "-fPIC", "-I", str(source.parent)]
             variants = []
             for variant, source_path in sources.items():
                 frozen, binary = folder / f"{variant}.i", folder / f"{variant}.so"
@@ -126,9 +126,15 @@ def prepare(args, root, report, command):
                 params = [{"kind": p["kind"], "read_only": p.get("read_only", False)} for p in function["parameters"]]
                 for public, parameter in zip(params,function["parameters"]):
                     if parameter.get("element_bits")==8: public["element_signed"]=parameter["element_signed"]
+                    if "record" in parameter: public["record"]=parameter["record"]
                 group = {"function": function["function"], "profile": profile["id"], "parameters": params,
                          "reference": str(folder / "original.i"), "reference_sha256": file_hash(folder / "original.i"),
                          "variants": variants}
+                if function["semantic_model"]=="records-state-byte-c11-v1":
+                    globals_=[{k:g[k] for k in ("name","kind","record") if k in g} for g in function["persistent_objects"]]
+                    interface=folder/f"{function['function']}-public-abi.json"
+                    write_json(interface,{"parameters":params,"persistent_objects":globals_})
+                    group.update(public_abi=str(interface),public_abi_sha256=file_hash(interface),persistent_objects=globals_)
                 report["groups"].append(group)
     if not report["groups"] or (args.function and seen_functions != set(args.function)):
         raise ValueError("no groups or requested function missing")
@@ -159,10 +165,12 @@ def observe(args, root, report, command, csrd, headless):
             if p["kind"]=="uint32-buffer": return "c" if p["read_only"] else "p"
             code={"unsigned-char-buffer":"b","signed-char-buffer":"s","char-buffer":"h" if p["element_signed"] else "j"}[p["kind"]]
             return code.upper() if p["read_only"] else code
-        abi = ",".join(public_type(p) for p in group["parameters"])
+        abi = "@"+group["public_abi"] if "public_abi" in group else ",".join(public_type(p) for p in group["parameters"])
         print(f"{attempt+1}/{len(schedule)} {group['function']} {group['profile']} {variant['variant']}", flush=True)
         try:
             if file_hash(variant["binary"]) != variant["binary_sha256"]: raise ValueError("binary changed")
+            if "public_abi" in group and file_hash(group["public_abi"])!=group["public_abi_sha256"]:
+                raise ValueError("public interface changed")
             item["decompiler_resources"] = measure(
                 [headless, project, "buffer", "-import", variant["binary"], "-deleteProject", "-max-cpu", "2",
                  "-analysisTimeoutPerFile", "30", "-scriptPath", ROOT / "tools/ghidra", "-postScript",
@@ -178,6 +186,8 @@ def observe(args, root, report, command, csrd, headless):
             if export["status"] != "decompiled": item["status"] = export["status"]; continue
             if export["parameters"] != group["parameters"] or export["function"] != group["function"]:
                 raise ValueError("export does not match supplied ABI")
+            if "public_abi" in group and [{k:v for k,v in g.items() if k!="address"} for g in export.get("persistent_objects",[])]!=group["persistent_objects"]:
+                raise ValueError("export does not match supplied persistent object interface")
             item["adapter_resources"] = measure(
                 [sys.executable, ROOT / "tools/pcode_memory.py", "--export", exported, "--output-dir", directory / "adapter"],
                 directory / "adapter-resources", wall_seconds=30)
@@ -258,6 +268,8 @@ def run(args, root):
         csrd, headless = prepare(args, root, report, command)
         observe(args, root, report, command, csrd, headless)
         for group in report["groups"]:
+            if "public_abi" in group and file_hash(group["public_abi"])!=group["public_abi_sha256"]:
+                raise ValueError("public object interface changed")
             if file_hash(group["reference"]) != group["reference_sha256"]: raise ValueError("reference changed")
             for v in group["variants"]:
                 if file_hash(v["binary"]) != v["binary_sha256"] or file_hash(v["source"]) != v["source_sha256"]:

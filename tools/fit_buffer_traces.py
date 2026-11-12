@@ -11,7 +11,7 @@ from observe_runtime import fit_affine, locations, score_models
 
 
 def location_scope(location):
-    return "public-return" if ":boundary:return" in location else "caller-memory" if ":caller:" in location or ":caller-byte:" in location else "register" if ":reg:" in location else "stack"
+    return "public-return" if ":boundary:return" in location else "persistent-memory" if ":global:" in location else "caller-memory" if ":caller:" in location or ":caller-byte:" in location else "register" if ":reg:" in location else "stack"
 
 
 def run(config):
@@ -46,6 +46,7 @@ def run(config):
         score = score_models(models, test, [values[i] for i in heldout])
         controls = score_models(negative, test, [values[i] for i in heldout])
         scopes=("register", "stack", "caller-memory")+(("public-return",) if complete else ())
+        if any(":global:" in key for trace in traces for key in locations(trace)):scopes+=("persistent-memory",)
         by_scope = {key: {"validated_locations": 0, "false_locations": 0, "inconclusive_locations": 0} for key in scopes}
         for model in score["models"]:
             label = "validated_locations" if model["correct"] == model["total"] else (

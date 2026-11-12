@@ -15,6 +15,7 @@ struct Expr {
                     Greater, GreaterEqual, Select, Table, Load, ByteCast } kind;
   uint32_t value = 0; // Constant, scale, load index bound, or ByteCast signedness.
   std::string name;
+  std::string member; // Named record field for a Load; never a C text fragment.
   std::unique_ptr<Expr> left, right, third;
   std::vector<uint32_t> table;
   explicit Expr(Kind k) : kind(k) {}
@@ -22,6 +23,7 @@ struct Expr {
 struct Statement {
   enum class Kind { Declare, Assign, Return, If, Repeat, Store, Call } kind;
   std::string name;
+  std::string member; // Named record field for a Store.
   std::unique_ptr<Expr> expression;
   std::vector<Statement> thenBranch, elseBranch;
   unsigned repetitions = 0;
@@ -45,6 +47,11 @@ struct Region {
     bool elementSigned = false;
     std::string elementType = "uint32";
     unsigned minimumElements = 0, loads = 0, stores = 0;
+    bool persistent = false, isUnion = false;
+    std::string recordTag;
+    unsigned recordBytes = 0, recordAlignment = 0;
+    std::map<std::string, unsigned> fields; // Byte offsets from Clang's layout.
+    unsigned stride() const { return recordBytes ? recordBytes : elementBits / 8; }
   };
   std::string name;
   std::vector<std::string> parameters;

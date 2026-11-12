@@ -70,6 +70,22 @@ void require(bool value, const std::string &message) { if (!value) throw std::ru
 }
 int main() {
   try {
+    {
+      // Small-index enumeration must prove its domain even when both sides
+      // carry the same bad IR hint; otherwise it could prove a shared clamp.
+      auto memoryRegion = [](bool bounded) {
+        Region r; r.name = "field"; r.parameters = {"p", "x"}; r.extendedMemory = true;
+        Region::Buffer b; b.recordTag = "R"; b.recordBytes = b.recordAlignment = 4;
+        b.fields.emplace("a",0); b.minimumElements = 1; r.buffers.emplace("p",b);
+        auto e = std::make_unique<Expr>(K::Load); e->name = "p"; e->member = "a";
+        e->left = bounded ? binary(K::BitAnd,referenceExpr("x"),num(0)) : referenceExpr("x");
+        r.statements.emplace_back(Statement::Kind::Return,"",std::move(e));return r;
+      };
+      require(verifyMemory(memoryRegion(false),memoryRegion(false),5000).status == "counterexample",
+              "unproved index bound silently clamped both programs");
+      require(verifyMemory(memoryRegion(true),memoryRegion(true),5000).status == "proved-under-model",
+              "valid enumerated record index rejected");
+    }
     const auto source = original(); const auto graph = lower(source);
     const auto witness = emitLimbs16(graph, 0, {}).limbWitness;
     auto run = [&](const Region &r, const Graph &g, const LimbWitness &w, unsigned timeout = 5000) {

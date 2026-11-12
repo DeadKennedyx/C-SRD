@@ -24,13 +24,15 @@ FILES=("tools/replay_buffer_observers.py","tools/pcode_memory.py","tools/pcode_m
 
 def run(args,root):
     path=Path(args.reconstruction_report).resolve();previous=json.loads(path.read_text())
-    if previous["status"] not in ("completed","completed-with-gaps"):raise ValueError("requires finished reconstruction report")
+    if previous["status"] not in ("completed","completed-with-gaps") and not (previous["status"]=="failed" and "outcomes" in previous):
+        raise ValueError("requires finished reconstruction/grading report")
     tool=executable(args.csrd)
     contracts=previous.get("call_contracts")
     if contracts and file_hash(contracts["path"])!=contracts["sha256"]:raise ValueError("call contracts changed")
     contract_path=contracts["path"] if contracts else None
     report={"schema_version":1,"status":"running","environment":environment(),"commands":[],"records":[],
         "input_report":str(path),"input_sha256":file_hash(path),"csrd":tool,"csrd_sha256":file_hash(tool),
+        "prior_status":previous["status"],"prior_outcomes":previous["outcomes"],
         "adapter_hashes":{f:file_hash(ROOT/f) for f in FILES},"repetitions":args.repetitions,
         "scope":"same saved binary-only exports; new adapter costs; prior Ghidra costs are not rerun; no proof of binary lifting"}
     command=Runner(report)
@@ -97,6 +99,8 @@ def run(args,root):
             if file_hash(row["export_path"])!=row["export_sha256"]:raise ValueError("export changed")
             if "recovered_path" in row and file_hash(row["recovered_path"])!=row["recovered_sha256"]:raise ValueError("answer changed")
         for group in previous["groups"]:
+            if "public_abi" in group and file_hash(group["public_abi"])!=group["public_abi_sha256"]:
+                raise ValueError("public object interface changed")
             if file_hash(group["reference"])!=group["reference_sha256"]:raise ValueError("reference changed")
             for variant in group["variants"]:
                 if file_hash(variant["binary"])!=variant["binary_sha256"]:raise ValueError("observed binary changed")

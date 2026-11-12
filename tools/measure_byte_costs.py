@@ -14,6 +14,9 @@ from inspect_region_binaries import elf_functions
 
 
 def harness(function,parameters,corpus="byte"):
+    if corpus=="record":
+        from record_observation_cases import cost_driver
+        return cost_driver(function,parameters)
     from call_observation_cases import signature as call_signature, ENVIRONMENT, INITIAL_STATE
     byte_type,declaration=(call_signature if corpus=="call" else signature)(function,parameters)
     environment=("#define CSRD_RECORD_CALLS 0\n"+ENVIRONMENT.read_text()+"\n") if corpus=="call" else ""
@@ -61,6 +64,10 @@ def run(args,root):
     dependencies=("tools/inspect_region_binaries.py","tools/byte_observation_cases.py","tools/call_observation_cases.py")
     source_root=Path(__file__).resolve().parents[1]
     report["dependencies"]={p:file_hash(source_root/p) for p in dependencies}
+    if args.corpus=="record":
+        for p in ("tools/record_observation_cases.py","tests/fixtures/records.h"):
+            report["dependencies"][p]=file_hash(source_root/p)
+        report["scope"]+="; typed record storage and accumulating persistent state"
     if args.corpus=="call":
         from call_observation_cases import ENVIRONMENT
         report["environment_source_sha256"]=file_hash(ENVIRONMENT)
@@ -115,7 +122,7 @@ def run(args,root):
 
 if __name__=="__main__":
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("--reconstruction-report",required=True);p.add_argument("--output-dir",required=True)
-    p.add_argument("--corpus",choices=("byte","call"),default="byte")
+    p.add_argument("--corpus",choices=("byte","call","record"),default="byte")
     p.add_argument("--iterations",type=int,default=1000000);p.add_argument("--repetitions",type=int,default=7);args=p.parse_args()
     if args.iterations<1 or args.repetitions<3:p.error("positive iterations and at least three repetitions required")
     root=Path(args.output_dir).resolve();root.mkdir(parents=True,exist_ok=False)

@@ -194,19 +194,40 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
     }
     if (d.region) {
       const auto &region = *d.region;
-      f["semantic_model"] = region.orderedCalls ? "ordered-calls-byte-c11-v1" : region.buffers.empty() ? "pure-u32-c11-v2" :
+      const bool records = std::any_of(region.buffers.begin(), region.buffers.end(),
+        [](const auto &entry) { return entry.second.persistent || entry.second.recordBytes; });
+      f["semantic_model"] = records ? "records-state-byte-c11-v1" : region.orderedCalls ? "ordered-calls-byte-c11-v1" : region.buffers.empty() ? "pure-u32-c11-v2" :
         region.extendedMemory ? "buffers-byte-c11-v2" : "buffers-u32-c11-v1";
       if (!region.buffers.empty()) f["byte_order"] = region.littleEndian ? "little" : "big";
       llvm::json::Array parameters;
+      auto descriptor = [](const std::string &name, const csrd::Region::Buffer &buffer) {
+        llvm::json::Object item{{"name", name}, {"kind", buffer.elementType + "-buffer"},
+          {"element_bits", buffer.elementBits}, {"element_signed", buffer.elementSigned},
+          {"read_only", buffer.readOnly}, {"minimum_elements", buffer.minimumElements},
+          {"loads", buffer.loads}, {"stores", buffer.stores}};
+        if (buffer.recordBytes) {
+          llvm::json::Array fields;
+          for (const auto &[field, offset] : buffer.fields)
+            fields.push_back(llvm::json::Object{{"name", field}, {"byte_offset", offset}, {"kind", "uint32"}});
+          item["record"] = llvm::json::Object{{"tag", buffer.recordTag}, {"union", buffer.isUnion},
+            {"bytes", buffer.recordBytes}, {"alignment", buffer.recordAlignment}, {"fields", std::move(fields)}};
+        }
+        return item;
+      };
       for (const auto &name : region.parameters) {
         const auto buffer = region.buffers.find(name);
         if (buffer == region.buffers.end()) parameters.push_back(llvm::json::Object{{"name", name}, {"kind", "uint32"}});
-        else parameters.push_back(llvm::json::Object{{"name", name}, {"kind", buffer->second.elementType + "-buffer"},
-          {"element_bits", buffer->second.elementBits}, {"element_signed", buffer->second.elementSigned},
-          {"read_only", buffer->second.readOnly}, {"minimum_elements", buffer->second.minimumElements},
-          {"loads", buffer->second.loads}, {"stores", buffer->second.stores}});
+        else parameters.push_back(descriptor(name, buffer->second));
       }
       f["parameters"] = std::move(parameters);
+      if (records) {
+        llvm::json::Array globals;
+        for (const auto &[name, buffer] : region.buffers) if (buffer.persistent)
+          globals.push_back(descriptor(name, buffer));
+        f["persistent_objects"] = std::move(globals);
+        f["state_assumptions"] = "equal incoming global state; original declarations and initialization retained by transform; globals are distinct complete objects; record pointers designate complete records, scalar pointers may alias fields; initialized live prefixes, no concurrent/asynchronous access; no record padding";
+        f["observations_checked"] = "return, entire final shared byte memory and ordered call prefixes; persistent state participates in shared memory";
+      }
       if (region.orderedCalls) {
         llvm::json::Array calls;
         for (const auto &s : region.statements) if (s.kind == csrd::Statement::Kind::Call) {

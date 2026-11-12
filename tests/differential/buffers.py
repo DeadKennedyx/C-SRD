@@ -54,7 +54,7 @@ int main(void){{
 '''
 
 
-def run_fixture(args, source, names, driver_text, model, comparisons, metadata, *, transform_flags=()):
+def run_fixture(args, source, names, driver_text, model, comparisons, metadata, *, transform_flags=(), rename_symbols=()):
     catalog = ROOT / "benchmarks/matrix.json"
     profiles = json.loads(catalog.read_text())["profiles"]
     records, capabilities, transformations = [], [], []
@@ -100,7 +100,7 @@ def run_fixture(args, source, names, driver_text, model, comparisons, metadata, 
                     cell = directory / f"cell-{number}"; cell.mkdir()
                     commands = []
                     for label, path in (("original", source), ("candidate", variant)):
-                        cmd = [item["compiler"], *flags, *[f"-D{name}={label}_{name}" for name in names],
+                        cmd = [item["compiler"], *flags, "-I",str(source.parent), *[f"-D{name}={label}_{name}" for name in (*names,*rename_symbols)],
                                "-c", str(path), "-o", str(cell / f"{label}.o")]
                         execute(cmd); commands.append(cmd)
                     cmd = [item["compiler"], *flags, str(driver), str(cell / "original.o"),

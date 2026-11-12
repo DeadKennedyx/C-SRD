@@ -3,6 +3,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/Stmt.h"
+#include "clang/AST/RecordLayout.h"
 #include "clang/Basic/TargetInfo.h"
 #include <unordered_set>
 #include <unordered_map>
@@ -24,6 +25,7 @@ class Analyzer {
   std::unordered_map<const clang::ValueDecl *, std::vector<uint32_t>> arrays;
   std::unordered_map<std::string, uint32_t> loopBounds;
   std::unordered_set<const clang::ValueDecl *> pointers;
+  std::unordered_set<const clang::ValueDecl *> persistent;
   // Local pointers capture an offset into one original parameter. Their
   // offsets are scalar IR declarations, frozen when the pointer is initialized.
   std::unordered_map<const clang::ValueDecl *, std::string> pointerOrigins;
@@ -40,6 +42,53 @@ class Analyzer {
     return !t.hasQualifiers() && t->isAnyCharacterType() && ctx.getTypeSize(t) == 8 &&
            (ctx.hasSameType(t, ctx.CharTy) || ctx.hasSameType(t, ctx.SignedCharTy) ||
             ctx.hasSameType(t, ctx.UnsignedCharTy));
+  }
+  bool record(clang::QualType type, Region::Buffer &buffer, clang::SourceLocation loc) {
+    const auto *rt = type->getAs<clang::RecordType>();
+    const auto *decl = rt ? rt->getDecl()->getDefinition() : nullptr;
+    if (!decl || decl->getName().empty() || decl->hasAttrs() || !decl->getDeclContext()->isFileContext())
+      return fail(loc, "records require a complete named file-scope struct/union without attributes");
+    const auto &layout = ctx.getASTRecordLayout(decl);
+    unsigned count = 0;
+    for (const auto *field : decl->fields()) {
+      if (field->getName().empty() || field->isBitField() || field->hasAttrs() || !u32(field->getType()) || count >= 16)
+        return fail(loc, "records require 1..16 named, unqualified uint32_t fields; no bitfields, arrays or nested records");
+      const auto expected = decl->isUnion() ? 0u : count * 32u;
+      if (layout.getFieldOffset(count) != expected)
+        return fail(loc, "record layout contains unsupported padding or field alignment");
+      buffer.fields.emplace(field->getNameAsString(), expected / 8);
+      ++count;
+    }
+    if (!count || layout.getSize().getQuantity() != (decl->isUnion() ? 4 : count * 4) ||
+        layout.getAlignment().getQuantity() != 4)
+      return fail(loc, "records require padding-free uint32_t layouts with 4-byte alignment");
+    buffer.recordTag = decl->getNameAsString(); buffer.isUnion = decl->isUnion();
+    buffer.recordBytes = unsigned(layout.getSize().getQuantity()); buffer.recordAlignment = 4;
+    buffer.elementType = "record";
+    region.extendedMemory = true;
+    return true;
+  }
+  bool collectPersistent(const clang::Stmt *s) {
+    if (!s) return true;
+    if (const auto *ref = llvm::dyn_cast<clang::DeclRefExpr>(s)) {
+      const auto *v = llvm::dyn_cast<clang::VarDecl>(ref->getDecl());
+      if (v && v->hasGlobalStorage()) {
+        if (persistent.count(v)) return true;
+        if (!v->isFileVarDecl() || v->getTLSKind() != clang::VarDecl::TLS_None ||
+            v->getType().hasQualifiers() || v->getName().empty())
+          return fail(ref->getExprLoc(), "persistent objects require file-scope mutable uint32_t or admitted records; no local statics or TLS");
+        for (const auto *d : v->redecls()) if (d->hasAttrs())
+          return fail(ref->getExprLoc(), "persistent object attributes are unsupported");
+        Region::Buffer buffer; buffer.persistent = true; buffer.minimumElements = 1;
+        if (!u32(v->getType()) && !record(v->getType(), buffer, ref->getExprLoc())) return false;
+        const auto name = v->getNameAsString();
+        if (!names.insert(name).second) return fail(ref->getExprLoc(), "persistent object names cannot shadow parameters or locals");
+        region.buffers.emplace(name, std::move(buffer)); persistent.insert(v);
+        region.extendedMemory = true;
+      }
+    }
+    for (const auto *child : s->children()) if (!collectPersistent(child)) return false;
+    return true;
   }
   static std::unique_ptr<Expr> constant(uint32_t value) {
     auto e = std::make_unique<Expr>(Expr::Kind::Constant); e->value = value; return e;
@@ -90,15 +139,33 @@ class Analyzer {
     e = e->IgnoreParens();
     const clang::Expr *base = nullptr;
     auto index = constant(0);
-    if (const auto *subscript = llvm::dyn_cast<clang::ArraySubscriptExpr>(e)) {
+    std::string member, name;
+    if (const auto *field = llvm::dyn_cast<clang::MemberExpr>(e)) {
+      if (!u32(field->getType().getUnqualifiedType()) || field->getType().isVolatileQualified()) {
+        fail(e->getExprLoc(), "record access requires an ordinary uint32_t field"); return nullptr;
+      }
+      member = field->getMemberDecl()->getNameAsString();
+      if (field->isArrow()) base = field->getBase();
+      else {
+        const auto *object = field->getBase()->IgnoreParens();
+        if (const auto *ref = llvm::dyn_cast<clang::DeclRefExpr>(object)) {
+          if (persistent.count(ref->getDecl())) name = ref->getDecl()->getNameAsString();
+        } else if (const auto *subscript = llvm::dyn_cast<clang::ArraySubscriptExpr>(object)) {
+          base = subscript->getBase(); index = expression(subscript->getIdx());
+        } else if (const auto *deref = llvm::dyn_cast<clang::UnaryOperator>(object)) {
+          if (deref->getOpcode() == clang::UO_Deref) base = deref->getSubExpr();
+        }
+      }
+    } else if (const auto *ref = llvm::dyn_cast<clang::DeclRefExpr>(e)) {
+      if (persistent.count(ref->getDecl()) && u32(ref->getType())) name = ref->getDecl()->getNameAsString();
+    } else if (const auto *subscript = llvm::dyn_cast<clang::ArraySubscriptExpr>(e)) {
       base = subscript->getBase();
       index = expression(subscript->getIdx());
     } else if (const auto *unary = llvm::dyn_cast<clang::UnaryOperator>(e)) {
       if (unary->getOpcode() == clang::UO_Deref) base = unary->getSubExpr();
     }
-    std::string name;
-    if (!base) { fail(e->getExprLoc(), "memory access requires a buffer subscript or dereference"); return nullptr; }
-    auto offset = base ? pointerOffset(base, name) : nullptr;
+    if (!base && name.empty()) { fail(e->getExprLoc(), "memory access requires a buffer subscript, record field or file-scope object"); return nullptr; }
+    auto offset = base ? pointerOffset(base, name) : constant(0);
     if (!index || !offset) return nullptr;
     if (offset->kind != Expr::Kind::Constant || offset->value) {
       auto sum = std::make_unique<Expr>(Expr::Kind::Add);
@@ -109,13 +176,16 @@ class Analyzer {
       fail(e->getExprLoc(), "buffer index must be statically bounded in 0..255"); return nullptr;
     }
     auto &buffer = region.buffers.at(name);
+    if ((buffer.recordBytes && !buffer.fields.count(member)) || (!buffer.recordBytes && !member.empty())) {
+      fail(e->getExprLoc(), "whole-record loads/stores and unknown fields are unsupported"); return nullptr;
+    }
     if (write && buffer.readOnly) {
       fail(e->getExprLoc(), "cannot store through a const buffer parameter"); return nullptr;
     }
     buffer.minimumElements = std::max(buffer.minimumElements, unsigned(bound + 1));
     if (write) ++buffer.stores; else ++buffer.loads;
     auto out = std::make_unique<Expr>(Expr::Kind::Load);
-    out->name = name; out->value = bound;
+    out->name = name; out->value = bound; out->member = member;
     if (index->kind != Expr::Kind::Constant) { out->left = std::move(index); region.extendedMemory = true; }
     if (bound >= 16) region.extendedMemory = true;
     return out;
@@ -218,6 +288,7 @@ class Analyzer {
       auto out = std::make_unique<Expr>(Expr::Kind::Table);
       out->table = values; out->left = std::move(index); ++region.operations; return out;
     }
+    if (llvm::isa<clang::MemberExpr>(e) && !region.buffers.empty()) return access(e);
     if (auto *unary = llvm::dyn_cast<clang::UnaryOperator>(e)) {
       if (!region.buffers.empty()) {
         if (unary->getOpcode() == clang::UO_Deref) return access(unary);
@@ -250,6 +321,7 @@ class Analyzer {
       return out;
     }
     if (auto *ref = llvm::dyn_cast<clang::DeclRefExpr>(e)) {
+      if (persistent.count(ref->getDecl())) return access(ref);
       if (!u32(ref->getType()) || !initialized.count(ref->getDecl())) {
         fail(e->getExprLoc(), "reference must read an initialized local uint32_t object or parameter"); return nullptr;
       }
@@ -463,9 +535,11 @@ class Analyzer {
       if (nested) return fail(s->getBeginLoc(), "declarations inside control-flow bodies are unsupported");
       if (!d->isSingleDecl()) return fail(s->getBeginLoc(), "use a single initialized variable per declaration");
       auto *v = llvm::dyn_cast<clang::VarDecl>(d->getSingleDecl());
+      if (v && region.buffers.count(v->getNameAsString()) && region.buffers.at(v->getNameAsString()).persistent)
+        return fail(v->getLocation(), "local declarations cannot shadow referenced persistent objects");
       if (v && v->getType()->isPointerType() && !region.buffers.empty()) {
         const auto type = v->getType(), element = type->getPointeeType();
-        if (type.hasQualifiers() || (!u32(element.getUnqualifiedType()) && !byte(element.getUnqualifiedType())) ||
+        if (type.hasQualifiers() || (!u32(element.getUnqualifiedType()) && !byte(element.getUnqualifiedType()) && !element->isRecordType()) ||
             (element.hasQualifiers() && element.getQualifiers() != clang::Qualifiers::fromCVRMask(clang::Qualifiers::Const)) ||
             !v->hasLocalStorage() || v->getStorageClass() != clang::SC_None || v->hasAttrs() || !v->hasInit())
           return fail(v->getLocation(), "local pointers require a simple initialized automatic buffer view");
@@ -523,15 +597,15 @@ class Analyzer {
     }
     if (auto *a = llvm::dyn_cast<clang::BinaryOperator>(s)) {
       if (a->getOpcode() != clang::BO_Assign) return fail(a->getExprLoc(), "only simple assignment statements are supported");
-      if (!region.buffers.empty() && !llvm::isa<clang::DeclRefExpr>(a->getLHS()->IgnoreParens())) {
+      auto *ref = llvm::dyn_cast<clang::DeclRefExpr>(a->getLHS()->IgnoreParens());
+      if (!region.buffers.empty() && (!ref || persistent.count(ref->getDecl()))) {
         auto location = access(a->getLHS(), true);
         auto value = expression(a->getRHS());
         if (!location || !value) return false;
         Statement store(Statement::Kind::Store, location->name, std::move(value));
-        store.index = location->value; store.dynamicIndex = std::move(location->left);
+        store.index = location->value; store.dynamicIndex = std::move(location->left); store.member = location->member;
         output.push_back(std::move(store)); return true;
       }
-      auto *ref = llvm::dyn_cast<clang::DeclRefExpr>(a->getLHS()->IgnoreParens());
       if (!ref || !u32(ref->getType()) || !initialized.count(ref->getDecl()))
         return fail(a->getExprLoc(), "assignment must target an initialized local uint32_t object or parameter");
       if (loopIndices.count(ref->getDecl())) return fail(a->getExprLoc(), "loop indices cannot be modified in the body");
@@ -578,16 +652,18 @@ public:
       if (p->getType()->isPointerType()) {
         const auto element = p->getType()->getPointeeType();
         if (ctx.getTypeSize(ctx.CharTy) != 8 || p->getType().hasQualifiers() ||
-            (!u32(element.getUnqualifiedType()) && !byte(element.getUnqualifiedType())) ||
+            (!u32(element.getUnqualifiedType()) && !byte(element.getUnqualifiedType()) && !element->isRecordType()) ||
             (element.hasQualifiers() && element.getQualifiers() != clang::Qualifiers::fromCVRMask(clang::Qualifiers::Const)) ||
             p->getOriginalType()->isArrayType() || p->hasAttrs() || p->getName().empty() || p->getStorageClass() != clang::SC_None) {
-          fail(p->getLocation(), "buffer parameters require unqualified pointers to uint32_t or 8-bit character types (optionally const); array declarators are unsupported");
+          fail(p->getLocation(), "buffer parameters require unqualified pointers to uint32_t, 8-bit characters or admitted records (optionally const); array declarators are unsupported");
           return std::move(result);
         }
         const auto name = p->getNameAsString();
         pointers.insert(p); names.insert(name); region.parameters.push_back(name);
         Region::Buffer buffer; buffer.readOnly = element.isConstQualified();
-        buffer.elementBits = unsigned(ctx.getTypeSize(element));
+        if (element->isRecordType()) {
+          if (!record(element, buffer, p->getLocation())) return std::move(result);
+        } else buffer.elementBits = unsigned(ctx.getTypeSize(element));
         buffer.elementSigned = element->isSignedIntegerType();
         if (buffer.elementBits == 8) {
           region.extendedMemory = true;
@@ -605,6 +681,7 @@ public:
     if (!body || body->body_empty() || !llvm::isa<clang::ReturnStmt>(body->body_back())) {
       fail(f.getLocation(), "require a supported compound body ending in a return statement"); return std::move(result);
     }
+    if (!collectPersistent(body)) return std::move(result);
     for (auto *s : body->body()) if (!statement(s, s == body->body_back(), region.statements)) return std::move(result);
     result.region = std::move(region);
     return std::move(result);

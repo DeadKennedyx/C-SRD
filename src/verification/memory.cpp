@@ -1,4 +1,5 @@
 #include "symbolic.hpp"
+#include <algorithm>
 #include <set>
 #include <stdexcept>
 
@@ -12,15 +13,24 @@ struct CallEvent {
 };
 struct Execution {
   z3::expr first, second;
+  z3::expr bounds;
   std::vector<CallEvent> events;
 };
 class MemoryModel {
   z3::context &ctx;
-  bool bytes, littleEndian;
+  bool bytes, littleEndian, enumerate;
+  mutable z3::expr ranges;
 public:
-  MemoryModel(z3::context &c, bool b, bool little) : ctx(c), bytes(b), littleEndian(little) {}
+  MemoryModel(z3::context &c, bool b, bool little, bool finite) : ctx(c), bytes(b), littleEndian(little), enumerate(finite), ranges(c.bool_val(true)) {}
   z3::expr address(const z3::expr &base, const z3::expr &index, unsigned bits) const {
     return base + z3::bv2int(index, false) * ctx.int_val(bytes ? bits / 8 : 1);
+  }
+  z3::expr location(const Region::Buffer &buffer, const z3::expr &base, const z3::expr &index,
+                    const std::string &member) const {
+    if (!buffer.recordBytes) return address(base, index, buffer.elementBits);
+    const unsigned unit = bytes ? 1 : 4;
+    return base + z3::bv2int(index, false) * ctx.int_val(buffer.recordBytes / unit) +
+           ctx.int_val(buffer.fields.at(member) / unit);
   }
   z3::expr load(const z3::expr &memory, const z3::expr &at, unsigned bits, bool sign) const {
     if (!bytes) return z3::select(memory, at);
@@ -49,7 +59,16 @@ public:
   case Expr::Kind::Load: {
     const auto &buffer = r.buffers.at(e.name);
     const auto index = e.left ? eval(*e.left) : ctx.bv_val(e.value, 32);
-    return load(memory, address(bases.at(e.name), index, buffer.elementBits), buffer.elementBits, buffer.elementSigned);
+    auto read = [&](const z3::expr &i) { return load(memory, location(buffer, bases.at(e.name), i, e.member), buffer.elementBits, buffer.elementSigned); };
+    if (enumerate && e.left && e.value <= 16) {
+      // The range is a proof obligation, never an assumed clamp. Enumerating
+      // small indices avoids mixed integer/bit-vector address reasoning.
+      ranges = ranges && z3::ule(index, ctx.bv_val(e.value,32));
+      auto result = read(ctx.bv_val(e.value,32));
+      for (unsigned i = 0; i < e.value; ++i) result = z3::ite(index == ctx.bv_val(i,32),read(ctx.bv_val(i,32)),result);
+      return result;
+    }
+    return read(index);
   }
   case Expr::Kind::ByteCast: {
     const auto low = eval(*e.left).extract(7,0);
@@ -77,6 +96,7 @@ public:
   Execution execute(const Region &r, Environment scalars,
                                      const Environment &bases, z3::expr memory) const {
   std::vector<CallEvent> events;
+  ranges = ctx.bool_val(true);
   for (const auto &s : r.statements) {
     if (s.kind == Statement::Kind::Call) {
       const auto &contract = r.calls.at(s.callee);
@@ -107,9 +127,16 @@ public:
     case Statement::Kind::Store: {
       const auto bits = r.buffers.at(s.name).elementBits;
       const auto index = s.dynamicIndex ? value(r,*s.dynamicIndex,scalars,bases,memory) : ctx.bv_val(s.index,32);
-      memory = store(memory, address(bases.at(s.name),index,bits), result, bits); break;
+      auto write = [&](const z3::expr &i) { return store(memory, location(r.buffers.at(s.name), bases.at(s.name), i, s.member), result, bits); };
+      if (enumerate && s.dynamicIndex && s.index <= 16) {
+        ranges = ranges && z3::ule(index,ctx.bv_val(s.index,32));
+        auto next = write(ctx.bv_val(s.index,32));
+        for (unsigned i = 0; i < s.index; ++i) next = z3::ite(index == ctx.bv_val(i,32),write(ctx.bv_val(i,32)),next);
+        memory = next;
+      } else memory = write(index);
+      break;
     }
-    case Statement::Kind::Return: return {result, memory, std::move(events)};
+    case Statement::Kind::Return: return {result, memory, ranges, std::move(events)};
     default: throw std::invalid_argument("unmodeled control flow in buffer verification");
     }
   }
@@ -119,8 +146,21 @@ public:
 }
 Verification verifyMemory(const Region &original, const Region &candidate, unsigned timeoutMs) {
   Verification proof;
-  const bool bytes = original.extendedMemory || candidate.extendedMemory;
+  const auto hasRecords = [](const Region &r) {
+    return std::any_of(r.buffers.begin(), r.buffers.end(), [](const auto &entry) {
+      return entry.second.recordBytes || entry.second.persistent;
+    });
+  };
+  const auto wordOnly = [](const Region &r) {
+    return std::all_of(r.buffers.begin(), r.buffers.end(), [](const auto &entry) { return entry.second.elementBits == 32; });
+  };
+  // Padding-free, aligned uint32 accesses partition shared bytes into words.
+  // Equality of every word is equality of every byte. This exact projection
+  // avoids asking the solver to rediscover alignment across byte-store chains.
+  const bool recordWords = (hasRecords(original) || hasRecords(candidate)) && wordOnly(original) && wordOnly(candidate);
+  const bool bytes = !recordWords && (original.extendedMemory || candidate.extendedMemory);
   proof.strategy = std::string(bytes ? "shared-byte-memory" : "shared-word-memory") +
+                   (recordWords ? "/aligned-record-projection/blast-select-store/bv-sort-ac" : "") +
                    (original.orderedCalls || candidate.orderedCalls ? "/ordered-opaque-calls" : "") +
                    "/simplify/blast-term-ite/simplify/smt";
   proof.memoryAddressUnit = bytes ? "byte" : "word32";
@@ -130,6 +170,16 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
     z3::context ctx;
     Environment leftScalars, rightScalars, leftBases, rightBases;
     std::vector<z3::expr> inputs;
+    auto compatible = [](const Region::Buffer &a, const Region::Buffer &b) {
+      if (a.persistent != b.persistent || a.recordTag != b.recordTag || a.isUnion != b.isUnion ||
+          a.recordBytes != b.recordBytes || a.recordAlignment != b.recordAlignment || a.fields != b.fields)
+        throw std::invalid_argument("record layout or persistent object kind mismatch");
+      if (a.readOnly != b.readOnly) throw std::invalid_argument("pointer constness mismatch");
+      if (a.elementBits != b.elementBits || a.elementSigned != b.elementSigned || a.elementType != b.elementType)
+        throw std::invalid_argument("pointer element type mismatch");
+      if (b.minimumElements > a.minimumElements)
+        throw std::invalid_argument("candidate requires a larger buffer footprint than the original contract");
+    };
     for (unsigned i = 0; i < original.parameters.size(); ++i) {
       const auto &left = original.parameters[i], &right = candidate.parameters[i];
       const auto a = original.buffers.find(left), b = candidate.buffers.find(right);
@@ -139,26 +189,60 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
         const auto input = ctx.bv_const(("input_" + std::to_string(i)).c_str(), 32);
         leftScalars.emplace(left, input); rightScalars.emplace(right, input); inputs.push_back(input);
       } else {
-        if (a->second.readOnly != b->second.readOnly) throw std::invalid_argument("pointer constness mismatch");
-        if (a->second.elementBits != b->second.elementBits || a->second.elementSigned != b->second.elementSigned ||
-            a->second.elementType != b->second.elementType) throw std::invalid_argument("pointer element type mismatch");
-        if (b->second.minimumElements > a->second.minimumElements)
-          throw std::invalid_argument("candidate requires a larger buffer footprint than the original contract");
+        compatible(a->second, b->second);
         const auto base = ctx.int_const(("base_" + std::to_string(i)).c_str());
         leftBases.emplace(left, base); rightBases.emplace(right, base);
       }
     }
+    // File-scope identities are shared across calls and across both programs.
+    // Public pointers may alias these objects; do not invent disjointness.
+    for (const auto &[name, buffer] : original.buffers) if (buffer.persistent) {
+      const auto found = candidate.buffers.find(name);
+      if (found == candidate.buffers.end() || !found->second.persistent)
+        throw std::invalid_argument("persistent object set mismatch");
+      compatible(buffer, found->second);
+      const auto base = ctx.int_const(("global_" + name).c_str());
+      leftBases.emplace(name, base); rightBases.emplace(name, base);
+    }
+    for (const auto &[name, buffer] : candidate.buffers) if (buffer.persistent && !leftBases.count(name))
+      throw std::invalid_argument("candidate introduces a persistent object");
     const auto memory = ctx.constant("initial_memory", ctx.array_sort(ctx.int_sort(), ctx.bv_sort(bytes ? 8 : 32)));
-    const MemoryModel model(ctx, bytes, original.littleEndian);
+    const MemoryModel model(ctx, bytes, original.littleEndian, recordWords);
     const auto left = model.execute(original, leftScalars, leftBases, memory);
     const auto right = model.execute(candidate, rightScalars, rightBases, memory);
     z3::params params(ctx); params.set("som", true); params.set("push_ite_bv", true);
+    if (recordWords) { params.set("blast_select_store", true); params.set("bv_sort_ac", true); }
     const auto simplify = z3::with(z3::tactic(ctx, "simplify"), params);
     auto solver = (simplify & z3::tactic(ctx, "blast-term-ite") & simplify & z3::tactic(ctx, "smt")).mk_solver();
     solver.set("timeout", timeoutMs);
     if (bytes) for (const auto &[name, buffer] : original.buffers)
       if (buffer.elementBits == 32) solver.add(leftBases.at(name) % ctx.int_val(4) == 0);
-    auto mismatch = left.first != right.first || left.second != right.second ||
+    // File-scope definitions denote separate complete objects. A pointer to a
+    // flat record may designate that same complete record, but cannot start at
+    // its second field. Ordinary uint32 pointers still alias record members.
+    // This is an object-layout condition, not a restrict/no-alias assumption.
+    const unsigned unit = bytes ? 1 : 4;
+    for (auto a = original.buffers.begin(); a != original.buffers.end(); ++a) {
+      const auto &x = a->second;
+      if (!x.minimumElements) continue;
+      for (auto b = std::next(a); b != original.buffers.end(); ++b) {
+        const auto &y = b->second;
+        if (!y.minimumElements || (!x.persistent && !y.persistent)) continue;
+        const auto xb = leftBases.at(a->first), yb = leftBases.at(b->first);
+        const auto disjoint = xb + ctx.int_val(x.minimumElements * x.stride() / unit) <= yb ||
+                              yb + ctx.int_val(y.minimumElements * y.stride() / unit) <= xb;
+        if (x.persistent && y.persistent) solver.add(disjoint);
+        else {
+          const auto &pointer = x.persistent ? y : x, &global = x.persistent ? x : y;
+          if (pointer.recordBytes) {
+            const bool same = pointer.recordTag == global.recordTag && pointer.isUnion == global.isUnion &&
+                              pointer.recordBytes == global.recordBytes && pointer.minimumElements == 1;
+            solver.add(disjoint || (ctx.bool_val(same) && xb == yb));
+          } else if (pointer.elementBits == 32 && pointer.minimumElements > 1) solver.add(disjoint);
+        }
+      }
+    }
+    auto mismatch = !left.bounds || !right.bounds || left.first != right.first || left.second != right.second ||
                     ctx.bool_val(left.events.size() != right.events.size());
     for (unsigned i = 0; i < std::min(left.events.size(), right.events.size()); ++i) {
       const auto &a = left.events[i], &b = right.events[i];
@@ -197,7 +281,7 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
       std::set<std::string> seen;
       for (const auto &[name, buffer] : original.buffers) {
         proof.pointerBases.emplace_back(name, model.eval(leftBases.at(name), true).to_string());
-        const unsigned cells = buffer.minimumElements * (bytes ? buffer.elementBits / 8 : 1);
+        const unsigned cells = buffer.minimumElements * (bytes ? buffer.stride() : buffer.stride() / 4);
         for (unsigned i = 0; i < cells; ++i) {
           const auto address = model.eval(leftBases.at(name) + ctx.int_val(i), true);
           if (seen.insert(address.to_string()).second)

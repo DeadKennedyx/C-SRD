@@ -38,11 +38,17 @@ class MemoryEmitter {
     // validate its no-op property against the source; never trust emitter hints.
     return "(" + value + " <= " + literal(bound) + " ? " + value + " : " + literal(bound) + ")";
   }
+  std::string location(const std::string &name, const std::string &member, const Expr *offset, uint32_t bound) {
+    const auto &buffer = region->buffers.at(name);
+    auto value = buffer.persistent ? name : name + "[" + index(offset, bound) + "]";
+    if (buffer.recordBytes) value += "." + member;
+    return value;
+  }
   std::string expression(const Expr &e) {
     if (e.kind == Expr::Kind::Constant) return rep.constant(e.value);
     if (e.kind == Expr::Kind::Reference) return values.at(e.name);
     if (e.kind == Expr::Kind::Load) {
-      auto load = e.name + "[" + index(e.left.get(), e.value) + "]";
+      auto load = location(e.name, e.member, e.left.get(), e.value);
       if (region->buffers.at(e.name).elementBits == 8) load = "((unsigned int)(" + load + "))";
       return encode(load);
     }
@@ -135,8 +141,8 @@ public:
       case Statement::Kind::Declare: declare(s.name, value); break;
       case Statement::Kind::Assign: result.body += " " + values.at(s.name) + " = " + value + ";"; break;
       case Statement::Kind::Store: {
-        const auto offset = index(s.dynamicIndex.get(), s.index);
-        result.body += " " + s.name + "[" + offset + "] = " + decode(value) + ";"; break;
+        const auto target = location(s.name, s.member, s.dynamicIndex.get(), s.index);
+        result.body += " " + target + " = " + decode(value) + ";"; break;
       }
       case Statement::Kind::Return: result.body += " return " + decode(value) + ";"; break;
       default: throw std::invalid_argument("control flow is unsupported in ordered memory emission");

@@ -10,6 +10,7 @@ from collections import Counter
 import fcntl
 import json
 from pathlib import Path
+import random
 import sys
 
 from audit_protection import Runner, executable, file_hash, write_json, AuditError
@@ -24,9 +25,10 @@ IMPLEMENTATION = ["tools/observe_buffer_runtime.py", "tools/gdb_buffer_trace.py"
 def run(args, root):
     from byte_observation_cases import cases as byte_cases, driver as byte_driver, expected as byte_expected, LAYOUTS as byte_layouts
     from call_observation_cases import cases as call_cases, driver as call_driver, expected as call_expected, LAYOUTS as call_layouts
-    selected_cases = call_cases if args.corpus=="call" else byte_cases if args.corpus == "byte" else cases
-    selected_driver = call_driver if args.corpus=="call" else byte_driver if args.corpus == "byte" else driver
-    selected_layouts = call_layouts if args.corpus=="call" else byte_layouts if args.corpus == "byte" else LAYOUTS
+    from record_observation_cases import driver as record_driver, expected as record_expected, LAYOUTS as record_layouts, GLOBALS
+    selected_cases = byte_cases if args.corpus in ("byte","call","record") else cases
+    selected_driver = record_driver if args.corpus=="record" else call_driver if args.corpus=="call" else byte_driver if args.corpus == "byte" else driver
+    selected_layouts = record_layouts if args.corpus=="record" else call_layouts if args.corpus=="call" else byte_layouts if args.corpus == "byte" else LAYOUTS
     report = {"schema_version": 3, "status": "running", "protocol": vars(args), "commands": [],
               "environment": environment(), "cases": selected_cases(args.input_protocol), "layouts": selected_layouts, "observations": [],
               "claims": {"known_intermediate_targets": True, "seed_or_encoding_given_to_fit": False,
@@ -43,6 +45,9 @@ def run(args, root):
         report["gdb"] = {"path": gdb, "sha256": file_hash(gdb), "version": command([gdb, "--version"]).splitlines()[0]}
         report["implementation"] = {p: file_hash(ROOT / p) for p in IMPLEMENTATION}
         if args.corpus=="byte": report["implementation"]["tools/byte_observation_cases.py"]=file_hash(ROOT/"tools/byte_observation_cases.py")
+        if args.corpus=="record":
+            for path in ("tools/record_observation_cases.py","tools/byte_observation_cases.py","tests/fixtures/records.h"):
+                report["implementation"][path]=file_hash(ROOT/path)
         if args.corpus=="call":
             for path in ("tools/call_observation_cases.py","tools/byte_observation_cases.py","tests/fixtures/call_environment.h","tools/inspect_region_binaries.py"):
                 report["implementation"][path]=file_hash(ROOT/path)
@@ -73,6 +78,9 @@ def run(args, root):
                 prepared.append({"group": group, "variant": variant, "executable": str(executable_path), "function_bytes":extent,
                                  "executable_sha256": file_hash(executable_path), "directory": directory,
                                  "harness": str(harness), "harness_sha256": file_hash(harness)})
+        random.Random(args.order_seed).shuffle(prepared)
+        report["schedule"]=[{"function":i["group"]["function"],"profile":i["group"]["profile"],
+                             "variant":i["variant"]["variant"]} for i in prepared]
         write_json(root / "runtime.json", report)
 
         def progress():
@@ -96,13 +104,14 @@ def run(args, root):
                 for ci, case in enumerate(report["cases"]):
                     inputs = directory / f"{ci}.input"
                     inputs.write_text(" ".join(map(str, [p, q, case["x"], *case["memory"]])) + "\n")
-                    wanted = call_expected(group["function"], case["memory"], p, q, case["x"]) if args.corpus=="call" else byte_expected(group["function"], case["memory"], p, q, case["x"],
+                    wanted = record_expected(group["function"], case["memory"], p, q, case["x"]) if args.corpus=="record" else call_expected(group["function"], case["memory"], p, q, case["x"]) if args.corpus=="call" else byte_expected(group["function"], case["memory"], p, q, case["x"],
                         plain_char_signed=group["parameters"][0].get("element_signed",False)) if args.corpus=="byte" else expected(group["function"], case["memory"], p, q, case["x"])
                     for target, value in wanted["targets"].items(): labels.setdefault(target, []).append(value)
                     trace_path, config_path, script = directory / f"{ci}.trace.json", directory / f"{ci}.json", directory / f"{ci}.gdb"
                     write_json(config_path, {"function": group["function"], "step_limit": args.step_limit,
                                             "sample_bytes": args.corpus in ("byte","call"),
                                             "call_scope": args.corpus=="call", "function_bytes":item["function_bytes"],
+                                            "persistent_objects":GLOBALS if args.corpus=="record" else {},
                                             "input_file": str(inputs), "output": str(trace_path)})
                     script.write_text("python\nimport sys\nsys.path.insert(0, " + repr(str(ROOT / "tools")) +
                                       ")\nimport gdb_buffer_trace\ngdb_buffer_trace.main(" + repr(str(config_path)) + ")\nend\n")
@@ -119,6 +128,8 @@ def run(args, root):
                         if trace["return_value"] != wanted["return_value"] or trace["final_memory"] != wanted["final_memory"]:
                             record["status"] = "oracle-mismatch"
                         if args.corpus=="call" and any(trace.get(key)!=wanted[key] for key in ("external_state","events")):
+                            record["status"]="oracle-mismatch"
+                        if args.corpus=="record" and trace.get("persistent_state")!=wanted["persistent_state"]:
                             record["status"]="oracle-mismatch"
                         if trace["stack_read_failures"]: record["status"] = "incomplete-memory-sampling"
                     observation["traces"].append(record)
@@ -164,8 +175,9 @@ def main():
     p.add_argument("--function", action="append")
     p.add_argument("--profile", action="append")
     p.add_argument("--step-limit", type=int, default=512)
+    p.add_argument("--order-seed",type=int,default=20261115)
     p.add_argument("--input-protocol", choices=("basis-parity-v2", "seeded-v1"), default="basis-parity-v2")
-    p.add_argument("--corpus", choices=("word","byte","call"), default="word")
+    p.add_argument("--corpus", choices=("word","byte","call","record"), default="word")
     p.add_argument("--fit-protocol",choices=("affine-v1","affine-literal-boundaries-v2"),default="affine-literal-boundaries-v2")
     p.add_argument("--output-dir", required=True)
     args = p.parse_args()

@@ -6,6 +6,8 @@ import ghidra.framework.Application;
 import ghidra.program.model.listing.*;
 import ghidra.program.model.data.*;
 import ghidra.program.model.symbol.SourceType;
+import ghidra.program.model.symbol.Symbol;
+import ghidra.program.model.reloc.Relocation;
 import ghidra.program.model.pcode.*;
 import ghidra.program.model.address.AddressSpace;
 import com.google.gson.*;
@@ -18,6 +20,23 @@ public class ExportCSRDBuffers extends HeadlessScript {
     private int id(Varnode node) {
         if (!ids.containsKey(node)) { ids.put(node, nodes.size()); nodes.add(node); }
         return ids.get(node);
+    }
+    private DataType recordType(JsonObject record) {
+        String tag = record.get("tag").getAsString();
+        boolean union = record.get("union").getAsBoolean();
+        if (union) {
+            UnionDataType type = new UnionDataType(tag);
+            for (JsonElement f : record.getAsJsonArray("fields"))
+                type.add(UnsignedIntegerDataType.dataType, f.getAsJsonObject().get("name").getAsString(), null);
+            return type;
+        }
+        StructureDataType type = new StructureDataType(tag, record.get("bytes").getAsInt());
+        for (JsonElement f : record.getAsJsonArray("fields")) {
+            JsonObject field = f.getAsJsonObject();
+            type.replaceAtOffset(field.get("byte_offset").getAsInt(), UnsignedIntegerDataType.dataType, 4,
+                                 field.get("name").getAsString(), null);
+        }
+        return type;
     }
     private void configureCall(Function function, JsonObject contracts) throws Exception {
         if (!contracts.has(function.getName())) return;
@@ -70,7 +89,14 @@ public class ExportCSRDBuffers extends HeadlessScript {
             report.addProperty("memory_model", "ordered-calls-buffers-v1");
             report.add("call_signatures", contracts);
         }
-        String[] abi = args[1].split(",", -1);
+        JsonObject publicAbi = args[1].startsWith("@") ?
+            JsonParser.parseString(Files.readString(Paths.get(args[1].substring(1)))).getAsJsonObject() : null;
+        String[] abi = publicAbi == null ? args[1].split(",", -1) : new String[publicAbi.getAsJsonArray("parameters").size()];
+        if (publicAbi != null) {
+            report.addProperty("schema_version", 8);
+            report.addProperty("memory_model", "records-state-buffers-v1");
+            report.add("call_signatures", contracts);
+        }
         if (abi.length < 1 || abi.length > 8) throw new IllegalArgumentException("one to eight parameters required");
         report.addProperty("arity", abi.length);
         AddressSpace space = currentProgram.getAddressFactory().getDefaultAddressSpace();
@@ -96,6 +122,17 @@ public class ExportCSRDBuffers extends HeadlessScript {
             List<Variable> parameters = new ArrayList<>();
             JsonArray signature = new JsonArray();
             for (int i = 0; i < abi.length; ++i) {
+                if (publicAbi != null) {
+                    JsonObject item = publicAbi.getAsJsonArray("parameters").get(i).getAsJsonObject();
+                    String kind = item.get("kind").getAsString();
+                    DataType type = kind.equals("record-buffer") ? recordType(item.getAsJsonObject("record")) :
+                        kind.equals("unsigned-char-buffer") ? UnsignedCharDataType.dataType :
+                        kind.equals("signed-char-buffer") ? SignedCharDataType.dataType :
+                        kind.equals("char-buffer") ? CharDataType.dataType : UnsignedIntegerDataType.dataType;
+                    if (!kind.equals("uint32")) type = new PointerDataType(type, currentProgram.getDefaultPointerSize());
+                    parameters.add(new ParameterImpl("p"+i, type, currentProgram));
+                    signature.add(item); continue;
+                }
                 if (!Set.of("u", "p", "c", "b", "B", "s", "S", "h", "H", "j", "J").contains(abi[i]))
                     throw new IllegalArgumentException("unknown ABI type");
                 DataType type = UnsignedIntegerDataType.dataType;
@@ -112,6 +149,27 @@ public class ExportCSRDBuffers extends HeadlessScript {
                 signature.add(item);
             }
             report.add("parameters", signature);
+            if (publicAbi != null) {
+                JsonArray globals = new JsonArray();
+                for (JsonElement g : publicAbi.getAsJsonArray("persistent_objects")) {
+                    JsonObject item = g.getAsJsonObject().deepCopy();
+                    List<Symbol> symbols = currentProgram.getSymbolTable().getGlobalSymbols(item.get("name").getAsString());
+                    Symbol selected = null;
+                    for (Symbol s : symbols) if (s.getAddress().isMemoryAddress()) {
+                        if (selected != null) throw new IllegalStateException("ambiguous global symbol");
+                        selected = s;
+                    }
+                    if (selected == null) throw new IllegalStateException("missing global symbol");
+                    item.addProperty("address", Long.toUnsignedString(selected.getAddress().getOffset()));
+                    // Use the public layout to type this object. No contents,
+                    // initializers or source expressions are supplied.
+                    DataType type = item.has("record") ? recordType(item.getAsJsonObject("record")) : UnsignedIntegerDataType.dataType;
+                    clearListing(selected.getAddress(), selected.getAddress().add(type.getLength()-1));
+                    createData(selected.getAddress(), type);
+                    globals.add(item);
+                }
+                report.add("persistent_objects", globals);
+            }
             target.setReturnType(UnsignedIntegerDataType.dataType, SourceType.USER_DEFINED);
             target.replaceParameters(parameters, Function.FunctionUpdateType.DYNAMIC_STORAGE_ALL_PARAMS, true, SourceType.USER_DEFINED);
             target.setVarArgs(false);
@@ -182,6 +240,20 @@ public class ExportCSRDBuffers extends HeadlessScript {
                 item.addProperty("size", node.getSize());
                 item.addProperty("input", node.isInput());
                 item.addProperty("storage", node.getAddress().toString());
+                if (publicAbi != null && node.getAddress().isMemoryAddress() && node.getSize()==8 &&
+                    currentProgram.getLanguageID().toString().equals("AARCH64:LE:64:v8A")) {
+                    for (Relocation relocation : currentProgram.getRelocationTable().getRelocations(node.getAddress())) {
+                        // AArch64 ELF R_AARCH64_GLOB_DAT. This exposes the
+                        // binary's linker binding, not the global's contents.
+                        if (relocation.getType()!=1025 || relocation.getSymbolName()==null) continue;
+                        for (JsonElement g : report.getAsJsonArray("persistent_objects")) {
+                            JsonObject global=g.getAsJsonObject();
+                            if (relocation.getSymbolName().equals(global.get("name").getAsString()) &&
+                                currentProgram.getMemory().getLong(node.getAddress())==Long.parseUnsignedLong(global.get("address").getAsString()))
+                                item.addProperty("linkage_pointer",relocation.getSymbolName());
+                        }
+                    }
+                }
                 if (node.isConstant()) item.addProperty("constant", Long.toUnsignedString(node.getOffset()));
                 if (node.isInput() && node instanceof VarnodeAST && ((VarnodeAST)node).getHigh() instanceof HighParam)
                     item.addProperty("parameter", ((HighParam)((VarnodeAST)node).getHigh()).getSlot());

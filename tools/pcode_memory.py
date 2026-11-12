@@ -33,7 +33,8 @@ def reconstruct(export, *, metrics=None, result_offset=0, store_offset=0, final_
 
 
 def _reconstruct(export, metrics, result_offset, store_offset, final_store_offset, call_argument_offset):
-    calls = export.get("schema_version") == 7 and export.get("memory_model") == "ordered-calls-buffers-v1"
+    records = export.get("schema_version") == 8 and export.get("memory_model") == "records-state-buffers-v1"
+    calls = records or (export.get("schema_version") == 7 and export.get("memory_model") == "ordered-calls-buffers-v1")
     extended = calls or (export.get("schema_version") == 5 and export.get("memory_model") == "ordered-byte-buffers-v2")
     if not extended and (export.get("schema_version") != 4 or export.get("memory_model") != "ordered-u32-buffers-v1"):
         raise Unsupported("requires ordered buffer export schema 4 or 5")
@@ -43,7 +44,7 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
     if type(arity) is not int or not 1 <= arity <= 8 or len(parameters) != arity:
         raise Unsupported("invalid public buffer interface")
     for p in parameters:
-        if p["kind"] not in (TYPES if extended else ("uint32", "uint32-buffer")) or type(p["read_only"]) is not bool:
+        if p["kind"] not in (set(TYPES)|({"record-buffer"} if records else set()) if extended else ("uint32", "uint32-buffer")) or type(p["read_only"]) is not bool:
             raise Unsupported("invalid parameter kind or constness")
         if p["kind"] == "uint32" and p["read_only"]:
             raise Unsupported("const scalar parameters are outside the contract")
@@ -52,6 +53,41 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
     signatures = export.get("call_signatures", {}) if calls else {}
     if not isinstance(signatures,dict) or len(signatures)>64:raise Unsupported("invalid call signatures")
     declarations=[]
+    record_types={}
+    def symbol(name):
+        return isinstance(name,str) and re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*",name) and not re.fullmatch(r"[pv][0-9]+",name)
+    def record_type(p):
+        r=p["record"]
+        if not symbol(r["tag"]) or type(r["union"]) is not bool or r["alignment"]!=4 or not 1<=len(r["fields"])<=16:
+            raise Unsupported("unsupported public record layout")
+        fields=sorted(r["fields"],key=lambda f:(f["byte_offset"],f["name"]))
+        if len({f["name"] for f in fields})!=len(fields) or r["bytes"]!=(4 if r["union"] else 4*len(fields)):
+            raise Unsupported("padded or duplicate record layout")
+        for i,f in enumerate(fields):
+            if not symbol(f["name"]) or f["kind"]!="uint32" or f["byte_offset"]!=(0 if r["union"] else 4*i):
+                raise Unsupported("invalid public record field")
+        if r["tag"] in record_types and record_types[r["tag"]]!=r:raise Unsupported("conflicting record definitions")
+        if r["tag"] not in record_types:
+            declarations.append(("union " if r["union"] else "struct ")+r["tag"]+" {"+"".join("unsigned int "+f["name"]+";" for f in fields)+"};")
+            record_types[r["tag"]]=r
+        return ("union " if r["union"] else "struct ")+r["tag"]
+    def ctype(p):return record_type(p) if p["kind"]=="record-buffer" else TYPES[p["kind"]]
+    for p in parameters:
+        if p["kind"]=="record-buffer":record_type(p)
+    objects=list(parameters)
+    globals_=export.get("persistent_objects",[]) if records else []
+    addresses=[]
+    global_slots={}
+    for g in globals_:
+        if not symbol(g["name"]) or g["name"]==name or any(g["name"]==p.get("name") for p in objects):
+            raise Unsupported("invalid or duplicate global symbol")
+        if g["kind"] not in ("uint32-buffer","record-buffer"):raise Unsupported("unsupported persistent type")
+        slot=len(objects);objects.append({**g,"read_only":False,"persistent":True})
+        global_slots[g["name"]]=slot
+        declarations.append("extern "+ctype(g)+" "+g["name"]+";")
+        start=int(g["address"]);size=g.get("record",{}).get("bytes",4)
+        if any(start<b and a<start+size for a,b,_ in addresses):raise Unsupported("overlapping global symbols")
+        addresses.append((start,start+size,slot))
     for callee,spec in signatures.items():
         if (not isinstance(callee,str) or not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*",callee) or
             re.fullmatch(r"[pv][0-9]+",callee) or callee==name):raise Unsupported("invalid or conflicting external call symbol")
@@ -93,7 +129,7 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
                    emitted_statements=0, loads=0, stores=0, pointer_operations=0,
                    calls=0,
                    scalar_diamonds=diamonds,
-                   footprint_elements={str(i): 0 for i, p in enumerate(parameters) if p["kind"] != "uint32"})
+                   footprint_elements={str(i): 0 for i, p in enumerate(objects) if p["kind"] != "uint32"})
     builder, values, definitions = Builder(metrics), {}, set()
     bounds, predicates, multiples, origins = {}, {}, {}, {}
 
@@ -198,6 +234,10 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             if node.get("input") is not True or size != (space["pointer_bytes"] if pointer else 4):
                 raise Unsupported("parameter storage disagrees with public ABI")
             values[i] = Pointer(pointer_bits, slot) if pointer else Value(32, f"p{slot}")
+        elif records and node.get("input") and "linkage_pointer" in node:
+            if size*8!=pointer_bits or node["linkage_pointer"] not in global_slots:
+                raise Unsupported("invalid linkage pointer input")
+            values[i]=Pointer(pointer_bits,global_slots[node["linkage_pointer"]])
 
     def read(i):
         if i not in values:
@@ -210,9 +250,48 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
         return value.known
 
     def address(pointer, bits=32, write=False, argument=False):
+        if records and isinstance(pointer,Value) and pointer.known is not None:
+            for start,end,slot in addresses:
+                if start<=pointer.known<end:
+                    pointer=Pointer(pointer_bits,slot,pointer.known-start);break
         if not isinstance(pointer, Pointer) or pointer.bits != pointer_bits:
             raise Unsupported("memory address is not derived from a public pointer")
-        element_bytes = 4 if parameters[pointer.slot]["kind"] == "uint32-buffer" else 1
+        obj=objects[pointer.slot]
+        if obj["kind"]=="record-buffer":
+            if bits!=32 or argument:raise Unsupported("record observer requires uint32 field accesses")
+            r=obj["record"];stride=r["bytes"];offset=pointer.offset
+            field_offset=offset%stride if isinstance(offset,int) else None
+            if not isinstance(offset,int):
+                def residue(value,depth=0):
+                    if value.known is not None:return value.known%stride
+                    if multiple(value)%stride==0:return 0
+                    if depth>64 or value not in origins:return None
+                    op,_,args=origins[value]
+                    if op in ("COPY","CAST","INT_ZEXT"):return residue(args[0],depth+1)
+                    if op in ("INT_ADD","INT_MULT"):
+                        a,b=(residue(v,depth+1) for v in args)
+                        if a is not None and b is not None:return (a+b if op=="INT_ADD" else a*b)%stride
+                    return None
+                # Power-of-two strides divide pointer modulus. Otherwise a
+                # modular expression's residue is not justified by this rule.
+                if stride&(stride-1):raise Unsupported("dynamic record stride must be a power of two")
+                field_offset=residue(offset)
+                maximum=bound(offset)//stride
+                if field_offset is None or maximum>255:raise Unsupported("unbounded or unresolved dynamic record field")
+                low=offset.parts[0] if offset.parts else offset
+                element=operation("INT_RIGHT",32,[low,literal(32,stride.bit_length()-1)])
+                captured=builder.emit(32,element.atom)
+                expression=f"({captured.atom} <= {maximum}u ? {captured.atom} : {maximum}u)"
+            else:
+                if offset<0 or offset//stride>255:raise Unsupported("record index outside bounded domain")
+                maximum=offset//stride;expression=str(maximum)
+            fields=[f for f in r["fields"] if f["byte_offset"]==field_offset]
+            if not fields:raise Unsupported("address does not identify a record field")
+            if obj["read_only"] and write:raise Unsupported("store through const record")
+            if obj.get("persistent") and maximum:raise Unsupported("global record overrun")
+            metrics["footprint_elements"][str(pointer.slot)]=max(metrics["footprint_elements"][str(pointer.slot)],maximum+1)
+            return (obj["name"] if obj.get("persistent") else f"p{pointer.slot}[{expression}]")+"."+fields[0]["name"]
+        element_bytes = 4 if obj["kind"] == "uint32-buffer" else 1
         if bits != element_bytes*8: raise Unsupported("memory access width differs from public pointee type")
         if isinstance(pointer.offset,int):
             if pointer.offset % element_bytes or not 0 <= pointer.offset <= (255 if extended else 15)*element_bytes:
@@ -230,10 +309,13 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             captured=builder.emit(32,low.atom)
             element=maximum
             expression=f"({captured.atom} <= {maximum}u ? {captured.atom} : {maximum}u)"
-        if write and parameters[pointer.slot]["read_only"]:
+        if write and obj["read_only"]:
             raise Unsupported("store through a read-only public parameter")
         footprint = metrics["footprint_elements"]
         footprint[str(pointer.slot)] = max(footprint[str(pointer.slot)], element + 1)
+        if obj.get("persistent"):
+            if pointer.offset!=0:raise Unsupported("global scalar overrun")
+            return "(&"+obj["name"]+")" if argument else obj["name"]
         if argument:return f"p{pointer.slot}" if isinstance(pointer.offset,int) and pointer.offset==0 else f"(p{pointer.slot}+{expression})"
         return f"p{pointer.slot}[{expression}]"
 
@@ -263,6 +345,16 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             result = args[0]
             if not isinstance(result, Value) or result.bits != 32:
                 raise Unsupported("return must be uint32")
+        elif records and code=="INDIRECT":
+            # Only loader-resolved GOT slots are immutable in this observer's
+            # ordinary C object model. Never discard an INDIRECT on program data.
+            if len(args)!=2 or not isinstance(args[0],Pointer) or out is None:
+                raise Unsupported("unmodeled INDIRECT effect")
+            object_name=objects[args[0].slot].get("name")
+            if (not object_name or nodes[out].get("linkage_pointer")!=object_name or
+                nodes[inputs[0]].get("linkage_pointer")!=object_name or args[0].offset!=0):
+                raise Unsupported("INDIRECT is not an unchanged loader linkage slot")
+            values[out]=args[0]
         elif calls and code=="CALL":
             spec=signatures.get(op.get("callee"))
             if not spec or len(args)!=len(spec["parameters"]) or not inputs:
@@ -323,6 +415,11 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             if not isinstance(args[0], Pointer):
                 raise Unsupported("unsupported pointer operation")
             base = args[0]
+            if (records and code=="PTRSUB" and len(args)==2 and isinstance(args[1],Value) and
+                args[1].known==0 and args[1].bits<=pointer_bits):
+                # Union member selection uses a zero-byte offset that Ghidra
+                # may spell as uint32 even when pointers are uint64.
+                args[1]=literal(pointer_bits,0)
             if extended and ((isinstance(base.offset,Value)) or any(a.known is None for a in args[1:])):
                 if code == "PTRADD" and len(args)==3:
                     delta=operation("INT_MULT",pointer_bits,args[1:])
@@ -364,7 +461,7 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
     expression = result.atom
     if result_offset:
         expression = f"({expression} + {result_offset & 0xffffffff}u)"
-    signature = ", ".join(("const " if p["read_only"] else "") + TYPES[p["kind"]] +
+    signature = ", ".join(("const " if p["read_only"] else "") + ctype(p) +
                           (" *" if p["kind"] != "uint32" else " ") + f"p{i}"
                           for i, p in enumerate(parameters))
     lines = builder.lines + [f"    (void)v{i};" for i in range(builder.serial)] + [f"    (void)p{i};" for i in range(arity)] + [f"    return {expression};"]

@@ -97,6 +97,36 @@ def byte_diamond():
 
 
 class MemoryReconstruction(unittest.TestCase):
+    def test_record_dynamic_fields_and_global_linkage(self):
+        layout={"tag":"pair","union":False,"bytes":8,"alignment":4,"fields":[
+            {"name":"a","kind":"uint32","byte_offset":0},{"name":"b","kind":"uint32","byte_offset":4}]}
+        e=Export();e.data.update(schema_version=8,memory_model="records-state-buffers-v1",persistent_objects=[],call_signatures={})
+        e.data["parameters"][0].update(kind="record-buffer",record=layout)
+        mask=e.op("INT_AND",[e.x,e.constant(1)])
+        wide=e.op("INT_ZEXT",[mask],size=8)
+        pointer=e.op("PTRADD",[e.p,wide,e.constant(8,8)],size=8)
+        pointer=e.op("PTRSUB",[pointer,e.constant(4,8)],size=8)
+        e.store(pointer,e.x);data=e.finish(e.load(e.q))
+        self.grade("struct pair{unsigned a;unsigned b;};unsigned f(struct pair*p,unsigned*q,unsigned x){p[x&1u].b=x;return *q;}",reconstruct(data))
+        self.grade(reconstruct(data),reconstruct(data,final_store_offset=1),"counterexample")
+        e=Export();e.data.update(schema_version=8,memory_model="records-state-buffers-v1",call_signatures={},
+                                persistent_objects=[{"name":"g","kind":"uint32-buffer","address":"4096"}])
+        pointer=e.node(8,input=True,linkage_pointer="g",storage="GOT-slot")
+        after=e.op("INDIRECT",[pointer,e.constant(9)],size=8)
+        e.data["nodes"][after].update(linkage_pointer="g",storage="GOT-slot")
+        e.store(pointer,e.x);result=e.load(after);data=e.finish(result)
+        self.grade("unsigned g;unsigned f(unsigned*p,unsigned*q,unsigned x){(void)p;(void)q;g=x;return g;}",reconstruct(data))
+        bad=copy.deepcopy(data);del bad["nodes"][after]["linkage_pointer"]
+        with self.assertRaisesRegex(Unsupported,"INDIRECT"):reconstruct(bad)
+
+    def test_union_narrow_zero_offset(self):
+        e=Export();e.data.update(schema_version=8,memory_model="records-state-buffers-v1",persistent_objects=[],call_signatures={})
+        e.data["parameters"][0].update(kind="record-buffer",record={"tag":"word","union":True,"bytes":4,"alignment":4,
+            "fields":[{"name":"a","kind":"uint32","byte_offset":0},{"name":"b","kind":"uint32","byte_offset":0}]})
+        at=e.op("PTRSUB",[e.p,e.constant(0)],size=8)
+        e.store(at,e.x);data=e.finish(e.load(at))
+        self.grade("union word{unsigned a;unsigned b;};unsigned f(union word*p,unsigned*q,unsigned x){(void)q;p->b=x;return p->a;}",reconstruct(data))
+
     def grade(self, reference, candidate, expected="proved-under-model", calls=False):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp)

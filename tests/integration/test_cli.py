@@ -67,8 +67,8 @@ class CLI(unittest.TestCase):
             "branch": "if(x) return y; return x;",
             "loop": "while(x) x=x-1u; return x;",
             "nested scope": "{uint32_t a=x;} return y;",
-            "global read": "return global+x;",
-            "global write": "global=x; return x;",
+            "volatile global read": "return global+x;",
+            "volatile global write": "global=x; return x;",
             "multiple declarations": "uint32_t a=x,b=y; return a+b;",
             "explicit cast": "return (uint32_t)x;",
             "unary negation": "return -x;",
@@ -81,7 +81,7 @@ class CLI(unittest.TestCase):
             "function pointer": "uint32_t (*p)(uint32_t)=external; return p(x);",
             "local attribute": "uint32_t a __attribute__((aligned(32)))=x; return a;",
         }
-        prefix = "#include <stdint.h>\nuint32_t global; uint32_t external(uint32_t);\n"
+        prefix = "#include <stdint.h>\nvolatile uint32_t global; uint32_t external(uint32_t);\n"
         for name, body in bodies.items():
             with self.subTest(name=name):
                 source = prefix + "uint32_t f(uint32_t x,uint32_t y){" + body + "}\n"

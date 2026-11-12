@@ -65,6 +65,16 @@ no callbacks/reentry, retained pointers, nonlocal jumps, frame inspection or
 invalidation of caller buffers. Callee implementations are not proved by their
 declarations. Nested call expressions, varargs and indirect calls remain unsupported.
 
+The record/state path admits named, padding-free structs/unions with 1..16
+`uint32_t` fields, bounded record-pointer views, and mutable file-scope scalar or
+record objects. Public storage and initializers stay ordinary; arithmetic between
+loads and stores is diversified. Proofs compare return values and persistent
+state from equal incoming states. Globals denote distinct complete objects;
+record pointers designate complete records, while scalar pointers may alias
+fields. Aligned word-only accesses use an exact word projection of byte memory;
+small index ranges are proved before enumeration. Nested/padded records, bitfields,
+whole-record assignments, local statics and TLS remain outside this increment.
+
 For `n`-bit integers, affine encoding is `E(x) = a*x+b mod 2^n`, with odd `a`.
 Addition, subtraction and constant scaling can remain encoded. The seed selects
 reproducible parameters; it is not a secret key. Emitted C is reparsed and checked
@@ -85,7 +95,7 @@ not a promise of universal C support.
 | 3 | Integer widths, promotions and operators | Scoped checkpoint measured |
 | 4 | Byte/string buffers, runtime indexes, richer pointers | Scoped checkpoint measured |
 | 5 | Direct calls and effect contracts | Scoped checkpoint measured |
-| 6 | Structs/unions, globals, persistent state | Pending |
+| 6 | Structs/unions, globals, persistent state | Scoped checkpoint measured |
 | 7 | Branches, exits, input-dependent loops | Pending |
 | 8 | Allocation, failure and lifetime | Pending |
 | 9 | Recursion and indirect calls | Pending |
@@ -102,24 +112,32 @@ bounded GDB value-recovery tooling. Write generated measurements to ignored
 `build*/` directories. CPU/RSS, recovery correctness and application costs are
 separate measurements; fingerprints and finite tests are not equivalence proofs.
 
-The direct-call checkpoint passed all 39 Linux test groups and 12,726,560
-native/Linux differential comparisons.
+The record/state checkpoint passed all 42 Linux test groups (including the
+corrected rejection-test rerun) and 28,634,760 native/Linux differential
+comparisons, including repeated calls and aliases into global fields.
 Across Clang/GCC `-O0`/`-O2`, the revised observer reconstructed all 112 binary
-cases (three adapter repetitions); 45 distinct answers passed source-model
-checks and 96,480 compiled checks of returns, memory and call events.
+cases (three adapter repetitions); 54 distinct answers passed source-model
+checks and 115,776 compiled checks of returns, memory and persistent state.
 The 5,376 runtime traces recovered 224/224 target cases for every variant, with
 zero successful negative controls. Fitting includes literal matches and captured
-return boundaries; three fitting repetitions agreed. The earlier scorer's
-172/224 result missed those observations. Callee interiors are not sampled.
-At `-O2`, 9/14 affine cases have the original opcode sequence (operands excluded),
-and application CPU costs were close to baseline. No useful protection advantage
-was established. These are scoped ARM64 observations, not security guarantees.
+return boundaries; three fitting repetitions agreed. Ordinary values appeared
+in 1,808/2,688 affine target/trace pairs versus 2,688/2,688 original pairs;
+absence from some traces did not prevent recovery.
+At `-O2`, affine fitting used median matched CPU ratios of 1.70 (Clang) and 1.84
+(GCC), and worker peak RSS ratios of 1.10 and 1.11; median fitting times were
+34–36 ms. Static adapter worker CPU/RSS remained near baseline. Application CPU
+ratios were 1.015/1.014, while function-byte ratios were 1.73/1.86.
+Only 4/14 optimized affine cases retained the original opcode sequence (operands
+excluded), but all were reconstructed. These descriptive ARM64 measurements
+show modest observer cost and size increases, not established useful protection.
 
-Reproduce buffer/call measurements with `tools/audit_buffer_reconstruction.py`,
+Reproduce buffer/call/record measurements with `tools/audit_buffer_reconstruction.py`,
 `tools/replay_buffer_observers.py`, `tools/grade_byte_reconstruction.py`,
 `tools/observe_buffer_runtime.py`, `tools/replay_buffer_fits.py` and
 `tools/measure_byte_costs.py`; use `--corpus call` for call execution tools and
-`--call-contracts tests/fixtures/calls.json` for call reconstruction. Each exposes
+`--call-contracts tests/fixtures/calls.json` for call reconstruction, or
+`--corpus record` for record execution tools. Record reconstruction supplies public
+types/global names to Ghidra and assumes stable, resolved loader bindings. Each exposes
 `--help`. Ghidra ARM64 signed-byte lifting requires the checked
 overlay produced by `tools/patch_ghidra_signed_byte.py`. Generated artifacts stay
 under ignored `build*/` paths; the repository keeps no measurement archives.

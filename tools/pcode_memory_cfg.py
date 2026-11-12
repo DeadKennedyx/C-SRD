@@ -34,12 +34,13 @@ def linearize(export):
         export={**export,"blocks":normalized}
     graph=Graph.__new__(Graph)
     graph.nodes,graph.ops=nodes,ops
-    graph.initial={i:None for i,n in enumerate(nodes) if "constant" in n or "parameter" in n}
+    graph.initial={i:None for i,n in enumerate(nodes) if "constant" in n or "parameter" in n or (n.get("input") and "linkage_pointer" in n)}
     graph.definitions={}
     for oi,op in enumerate(ops):
         code=op["opcode"]
-        calls={"CALL"} if export.get("schema_version")==7 and export.get("memory_model")=="ordered-calls-buffers-v1" else set()
-        if code not in SCALAR|CONTROL|{"LOAD","STORE","PTRADD","PTRSUB","MULTIEQUAL"}|calls:
+        calls={"CALL"} if (export.get("schema_version"),export.get("memory_model")) in ((7,"ordered-calls-buffers-v1"),(8,"records-state-buffers-v1")) else set()
+        extra={"INDIRECT"} if export.get("schema_version")==8 else set()
+        if code not in SCALAR|CONTROL|{"LOAD","STORE","PTRADD","PTRSUB","MULTIEQUAL"}|calls|extra:
             raise Unsupported("unsupported memory CFG instruction: "+code)
         if not isinstance(op["inputs"],list):raise Unsupported("invalid CFG instruction inputs")
         for value in op["inputs"]:index(value,len(nodes),"varnode")
