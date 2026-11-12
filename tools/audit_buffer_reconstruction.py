@@ -21,6 +21,7 @@ from run_matrix import flags_for
 
 ROOT = Path(__file__).resolve().parents[1]
 IMPLEMENTATION = ["tools/audit_buffer_reconstruction.py", "tools/pcode_memory.py", "tools/pcode_values.py",
+                  "tools/pcode_memory_cfg.py",
                   "tools/pcode_wide.py", "tools/pcode_cfg.py", "tools/effort_resources.py",
                   "tools/ghidra/ExportCSRDBuffers.java", "tools/run_matrix.py", "tools/audit_protection.py"]
 
@@ -54,6 +55,9 @@ def prepare(args, root, report, command):
     components = sorted(set(installation.glob("Ghidra/Features/Decompiler/lib/*.jar")) |
                         set(installation.glob("Ghidra/Features/Decompiler/os/*/decompile")))
     report["ghidra_components"] = {str(p): file_hash(p) for p in components}
+    language=installation/"Ghidra/Processors/AARCH64/data/languages"
+    for name in ("AARCH64base.sinc","AARCH64.sla"):
+        if (language/name).is_file(): report["ghidra_components"][str(language/name)]=file_hash(language/name)
     report["implementation"] = {name: file_hash(ROOT / name) for name in IMPLEMENTATION}
     catalog = ROOT / "benchmarks/matrix.json"
     report["profile_catalog_sha256"] = file_hash(catalog)
@@ -74,7 +78,7 @@ def prepare(args, root, report, command):
         analysis = json.loads(analysis_path.read_text())
         functions = [f for f in analysis["functions"] if not args.function or f["function"] in args.function]
         if not functions: continue
-        if any(f["status"] != "supported" or f.get("semantic_model") != "buffers-u32-c11-v1" for f in functions):
+        if any(f["status"] != "supported" or f.get("semantic_model") not in ("buffers-u32-c11-v1","buffers-byte-c11-v2") for f in functions):
             raise ValueError("selected source functions must use the admitted buffer contract")
         if seen_functions & {f["function"] for f in functions}: raise ValueError("duplicate selected function symbol")
         seen_functions.update(f["function"] for f in functions)
@@ -114,6 +118,8 @@ def prepare(args, root, report, command):
             variants.append({**baseline, "variant": "original-copy", "binary": str(copied), "compile_link_wall_seconds": None})
             for function in functions:
                 params = [{"kind": p["kind"], "read_only": p.get("read_only", False)} for p in function["parameters"]]
+                for public, parameter in zip(params,function["parameters"]):
+                    if parameter.get("element_bits")==8: public["element_signed"]=parameter["element_signed"]
                 group = {"function": function["function"], "profile": profile["id"], "parameters": params,
                          "reference": str(folder / "original.i"), "reference_sha256": file_hash(folder / "original.i"),
                          "variants": variants}
@@ -142,7 +148,12 @@ def observe(args, root, report, command, csrd, headless):
         directory = root / f"attempt-{attempt}"; directory.mkdir()
         export_dir = directory / "export"; export_dir.mkdir()
         project = directory / "project"; project.mkdir()
-        abi = ",".join("u" if p["kind"] == "uint32" else "c" if p["read_only"] else "p" for p in group["parameters"])
+        def public_type(p):
+            if p["kind"]=="uint32": return "u"
+            if p["kind"]=="uint32-buffer": return "c" if p["read_only"] else "p"
+            code={"unsigned-char-buffer":"b","signed-char-buffer":"s","char-buffer":"h" if p["element_signed"] else "j"}[p["kind"]]
+            return code.upper() if p["read_only"] else code
+        abi = ",".join(public_type(p) for p in group["parameters"])
         print(f"{attempt+1}/{len(schedule)} {group['function']} {group['profile']} {variant['variant']}", flush=True)
         try:
             if file_hash(variant["binary"]) != variant["binary_sha256"]: raise ValueError("binary changed")

@@ -20,7 +20,8 @@ struct Verification {
   std::shared_ptr<IntegerWitness> integerComposition;
   std::vector<uint32_t> inputs;
   uint32_t originalOutput = 0, candidateOutput = 0;
-  // Memory counterexamples use mathematical word addresses, not host pointers.
+  // Mathematical addresses, not host pointers; the unit is explicit in reports.
+  std::string memoryAddressUnit;
   std::vector<std::pair<std::string, std::string>> pointerBases;
   struct MemoryCell { std::string address; uint32_t initial, original, candidate; };
   std::vector<MemoryCell> memoryCells;

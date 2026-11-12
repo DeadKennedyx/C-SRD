@@ -67,7 +67,7 @@ bool isArithmetic(Expr::Kind k) { return k == Expr::Kind::Add || k == Expr::Kind
 bool isBitwise(Expr::Kind k) { return k >= Expr::Kind::BitAnd && k <= Expr::Kind::ShiftRight; }
 bool isComparison(Expr::Kind k) { return k >= Expr::Kind::Equal && k <= Expr::Kind::GreaterEqual; }
 const char *operationName(Expr::Kind k) {
-  static const char *names[] = {"constant", "parameter", "add", "subtract", "scale", "and", "or", "xor", "not", "shl", "lshr", "eq", "ne", "ult", "ule", "ugt", "uge", "select", "table", "load"};
+  static const char *names[] = {"constant", "parameter", "add", "subtract", "scale", "and", "or", "xor", "not", "shl", "lshr", "eq", "ne", "ult", "ule", "ugt", "uge", "select", "table", "load", "byte-cast"};
   return names[unsigned(k)];
 }
 }

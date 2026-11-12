@@ -45,6 +45,8 @@ def collect(config):
         values = {"reg:" + name: int(gdb.parse_and_eval("$" + name)) & 0xffffffff for name in registers}
         memory = gdb.selected_inferior().read_memory(memory_address, 64*4).tobytes()
         values.update({f"caller:{i}": int.from_bytes(memory[4*i:4*i+4], "little") for i in range(64)})
+        if config.get("sample_bytes"):
+            values.update({f"caller-byte:{i}":value for i,value in enumerate(memory)})
         try:
             sp = int(gdb.parse_and_eval("$sp"))
             stack = gdb.selected_inferior().read_memory(sp, 64).tobytes()
@@ -56,7 +58,8 @@ def collect(config):
     complete = int(gdb.parse_and_eval("$pc")) == return_address
     result = {"status": "completed" if complete else "step-limit", "architecture": architecture,
               "samples": samples, "steps": len(samples), "stack_read_failures": failures,
-              "scope": "low32 general registers, 64 bytes at SP, all64 caller words before each instruction; no SIMD coverage"}
+              "scope": "low32 general registers, 64 bytes at SP, all64 caller words before each instruction; no SIMD coverage" +
+                       ("; all256 caller bytes also sampled" if config.get("sample_bytes") else "")}
     if complete:
         memory = gdb.selected_inferior().read_memory(memory_address, 64*4).tobytes()
         result["final_memory"] = [int.from_bytes(memory[4*i:4*i+4], "little") for i in range(64)]

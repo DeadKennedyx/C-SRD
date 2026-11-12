@@ -22,8 +22,12 @@ IMPLEMENTATION = ["tools/observe_buffer_runtime.py", "tools/gdb_buffer_trace.py"
 
 
 def run(args, root):
+    from byte_observation_cases import cases as byte_cases, driver as byte_driver, expected as byte_expected, LAYOUTS as byte_layouts
+    selected_cases = byte_cases if args.corpus == "byte" else cases
+    selected_driver = byte_driver if args.corpus == "byte" else driver
+    selected_layouts = byte_layouts if args.corpus == "byte" else LAYOUTS
     report = {"schema_version": 3, "status": "running", "protocol": vars(args), "commands": [],
-              "environment": environment(), "cases": cases(args.input_protocol), "layouts": LAYOUTS, "observations": [],
+              "environment": environment(), "cases": selected_cases(args.input_protocol), "layouts": selected_layouts, "observations": [],
               "claims": {"known_intermediate_targets": True, "seed_or_encoding_given_to_fit": False,
                          "binary_only_algorithm_discovery": False, "human_effort": "not-measured",
                          "exhaustive_visibility": False, "heldout_matches_are_proof": False}}
@@ -37,6 +41,7 @@ def run(args, root):
         gdb = executable(args.gdb)
         report["gdb"] = {"path": gdb, "sha256": file_hash(gdb), "version": command([gdb, "--version"]).splitlines()[0]}
         report["implementation"] = {p: file_hash(ROOT / p) for p in IMPLEMENTATION}
+        if args.corpus=="byte": report["implementation"]["tools/byte_observation_cases.py"]=file_hash(ROOT/"tools/byte_observation_cases.py")
         groups = [g for g in matrix["groups"] if (not args.function or g["function"] in args.function)
                   and (not args.profile or g["profile"] in args.profile)]
         if not groups: raise ValueError("no selected groups")
@@ -51,7 +56,7 @@ def run(args, root):
             tool = matrix["tools"][profile["compiler"]]
             if file_hash(tool["path"]) != tool["sha256"]: raise ValueError("compiler changed")
             directory = root / f"group-{gi}"; directory.mkdir()
-            harness = directory / "harness.c"; harness.write_text(driver(group["function"], group["parameters"]))
+            harness = directory / "harness.c"; harness.write_text(selected_driver(group["function"], group["parameters"]))
             for variant in group["variants"]:
                 if file_hash(variant["binary"]) != variant["binary_sha256"]: raise ValueError("library changed")
                 executable_path = directory / variant["variant"]
@@ -72,7 +77,7 @@ def run(args, root):
 
         for prepared_index, item in enumerate(prepared):
             group, variant = item["group"], item["variant"]
-            for li, (p, q) in enumerate(LAYOUTS):
+            for li, (p, q) in enumerate(selected_layouts):
                 directory = item["directory"] / f"{variant['variant']}-layout-{li}"; directory.mkdir()
                 observation = {"function": group["function"], "profile": group["profile"], "variant": variant["variant"],
                                "layout": [p, q], "library_sha256": variant["binary_sha256"], "status": "running", "traces": [],
@@ -83,10 +88,12 @@ def run(args, root):
                 for ci, case in enumerate(report["cases"]):
                     inputs = directory / f"{ci}.input"
                     inputs.write_text(" ".join(map(str, [p, q, case["x"], *case["memory"]])) + "\n")
-                    wanted = expected(group["function"], case["memory"], p, q, case["x"])
+                    wanted = byte_expected(group["function"], case["memory"], p, q, case["x"],
+                        plain_char_signed=group["parameters"][0].get("element_signed",False)) if args.corpus=="byte" else expected(group["function"], case["memory"], p, q, case["x"])
                     for target, value in wanted["targets"].items(): labels.setdefault(target, []).append(value)
                     trace_path, config_path, script = directory / f"{ci}.trace.json", directory / f"{ci}.json", directory / f"{ci}.gdb"
                     write_json(config_path, {"function": group["function"], "step_limit": args.step_limit,
+                                            "sample_bytes": args.corpus=="byte",
                                             "input_file": str(inputs), "output": str(trace_path)})
                     script.write_text("python\nimport sys\nsys.path.insert(0, " + repr(str(ROOT / "tools")) +
                                       ")\nimport gdb_buffer_trace\ngdb_buffer_trace.main(" + repr(str(config_path)) + ")\nend\n")
@@ -147,6 +154,7 @@ def main():
     p.add_argument("--profile", action="append")
     p.add_argument("--step-limit", type=int, default=512)
     p.add_argument("--input-protocol", choices=("basis-parity-v2", "seeded-v1"), default="basis-parity-v2")
+    p.add_argument("--corpus", choices=("word","byte"), default="word")
     p.add_argument("--output-dir", required=True)
     args = p.parse_args()
     if not 1 <= args.step_limit <= 10000: p.error("step limit must be 1..10000")

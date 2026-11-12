@@ -3,6 +3,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/Stmt.h"
+#include "clang/Basic/TargetInfo.h"
 #include <unordered_set>
 #include <unordered_map>
 #include <algorithm>
@@ -20,6 +21,9 @@ class Analyzer {
   std::unordered_map<const clang::ValueDecl *, std::vector<uint32_t>> arrays;
   std::unordered_map<std::string, uint32_t> loopBounds;
   std::unordered_set<const clang::ValueDecl *> pointers;
+  // Local pointers capture an offset into one original parameter. Their
+  // offsets are scalar IR declarations, frozen when the pointer is initialized.
+  std::unordered_map<const clang::ValueDecl *, std::string> pointerOrigins;
   unsigned memoryExpressions = 0;
 
   bool fail(clang::SourceLocation loc, const std::string &why) {
@@ -29,6 +33,52 @@ class Analyzer {
   bool u32(clang::QualType t) const {
     return !t.hasQualifiers() && ctx.hasSameType(t, ctx.UnsignedIntTy) && ctx.getTypeSize(t) == 32;
   }
+  bool byte(clang::QualType t) const {
+    return !t.hasQualifiers() && t->isAnyCharacterType() && ctx.getTypeSize(t) == 8 &&
+           (ctx.hasSameType(t, ctx.CharTy) || ctx.hasSameType(t, ctx.SignedCharTy) ||
+            ctx.hasSameType(t, ctx.UnsignedCharTy));
+  }
+  static std::unique_ptr<Expr> constant(uint32_t value) {
+    auto e = std::make_unique<Expr>(Expr::Kind::Constant); e->value = value; return e;
+  }
+  std::unique_ptr<Expr> pointerOffset(const clang::Expr *e, std::string &name) {
+    e = e->IgnoreParens();
+    if (e->getBeginLoc().isMacroID() || e->getEndLoc().isMacroID()) {
+      fail(e->getExprLoc(), "macro expansions are not transformed"); return nullptr;
+    }
+    if (const auto *cast = llvm::dyn_cast<clang::ImplicitCastExpr>(e)) {
+      if (cast->getCastKind() == clang::CK_LValueToRValue || cast->getCastKind() == clang::CK_NoOp)
+        return pointerOffset(cast->getSubExpr(), name);
+      fail(e->getExprLoc(), "pointer reinterpretation is unsupported"); return nullptr;
+    }
+    if (const auto *ref = llvm::dyn_cast<clang::DeclRefExpr>(e)) {
+      if (pointers.count(ref->getDecl())) {
+        name = ref->getDecl()->getNameAsString(); return constant(0);
+      }
+      auto found = pointerOrigins.find(ref->getDecl());
+      if (found != pointerOrigins.end()) {
+        name = found->second;
+        auto offset = std::make_unique<Expr>(Expr::Kind::Reference);
+        offset->name = ref->getDecl()->getNameAsString(); return offset;
+      }
+    }
+    if (const auto *add = llvm::dyn_cast<clang::BinaryOperator>(e)) {
+      if (add->getOpcode() == clang::BO_Add && add->getType()->isPointerType()) {
+        const auto *base = add->getLHS()->getType()->isPointerType() ? add->getLHS() : add->getRHS();
+        const auto *index = base == add->getLHS() ? add->getRHS() : add->getLHS();
+        auto offset = pointerOffset(base, name), step = expression(index);
+        if (!offset || !step) return nullptr;
+        auto sum = std::make_unique<Expr>(Expr::Kind::Add);
+        sum->left = std::move(offset); sum->right = std::move(step);
+        if (upperBound(*sum) >= 256) {
+          fail(e->getExprLoc(), "pointer offset must be statically bounded in 0..255"); return nullptr;
+        }
+        region.extendedMemory = true; return sum;
+      }
+    }
+    fail(e->getExprLoc(), "pointer must derive from a buffer parameter using bounded nonnegative offsets");
+    return nullptr;
+  }
   bool boolean(const clang::Expr *e) const {
     const auto *b = llvm::dyn_cast<clang::BinaryOperator>(e->IgnoreParens());
     return b && b->isComparisonOp();
@@ -36,43 +86,69 @@ class Analyzer {
   std::unique_ptr<Expr> access(const clang::Expr *e, bool write = false) {
     e = e->IgnoreParens();
     const clang::Expr *base = nullptr;
-    uint32_t index = 0;
+    auto index = constant(0);
     if (const auto *subscript = llvm::dyn_cast<clang::ArraySubscriptExpr>(e)) {
       base = subscript->getBase();
-      const auto *literal = llvm::dyn_cast<clang::IntegerLiteral>(subscript->getIdx()->IgnoreParens());
-      if (!literal || (!u32(literal->getType()) && !ctx.hasSameType(literal->getType(), ctx.IntTy)) ||
-          literal->getValue().getLimitedValue(16) >= 16) {
-        fail(e->getExprLoc(), "buffer index must be an integer literal in 0..15"); return nullptr;
-      }
-      index = uint32_t(literal->getValue().getZExtValue());
+      index = expression(subscript->getIdx());
     } else if (const auto *unary = llvm::dyn_cast<clang::UnaryOperator>(e)) {
       if (unary->getOpcode() == clang::UO_Deref) base = unary->getSubExpr();
     }
-    const auto *ref = base ? llvm::dyn_cast<clang::DeclRefExpr>(base->IgnoreParenImpCasts()) : nullptr;
-    if (!ref || !pointers.count(ref->getDecl())) {
-      fail(e->getExprLoc(), "memory access requires a direct buffer parameter with a fixed index"); return nullptr;
+    std::string name;
+    if (!base) { fail(e->getExprLoc(), "memory access requires a buffer subscript or dereference"); return nullptr; }
+    auto offset = base ? pointerOffset(base, name) : nullptr;
+    if (!index || !offset) return nullptr;
+    if (offset->kind != Expr::Kind::Constant || offset->value) {
+      auto sum = std::make_unique<Expr>(Expr::Kind::Add);
+      sum->left = std::move(offset); sum->right = std::move(index); index = std::move(sum);
     }
-    const auto name = ref->getDecl()->getNameAsString();
+    const auto bound = upperBound(*index);
+    if (bound >= 256) {
+      fail(e->getExprLoc(), "buffer index must be statically bounded in 0..255"); return nullptr;
+    }
     auto &buffer = region.buffers.at(name);
     if (write && buffer.readOnly) {
       fail(e->getExprLoc(), "cannot store through a const buffer parameter"); return nullptr;
     }
-    buffer.minimumElements = std::max(buffer.minimumElements, unsigned(index + 1));
+    buffer.minimumElements = std::max(buffer.minimumElements, unsigned(bound + 1));
     if (write) ++buffer.stores; else ++buffer.loads;
     auto out = std::make_unique<Expr>(Expr::Kind::Load);
-    out->name = name; out->value = index;
+    out->name = name; out->value = bound;
+    if (index->kind != Expr::Kind::Constant) { out->left = std::move(index); region.extendedMemory = true; }
+    if (bound >= 16) region.extendedMemory = true;
     return out;
   }
   uint32_t upperBound(const Expr &e) const {
     if (e.kind == Expr::Kind::Constant) return e.value;
+    if (e.kind == Expr::Kind::Load) {
+      const auto &b = region.buffers.at(e.name);
+      return b.elementBits == 8 && !b.elementSigned ? 255 : UINT32_MAX;
+    }
+    if (e.kind == Expr::Kind::ByteCast) return e.value ? UINT32_MAX : 255;
     if (e.kind == Expr::Kind::Reference) {
       auto found = loopBounds.find(e.name);
       return found == loopBounds.end() ? UINT32_MAX : found->second;
     }
     if (e.kind == Expr::Kind::BitAnd) return std::min(upperBound(*e.left), upperBound(*e.right));
     if (e.kind == Expr::Kind::ShiftRight) return upperBound(*e.left) >> e.value;
+    if (e.kind == Expr::Kind::ShiftLeft) {
+      const auto bound = uint64_t(upperBound(*e.left)) << e.value;
+      return bound <= UINT32_MAX ? uint32_t(bound) : UINT32_MAX;
+    }
+    if (e.kind == Expr::Kind::BitOr || e.kind == Expr::Kind::BitXor) {
+      uint32_t bound = std::max(upperBound(*e.left), upperBound(*e.right));
+      bound |= bound >> 1; bound |= bound >> 2; bound |= bound >> 4;
+      bound |= bound >> 8; bound |= bound >> 16; return bound;
+    }
     if (e.kind >= Expr::Kind::Equal && e.kind <= Expr::Kind::GreaterEqual) return 1;
-    if (e.kind == Expr::Kind::Select) return std::max(upperBound(*e.right), upperBound(*e.third));
+    if (e.kind == Expr::Kind::Select) {
+      // Expose a checked unsigned clamp's bound after decoding an index.
+      // Translation validation still checks that the clamp preserves its value.
+      if (e.left->kind == Expr::Kind::LessEqual && e.left->left->kind == Expr::Kind::Reference &&
+          e.right->kind == Expr::Kind::Reference && e.left->left->name == e.right->name &&
+          e.left->right->kind == Expr::Kind::Constant)
+        return std::max(e.left->right->value, upperBound(*e.third));
+      return std::max(upperBound(*e.right), upperBound(*e.third));
+    }
     if (e.kind == Expr::Kind::Table) return *std::max_element(e.table.begin(), e.table.end());
     if (e.kind == Expr::Kind::Add || e.kind == Expr::Kind::Scale) {
       const uint64_t bound = e.kind == Expr::Kind::Add ? uint64_t(upperBound(*e.left)) + upperBound(*e.right) : uint64_t(upperBound(*e.left)) * e.value;
@@ -88,6 +164,26 @@ class Analyzer {
       fail(e->getExprLoc(), "macro expansions are not transformed"); return nullptr;
     }
     if (auto *p = llvm::dyn_cast<clang::ParenExpr>(e)) return expression(p->getSubExpr());
+    if (!region.buffers.empty()) if (auto *c = llvm::dyn_cast<clang::CastExpr>(e)) {
+      const auto to = c->getType(), from = c->getSubExpr()->getType().getUnqualifiedType();
+      const bool integral = c->getCastKind() == clang::CK_IntegralCast || c->getCastKind() == clang::CK_NoOp;
+      const bool load = c->getCastKind() == clang::CK_LValueToRValue &&
+                        !c->getSubExpr()->getType().isVolatileQualified();
+      if ((integral || load) && (byte(to) || u32(to) || ctx.hasSameType(to, ctx.IntTy)) &&
+          (byte(from) || u32(from) || ctx.hasSameType(from, ctx.IntTy))) {
+        if (ctx.hasSameType(to, ctx.IntTy) && u32(from)) {
+          fail(e->getExprLoc(), "uint32_t to signed int conversion is unsupported in memory regions"); return nullptr;
+        }
+        auto value = expression(c->getSubExpr());
+        if (!value) return nullptr;
+        if (byte(to) && !load) {
+          auto out = std::make_unique<Expr>(Expr::Kind::ByteCast);
+          out->value = to->isSignedIntegerType(); out->left = std::move(value);
+          region.extendedMemory = true; return out;
+        }
+        return value;
+      }
+    }
     if (auto *c = llvm::dyn_cast<clang::ImplicitCastExpr>(e)) {
       bool allowed = c->getCastKind() == clang::CK_LValueToRValue && u32(c->getType()) && u32(c->getSubExpr()->getType());
       const auto *lit = llvm::dyn_cast<clang::IntegerLiteral>(c->getSubExpr()->IgnoreParens());
@@ -122,7 +218,7 @@ class Analyzer {
     if (auto *unary = llvm::dyn_cast<clang::UnaryOperator>(e)) {
       if (!region.buffers.empty()) {
         if (unary->getOpcode() == clang::UO_Deref) return access(unary);
-        fail(e->getExprLoc(), "buffer regions support only dereference as a unary expression"); return nullptr;
+        region.extendedMemory = true;
       }
       if (unary->getOpcode() != clang::UO_Not || !u32(unary->getType())) {
         fail(e->getExprLoc(), "only unsigned bitwise complement is supported as a unary expression"); return nullptr;
@@ -133,7 +229,7 @@ class Analyzer {
       ++region.operations; return out;
     }
     if (auto *conditional = llvm::dyn_cast<clang::ConditionalOperator>(e)) {
-      if (!region.buffers.empty()) { fail(e->getExprLoc(), "buffer regions require straight-line arithmetic without selections"); return nullptr; }
+      if (!region.buffers.empty()) region.extendedMemory = true;
       if (!u32(e->getType())) { fail(e->getExprLoc(), "conditional values must have unsigned 32-bit type"); return nullptr; }
       auto out = std::make_unique<Expr>(Expr::Kind::Select);
       out->left = expression(conditional->getCond());
@@ -159,12 +255,10 @@ class Analyzer {
       return out;
     }
     if (auto *b = llvm::dyn_cast<clang::BinaryOperator>(e)) {
-      if (!region.buffers.empty() && b->getOpcode() != clang::BO_Add &&
-          b->getOpcode() != clang::BO_Sub && b->getOpcode() != clang::BO_Mul) {
-        fail(e->getExprLoc(), "buffer regions support only addition, subtraction and literal multiplication"); return nullptr;
-      }
-      if ((!b->isComparisonOp() && !u32(b->getType())) ||
-          (b->isComparisonOp() && (!u32(b->getLHS()->getType()) || !u32(b->getRHS()->getType())))) {
+      const bool promotedBytes = !region.buffers.empty() && ctx.hasSameType(b->getType(), ctx.IntTy) &&
+        ctx.hasSameType(b->getLHS()->getType(), ctx.IntTy) && ctx.hasSameType(b->getRHS()->getType(), ctx.IntTy);
+      if (!promotedBytes && ((!b->isComparisonOp() && !u32(b->getType())) ||
+          (b->isComparisonOp() && (!u32(b->getLHS()->getType()) || !u32(b->getRHS()->getType()))))) {
         fail(e->getExprLoc(), "operations require unsigned 32-bit operands and semantics"); return nullptr;
       }
       Expr::Kind kind;
@@ -205,6 +299,17 @@ class Analyzer {
         out->value = right->value; right.reset();
       }
       out->left = std::move(left); out->right = std::move(right);
+      if (promotedBytes) {
+        const auto a = upperBound(*out->left), c = out->right ? upperBound(*out->right) : out->value;
+        bool safe = a <= INT32_MAX && c <= INT32_MAX;
+        if (kind == Expr::Kind::Add) safe &= uint64_t(a) + c <= INT32_MAX;
+        else if (kind == Expr::Kind::Scale) safe &= uint64_t(a) * c <= INT32_MAX;
+        else if (kind == Expr::Kind::ShiftLeft) safe &= (uint64_t(a) << out->value) <= INT32_MAX;
+        else if (kind == Expr::Kind::Subtract) safe = false;
+        if (!safe) { fail(e->getExprLoc(), "promoted byte arithmetic must stay nonnegative and within INT_MAX; cast to uint32_t for modular arithmetic"); return nullptr; }
+      }
+      if (!region.buffers.empty() && (promotedBytes || (kind != Expr::Kind::Add &&
+          kind != Expr::Kind::Subtract && kind != Expr::Kind::Scale))) region.extendedMemory = true;
       ++region.operations;
       return out;
     }
@@ -221,7 +326,8 @@ class Analyzer {
   bool statement(const clang::Stmt *s, bool final, std::vector<Statement> &output, bool nested = false) {
     if (const auto *discard = llvm::dyn_cast<clang::CStyleCastExpr>(s)) {
       const auto *ref = llvm::dyn_cast<clang::DeclRefExpr>(discard->getSubExpr()->IgnoreParenImpCasts());
-      if (discard->getCastKind() == clang::CK_ToVoid && ref && pointers.count(ref->getDecl())) return true;
+      if (discard->getCastKind() == clang::CK_ToVoid && ref &&
+          (pointers.count(ref->getDecl()) || pointerOrigins.count(ref->getDecl()))) return true;
       if (discard->getCastKind() == clang::CK_ToVoid &&
           llvm::isa<clang::DeclRefExpr>(discard->getSubExpr()->IgnoreParenImpCasts()) &&
           expression(discard->getSubExpr())) return true;
@@ -279,6 +385,26 @@ class Analyzer {
       if (nested) return fail(s->getBeginLoc(), "declarations inside control-flow bodies are unsupported");
       if (!d->isSingleDecl()) return fail(s->getBeginLoc(), "use a single initialized variable per declaration");
       auto *v = llvm::dyn_cast<clang::VarDecl>(d->getSingleDecl());
+      if (v && v->getType()->isPointerType() && !region.buffers.empty()) {
+        const auto type = v->getType(), element = type->getPointeeType();
+        if (type.hasQualifiers() || (!u32(element.getUnqualifiedType()) && !byte(element.getUnqualifiedType())) ||
+            (element.hasQualifiers() && element.getQualifiers() != clang::Qualifiers::fromCVRMask(clang::Qualifiers::Const)) ||
+            !v->hasLocalStorage() || v->getStorageClass() != clang::SC_None || v->hasAttrs() || !v->hasInit())
+          return fail(v->getLocation(), "local pointers require a simple initialized automatic buffer view");
+        std::string origin;
+        auto offset = pointerOffset(v->getInit(), origin);
+        if (!offset) return false;
+        const auto name = v->getNameAsString();
+        pointerOrigins.emplace(v, origin); names.insert(name);
+        loopBounds[name] = upperBound(*offset);
+        // Even unused pointer arithmetic requires a live source object under
+        // the footprint contract. One-past formation is intentionally excluded.
+        auto &buffer = region.buffers.at(origin);
+        if (offset->kind != Expr::Kind::Constant || offset->value)
+          buffer.minimumElements = std::max(buffer.minimumElements, unsigned(loopBounds[name] + 1));
+        output.push_back({Statement::Kind::Declare, name, std::move(offset)});
+        region.extendedMemory = true; return true;
+      }
       if (v && ctx.getAsConstantArrayType(v->getType())) {
         if (!region.buffers.empty()) return fail(s->getBeginLoc(), "local arrays are not supported inside buffer regions");
         const auto *type = ctx.getAsConstantArrayType(v->getType());
@@ -320,7 +446,8 @@ class Analyzer {
         auto value = expression(a->getRHS());
         if (!location || !value) return false;
         Statement store(Statement::Kind::Store, location->name, std::move(value));
-        store.index = location->value; output.push_back(std::move(store)); return true;
+        store.index = location->value; store.dynamicIndex = std::move(location->left);
+        output.push_back(std::move(store)); return true;
       }
       auto *ref = llvm::dyn_cast<clang::DeclRefExpr>(a->getLHS()->IgnoreParens());
       if (!ref || !u32(ref->getType()) || !initialized.count(ref->getDecl()))
@@ -345,6 +472,7 @@ public:
   explicit Analyzer(clang::ASTContext &context) : ctx(context) {}
   Analysis run(const clang::FunctionDecl &f) {
     region.name = f.getNameAsString();
+    region.littleEndian = ctx.getTargetInfo().isLittleEndian();
     if (ctx.getTypeSize(ctx.IntTy) != 32 || ctx.getTypeSize(ctx.UnsignedIntTy) != 32 || !u32(f.getReturnType()) ||
         f.isVariadic() || !f.hasWrittenPrototype()) {
       fail(f.getLocation(), "require a prototyped uint32_t function on a target with 32-bit int/unsigned int");
@@ -356,15 +484,23 @@ public:
     for (const auto *p : f.parameters()) {
       if (p->getType()->isPointerType()) {
         const auto element = p->getType()->getPointeeType();
-        if (p->getType().hasQualifiers() || !u32(element.getUnqualifiedType()) ||
+        if (ctx.getTypeSize(ctx.CharTy) != 8 || p->getType().hasQualifiers() ||
+            (!u32(element.getUnqualifiedType()) && !byte(element.getUnqualifiedType())) ||
             (element.hasQualifiers() && element.getQualifiers() != clang::Qualifiers::fromCVRMask(clang::Qualifiers::Const)) ||
             p->getOriginalType()->isArrayType() || p->hasAttrs() || p->getName().empty() || p->getStorageClass() != clang::SC_None) {
-          fail(p->getLocation(), "buffer parameters require unqualified pointers to uint32_t or const uint32_t; array declarators are unsupported");
+          fail(p->getLocation(), "buffer parameters require unqualified pointers to uint32_t or 8-bit character types (optionally const); array declarators are unsupported");
           return std::move(result);
         }
         const auto name = p->getNameAsString();
         pointers.insert(p); names.insert(name); region.parameters.push_back(name);
         Region::Buffer buffer; buffer.readOnly = element.isConstQualified();
+        buffer.elementBits = unsigned(ctx.getTypeSize(element));
+        buffer.elementSigned = element->isSignedIntegerType();
+        if (buffer.elementBits == 8) {
+          region.extendedMemory = true;
+          buffer.elementType = ctx.hasSameType(element.getUnqualifiedType(), ctx.CharTy) ? "char" :
+            buffer.elementSigned ? "signed-char" : "unsigned-char";
+        }
         region.buffers.emplace(name, buffer); continue;
       }
       if (!u32(p->getType()) || p->hasAttrs() || p->getName().empty() || p->getStorageClass() != clang::SC_None) {

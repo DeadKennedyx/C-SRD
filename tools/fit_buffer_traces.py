@@ -11,7 +11,7 @@ from observe_runtime import fit_affine, locations, score_models
 
 
 def location_scope(location):
-    return "caller-memory" if ":caller:" in location else "register" if ":reg:" in location else "stack"
+    return "caller-memory" if ":caller:" in location or ":caller-byte:" in location else "register" if ":reg:" in location else "stack"
 
 
 def run(config):

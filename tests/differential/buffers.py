@@ -54,8 +54,7 @@ int main(void){{
 '''
 
 
-def run(args):
-    source = ROOT / "tests/fixtures/buffers.c"
+def run_fixture(args, source, names, driver_text, model, comparisons, metadata):
     catalog = ROOT / "benchmarks/matrix.json"
     profiles = json.loads(catalog.read_text())["profiles"]
     records, capabilities, transformations = [], [], []
@@ -64,7 +63,7 @@ def run(args):
         output.mkdir(parents=True, exist_ok=False)
     with tempfile.TemporaryDirectory(prefix="csrd-buffer-") as temp:
         root = output or Path(temp)
-        driver = root / "driver.c"; driver.write_text(harness())
+        driver = root / "driver.c"; driver.write_text(driver_text)
         probe = root / "probe.c"; probe.write_text("int main(void){return 0;}\n")
         available = []
         for compiler, version, family in compilers():
@@ -93,7 +92,7 @@ def run(args):
                          "--seed", str(seed), "--report", manifest])
                 data = json.loads(manifest.read_text())
                 if {f["function"] for f in data["functions"] if f["status"] == "transformed" and
-                    f["verification"] == "proved-under-model"} != set(NAMES):
+                    f["verification"] == "proved-under-model"} != set(names):
                     raise AssertionError("incomplete buffer transformation or validation")
                 transformations.append({"strategy": strategy, "seed": str(seed), "source_sha256": data["source_sha256"],
                                         "candidate_sha256": data["candidate_sha256"], "functions": data["functions"]})
@@ -101,7 +100,7 @@ def run(args):
                     cell = directory / f"cell-{number}"; cell.mkdir()
                     commands = []
                     for label, path in (("original", source), ("candidate", variant)):
-                        cmd = [item["compiler"], *flags, *[f"-D{name}={label}_{name}" for name in NAMES],
+                        cmd = [item["compiler"], *flags, *[f"-D{name}={label}_{name}" for name in names],
                                "-c", str(path), "-o", str(cell / f"{label}.o")]
                         execute(cmd); commands.append(cmd)
                     cmd = [item["compiler"], *flags, str(driver), str(cell / "original.o"),
@@ -110,17 +109,22 @@ def run(args):
                     cmd = [str(cell / "compare")]; result = execute(cmd); commands.append(cmd)
                     records.append({**item, "strategy": strategy, "seed": str(seed), "flags": flags,
                                     "commands": commands, "status": "tested-pass", "stdout": result.stdout,
-                                    "comparisons": len(NAMES) * len(LAYOUTS) * CASES + 1})
+                                    "comparisons": comparisons})
                     print(f"PASS buffers {strategy}/{seed} {item['version']} {item['profile']}", flush=True)
-    report = {"schema_version": 1, "model": "buffers-u32-c11-v1", "platform": platform.platform(),
+    report = {"schema_version": 1, "model": model, "platform": platform.platform(),
               "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
               "profile_catalog_sha256": hashlib.sha256(catalog.read_bytes()).hexdigest(),
-              "input_prng": "xorshift32 seed 0x43535244", "pointer_offsets": LAYOUTS, "storage_words": 64,
-              "scope": "Finite correctness tests comparing returns and all 64 memory cells; no performance/protection claim",
+              "input_prng": "xorshift32 seed 0x43535244", **metadata,
+              "scope": "Finite correctness tests comparing returns and entire caller storage; no performance/protection claim",
               "capabilities": capabilities, "transformations": transformations, "records": records,
               "total_comparisons": sum(r["comparisons"] for r in records)}
     Path(args.report).write_text(json.dumps(report, indent=2) + "\n")
     print(f"PASS {len(records)} build cells; {report['total_comparisons']} function/memory comparisons")
+
+
+def run(args):
+    run_fixture(args, ROOT / "tests/fixtures/buffers.c", NAMES, harness(), "buffers-u32-c11-v1",
+                len(NAMES) * len(LAYOUTS) * CASES + 1, {"pointer_offsets": LAYOUTS, "storage_words": 64})
 
 
 if __name__ == "__main__":

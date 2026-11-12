@@ -156,7 +156,7 @@ public:
           if (!decision.xorMask) decision.xorMask = 1;
           if (memory) {
             decision.plan.status = "ordered-memory";
-            decision.plan.reason = "fixed-index loads/stores; encoded scalars; no pure-graph pruning";
+            decision.plan.reason = "bounded ordered loads/stores; encoded scalars; no pure-graph pruning";
           } else decision.plan = plan(*decision.graph, result.options);
           if (decision.plan.status == "inconclusive") throw std::runtime_error(decision.plan.reason);
           const auto range = clang::CharSourceRange::getTokenRange(f->getBody()->getSourceRange());

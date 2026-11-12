@@ -21,11 +21,11 @@ public class ExportCSRDBuffers extends HeadlessScript {
     }
     public void run() throws Exception {
         String[] args = getScriptArgs();
-        if (args.length != 4) throw new IllegalArgumentException("function u,p,c-ABI timeout-seconds output-directory");
+        if (args.length != 4) throw new IllegalArgumentException("function public-buffer-ABI timeout-seconds output-directory");
         Path out = Paths.get(args[3]);
         JsonObject report = new JsonObject();
-        report.addProperty("schema_version", 4);
-        report.addProperty("memory_model", "ordered-u32-buffers-v1");
+        report.addProperty("schema_version", 5);
+        report.addProperty("memory_model", "ordered-byte-buffers-v2");
         report.addProperty("ghidra_version", Application.getApplicationVersion());
         report.addProperty("language", currentProgram.getLanguageID().toString());
         report.addProperty("compiler_spec", currentProgram.getCompilerSpec().getCompilerSpecID().toString());
@@ -56,13 +56,19 @@ public class ExportCSRDBuffers extends HeadlessScript {
             List<Variable> parameters = new ArrayList<>();
             JsonArray signature = new JsonArray();
             for (int i = 0; i < abi.length; ++i) {
-                if (!Set.of("u", "p", "c").contains(abi[i])) throw new IllegalArgumentException("unknown ABI type");
+                if (!Set.of("u", "p", "c", "b", "B", "s", "S", "h", "H", "j", "J").contains(abi[i]))
+                    throw new IllegalArgumentException("unknown ABI type");
                 DataType type = UnsignedIntegerDataType.dataType;
+                String code = abi[i].toLowerCase(Locale.ROOT);
+                if (code.equals("b") || code.equals("j")) type = UnsignedCharDataType.dataType;
+                if (code.equals("s") || code.equals("h")) type = SignedCharDataType.dataType;
                 if (!abi[i].equals("u")) type = new PointerDataType(type, currentProgram.getDefaultPointerSize());
                 parameters.add(new ParameterImpl("p" + i, type, currentProgram));
                 JsonObject item = new JsonObject();
-                item.addProperty("kind", abi[i].equals("u") ? "uint32" : "uint32-buffer");
-                item.addProperty("read_only", abi[i].equals("c"));
+                item.addProperty("kind", code.equals("u") ? "uint32" : code.equals("b") ? "unsigned-char-buffer" :
+                    code.equals("s") ? "signed-char-buffer" : Set.of("h","j").contains(code) ? "char-buffer" : "uint32-buffer");
+                item.addProperty("read_only", abi[i].equals("c") || !abi[i].equals(code));
+                if (Set.of("b","s","h","j").contains(code)) item.addProperty("element_signed", code.equals("s") || code.equals("h"));
                 signature.add(item);
             }
             report.add("parameters", signature);
@@ -91,8 +97,16 @@ public class ExportCSRDBuffers extends HeadlessScript {
                     entry = block.getIndex();
                 }
                 JsonArray incoming = new JsonArray(), outgoing = new JsonArray(), ordered = new JsonArray();
-                for (int i = 0; i < block.getInSize(); ++i) incoming.add(block.getIn(i).getIndex());
-                for (int i = 0; i < block.getOutSize(); ++i) outgoing.add(block.getOut(i).getIndex());
+                for (int i = 0; i < block.getInSize(); ++i) {
+                    JsonObject edge = new JsonObject();
+                    edge.addProperty("block", block.getIn(i).getIndex());
+                    edge.addProperty("reverse_index", block.getInRevIndex(i)); incoming.add(edge);
+                }
+                for (int i = 0; i < block.getOutSize(); ++i) {
+                    JsonObject edge = new JsonObject();
+                    edge.addProperty("block", block.getOut(i).getIndex());
+                    edge.addProperty("reverse_index", block.getOutRevIndex(i)); outgoing.add(edge);
+                }
                 Iterator<PcodeOp> iterator = block.getIterator();
                 while (iterator.hasNext()) {
                     PcodeOp op = iterator.next();

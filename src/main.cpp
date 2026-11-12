@@ -137,11 +137,12 @@ llvm::json::Object proof(const csrd::Verification &v) {
       llvm::json::Array cells;
       for (const auto &entry : v.pointerBases) bases[entry.first] = entry.second;
       for (const auto &cell : v.memoryCells) cells.push_back(llvm::json::Object{
-        {"word_address", cell.address}, {"initial", cell.initial},
+        {v.memoryAddressUnit == "byte" ? "byte_address" : "word_address", cell.address}, {"initial", cell.initial},
         {"original", cell.original}, {"candidate", cell.candidate}});
-      result["pointer_word_bases"] = std::move(bases);
+      result[v.memoryAddressUnit == "byte" ? "pointer_byte_bases" : "pointer_word_bases"] = std::move(bases);
+      result["address_unit"] = v.memoryAddressUnit;
       result["memory_cells"] = std::move(cells);
-      result["input_layout"] = "inputs contains scalar parameters only, in signature order; pointer bases are abstract word addresses";
+      result["input_layout"] = "inputs contains scalar parameters only, in signature order; pointer bases are abstract addresses in address_unit";
     }
   }
   return result;
@@ -192,12 +193,15 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
     }
     if (d.region) {
       const auto &region = *d.region;
-      f["semantic_model"] = region.buffers.empty() ? "pure-u32-c11-v2" : "buffers-u32-c11-v1";
+      f["semantic_model"] = region.buffers.empty() ? "pure-u32-c11-v2" :
+        region.extendedMemory ? "buffers-byte-c11-v2" : "buffers-u32-c11-v1";
+      if (!region.buffers.empty()) f["byte_order"] = region.littleEndian ? "little" : "big";
       llvm::json::Array parameters;
       for (const auto &name : region.parameters) {
         const auto buffer = region.buffers.find(name);
         if (buffer == region.buffers.end()) parameters.push_back(llvm::json::Object{{"name", name}, {"kind", "uint32"}});
-        else parameters.push_back(llvm::json::Object{{"name", name}, {"kind", "uint32-buffer"},
+        else parameters.push_back(llvm::json::Object{{"name", name}, {"kind", buffer->second.elementType + "-buffer"},
+          {"element_bits", buffer->second.elementBits}, {"element_signed", buffer->second.elementSigned},
           {"read_only", buffer->second.readOnly}, {"minimum_elements", buffer->second.minimumElements},
           {"loads", buffer->second.loads}, {"stores", buffer->second.stores}});
       }

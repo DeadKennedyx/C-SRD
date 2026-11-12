@@ -67,6 +67,35 @@ def snapshot():
     return e.finish(result)
 
 
+def byte_diamond():
+    e=Export()
+    e.data.update(schema_version=5,memory_model="ordered-byte-buffers-v2")
+    e.data["parameters"][0].update(kind="unsigned-char-buffer",element_signed=False)
+    masked=e.op("INT_AND",[e.x,e.constant(7)])
+    cap=e.constant(3)
+    condition=e.op("INT_LESS",[cap,masked],size=1)
+    e.op("CBRANCH",[e.destination,condition],size=None)
+    first=len(e.data["operations"])
+    no=e.op("COPY",[masked]);e.op("BRANCH",[e.destination],size=None)
+    second=len(e.data["operations"])
+    yes=e.op("COPY",[cap]);e.op("BRANCH",[e.destination],size=None)
+    join=len(e.data["operations"])
+    merged=e.op("MULTIEQUAL",[no,yes])
+    wide=e.op("INT_ZEXT",[merged],size=8)
+    pointer=e.op("PTRADD",[e.p,wide,e.constant(1,8)],size=8)
+    value=e.op("LOAD",[e.space,pointer],size=1)
+    data=e.finish(e.op("INT_ZEXT",[value]))
+    def edge(block,reverse):return {"block":block,"reverse_index":reverse}
+    ranges=[(0,first),(first,second),(second,join),(join,len(data["operations"]))]
+    incoming=[[],[edge(0,0)],[edge(0,1)],[edge(1,0),edge(2,0)]]
+    outgoing=[[edge(1,0),edge(2,0)],[edge(3,0)],[edge(3,1)],[]]
+    data["blocks"]=[]
+    for i,(begin,end) in enumerate(ranges):
+        for op in data["operations"][begin:end]:op["block"]=i
+        data["blocks"].append({"id":i,"operations":list(range(begin,end)),"incoming":incoming[i],"outgoing":outgoing[i]})
+    return data
+
+
 class MemoryReconstruction(unittest.TestCase):
     def grade(self, reference, candidate, expected="proved-under-model"):
         with tempfile.TemporaryDirectory() as tmp:
@@ -91,6 +120,64 @@ class MemoryReconstruction(unittest.TestCase):
         # Move the store after the second load. Valid SSA, wrong with aliases.
         data["operations"][1], data["operations"][2] = data["operations"][2], data["operations"][1]
         self.grade(reference, reconstruct(data), "counterexample")
+
+    def test_byte_dynamic_offset_and_word_alias(self):
+        e=Export()
+        e.data.update(schema_version=5,memory_model="ordered-byte-buffers-v2")
+        e.data["parameters"][0].update(kind="unsigned-char-buffer",element_signed=False)
+        idx=e.op("INT_AND",[e.x,e.constant(7)])
+        wide=e.op("INT_ZEXT",[idx],size=8)
+        pointer=e.op("PTRADD",[e.p,wide,e.constant(1,8)],size=8)
+        before=e.load(e.q)
+        low=e.op("SUBPIECE",[e.x,e.constant(0)],size=1)
+        e.store(pointer,low)
+        after=e.load(e.q)
+        data=e.finish(e.op("INT_ADD",[before,after]))
+        metrics={}
+        self.grade("unsigned int f(unsigned char*p,unsigned int*q,unsigned int x){unsigned int b=q[0];p[x&7u]=x;return b+q[0];}",reconstruct(data,metrics=metrics))
+        self.assertEqual(metrics["footprint_elements"],{"0":8,"1":1})
+        self.grade(reconstruct(data),reconstruct(data,final_store_offset=1),"counterexample")
+        # An unbounded offset must not acquire a false range just from clamping.
+        data["operations"][0]["inputs"][1]=e.constant(0xffffffff)
+        with self.assertRaises(Unsupported): reconstruct(data)
+
+    def test_signed_byte_load_is_raw_before_sign_extension(self):
+        e=Export()
+        e.data.update(schema_version=5,memory_model="ordered-byte-buffers-v2")
+        e.data["parameters"][0].update(kind="signed-char-buffer",element_signed=True)
+        raw=e.op("LOAD",[e.space,e.p],size=1)
+        value=e.op("INT_SEXT",[raw])
+        data=e.finish(value)
+        self.grade("unsigned int f(signed char*p,unsigned int*q,unsigned int x){(void)q;(void)x;return (unsigned int)p[0];}",reconstruct(data))
+
+    def test_scalar_diamond_preserves_clamped_index(self):
+        data=byte_diamond();metrics={}
+        source=reconstruct(data,metrics=metrics)
+        self.grade("unsigned int f(unsigned char*p,unsigned int*q,unsigned int x){(void)q;unsigned int i=x&7u;return p[i<=3u?i:3u];}",source)
+        self.assertEqual(metrics["scalar_diamonds"],1)
+        self.assertEqual(metrics["footprint_elements"]["0"],4)
+        legacy=copy.deepcopy(data)
+        for block in legacy["blocks"]:
+            for direction in ("incoming","outgoing"):
+                block[direction]=[e["block"] for e in block[direction]]
+        self.grade("unsigned int f(unsigned char*p,unsigned int*q,unsigned int x){(void)q;unsigned int i=x&7u;return p[i<=3u?i:3u];}",reconstruct(legacy))
+        # Wrong incoming-phi correspondence changes results on concrete inputs.
+        wrong=copy.deepcopy(data)
+        phi=next(o for o in wrong["operations"] if o["opcode"]=="MULTIEQUAL")
+        phi["inputs"].reverse()
+        # This input violates dominance (arm-local definitions on wrong edges).
+        with self.assertRaises(Unsupported):reconstruct(wrong)
+
+    def test_diamond_cannot_speculate_effects_or_accept_virtual_opcodes(self):
+        data=byte_diamond()
+        branch=data["operations"][data["blocks"][1]["operations"][0]]
+        phi=next(o for o in data["operations"] if o["opcode"]=="MULTIEQUAL")
+        phi["inputs"][0]=branch["inputs"][0]
+        # Replace the false arm's copy with a store; its inputs dominate it.
+        branch.update(opcode="STORE",inputs=[3,0,2]);branch.pop("output")
+        with self.assertRaisesRegex(Unsupported,"effects"):reconstruct(data)
+        data=byte_diamond();data["operations"][0]["opcode"]="CSRD_SELECT"
+        with self.assertRaises(Unsupported):reconstruct(data)
 
     def test_stores_survive_constant_return_and_mutations(self):
         e = Export(); e.store(e.p, e.x); e.store(e.q, e.load(e.p))

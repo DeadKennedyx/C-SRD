@@ -12,7 +12,8 @@ from audit_region_observers import checked_artifacts, command
 from region_observation_cases import FUNCTIONS
 
 
-def elf_functions(data):
+def elf_functions(data, names=None):
+    requested=set(FUNCTIONS if names is None else names)
     if data[:6] != b"\x7fELF\x02\x01": raise ValueError("requires little-endian ELF64")
     header=struct.unpack_from("<16sHHIQQQIHHHHHH",data)
     offset,entry_size,count=header[6],header[11],header[12]
@@ -29,7 +30,7 @@ def elf_functions(data):
             if info & 15 != 2 or index==0:continue
             if name>=len(names) or b"\0" not in names[name:]:raise ValueError("invalid symbol name")
             label=names[name:].split(b"\0",1)[0].decode("utf-8")
-            if label not in FUNCTIONS:continue
+            if label not in requested:continue
             if index>=count:raise ValueError("unsupported special symbol section")
             target=sections[index];relative=value-target[3]
             if not size or relative<0 or relative+size>target[5] or target[4]+relative+size>len(data):raise ValueError("function outside code section")
@@ -37,7 +38,7 @@ def elf_functions(data):
             item={"bytes":size,"sha256":hashlib.sha256(raw).hexdigest(),"address":value}
             if label in found and found[label]!=item:raise ValueError("ambiguous public symbol")
             found[label]=item
-    if found.keys()!=FUNCTIONS.keys():raise ValueError("missing public function")
+    if found.keys()!=requested:raise ValueError("missing public function")
     return found
 
 
