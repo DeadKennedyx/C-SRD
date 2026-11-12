@@ -111,27 +111,40 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
     if len(nodes) > LIMITS["nodes"] or len(ops) > LIMITS["operations"]:
         raise Unsupported("P-code budget exceeded")
     diamonds=0
+    graph=None
     if export.get("operation_order") != "basic-block-live-order":
         raise Unsupported("requires ordered basic-block instructions")
     if extended:
-        from pcode_memory_cfg import linearize
-        ops,diamonds=linearize(export)
-        blocks=[{"id":0,"incoming":[],"outgoing":[],"operations":list(range(len(ops)))}]
-    if len(blocks) != 1:
+        from pcode_memory_cfg import linearize,validated_graph
+        try:ops,diamonds=linearize(export)
+        except Unsupported:
+            if not records:raise
+            graph=validated_graph(export)
+            if any(o['opcode']=='CALL' for o in ops):raise Unsupported('conditional calls are not modeled')
+        if graph is None:blocks=[{"id":0,"incoming":[],"outgoing":[],"operations":list(range(len(ops)))}]
+    if graph is None and len(blocks) != 1:
         raise Unsupported("buffer observer currently requires one ordered basic block")
     block = blocks[0]
-    if (type(block["id"]) is not int or (not extended and export["entry_block"] != block["id"]) or
+    if graph is None and (type(block["id"]) is not int or (not extended and export["entry_block"] != block["id"]) or
             block["incoming"] or block["outgoing"] or block["operations"] != list(range(len(ops)))):
         raise Unsupported("inconsistent straight-line block membership")
-    if not ops or ops[-1]["opcode"] != "RETURN" or any(o["opcode"] == "RETURN" for o in ops[:-1]):
+    if graph is None and (not ops or ops[-1]["opcode"] != "RETURN" or any(o["opcode"] == "RETURN" for o in ops[:-1])):
         raise Unsupported("requires one final return")
     metrics.update(observer="ordered-calls-buffers-v1" if calls else "ordered-byte-buffers-v2" if extended else "ordered-u32-buffers-v1", evaluated_operations=0,
                    emitted_statements=0, loads=0, stores=0, pointer_operations=0,
                    calls=0,
                    scalar_diamonds=diamonds,
                    footprint_elements={str(i): 0 for i, p in enumerate(objects) if p["kind"] != "uint32"})
-    builder, values, definitions = Builder(metrics), {}, set()
+    class ScopedBuilder(Builder):
+        def emit(self,bits,expression):
+            value=super().emit(bits,expression)
+            if graph is not None:self.lines.append('    (void)'+value.atom+';')
+            return value
+    builder, values, definitions = ScopedBuilder(metrics), {}, set()
     bounds, predicates, multiples, origins = {}, {}, {}, {}
+    identical_scalars = {}
+    lower,excluded={},{}
+    constant_choices={};choice_depth={}
 
     def multiple(value):
         if value.known is not None:return (value.known & -value.known) if value.known else (1<<value.bits)
@@ -143,13 +156,74 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
         if value.parts: return sum(bound(part) << (i*32) for i,part in enumerate(value.parts))
         return (1 << value.bits)-1
 
+    def minimum(value,depth=0):
+        if value.known is not None:return value.known
+        result=lower.get(value,0)
+        if depth<32 and value in origins:
+            code,bits,args=origins[value];a=minimum(args[0],depth+1);mask=(1<<bits)-1
+            if code in ('COPY','CAST','INT_ZEXT') and bound(args[0])<=mask:result=max(result,a)
+            elif code in ('INT_ADD','INT_MULT'):
+                b=minimum(args[1],depth+1);maximum=bound(args[0])+bound(args[1]) if code=='INT_ADD' else bound(args[0])*bound(args[1])
+                if maximum<=mask:result=max(result,a+b if code=='INT_ADD' else a*b)
+        return result
+
+    def comparison(code,a,b):
+        lo,hi,other_lo,other_hi=minimum(a),bound(a),minimum(b),bound(b)
+        if code=='INT_LESS':
+            if hi<other_lo:return True
+            if lo>=other_hi:return False
+        if code=='INT_LESSEQUAL':
+            if hi<=other_lo:return True
+            if lo>other_hi:return False
+        if code in ('INT_EQUAL','INT_NOTEQUAL'):
+            if hi<other_lo or other_hi<lo:return code=='INT_NOTEQUAL'
+            if lo==hi==other_lo==other_hi:return code=='INT_EQUAL'
+        return None
+
     def operation(code, bits, args):
+        # Some high-P-code exports narrow a masked temporary without resizing
+        # its inputs, or retain a wider comparison constant. Normalize only
+        # when no possible value loses a bit; raw scalar shape checks stay strict.
+        if records and code=='INT_AND' and len(args)==2 and args[0].bits==args[1].bits and bits<args[0].bits<=32:
+            if any(a.known is not None and a.known < (1<<bits) for a in args):
+                metrics['lossless_width_normalizations']=metrics.get('lossless_width_normalizations',0)+1
+                full=operation(code,args[0].bits,args)
+                return operation('SUBPIECE',bits,[full,literal(32,0)])
+        if records and code in COMPARE and bits==8 and len(args)==2 and args[0].bits!=args[1].bits:
+            small,wide=sorted(args,key=lambda a:a.bits)
+            if wide.known is not None and wide.known < (1<<small.bits):
+                metrics['lossless_width_normalizations']=metrics.get('lossless_width_normalizations',0)+1
+                args=[literal(small.bits,a.known) if a==wide else a for a in args]
+        if code=='INT_MULT' and bits==32 and all(a.bits==32 and a.known is None for a in args) and len(args)==2:
+            for factor,other in (args,list(reversed(args))):
+                if factor in constant_choices:
+                    condition,yes,no=constant_choices[factor]
+                    metrics['selected_constant_multiplications']=metrics.get('selected_constant_multiplications',0)+1
+                    return select(condition,operation(code,bits,[other,yes]),operation(code,bits,[other,no]))
+            small,other=sorted(args,key=bound)
+            maximum=bound(small)
+            if maximum<=16:
+                # Binary compilers can turn a choice of constant scales into a
+                # variable multiply. Reconstruct its proved small unsigned range
+                # using exact bit selection, without admitting general C multiply.
+                metrics['bounded_multiplications']=metrics.get('bounded_multiplications',0)+1
+                result=literal(32,0)
+                for bit in range(maximum.bit_length()):
+                    flag=operation('INT_AND',32,[small,literal(32,1<<bit)])
+                    flag=operation('INT_NOTEQUAL',8,[flag,literal(32,0)])
+                    scaled=operation('INT_MULT',32,[other,literal(32,1<<bit)])
+                    result=operation('INT_ADD',32,[result,select(flag,scaled,literal(32,0))])
+                return result
         value = builder.operation(code, bits, args)
+        if graph is not None and code in COMPARE:
+            known=comparison(code,args[0],args[1])
+            if known is not None:return literal(bits,int(known))
         maximum = (1 << bits)-1
         a, b = bound(args[0]), bound(args[1]) if len(args)>1 else 0
         if code in ("COPY", "CAST", "INT_ZEXT"): maximum = min(maximum,a)
         elif code == "INT_SEXT" and a < (1 << (args[0].bits-1)): maximum = a
         elif code == "INT_ADD" and a+b <= maximum: maximum = a+b
+        elif code == "INT_SUB" and minimum(args[0])>=b: maximum = a-minimum(args[1])
         elif code == "INT_MULT" and a*b <= maximum: maximum = a*b
         elif code == "INT_AND": maximum = min(a,b)
         elif code in ("INT_OR","INT_XOR"): maximum = (1 << max(a,b).bit_length())-1
@@ -168,7 +242,14 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
         elif code=="INT_AND":m=max(multiple(args[0]),multiple(args[1]))
         elif code=="INT_LEFT" and args[1].known is not None:m=multiple(args[0])<<min(args[1].known,bits)
         multiples[value]=min(1<<bits,m)
-        if value.known is None and value not in args:origins[value]=(code,bits,tuple(args))
+        if value.known is None and value not in args:
+            signature=(code,bits,tuple(args));origins[value]=signature
+            peers=identical_scalars.setdefault(signature,set())
+            for peer in peers:
+                if peer in bounds:bounds[value]=min(bounds[value],bounds[peer])
+                if peer in lower:lower[value]=max(lower.get(value,0),lower[peer])
+                if peer in excluded:excluded.setdefault(value,set()).update(excluded[peer])
+            peers.add(value)
         if value.known is None:
             if code in COMPARE:predicates[value]=(code,args[0],args[1],False)
             elif code=="BOOL_NEGATE" and args[0] in predicates:
@@ -217,6 +298,9 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             return maximum
         bounds[result]=max(branch_bound(yes,True),branch_bound(no,False))
         multiples[result]=min(multiple(yes),multiple(no))
+        if yes.bits==32 and all(v.known is not None or v in constant_choices for v in (yes,no)):
+            depth=1+max(choice_depth.get(v,0) for v in (yes,no))
+            if depth<=32:constant_choices[result]=(condition,yes,no);choice_depth[result]=depth
         return result
     for i, node in enumerate(nodes):
         size = node["size"]
@@ -321,16 +405,17 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
 
     result = None
     final_store = max((i for i, op in enumerate(ops) if op["opcode"] == "STORE"), default=-1) if final_store_offset else -1
-    for oi, op in enumerate(ops):
+    def process(oi,op):
+        nonlocal result,call_argument_offset
         code, inputs = op["opcode"], op["inputs"]
-        if op.get("block") != block["id"] or not isinstance(inputs, list):
+        if (graph is None and op.get("block") != block["id"]) or not isinstance(inputs, list):
             raise Unsupported("invalid instruction block or inputs")
         for i in inputs:
             index(i, len(nodes), "varnode")
         out = op.get("output")
         if out is not None:
             index(out, len(nodes), "varnode")
-            if out in values or out in definitions or nodes[out].get("input"):
+            if (graph is None and (out in values or out in definitions)) or nodes[out].get("input") or 'constant' in nodes[out]:
                 raise Unsupported("multiple definitions or overwriting input/constant")
             definitions.add(out)
         if code in ("STORE", "RETURN"):
@@ -345,6 +430,9 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             result = args[0]
             if not isinstance(result, Value) or result.bits != 32:
                 raise Unsupported("return must be uint32")
+            if graph is not None:
+                expression=result.atom if not result_offset else f'({result.atom}+{result_offset & 0xffffffff}u)'
+                builder.lines.append('    return '+expression+';')
         elif records and code=="INDIRECT":
             # Only loader-resolved GOT slots are immutable in this observer's
             # ordinary C object model. Never discard an INDIRECT on program data.
@@ -405,11 +493,15 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             values[out]=select(*args)
         elif any(isinstance(a, Pointer) for a in args):
             metrics["pointer_operations"] += 1
+            if graph is not None and code in COMPARE and len(args)==2 and all(isinstance(a,Pointer) for a in args):
+                if args[0].slot!=args[1].slot:raise Unsupported('pointer comparisons require one shared base')
+                offsets=[a.offset if isinstance(a.offset,Value) else literal(pointer_bits,a.offset) for a in args]
+                values[out]=operation(code,bits,offsets);return
             if bits != pointer_bits:
                 raise Unsupported("pointer width changed or escaped to integer data")
             if code in ("COPY", "CAST") and len(args) == 1:
                 values[out] = args[0]
-                continue
+                return
             if code == "INT_ADD" and len(args) == 2 and isinstance(args[1], Pointer):
                 args = [args[1], args[0]]
             if not isinstance(args[0], Pointer):
@@ -428,7 +520,7 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
                 if any(a.bits!=pointer_bits for a in args): raise Unsupported("pointer arithmetic width mismatch")
                 initial=base.offset if isinstance(base.offset,Value) else literal(pointer_bits,base.offset)
                 values[out]=Pointer(pointer_bits,base.slot,operation("INT_ADD",pointer_bits,[initial,delta]))
-                continue
+                return
             if code == "PTRADD" and len(args) == 3:
                 delta = constant(args[1]) * constant(args[2])
             elif code in ("PTRSUB", "INT_ADD", "INT_SUB") and len(args) == 2:
@@ -458,13 +550,90 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
                 raise Unsupported(f"scalar operation outside buffer observer contract: {code}")
         if len(builder.lines) > LIMITS["emitted_statements"]:
             raise Unsupported("emitted statement budget exceeded")
-    expression = result.atom
+
+    def refine(condition,truth):
+        if condition not in predicates:return True
+        code,a,b,negated=predicates[condition];truth=truth!=negated
+        if a.known is not None and b.known is None:
+            if code in ('INT_EQUAL','INT_NOTEQUAL'):a,b=b,a
+            elif code in ('INT_LESS','INT_LESSEQUAL'):
+                a,b=b,a;code='INT_LESSEQUAL' if code=='INT_LESS' else 'INT_LESS';truth=not truth
+            else:return True
+        if b.known is None:return True
+        n=b.known;lo,hi=minimum(a),bound(a)
+        if code=='INT_LESS':
+            if truth:hi=min(hi,n-1)
+            else:lo=max(lo,n)
+        elif code=='INT_LESSEQUAL':
+            if truth:hi=min(hi,n)
+            else:lo=max(lo,n+1)
+        elif code in ('INT_EQUAL','INT_NOTEQUAL'):
+            if truth==(code=='INT_EQUAL'):lo,hi=max(lo,n),min(hi,n)
+            else:excluded.setdefault(a,set()).add(n)
+        else:return True
+        step=multiple(a)
+        lo=((lo+step-1)//step)*step;hi=(hi//step)*step
+        while lo<=hi and lo in excluded.get(a,()):lo+=step
+        while lo<=hi and hi in excluded.get(a,()):hi-=step
+        if lo>hi:return False
+        # Independent SSA temporaries can compute exactly the same total scalar
+        # expression. Share facts, never C variable names or speculative loads.
+        for peer in identical_scalars.get(origins.get(a),{a}):
+            lower[peer]=max(lower.get(peer,0),lo);bounds[peer]=min(bound(peer),hi)
+            excluded.setdefault(peer,set()).update(excluded.get(a,()))
+        return True
+
+    if graph is None:
+        for oi,op in enumerate(ops):process(oi,op)
+    else:
+        metrics.update(observer='bounded-guarded-memory-v1',block_expansions=0,terminal_paths=0,constant_branches=0,symbolic_branches=0,max_path_block_entries=0)
+        def walk(bid,incoming,environment,limits,depth):
+            nonlocal values,bounds,lower,excluded
+            metrics['block_expansions']+=1;metrics['max_path_block_entries']=max(metrics['max_path_block_entries'],depth)
+            if depth>LIMITS['path_block_entries'] or metrics['block_expansions']>LIMITS['block_expansions']:
+                raise Unsupported('complete memory CFG expansion exceeds block budget')
+            values=environment.copy();bounds,lower,excluded=limits[0].copy(),limits[1].copy(),{v:set(s) for v,s in limits[2].items()}
+            body=graph.blocks[bid]
+            phis=[ops[i] for i in body['operations'] if ops[i]['opcode']=='MULTIEQUAL']
+            merged={op['output']:values[op['inputs'][incoming]] for op in phis}
+            for oi in body['operations']:
+                if 'output' in ops[oi]:values.pop(ops[oi]['output'],None)
+            values.update(merged)
+            for oi in body['operations']:
+                op=ops[oi];code=op['opcode']
+                if code in ('MULTIEQUAL','BRANCH','CBRANCH'):continue
+                process(oi,op)
+                if code=='RETURN':
+                    metrics['terminal_paths']+=1
+                    if metrics['terminal_paths']>LIMITS['terminal_paths']:raise Unsupported('complete memory CFG expansion exceeds path budget')
+                    return
+            env=values.copy();snapshot=(bounds.copy(),lower.copy(),{v:set(s) for v,s in excluded.items()})
+            def successor(slot,condition=None):
+                nonlocal bounds,lower,excluded
+                bounds,lower,excluded=snapshot[0].copy(),snapshot[1].copy(),{v:set(s) for v,s in snapshot[2].items()}
+                if condition is not None and not refine(condition,bool(slot)):
+                    # Exact interval contradiction, never a heuristic path cut.
+                    builder.lines.append('    return 0u;');return
+                edge=body['outgoing'][slot]
+                walk(edge['block'],edge['reverse_index'],env,(bounds,lower,excluded),depth+1)
+            last=ops[body['operations'][-1]] if body['operations'] else None
+            if last and last['opcode']=='CBRANCH':
+                condition=read(last['inputs'][1])
+                if not isinstance(condition,Value) or condition.bits!=8:raise Unsupported('nonboolean memory branch')
+                if condition.known is not None:
+                    metrics['constant_branches']+=1;successor(int(condition.known!=0));return
+                metrics['symbolic_branches']+=1
+                builder.lines.append('    if ('+condition.atom+' != 0u) {');successor(1,condition)
+                builder.lines.append('    } else {');successor(0,condition);builder.lines.append('    }')
+            else:successor(0)
+        walk(graph.entry,None,values,(bounds,lower,excluded),1)
+    expression = result.atom if graph is None else '0u'
     if result_offset:
         expression = f"({expression} + {result_offset & 0xffffffff}u)"
     signature = ", ".join(("const " if p["read_only"] else "") + ctype(p) +
                           (" *" if p["kind"] != "uint32" else " ") + f"p{i}"
                           for i, p in enumerate(parameters))
-    lines = builder.lines + [f"    (void)v{i};" for i in range(builder.serial)] + [f"    (void)p{i};" for i in range(arity)] + [f"    return {expression};"]
+    lines = builder.lines + ([] if graph is not None else [f"    (void)v{i};" for i in range(builder.serial)]) + [f"    (void)p{i};" for i in range(arity)] + [f"    return {expression};"]
     source = ("\n".join(declarations)+"\n" if declarations else "")+f"unsigned int {name}({signature}) {{\n" + "\n".join(lines) + "\n}\n"
     if len(source.encode()) > LIMITS["generated_bytes"]:
         raise Unsupported("generated source budget exceeded")

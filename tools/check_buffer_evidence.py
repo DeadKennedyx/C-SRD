@@ -49,6 +49,7 @@ def check_reconstruction(path):
     for source in report["sources"]:
         for item in [source, *source["dependencies"]]: checked(item["path"], item["sha256"])
     for group in report["groups"]:
+        if "public_abi" in group:checked(group["public_abi"],group["public_abi_sha256"])
         checked(group["reference"], group["reference_sha256"])
         require([v["variant"] for v in group["variants"]] == ["original", "identity", "affine", "original-copy"], "variant set changed")
         for variant in group["variants"]:
@@ -99,7 +100,8 @@ def check_reconstruction(path):
             wrong = directory / f"{label}.c"
             require(wrong.read_text() == reconstruct(export, **mutation), "wrong mutation input")
             control = load(directory / f"{label}.json")
-            require(control["source_sha256"] == row["recovered_sha256"] and control["candidate_sha256"] == file_hash(wrong), "control proof identity mismatch")
+            control_source=group["reference_sha256"] if report.get("control_reference")=="original-source" else row["recovered_sha256"]
+            require(control["source_sha256"] == control_source and control["candidate_sha256"] == file_hash(wrong), "control proof identity mismatch")
             require(control["functions"][0]["verification"] == row["controls"][label] == "counterexample", "control not rejected")
             controls += 1
     recomputed = copy.deepcopy(report); summarize(recomputed)
@@ -115,12 +117,16 @@ def check_runtime(path):
     for name in ("tools/fit_buffer_traces.py", "tools/observe_runtime.py"):
         checked(ROOT / name, report["implementation"][name])
     matrix = load(checked(report["matrix"]["path"], report["matrix"]["sha256"]))
-    require(report["cases"] == cases(report["protocol"].get("input_protocol", "seeded-v1")) and
-            report["layouts"] == list(map(list, LAYOUTS)), "runtime input protocol changed")
+    selected_cases,selected_expected,layouts=cases,expected,LAYOUTS
+    if report["protocol"].get("corpus")=="control":
+        from control_observation_cases import cases as selected_cases,expected as selected_expected,LAYOUTS as layouts
+    elif report["protocol"].get("corpus","word")!="word":raise ValueError("evidence checker supports word/control runtime corpora")
+    require(report["cases"] == selected_cases(report["protocol"].get("input_protocol", "seeded-v1")) and
+            report["layouts"] == list(map(list, layouts)), "runtime input protocol changed")
     groups = [g for g in matrix["groups"] if (not report["protocol"]["function"] or g["function"] in report["protocol"]["function"])
               and (not report["protocol"]["profile"] or g["profile"] in report["protocol"]["profile"])]
     keys = {(g["function"], g["profile"], v["variant"], tuple(layout))
-            for g in groups for v in g["variants"] for layout in LAYOUTS}
+            for g in groups for v in g["variants"] for layout in layouts}
     require(len(keys) == len(report["observations"]), "runtime schedule incomplete")
     seen, executions, fits = set(), 0, 0
     for row in report["observations"]:
@@ -148,7 +154,7 @@ def check_runtime(path):
             trace = load(checked(trace_path, record["sha256"]))
             if record["status"] != "completed": continue
             require(record["resources"]["status"] == "completed", "completed trace exceeded a resource budget")
-            oracle = expected(row["function"], case["memory"], *row["layout"], case["x"])
+            oracle = selected_expected(row["function"], case["memory"], *row["layout"], case["x"])
             require(trace["status"] == "completed" and trace["steps"] == len(trace["samples"]) and
                     trace["return_value"] == oracle["return_value"] and trace["final_memory"] == oracle["final_memory"], "trace outcome/oracle mismatch")
             for target, value in oracle["targets"].items(): labels.setdefault(target, []).append(value)
@@ -157,14 +163,16 @@ def check_runtime(path):
         require(row["fit_resources"]["status"] == "completed", "completed fit exceeded a resource budget")
         fitpath = Path(row["traces"][0]["path"]).parent / "fit-config.json"
         config = load(checked(fitpath, row["fit"]["config_sha256"]))
-        require(config == {"traces": row["traces"], "targets": labels}, "fit inputs differ from declared labels/traces")
+        expected_config={"traces":row["traces"],"targets":labels}
+        if report["schema_version"]>=3:expected_config["fit_protocol"]=report["protocol"]["fit_protocol"]
+        require(config == expected_config, "fit inputs differ from declared labels/traces")
         for k, v in replay_fit(config).items(): require(row["fit"][k] == v, "fit replay differs")
         require(load(fitpath.parent / "fit.json") == row["fit"], "fit result changed")
         require(load(fitpath.parent / "fit-resources/resources.json") == row["fit_resources"], "fit counters changed")
         fits += 1
     return {"report_sha256": file_hash(path), "observations": len(seen), "checked_executions": executions, "replayed_fits": fits,
             "harness_input_hashes_present": report["schema_version"] >= 2,
-            "replay_input_model_sha256": file_hash(ROOT / "tools/buffer_observation_cases.py")}
+            "replay_input_model_sha256": file_hash(ROOT / ("tools/control_observation_cases.py" if report["protocol"].get("corpus")=="control" else "tools/buffer_observation_cases.py"))}
 
 
 def main():

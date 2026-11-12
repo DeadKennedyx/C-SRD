@@ -13,6 +13,7 @@ TOOL = str(Path(sys.argv.pop(1)).resolve())
 AUDIT = ROOT / "tools/audit_protection.py"
 sys.path.insert(0, str(ROOT / "tools"))
 from audit_protection import assert_snapshot, file_hash, AuditError
+from audit_buffer_reconstruction import grade as grade_buffer, load_matrix
 
 
 def compiler_tools():
@@ -56,6 +57,35 @@ class ProtectionAudit(unittest.TestCase):
         self.candidate = self.root / "candidate.c"
         self.original.write_text("#include <stdint.h>\nuint32_t calculate(uint32_t x,uint32_t y) {uint32_t s=x+y; return 3u*s+11u;}\n")
         self.candidate.write_bytes(self.original.read_bytes())
+
+    def test_missing_verifier_report_is_inconclusive(self):
+        def failed(*args,**kwargs):raise AuditError('verifier terminated during grading')
+        output=self.root/'failed-grade.json'
+        result=grade_buffer(failed,TOOL,self.original,self.candidate,'calculate',output,1000)
+        self.assertEqual(result['verification'],'inconclusive')
+        saved=json.loads(output.read_text())
+        self.assertEqual(saved['source_sha256'],file_hash(self.original))
+        self.assertIn('terminated',saved['grading_error'])
+
+    def test_revised_observer_is_bound_to_frozen_collection(self):
+        export=self.root/'export.json';export.write_text('{"status":"decompiled"}')
+        row={'attempt':0,'function':'calculate','profile':'clang-O2','variant':'affine',
+             'export_path':str(export),'export_sha256':file_hash(export),'binary_sha256':'binary-digest'}
+        matrix=self.root/'matrix.json';matrix.write_text(json.dumps({'status':'failed','schedule':[[0,0,0]],'observations':[row]}))
+        replay=self.root/'replay.json'
+        evidence={'status':'completed-with-gaps','input_report':str(matrix),'input_sha256':file_hash(matrix),
+                  'records':[{**row,'prior_attempt':0,'status':'control-inconclusive'}],
+                  'outcomes':{'control-inconclusive':1}}
+        replay.write_text(json.dumps(evidence))
+        with self.assertRaises(ValueError):load_matrix(matrix)
+        self.assertEqual(load_matrix(matrix,replay)[1]['status'],'completed-with-gaps')
+        for change in ('wrong_input','missing_export','known_failure'):
+            bad=json.loads(json.dumps(evidence))
+            if change=='wrong_input':bad['input_sha256']='wrong'
+            elif change=='missing_export':bad['records']=[]
+            else:bad['records'][0]['status']='false-reconstruction'
+            replay.write_text(json.dumps(bad))
+            with self.subTest(change=change),self.assertRaises(ValueError):load_matrix(matrix,replay)
 
     def audit(self, name="audit", extra=(), expected=0):
         directory = self.root / name

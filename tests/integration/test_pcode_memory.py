@@ -96,7 +96,135 @@ def byte_diamond():
     return data
 
 
+def guarded_graph(loop=False, comparison='INT_LESS'):
+    e=Export();e.data.update(schema_version=8,memory_model='records-state-buffers-v1',persistent_objects=[],call_signatures={})
+    if loop:
+        limit=e.op('INT_AND',[e.x,e.constant(3)])
+        e.op('BRANCH',[e.destination],size=None);header=len(e.data['operations'])
+        phi=e.op('MULTIEQUAL',[e.constant(0),e.constant(0)])
+        phi_op=e.data['operations'][-1]
+        condition=e.op(comparison,[phi,limit],size=1)
+        e.op('CBRANCH',[e.destination,condition],size=None);body=len(e.data['operations'])
+        offset=e.op('INT_ZEXT',[phi],size=8)
+        pointer=e.op('PTRADD',[e.p,offset,e.constant(4,8)],size=8)
+        e.store(pointer,e.op('INT_ADD',[e.x,phi]))
+        increment=e.op('INT_ADD',[phi,e.constant(1)]);phi_op['inputs'][1]=increment
+        e.op('BRANCH',[e.destination],size=None);end=len(e.data['operations'])
+        data=e.finish(e.load(e.q));ranges=[(0,header),(header,body),(body,end),(end,len(data['operations']))]
+        incoming=[[],[0,2],[1],[1]];outgoing=[[1],[3,2],[1],[]]
+    else:
+        condition=e.op('INT_NOTEQUAL',[e.x,e.constant(0)],size=1)
+        e.op('CBRANCH',[e.destination,condition],size=None);no=len(e.data['operations'])
+        e.store(e.q,e.op('INT_MULT',[e.x,e.constant(3)]));e.finish(e.load(e.p));yes=len(e.data['operations'])
+        e.store(e.p,e.op('INT_ADD',[e.x,e.constant(1)]));data=e.finish(e.load(e.q))
+        ranges=[(0,no),(no,yes),(yes,len(data['operations']))];incoming=[[],[0],[0]];outgoing=[[1,2],[],[]]
+    data['blocks']=[]
+    for i,(begin,end) in enumerate(ranges):
+        for op in data['operations'][begin:end]:op['block']=i
+        data['blocks'].append({'id':i,'operations':list(range(begin,end)),'incoming':incoming[i],'outgoing':outgoing[i]})
+    return data
+
+
+def duplicate_bound_graph():
+    e=Export();e.data.update(schema_version=8,memory_model='records-state-buffers-v1',persistent_objects=[],call_signatures={})
+    checked=e.op('INT_AND',[e.x,e.constant(3)])
+    used=e.op('INT_AND',[e.x,e.constant(3)])
+    zero=e.op('INT_EQUAL',[checked,e.constant(0)],size=1)
+    e.op('CBRANCH',[e.destination,zero],size=None);setup=len(e.data['operations'])
+    last=e.op('INT_SUB',[used,e.constant(1)])
+    wide=e.op('INT_ZEXT',[last],size=8)
+    end=e.op('PTRADD',[e.p,wide,e.constant(4,8)],size=8)
+    e.op('BRANCH',[e.destination],size=None);header=len(e.data['operations'])
+    pointer=e.op('MULTIEQUAL',[e.p,e.p],size=8);phi=e.data['operations'][-1]
+    e.store(pointer,e.x)
+    done=e.op('INT_EQUAL',[pointer,end],size=1)
+    e.op('CBRANCH',[e.destination,done],size=None);increment=len(e.data['operations'])
+    advanced=e.op('PTRADD',[pointer,e.constant(1,8),e.constant(4,8)],size=8);phi['inputs'][1]=advanced
+    e.op('BRANCH',[e.destination],size=None);exit_=len(e.data['operations'])
+    data=e.finish(e.load(e.q));ranges=[(0,setup),(setup,header),(header,increment),(increment,exit_),(exit_,len(data['operations']))]
+    incoming=[[],[0],[1,3],[2],[0,2]];outgoing=[[1,4],[2],[3,4],[2],[]]
+    data['blocks']=[]
+    for i,(begin,end_) in enumerate(ranges):
+        for op in data['operations'][begin:end_]:op['block']=i
+        data['blocks'].append({'id':i,'operations':list(range(begin,end_)),'incoming':incoming[i],'outgoing':outgoing[i]})
+    return data
+
+
 class MemoryReconstruction(unittest.TestCase):
+    def test_duplicate_scalar_bound_controls_pointer_loop(self):
+        data=duplicate_bound_graph();metrics={}
+        source='unsigned f(unsigned*p,unsigned*q,unsigned x){unsigned n=x&3u;for(unsigned i=0u;i<n;++i){p[i]=x;}return *q;}'
+        self.grade(source,reconstruct(data,metrics=metrics))
+        self.assertLess(metrics['block_expansions'],30)
+        self.grade(source,reconstruct(data,final_store_offset=1),'counterexample')
+        bad=copy.deepcopy(data)
+        bad['nodes'][bad['operations'][1]['inputs'][1]]['constant']='6'
+        with self.assertRaises(Unsupported):reconstruct(bad)
+
+    def test_lossless_high_pcode_width_normalization(self):
+        # Ghidra can retain wider inputs while narrowing a masked boolean
+        # temporary. Only range-preserving repairs are eligible for grading.
+        e=Export();e.data.update(schema_version=8,memory_model='records-state-buffers-v1',persistent_objects=[],call_signatures={})
+        masked=e.op('INT_AND',[e.load(e.p),e.constant(1)],size=1)
+        condition=e.op('INT_EQUAL',[masked,e.constant(0)],size=1)
+        result=e.op('INT_ZEXT',[condition]);e.store(e.q,result);data=e.finish(result)
+        metrics={};candidate=reconstruct(data,metrics=metrics)
+        self.grade('unsigned f(unsigned*p,unsigned*q,unsigned x){(void)x;unsigned r=(*p&1u)==0u;*q=r;return r;}',candidate)
+        self.assertEqual(metrics['lossless_width_normalizations'],2)
+        self.grade(candidate,reconstruct(data,final_store_offset=1),'counterexample')
+        for fault in ('lost_bits','nonconstant_comparand','nonfitting_constant','legacy_schema'):
+            bad=copy.deepcopy(data)
+            if fault=='lost_bits':bad['nodes'][bad['operations'][1]['inputs'][1]]['constant']='256'
+            elif fault=='nonconstant_comparand':bad['operations'][2]['inputs'][1]=e.x
+            elif fault=='nonfitting_constant':bad['nodes'][bad['operations'][2]['inputs'][1]]['constant']='256'
+            else:bad.update(schema_version=4,memory_model='ordered-u32-buffers-v1')
+            with self.subTest(fault=fault),self.assertRaises(Unsupported):reconstruct(bad)
+
+    def test_selected_large_scales_and_small_bounded_multiplication(self):
+        data=byte_diamond();data.update(schema_version=8,memory_model='records-state-buffers-v1',persistent_objects=[],call_signatures={})
+        data['parameters'][0]={'kind':'uint32-buffer','read_only':False}
+        # Independent CFG with either large constant feeding one machine multiply.
+        ph=next(o for o in data['operations'] if o['opcode']=='MULTIEQUAL')
+        for node,value in zip(ph['inputs'],(1073741823,2147483647)):
+            definition=next(o for o in data['operations'] if o.get('output')==node)
+            constant=len(data['nodes']);data['nodes'].append({'size':4,'constant':str(value),'input':False})
+            definition['inputs']=[constant]
+        join=data['blocks'][-1];phi_index=join['operations'][0]
+        data['operations']=data['operations'][:phi_index+1]
+        product=len(data['nodes']);data['nodes'].append({'size':4,'input':False})
+        data['operations'].append({'opcode':'INT_MULT','inputs':[2,ph['output']],'output':product,'block':join['id']})
+        data['operations'].append({'opcode':'STORE','inputs':[3,0,product],'block':join['id']})
+        data['operations'].append({'opcode':'RETURN','inputs':[4,product],'block':join['id']})
+        join['operations']=list(range(phi_index,len(data['operations'])))
+        source='unsigned int f(unsigned int*p,unsigned int*q,unsigned int x){(void)q;unsigned int v=(x&7u)>3u ? 2147483647u*x : 1073741823u*x;*p=v;return v;}'
+        self.grade(source,reconstruct(data))
+        e=Export();e.data.update(schema_version=8,memory_model='records-state-buffers-v1',persistent_objects=[],call_signatures={})
+        k=e.op('INT_AND',[e.x,e.constant(3)]);v=e.op('INT_MULT',[k,e.load(e.p)]);e.store(e.q,v)
+        source='unsigned int f(unsigned int*p,unsigned int*q,unsigned int x){unsigned int v=0u;if(x&1u)v=*p;if(x&2u)v=v+2u*(*p);*q=v;return v;}'
+        self.grade(source,reconstruct(e.finish(v)))
+
+    def test_conditional_effects_early_returns_and_bounded_loops(self):
+        source='unsigned int f(unsigned int*p,unsigned int*q,unsigned int x){if(x){*p=x+1u;return *q;}*q=3u*x;return *p;}'
+        metrics={};data=guarded_graph()
+        self.grade(source,reconstruct(data,metrics=metrics))
+        self.assertEqual(metrics['observer'],'bounded-guarded-memory-v1')
+        self.grade(source,reconstruct(data,result_offset=1),'counterexample')
+        for comparison in ('INT_LESS','INT_NOTEQUAL'):
+            data=guarded_graph(True,comparison);metrics={}
+            source='unsigned int f(unsigned int*p,unsigned int*q,unsigned int x){unsigned int n=x&3u;for(unsigned int i=0u;i<n;++i){p[i]=x+i;}return *q;}'
+            self.grade(source,reconstruct(data,metrics=metrics))
+            self.assertGreater(metrics['block_expansions'],4)
+            self.grade(source,reconstruct(data,final_store_offset=1),'counterexample')
+
+    def test_unbounded_or_nonterminating_memory_cfg_fails_closed(self):
+        data=guarded_graph(True)
+        data['operations'][0].update(opcode='COPY',inputs=[2])
+        with self.assertRaises(Unsupported):reconstruct(data)
+        data=guarded_graph(True)
+        increment=next(o for o in reversed(data['operations']) if o['opcode']=='INT_ADD')
+        data['nodes'][increment['inputs'][1]]['constant']='0'
+        with self.assertRaises(Unsupported):reconstruct(data)
+
     def test_record_dynamic_fields_and_global_linkage(self):
         layout={"tag":"pair","union":False,"bytes":8,"alignment":4,"fields":[
             {"name":"a","kind":"uint32","byte_offset":0},{"name":"b","kind":"uint32","byte_offset":4}]}

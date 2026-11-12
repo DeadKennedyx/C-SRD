@@ -11,6 +11,7 @@ import struct
 from audit_protection import file_hash, write_json
 from audit_region_observers import checked_artifacts, command
 from region_observation_cases import FUNCTIONS
+from audit_buffer_reconstruction import load_matrix
 
 
 def elf_functions(data, names=None):
@@ -73,8 +74,7 @@ def run(args):
 
 
 def run_buffer_matrix(args):
-    manifest=Path(args.reconstruction_report).resolve();matrix=json.loads(manifest.read_text())
-    if matrix["status"] not in ("completed","completed-with-gaps"):raise ValueError("requires finished reconstruction matrix")
+    manifest=Path(args.reconstruction_report).resolve();matrix,replay=load_matrix(manifest,args.replay_report)
     root=Path(args.output).resolve();root.mkdir(parents=True,exist_ok=False)
     objdump=shutil.which("objdump")
     if not objdump:raise ValueError("objdump unavailable")
@@ -82,6 +82,7 @@ def run_buffer_matrix(args):
             "implementation_sha256":file_hash(__file__),"objdump":objdump,"objdump_sha256":file_hash(objdump),
             "scope":"raw function bytes include relocations/PC-relative operands; opcode sequences discard operands/nops; equality of opcode sequences is only structural"}
     cache={}
+    if replay:report['observer_replay']=replay
     try:
         for gi,group in enumerate(matrix["groups"]):
             baseline=None
@@ -112,6 +113,7 @@ def run_buffer_matrix(args):
                 report["records"].append(record)
         if file_hash(manifest)!=report["matrix_sha256"] or file_hash(__file__)!=report["implementation_sha256"] or file_hash(objdump)!=report["objdump_sha256"]:
             raise ValueError("measurement input/tool changed")
+        if replay and file_hash(replay['path'])!=replay['sha256']:raise ValueError('observer replay changed')
         for row in report["records"]:
             if file_hash(row["binary"])!=row["binary_sha256"]:raise ValueError("library changed")
         report["status"]="completed"
@@ -122,5 +124,6 @@ def run_buffer_matrix(args):
 if __name__=="__main__":
     p=argparse.ArgumentParser(description=__doc__)
     group=p.add_mutually_exclusive_group(required=True);group.add_argument("--build");group.add_argument("--reconstruction-report")
+    p.add_argument('--replay-report',help='finished revised observer replay for the same frozen binaries')
     p.add_argument("--output",required=True);args=p.parse_args()
     (run_buffer_matrix if args.reconstruction_report else run)(args)

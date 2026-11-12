@@ -19,7 +19,8 @@ from pcode_memory import reconstruct
 
 ROOT=Path(__file__).resolve().parents[1]
 FILES=("tools/replay_buffer_observers.py","tools/pcode_memory.py","tools/pcode_memory_cfg.py",
-       "tools/pcode_values.py","tools/pcode_wide.py","tools/pcode_cfg.py","tools/effort_resources.py")
+       "tools/pcode_values.py","tools/pcode_wide.py","tools/pcode_cfg.py","tools/effort_resources.py",
+       "tools/audit_buffer_reconstruction.py","tools/audit_protection.py")
 
 
 def run(args,root):
@@ -31,10 +32,11 @@ def run(args,root):
     if contracts and file_hash(contracts["path"])!=contracts["sha256"]:raise ValueError("call contracts changed")
     contract_path=contracts["path"] if contracts else None
     report={"schema_version":1,"status":"running","environment":environment(),"commands":[],"records":[],
+        "control_reference":"original-source",
         "input_report":str(path),"input_sha256":file_hash(path),"csrd":tool,"csrd_sha256":file_hash(tool),
         "prior_status":previous["status"],"prior_outcomes":previous["outcomes"],
         "adapter_hashes":{f:file_hash(ROOT/f) for f in FILES},"repetitions":args.repetitions,
-        "scope":"same saved binary-only exports; new adapter costs; prior Ghidra costs are not rerun; no proof of binary lifting"}
+        "scope":"same saved binary-only exports; new adapter costs; prior Ghidra costs are not rerun; mutations graded against original source; no proof of binary lifting"}
     command=Runner(report)
     try:
         eligible=[r for r in previous["observations"] if r.get("export_path") and
@@ -81,7 +83,7 @@ def run(args,root):
                     controls["call-argument-plus-one"]={"call_argument_offset":1}
                 for name,mutation in controls.items():
                     wrong=folder/(name+".c");wrong.write_text(reconstruct(export,**mutation))
-                    checked=grade(command,tool,row["recovered_path"],wrong,row["function"],folder/(name+".json"),args.timeout_ms,contract_path)
+                    checked=grade(command,tool,group["reference"],wrong,row["function"],folder/(name+".json"),args.timeout_ms,contract_path)
                     control_status[name]=checked["verification"]
                 cache[key]={"verification":proof["verification"],"proof_path":str(folder/"verification.json"),
                             "proof_sha256":file_hash(folder/"verification.json"),"controls":control_status}
@@ -89,7 +91,8 @@ def run(args,root):
                     cache[key]["control_skips"]={"call-argument-plus-one":"no scalar call argument to mutate"}
             row.update(cache[key])
             row["status"]={"proved-under-model":"recovered-under-source-model","counterexample":"false-reconstruction"}.get(row["verification"],"inconclusive-grading")
-            if any(status!="counterexample" for status in row["controls"].values()):row["status"]="control-failure"
+            if any(status=="proved-under-model" for status in row["controls"].values()):row["status"]="control-failure"
+            elif any(status!="counterexample" for status in row["controls"].values()) and row["status"]!='false-reconstruction':row["status"]="control-inconclusive"
         report["distinct_graded_answers"]=len(cache)
         report["outcomes"]=dict(Counter(r["status"] for r in report["records"]))
         for name,expected in report["adapter_hashes"].items():

@@ -122,6 +122,45 @@ class MemoryEmitter {
       else result.body += " " + values.at(s.name) + " = " + value + ";";
     }
   }
+  void statements(const std::vector<Statement> &body) {
+    for (const auto &s : body) {
+      if (s.kind == Statement::Kind::Call) { call(s); continue; }
+      if (s.kind == Statement::Kind::If) {
+        const auto condition = decode(expression(*s.expression), true);
+        const auto outer = values;
+        result.body += " if ((" + condition + ") != 0u) {";
+        statements(s.thenBranch); values = outer;
+        result.body += "} else {";
+        statements(s.elseBranch); values = outer;
+        result.body += "}"; continue;
+      }
+      if (s.kind == Statement::Kind::Repeat) {
+        // The analyzer permits only loop-invariant scalar limits. Capture the
+        // ordinary bound once; translation validation checks the bound guard.
+        const auto limit = temporary(decode(expression(*s.expression), true));
+        const auto induction = fresh();
+        const auto outer = values;
+        values.insert_or_assign(s.name, encode(induction, true));
+        result.body += " for (unsigned int " + induction + " = 0u; " + induction + " < (" +
+          limit + " <= " + literal(s.repetitions) + " ? " + limit + " : " + literal(s.repetitions) +
+          "); ++" + induction + ") {";
+        statements(s.thenBranch); values = outer;
+        result.body += "}"; continue;
+      }
+      if (!s.expression) throw std::invalid_argument("unmodeled memory statement");
+      const auto value = expression(*s.expression);
+      switch (s.kind) {
+      case Statement::Kind::Declare: declare(s.name, value); break;
+      case Statement::Kind::Assign: result.body += " " + values.at(s.name) + " = " + value + ";"; break;
+      case Statement::Kind::Store: {
+        const auto target = location(s.name, s.member, s.dynamicIndex.get(), s.index);
+        result.body += " " + target + " = " + decode(value) + ";"; break;
+      }
+      case Statement::Kind::Return: result.body += " return " + decode(value) + ";"; break;
+      default: throw std::invalid_argument("unmodeled control flow in ordered memory emission");
+      }
+    }
+  }
 public:
   MemoryEmitter(const Representation &r, const std::set<std::string> &names)
       : rep(r), encoded(std::string(r.name()) != "identity-u32"), reserved(names) {}
@@ -133,21 +172,7 @@ public:
       if (region->buffers.count(name)) result.body += " (void)" + name + ";";
       else declare(name, encode(name));
     }
-    for (const auto &s : region->statements) {
-      if (s.kind == Statement::Kind::Call) { call(s); continue; }
-      if (!s.expression) throw std::invalid_argument("unmodeled memory statement");
-      const auto value = expression(*s.expression);
-      switch (s.kind) {
-      case Statement::Kind::Declare: declare(s.name, value); break;
-      case Statement::Kind::Assign: result.body += " " + values.at(s.name) + " = " + value + ";"; break;
-      case Statement::Kind::Store: {
-        const auto target = location(s.name, s.member, s.dynamicIndex.get(), s.index);
-        result.body += " " + target + " = " + decode(value) + ";"; break;
-      }
-      case Statement::Kind::Return: result.body += " return " + decode(value) + ";"; break;
-      default: throw std::invalid_argument("control flow is unsupported in ordered memory emission");
-      }
-    }
+    statements(region->statements);
     result.body += std::string(newlines, '\n') + "}";
     return result;
   }

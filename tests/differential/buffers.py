@@ -20,10 +20,10 @@ CASES = 1024 + 9
 LAYOUTS = ((4, 4), (4, 5), (5, 4), (4, 20), (20, 4), (12, 19), (0, 48), (48, 0))
 
 
-def harness():
+def harness(names=NAMES, *, unused_probe=True):
     declarations = []
     checks = []
-    for name in NAMES:
+    for name in names:
         const = "const " if name == "buffer_const" else ""
         declarations += [f"uint32_t {prefix}_{name}({const}uint32_t*,uint32_t*,uint32_t);"
                          for prefix in ("original", "candidate")]
@@ -48,7 +48,7 @@ int main(void){{
         unsigned po=offsets[layout][0],qo=offsets[layout][1];
         {chr(10).join(checks)}
     }}
-    if(original_buffer_unused(0,0,4294967295u)!=candidate_buffer_unused(0,0,4294967295u)) return 1;
+    {'if(original_buffer_unused(0,0,4294967295u)!=candidate_buffer_unused(0,0,4294967295u)) return 1;' if unused_probe else ''}
     puts("PASS memory and return differential");return 0;
 }}
 '''

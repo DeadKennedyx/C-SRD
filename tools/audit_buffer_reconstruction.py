@@ -26,12 +26,39 @@ IMPLEMENTATION = ["tools/audit_buffer_reconstruction.py", "tools/pcode_memory.py
                   "tools/ghidra/ExportCSRDBuffers.java", "tools/run_matrix.py", "tools/audit_protection.py"]
 
 
+def load_matrix(path, replay_path=None):
+    """Use frozen binaries after a revised observer, retaining grading gaps."""
+    path=Path(path).resolve();matrix=json.loads(path.read_text());evidence=None
+    if replay_path:
+        replay_path=Path(replay_path).resolve();replay=json.loads(replay_path.read_text())
+        if replay['status'] not in ('completed','completed-with-gaps') or replay['input_sha256']!=file_hash(path) or Path(replay['input_report']).resolve()!=path:
+            raise ValueError('requires a finished observer replay bound to this exact matrix')
+        if any(r['status'] in ('false-reconstruction','control-failure') for r in replay['records']):
+            raise ValueError('observer replay contains a correctness/control failure')
+        expected={r['attempt'] for r in matrix['observations'] if r.get('export_path') and json.loads(Path(r['export_path']).read_text()).get('status')=='decompiled'}
+        if {r['prior_attempt'] for r in replay['records']}!=expected:raise ValueError('replay omitted collected exports')
+        for row in replay['records']:
+            prior=matrix['observations'][row['prior_attempt']]
+            if any(row[k]!=prior[k] for k in ('function','profile','variant','export_sha256','binary_sha256')):
+                raise ValueError('replay changed observed artifact identity')
+        evidence={'path':str(replay_path),'sha256':file_hash(replay_path),'status':replay['status'],'outcomes':replay['outcomes']}
+    if matrix['status'] not in ('completed','completed-with-gaps'):
+        if matrix['status']!='failed' or evidence is None or len(matrix.get('schedule',[]))!=len(matrix['observations']):
+            raise ValueError('requires finished collection and grading, or a bound revised observer replay')
+    return matrix,evidence
+
+
 def grade(command, csrd, reference, candidate, function, output, timeout_ms, call_contracts=None):
     try:
         command([csrd, "verify", reference, candidate, "--function", function, "--report", output,
                  "--timeout-ms", timeout_ms, *(["--call-contracts",call_contracts] if call_contracts else [])], timeout=timeout_ms / 1000 + 30)
-    except AuditError:
-        if not output.is_file(): raise
+    except AuditError as error:
+        if not output.is_file():
+            # A crashed/timed-out grader is missing evidence, not a failed
+            # reconstruction or a proof. Preserve it without losing other rows.
+            write_json(output,{"source_sha256":file_hash(reference),"candidate_sha256":file_hash(candidate),
+                "grading_error":str(error),"functions":[{"function":function,"verification":"inconclusive",
+                "reason":"verifier process did not produce a report"}]})
     functions = json.loads(output.read_text())["functions"]
     if len(functions) != 1 or functions[0]["function"] != function:
         raise ValueError("grader did not select exactly the requested function")
@@ -84,7 +111,7 @@ def prepare(args, root, report, command):
         analysis = json.loads(analysis_path.read_text())
         functions = [f for f in analysis["functions"] if not args.function or f["function"] in args.function]
         if not functions: continue
-        if any(f["status"] != "supported" or f.get("semantic_model") not in ("buffers-u32-c11-v1","buffers-byte-c11-v2","ordered-calls-byte-c11-v1","records-state-byte-c11-v1") for f in functions):
+        if any(f["status"] != "supported" or f.get("semantic_model") not in ("buffers-u32-c11-v1","buffers-byte-c11-v2","ordered-calls-byte-c11-v1","records-state-byte-c11-v1","guarded-memory-c11-v1") for f in functions):
             raise ValueError("selected source functions must use the admitted buffer contract")
         if seen_functions & {f["function"] for f in functions}: raise ValueError("duplicate selected function symbol")
         seen_functions.update(f["function"] for f in functions)
@@ -130,8 +157,8 @@ def prepare(args, root, report, command):
                 group = {"function": function["function"], "profile": profile["id"], "parameters": params,
                          "reference": str(folder / "original.i"), "reference_sha256": file_hash(folder / "original.i"),
                          "variants": variants}
-                if function["semantic_model"]=="records-state-byte-c11-v1":
-                    globals_=[{k:g[k] for k in ("name","kind","record") if k in g} for g in function["persistent_objects"]]
+                if function["semantic_model"] in ("records-state-byte-c11-v1","guarded-memory-c11-v1"):
+                    globals_=[{k:g[k] for k in ("name","kind","record") if k in g} for g in function.get("persistent_objects",[])]
                     interface=folder/f"{function['function']}-public-abi.json"
                     write_json(interface,{"parameters":params,"persistent_objects":globals_})
                     group.update(public_abi=str(interface),public_abi_sha256=file_hash(interface),persistent_objects=globals_)
@@ -226,11 +253,13 @@ def observe(args, root, report, command, csrd, headless):
             else: item["control_skips"]={"call-argument-plus-one":"no scalar call argument to mutate"}
         for label, mutation in controls.items():
             wrong = directory / f"{label}.c"; wrong.write_text(reconstruct(export, **mutation))
-            control = grade(command, csrd, item["recovered_path"], wrong, group["function"],
+            control = grade(command, csrd, group["reference"], wrong, group["function"],
                             directory / f"{label}.json", args.timeout_ms, report.get("call_contracts",{}).get("path"))
             item["controls"][label] = control["verification"]
-            if control["verification"] != "counterexample":
-                item.update(status="control-failure", reason=f"{label} was not rejected")
+            if control["verification"] == "proved-under-model":
+                item.update(status="control-failure", reason=f"{label} was accepted as equivalent")
+            elif control["verification"] != "counterexample" and item["status"] not in ("control-failure","false-reconstruction"):
+                item.update(status="control-inconclusive", reason=f"{label} grading was inconclusive")
         write_json(root / "reconstruction.json", report)
 
 
@@ -258,8 +287,9 @@ def summarize(report):
 
 def run(args, root):
     report = {"schema_version": 2, "status": "running", "commands": [], "sources": [], "groups": [], "observations": [],
+              "control_reference":"original-source",
               "environment": environment(), "protocol": vars(args),
-              "scope": "Known-symbol, known-ABI, straight-line buffer recovery; cold Ghidra process totals include startup/import",
+              "scope": "Known-symbol, known-ABI buffer recovery including admitted bounded control flow; cold Ghidra process totals include startup/import; mutations graded against original source",
               "claims": {"binary_lifter_proved": False, "steady_state_costs": "not-measured",
                          "human_effort": "not-measured", "runtime_exposure": "separate-experiment",
                          "unsupported_means_protection": False, "source_given_to_observer": False}}

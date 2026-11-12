@@ -123,7 +123,7 @@ a!={cell['original']}u || b!={cell['candidate']}u || a==b; }}
 
     def test_unsupported_constructs_leave_whole_function_unchanged(self):
         bodies = ["return p[x];", "p++;return *p;", "p[0]+=x;return x;",
-                  "if(x){p[0]=x;}return x;", "for(uint32_t i=0;i<2u;++i){p[0]=x;}return x;",
+                  "if(x){p[0]=x++;}return x;", "for(uint32_t i=0;i<x;++i){p[0]=x;}return x;",
                   "return p[256];", "return p[-1];", "return p[0]*x;",
                   "uint32_t a[2]={1u,2u};return a[0];",
                   "extern uint32_t g(uint32_t*);return g(p);"]

@@ -27,6 +27,8 @@ struct Statement {
   std::unique_ptr<Expr> expression;
   std::vector<Statement> thenBranch, elseBranch;
   unsigned repetitions = 0;
+  // Repeat.expression, when present, is the runtime trip limit. repetitions
+  // is its maximum, checked by verification rather than assumed truncation.
   uint32_t index = 0; // Fixed Store index; Load uses Expr::value.
   std::unique_ptr<Expr> dynamicIndex; // If present, index is its proven upper bound.
   struct Argument {
@@ -60,6 +62,7 @@ struct Region {
   unsigned operations = 0;
   bool extendedMemory = false, littleEndian = true;
   bool orderedCalls = false;
+  bool memoryControl = false;
   CallContracts calls;
   bool ordered() const { return !buffers.empty() || orderedCalls; }
 };

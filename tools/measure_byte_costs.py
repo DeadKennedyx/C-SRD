@@ -10,6 +10,7 @@ import statistics
 from audit_protection import Runner, file_hash, write_json
 from byte_observation_cases import signature
 from effort_resources import environment, measurement_lock
+from audit_buffer_reconstruction import load_matrix
 from inspect_region_binaries import elf_functions
 
 
@@ -18,7 +19,8 @@ def harness(function,parameters,corpus="byte"):
         from record_observation_cases import cost_driver
         return cost_driver(function,parameters)
     from call_observation_cases import signature as call_signature, ENVIRONMENT, INITIAL_STATE
-    byte_type,declaration=(call_signature if corpus=="call" else signature)(function,parameters)
+    from control_observation_cases import signature as control_signature
+    byte_type,declaration=(control_signature if corpus=='control' else call_signature if corpus=="call" else signature)(function,parameters)
     environment=("#define CSRD_RECORD_CALLS 0\n"+ENVIRONMENT.read_text()+"\n") if corpus=="call" else ""
     reset=f" reset(memory,{INITIAL_STATE}u);\n" if corpus=="call" else ""
     offset="4*(i&3u)" if byte_type=="uint32_t" else "(i&3u)"
@@ -54,16 +56,18 @@ int main(int argc,char**argv){
 
 
 def run(args,root):
-    path=Path(args.reconstruction_report).resolve();matrix=json.loads(path.read_text())
-    if matrix["status"] not in ("completed","completed-with-gaps"):raise ValueError("requires finished reconstruction run")
+    path=Path(args.reconstruction_report).resolve();matrix,replay=load_matrix(path,args.replay_report)
     report={"schema_version":1,"status":"running","environment":environment(),"matrix":str(path),"matrix_sha256":file_hash(path),
             "implementation_sha256":file_hash(__file__), "corpus":args.corpus,
             "iterations":args.iterations,"repetitions":args.repetitions,"commands":[],"records":[],
             "scope":"application loop includes PRNG, two word resets, shared-library calls and return checksum; RSS is whole-process peak; function bytes include PC-relative operands"}
     command=Runner(report)
-    dependencies=("tools/inspect_region_binaries.py","tools/byte_observation_cases.py","tools/call_observation_cases.py")
+    if replay:report['observer_replay']=replay
+    dependencies=("tools/inspect_region_binaries.py","tools/byte_observation_cases.py","tools/call_observation_cases.py","tools/buffer_observation_cases.py",
+                  "tools/audit_buffer_reconstruction.py","tools/audit_protection.py")
     source_root=Path(__file__).resolve().parents[1]
     report["dependencies"]={p:file_hash(source_root/p) for p in dependencies}
+    if args.corpus=='control':report['dependencies']['tools/control_observation_cases.py']=file_hash(source_root/'tools/control_observation_cases.py')
     if args.corpus=="record":
         for p in ("tools/record_observation_cases.py","tests/fixtures/records.h"):
             report["dependencies"][p]=file_hash(source_root/p)
@@ -111,6 +115,7 @@ def run(args,root):
             if row["variant"]=="original-copy" and not row["code_bytes_identical"]:raise ValueError("copy control differs")
             if file_hash(row["binary"])!=row["sha256"] or file_hash(row["library"])!=row["library_sha256"]:raise ValueError("binary changed")
         if file_hash(path)!=report["matrix_sha256"]:raise ValueError("matrix changed")
+        if replay and file_hash(replay['path'])!=replay['sha256']:raise ValueError('observer replay changed')
         if file_hash(__file__)!=report["implementation_sha256"]:raise ValueError("measurement code changed")
         for name,digest in report["dependencies"].items():
             if file_hash(source_root/name)!=digest:raise ValueError("measurement dependency changed")
@@ -122,7 +127,8 @@ def run(args,root):
 
 if __name__=="__main__":
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("--reconstruction-report",required=True);p.add_argument("--output-dir",required=True)
-    p.add_argument("--corpus",choices=("byte","call","record"),default="byte")
+    p.add_argument('--replay-report',help='finished revised observer replay for the same frozen binaries')
+    p.add_argument("--corpus",choices=("byte","call","record","control"),default="byte")
     p.add_argument("--iterations",type=int,default=1000000);p.add_argument("--repetitions",type=int,default=7);args=p.parse_args()
     if args.iterations<1 or args.repetitions<3:p.error("positive iterations and at least three repetitions required")
     root=Path(args.output_dir).resolve();root.mkdir(parents=True,exist_ok=False)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bounded memory/register observation of the seven declared buffer benchmarks.
+"""Bounded memory/register observation of the selected benign buffer corpus.
 
 Uses unchanged shared objects from audit_buffer_reconstruction.py. Application
 I/O is checked against independent finite oracles. Fits never receive encoding
@@ -16,19 +16,23 @@ import sys
 from audit_protection import Runner, executable, file_hash, write_json, AuditError
 from buffer_observation_cases import cases, driver, expected, LAYOUTS
 from effort_resources import measure, environment, measurement_lock
+from audit_buffer_reconstruction import load_matrix
 
 ROOT = Path(__file__).resolve().parents[1]
 IMPLEMENTATION = ["tools/observe_buffer_runtime.py", "tools/gdb_buffer_trace.py", "tools/buffer_observation_cases.py",
-                  "tools/fit_buffer_traces.py", "tools/observe_runtime.py", "tools/effort_resources.py"]
+                  "tools/fit_buffer_traces.py", "tools/observe_runtime.py", "tools/effort_resources.py",
+                  "tools/audit_buffer_reconstruction.py","tools/audit_protection.py"]
 
 
 def run(args, root):
     from byte_observation_cases import cases as byte_cases, driver as byte_driver, expected as byte_expected, LAYOUTS as byte_layouts
     from call_observation_cases import cases as call_cases, driver as call_driver, expected as call_expected, LAYOUTS as call_layouts
     from record_observation_cases import driver as record_driver, expected as record_expected, LAYOUTS as record_layouts, GLOBALS
-    selected_cases = byte_cases if args.corpus in ("byte","call","record") else cases
-    selected_driver = record_driver if args.corpus=="record" else call_driver if args.corpus=="call" else byte_driver if args.corpus == "byte" else driver
+    from control_observation_cases import cases as control_cases,driver as control_driver,expected as control_expected,LAYOUTS as control_layouts
+    selected_cases = control_cases if args.corpus=="control" else byte_cases if args.corpus in ("byte","call","record") else cases
+    selected_driver = control_driver if args.corpus=="control" else record_driver if args.corpus=="record" else call_driver if args.corpus=="call" else byte_driver if args.corpus == "byte" else driver
     selected_layouts = record_layouts if args.corpus=="record" else call_layouts if args.corpus=="call" else byte_layouts if args.corpus == "byte" else LAYOUTS
+    if args.corpus=='control':selected_layouts=control_layouts
     report = {"schema_version": 3, "status": "running", "protocol": vars(args), "commands": [],
               "environment": environment(), "cases": selected_cases(args.input_protocol), "layouts": selected_layouts, "observations": [],
               "claims": {"known_intermediate_targets": True, "seed_or_encoding_given_to_fit": False,
@@ -37,13 +41,13 @@ def run(args, root):
     command = Runner(report)
     try:
         matrix_path = Path(args.reconstruction_report).resolve(strict=True)
-        matrix = json.loads(matrix_path.read_text())
+        matrix,replay = load_matrix(matrix_path,args.replay_report)
         report["matrix"] = {"path": str(matrix_path), "sha256": file_hash(matrix_path)}
-        if matrix["status"] not in ("completed", "completed-with-gaps"):
-            raise ValueError("requires a finished buffer reconstruction report")
+        if replay:report['observer_replay']=replay
         gdb = executable(args.gdb)
         report["gdb"] = {"path": gdb, "sha256": file_hash(gdb), "version": command([gdb, "--version"]).splitlines()[0]}
         report["implementation"] = {p: file_hash(ROOT / p) for p in IMPLEMENTATION}
+        if args.corpus=='control':report['implementation']['tools/control_observation_cases.py']=file_hash(ROOT/'tools/control_observation_cases.py')
         if args.corpus=="byte": report["implementation"]["tools/byte_observation_cases.py"]=file_hash(ROOT/"tools/byte_observation_cases.py")
         if args.corpus=="record":
             for path in ("tools/record_observation_cases.py","tools/byte_observation_cases.py","tests/fixtures/records.h"):
@@ -104,7 +108,7 @@ def run(args, root):
                 for ci, case in enumerate(report["cases"]):
                     inputs = directory / f"{ci}.input"
                     inputs.write_text(" ".join(map(str, [p, q, case["x"], *case["memory"]])) + "\n")
-                    wanted = record_expected(group["function"], case["memory"], p, q, case["x"]) if args.corpus=="record" else call_expected(group["function"], case["memory"], p, q, case["x"]) if args.corpus=="call" else byte_expected(group["function"], case["memory"], p, q, case["x"],
+                    wanted = control_expected(group["function"], case["memory"], p, q, case["x"]) if args.corpus=="control" else record_expected(group["function"], case["memory"], p, q, case["x"]) if args.corpus=="record" else call_expected(group["function"], case["memory"], p, q, case["x"]) if args.corpus=="call" else byte_expected(group["function"], case["memory"], p, q, case["x"],
                         plain_char_signed=group["parameters"][0].get("element_signed",False)) if args.corpus=="byte" else expected(group["function"], case["memory"], p, q, case["x"])
                     for target, value in wanted["targets"].items(): labels.setdefault(target, []).append(value)
                     trace_path, config_path, script = directory / f"{ci}.trace.json", directory / f"{ci}.json", directory / f"{ci}.gdb"
@@ -153,6 +157,7 @@ def run(args, root):
             if file_hash(ROOT / path) != expected_hash: raise ValueError("observer changed during experiment")
         if file_hash(matrix_path) != report["matrix"]["sha256"] or file_hash(gdb) != report["gdb"]["sha256"]:
             raise ValueError("input/tool changed during observation")
+        if replay and file_hash(replay['path'])!=replay['sha256']:raise ValueError('observer replay changed')
         report["outcomes"] = dict(Counter(o["status"] for o in report["observations"]))
         report["status"] = "completed" if set(report["outcomes"]) == {"completed"} else "completed-with-gaps"
         if any(t["status"] == "oracle-mismatch" for o in report["observations"] for t in o["traces"]):
@@ -171,13 +176,14 @@ def run(args, root):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--reconstruction-report", required=True)
+    p.add_argument("--replay-report",help="finished revised observer replay for the same frozen binaries")
     p.add_argument("--gdb", default="gdb")
     p.add_argument("--function", action="append")
     p.add_argument("--profile", action="append")
     p.add_argument("--step-limit", type=int, default=512)
     p.add_argument("--order-seed",type=int,default=20261115)
     p.add_argument("--input-protocol", choices=("basis-parity-v2", "seeded-v1"), default="basis-parity-v2")
-    p.add_argument("--corpus", choices=("word","byte","call","record"), default="word")
+    p.add_argument("--corpus", choices=("word","byte","call","record","control"), default="word")
     p.add_argument("--fit-protocol",choices=("affine-v1","affine-literal-boundaries-v2"),default="affine-literal-boundaries-v2")
     p.add_argument("--output-dir", required=True)
     args = p.parse_args()

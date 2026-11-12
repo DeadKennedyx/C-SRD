@@ -8,7 +8,7 @@ from pcode_cfg import Graph, CONTROL, LIMITS, index
 from pcode_values import SCALAR, Unsupported
 
 
-def linearize(export):
+def validated_graph(export):
     nodes,ops=export["nodes"],export["operations"]
     if not isinstance(nodes,list) or not isinstance(ops,list) or len(nodes)>LIMITS["nodes"] or len(ops)>LIMITS["operations"]:
         raise Unsupported("invalid memory CFG or graph budget exceeded")
@@ -55,6 +55,12 @@ def linearize(export):
             if code=="CBRANCH" and graph.width(op["inputs"][1])!=8:
                 raise Unsupported("branch condition must be byte")
     graph.cfg(export)
+    return graph
+
+
+def linearize(export):
+    graph=validated_graph(export)
+    ops=graph.ops
     seen,flat=set(),[]
 
     def append(op):

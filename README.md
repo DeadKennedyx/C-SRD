@@ -53,8 +53,8 @@ initialized, live, aligned prefixes of ordinary storage. Arithmetic stays `uint3
 provably nonnegative, nonoverflowing byte promotions are admitted. Character
 signedness and word byte order follow the frontend target. Signed byte narrowing
 assumes modulo conversion. String literals and their storage are unchanged.
-Verification compares the return and entire shared byte memory. Buffer loops,
-pointer reinterpretation and unbounded indexing remain unsupported.
+Verification compares the return and entire shared byte memory. Pointer
+reinterpretation and unbounded indexing remain unsupported.
 
 `--call-contracts tests/fixtures/calls.json` enables declared direct calls in
 straight-line `uint32_t` functions. Callees may return `uint32_t` or `void` and take scalar or
@@ -74,6 +74,12 @@ record pointers designate complete records, while scalar pointers may alias
 fields. Aligned word-only accesses use an exact word projection of byte memory;
 small index ranges are proved before enumeration. Nested/padded records, bitfields,
 whole-record assignments, local statics and TLS remain outside this increment.
+
+The control-flow path admits call-free memory branches, early returns and
+`for` loops with fresh `uint32_t` counters, `++`, and immutable scalar trip limits
+bounded by 32. Private locals can be declared inside these bodies. Verification
+checks guarded memory effects and every loop exit; finite expansion is never
+silently truncated. Break/continue, while loops and conditional calls are excluded.
 
 For `n`-bit integers, affine encoding is `E(x) = a*x+b mod 2^n`, with odd `a`.
 Addition, subtraction and constant scaling can remain encoded. The seed selects
@@ -96,7 +102,7 @@ not a promise of universal C support.
 | 4 | Byte/string buffers, runtime indexes, richer pointers | Scoped checkpoint measured |
 | 5 | Direct calls and effect contracts | Scoped checkpoint measured |
 | 6 | Structs/unions, globals, persistent state | Scoped checkpoint measured |
-| 7 | Branches, exits, input-dependent loops | Pending |
+| 7 | Branches, exits, input-dependent loops | Scoped checkpoint measured; two reconstruction proof gaps |
 | 8 | Allocation, failure and lifetime | Pending |
 | 9 | Recursion and indirect calls | Pending |
 | 10 | File/console I/O and ordered events | Pending |
@@ -112,31 +118,50 @@ bounded GDB value-recovery tooling. Write generated measurements to ignored
 `build*/` directories. CPU/RSS, recovery correctness and application costs are
 separate measurements; fingerprints and finite tests are not equivalence proofs.
 
-The record/state checkpoint passed all 42 Linux test groups (including the
-corrected rejection-test rerun) and 28,634,760 native/Linux differential
-comparisons, including repeated calls and aliases into global fields.
-Across Clang/GCC `-O0`/`-O2`, the revised observer reconstructed all 112 binary
-cases (three adapter repetitions); 54 distinct answers passed source-model
-checks and 115,776 compiled checks of returns, memory and persistent state.
-The 5,376 runtime traces recovered 224/224 target cases for every variant, with
-zero successful negative controls. Fitting includes literal matches and captured
-return boundaries; three fitting repetitions agreed. Ordinary values appeared
-in 1,808/2,688 affine target/trace pairs versus 2,688/2,688 original pairs;
-absence from some traces did not prevent recovery.
-At `-O2`, affine fitting used median matched CPU ratios of 1.70 (Clang) and 1.84
-(GCC), and worker peak RSS ratios of 1.10 and 1.11; median fitting times were
-34–36 ms. Static adapter worker CPU/RSS remained near baseline. Application CPU
-ratios were 1.015/1.014, while function-byte ratios were 1.73/1.86.
-Only 4/14 optimized affine cases retained the original opcode sequence (operands
-excluded), but all were reconstructed. These descriptive ARM64 measurements
-show modest observer cost and size increases, not established useful protection.
+The control-flow checkpoint (0.11.0) passed all 45 Linux test groups. Six benign
+fixtures passed 10,908,480 native/Linux differential comparisons of returns and
+entire caller storage. Across Clang/GCC `-O0`/`-O2`, 94/96 binary reconstructions
+passed source-model verification; three adapter replays gave consistent results.
+Two GCC `-O0` affine reconstructions remain inconclusive because their
+verifier processes terminated. All 56 distinct reconstructed programs nevertheless
+passed 121,856 compiled checks with both compilers. All 224 compiled corruption
+controls produced counterexamples over 243,712 executions. Execution evidence
+does not resolve the missing proofs or prove binary lifting.
 
-Reproduce buffer/call/record measurements with `tools/audit_buffer_reconstruction.py`,
+All 6,144 runtime traces matched independent return/memory oracles. The fitter
+recovered 112/128 intermediate target cases for affine code and 116/128 for
+originals; all variants recovered 64/64 public-return cases. Intermediate targets
+include values exposed through ordinary stores. Held-out validation rejected
+29 incorrect affine location models versus 15 original models; no negative
+control validated. Some models lacked locations on held-out paths. Three fitting
+repetitions agreed. Ordinary intermediate values appeared in 1,579/2,048 affine
+target/trace pairs versus 2,048/2,048 original pairs. These finite observer results
+show coverage limitations, not a confidentiality guarantee.
+
+Median matched `-O2` ratios against originals on Linux ARM64:
+
+| Compiler | Static observer CPU | Fit CPU | Fit peak RSS | Application CPU | Function bytes |
+| --- | --- | --- | --- | --- | --- |
+| Clang 18 | 1.03 | 1.56 | 1.14 | 1.058 | 1.57 |
+| GCC 13 | 1.00 | 1.63 | 1.15 | 1.035 | 1.95 |
+
+Observer CPU/RSS include their worker processes; fitting includes trace loading.
+Median affine fitting CPU was about 57 ms. Application measurements use seven
+repetitions of one million calls with identical-copy controls. None of the 12
+optimized affine cases retained the baseline opcode sequence (operands excluded);
+all 12 optimized identity controls retained identical function bytes. Structural
+difference and modest observer costs do not establish useful protection.
+
+Reproduce buffer/call/record/control measurements with `tools/audit_buffer_reconstruction.py`,
 `tools/replay_buffer_observers.py`, `tools/grade_byte_reconstruction.py`,
 `tools/observe_buffer_runtime.py`, `tools/replay_buffer_fits.py` and
 `tools/measure_byte_costs.py`; use `--corpus call` for call execution tools and
 `--call-contracts tests/fixtures/calls.json` for call reconstruction, or
-`--corpus record` for record execution tools. Record reconstruction supplies public
+`--corpus record` for record execution tools. Control measurements use
+`--source tests/fixtures/memory_control.c` for reconstruction and `--corpus control`
+for execution tools. Runtime/cost/binary tools accept `--replay-report` to bind a
+revised observer to the original frozen matrix, retaining inconclusive grades.
+Record reconstruction supplies public
 types/global names to Ghidra and assumes stable, resolved loader bindings. Each exposes
 `--help`. Ghidra ARM64 signed-byte lifting requires the checked
 overlay produced by `tools/patch_ghidra_signed_byte.py`. Generated artifacts stay

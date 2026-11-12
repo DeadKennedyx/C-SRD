@@ -392,11 +392,34 @@ class Analyzer {
     return nullptr;
   }
   bool block(const clang::Stmt *s, std::vector<Statement> &output) {
+    const auto before = initialized;
+    const auto bounds = loopBounds;
+    bool valid = true;
     if (auto *body = llvm::dyn_cast<clang::CompoundStmt>(s)) {
-      for (const auto *child : body->body()) if (!statement(child, false, output, true)) return false;
-      return true;
+      for (const auto *child : body->body()) if (!statement(child, false, output, true)) { valid = false; break; }
+    } else valid = statement(s, false, output, true);
+    initialized = before;
+    for (auto i = loopBounds.begin(); i != loopBounds.end();) {
+      if (!bounds.count(i->first)) i = loopBounds.erase(i); else ++i;
     }
-    return statement(s, false, output, true);
+    return valid;
+  }
+  static bool limitReferences(const Expr &e, std::unordered_set<std::string> &references) {
+    if (e.kind == Expr::Kind::Load) return false;
+    if (e.kind == Expr::Kind::Reference) references.insert(e.name);
+    for (const auto *child : {e.left.get(), e.right.get(), e.third.get()})
+      if (child && !limitReferences(*child, references)) return false;
+    return true;
+  }
+  static bool changesLimit(const clang::Stmt *s, const std::unordered_set<std::string> &references) {
+    if (!s) return false;
+    const clang::Expr *target = nullptr;
+    if (const auto *a = llvm::dyn_cast<clang::BinaryOperator>(s)) if (a->isAssignmentOp()) target = a->getLHS();
+    if (const auto *a = llvm::dyn_cast<clang::UnaryOperator>(s)) if (a->isIncrementDecrementOp()) target = a->getSubExpr();
+    if (target) if (const auto *ref = llvm::dyn_cast<clang::DeclRefExpr>(target->IgnoreParenImpCasts()))
+      if (references.count(ref->getDecl()->getNameAsString())) return true;
+    for (const auto *child : s->children()) if (changesLimit(child, references)) return true;
+    return false;
   }
   static bool containsCall(const clang::Stmt *s) {
     if (!s) return false;
@@ -484,7 +507,8 @@ class Analyzer {
       return fail(s->getBeginLoc(), "only a discarded pure uint32_t reference is accepted as a void cast statement");
     }
     if (auto *branch = llvm::dyn_cast<clang::IfStmt>(s)) {
-      if (region.ordered()) return fail(s->getBeginLoc(), "buffer/call regions currently require straight-line statements");
+      if (region.orderedCalls) return fail(s->getBeginLoc(), "call regions currently require straight-line statements");
+      if (region.ordered()) region.memoryControl = true;
       auto condition = expression(branch->getCond());
       if (!condition) return false;
       const auto before = loopBounds;
@@ -496,7 +520,8 @@ class Analyzer {
       output.push_back(std::move(out)); return true;
     }
     if (auto *loop = llvm::dyn_cast<clang::ForStmt>(s)) {
-      if (region.ordered()) return fail(s->getBeginLoc(), "buffer/call regions currently require straight-line statements");
+      if (region.orderedCalls) return fail(s->getBeginLoc(), "call regions currently require straight-line statements");
+      if (region.ordered()) region.memoryControl = true;
       const auto *decl = llvm::dyn_cast_or_null<clang::DeclStmt>(loop->getInit());
       const auto *index = decl && decl->isSingleDecl() ? llvm::dyn_cast<clang::VarDecl>(decl->getSingleDecl()) : nullptr;
       if (!index || !u32(index->getType()) || !index->hasInit() || index->hasAttrs() || index->getStorageClass() != clang::SC_None)
@@ -511,8 +536,13 @@ class Analyzer {
           !increment->isIncrementOp() || !incrementRef || incrementRef->getDecl() != index)
         return fail(s->getBeginLoc(), "require for(uint32_t i=0; i<N; ++i), with literal N in 0..32");
       auto limit = expression(condition->getRHS());
-      if (!limit || limit->kind != Expr::Kind::Constant || limit->value > 32)
-        return fail(s->getBeginLoc(), "loop bound must be a literal in 0..32");
+      if (!limit) return false;
+      const auto maximum = upperBound(*limit);
+      if (maximum > 32 || (!region.ordered() && limit->kind != Expr::Kind::Constant))
+        return fail(s->getBeginLoc(), "loop bound must be a literal or admitted memory-region scalar expression bounded in 0..32");
+      std::unordered_set<std::string> references;
+      if (!limitReferences(*limit, references) || changesLimit(loop->getBody(), references))
+        return fail(s->getBeginLoc(), "runtime loop bounds require immutable scalar expressions without memory loads");
       const auto name = index->getNameAsString();
       if (!names.insert(name).second) return fail(index->getLocation(), "loop index must have a fresh function-wide name");
       const auto before = loopBounds;
@@ -523,18 +553,21 @@ class Analyzer {
         for (const auto *active : loopIndices) if (active->getNameAsString() == variable) invariantIndex = true;
         if (!invariantIndex) bound = UINT32_MAX;
       }
-      initialized.insert(index); loopIndices.insert(index); loopBounds[name] = limit->value ? limit->value - 1 : 0;
-      Statement out(Statement::Kind::Repeat, name, nullptr); out.repetitions = limit->value;
+      initialized.insert(index); loopIndices.insert(index); loopBounds[name] = maximum ? maximum - 1 : 0;
+      Statement out(Statement::Kind::Repeat, name, nullptr); out.repetitions = maximum;
+      if (region.ordered()) out.expression = std::move(limit);
       const bool valid = block(loop->getBody(), out.thenBranch);
       initialized.erase(index); loopIndices.erase(index); loopBounds.erase(name);
-      if (limit->value == 0) loopBounds = before;
+      if (maximum == 0) loopBounds = before;
       if (!valid) return false;
       output.push_back(std::move(out)); return true;
     }
     if (auto *d = llvm::dyn_cast<clang::DeclStmt>(s)) {
-      if (nested) return fail(s->getBeginLoc(), "declarations inside control-flow bodies are unsupported");
+      if (nested && (!region.ordered() || region.orderedCalls)) return fail(s->getBeginLoc(), "declarations inside these control-flow bodies are unsupported");
       if (!d->isSingleDecl()) return fail(s->getBeginLoc(), "use a single initialized variable per declaration");
       auto *v = llvm::dyn_cast<clang::VarDecl>(d->getSingleDecl());
+      if (v && region.ordered() && names.count(v->getNameAsString()))
+        return fail(v->getLocation(), "ordered-region local names must be fresh throughout the function");
       if (v && region.buffers.count(v->getNameAsString()) && region.buffers.at(v->getNameAsString()).persistent)
         return fail(v->getLocation(), "local declarations cannot shadow referenced persistent objects");
       if (v && v->getType()->isPointerType() && !region.buffers.empty()) {
@@ -617,7 +650,9 @@ class Analyzer {
       return true;
     }
     if (auto *r = llvm::dyn_cast<clang::ReturnStmt>(s)) {
-      if (!final || !r->getRetValue()) return fail(s->getBeginLoc(), "require a single final return with a value");
+      if (!r->getRetValue() || (!final && (!region.ordered() || region.orderedCalls)))
+        return fail(s->getBeginLoc(), "early returns require call-free memory regions; every return needs a value");
+      if (!final) region.memoryControl = true;
       if (const auto *invoke = directCall(r->getRetValue())) {
         std::string name = "csrd_call_return";
         while (!names.insert(name).second) name += "_";

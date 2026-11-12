@@ -71,6 +71,21 @@ void require(bool value, const std::string &message) { if (!value) throw std::ru
 int main() {
   try {
     {
+      auto loopRegion = [](unsigned maximum, unsigned limit, bool returns) {
+        Region r; r.name = "loop"; r.parameters = {"p"}; r.buffers.emplace("p",Region::Buffer{}); r.memoryControl = true;
+        Statement loop(Statement::Kind::Repeat,"i",num(limit)); loop.repetitions = maximum;
+        r.statements.push_back(std::move(loop));
+        if (returns) r.statements.emplace_back(Statement::Kind::Return,"",num(7));
+        return r;
+      };
+      require(verifyMemory(loopRegion(1,2,true),loopRegion(1,2,true),5000).status == "counterexample",
+              "shared loop truncation incorrectly proved");
+      require(verifyMemory(loopRegion(0,0,true),loopRegion(0,0,true),5000).status == "proved-under-model",
+              "zero-trip termination rejected");
+      require(verifyMemory(loopRegion(1,1,false),loopRegion(1,1,false),5000).status == "counterexample",
+              "missing function return accepted");
+    }
+    {
       // Small-index enumeration must prove its domain even when both sides
       // carry the same bad IR hint; otherwise it could prove a shared clamp.
       auto memoryRegion = [](bool bounded) {

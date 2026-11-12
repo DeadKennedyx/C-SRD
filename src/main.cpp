@@ -196,7 +196,7 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
       const auto &region = *d.region;
       const bool records = std::any_of(region.buffers.begin(), region.buffers.end(),
         [](const auto &entry) { return entry.second.persistent || entry.second.recordBytes; });
-      f["semantic_model"] = records ? "records-state-byte-c11-v1" : region.orderedCalls ? "ordered-calls-byte-c11-v1" : region.buffers.empty() ? "pure-u32-c11-v2" :
+      f["semantic_model"] = region.memoryControl ? "guarded-memory-c11-v1" : records ? "records-state-byte-c11-v1" : region.orderedCalls ? "ordered-calls-byte-c11-v1" : region.buffers.empty() ? "pure-u32-c11-v2" :
         region.extendedMemory ? "buffers-byte-c11-v2" : "buffers-u32-c11-v1";
       if (!region.buffers.empty()) f["byte_order"] = region.littleEndian ? "little" : "big";
       llvm::json::Array parameters;
@@ -220,13 +220,17 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
         else parameters.push_back(descriptor(name, buffer->second));
       }
       f["parameters"] = std::move(parameters);
+      if (region.memoryControl) {
+        f["control_assumptions"] = "call-free structured branches and early returns; for loops start at zero with ++ and immutable scalar limits bounded by 32; live initialized prefixes for all admitted accesses; every loop exit and function return checked after finite expansion";
+        f["observations_checked"] = "return, entire final shared memory, conditional effects and termination within admitted loop bounds";
+      }
       if (records) {
         llvm::json::Array globals;
         for (const auto &[name, buffer] : region.buffers) if (buffer.persistent)
           globals.push_back(descriptor(name, buffer));
         f["persistent_objects"] = std::move(globals);
         f["state_assumptions"] = "equal incoming global state; original declarations and initialization retained by transform; globals are distinct complete objects; record pointers designate complete records, scalar pointers may alias fields; initialized live prefixes, no concurrent/asynchronous access; no record padding";
-        f["observations_checked"] = "return, entire final shared byte memory and ordered call prefixes; persistent state participates in shared memory";
+        if (!region.memoryControl) f["observations_checked"] = "return, entire final shared byte memory and ordered call prefixes; persistent state participates in shared memory";
       }
       if (region.orderedCalls) {
         llvm::json::Array calls;
