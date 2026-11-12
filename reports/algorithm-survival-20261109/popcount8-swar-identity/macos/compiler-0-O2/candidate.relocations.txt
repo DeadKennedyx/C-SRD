@@ -1,6 +1,0 @@
-
-/Users/admin/C-SRD/experiments/runs/algorithm-survival-20261109/popcount8-swar-identity/macos/compiler-0-O2/candidate.o:	file format mach-o arm64
-
-RELOCATION RECORDS FOR [__compact_unwind]:
-OFFSET           TYPE                     VALUE
-0000000000000000 ARM64_RELOC_UNSIGNED     __text

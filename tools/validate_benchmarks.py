@@ -166,7 +166,7 @@ def run(args, root):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--manifest", default=str(ROOT / "experiments/rich-benchmarks.json"))
+    parser.add_argument("--manifest", default=str(ROOT / "benchmarks/rich.json"))
     parser.add_argument("--csrd", required=True)
     parser.add_argument("--compiler", action="append", required=True, help="clang=PATH and gcc=PATH")
     parser.add_argument("--case", action="append")

@@ -9,7 +9,7 @@ import shutil
 
 from audit_protection import file_hash, write_json
 from audit_region_observers import checked_artifacts, command
-from effort_resources import measure, environment
+from effort_resources import measure, environment, measurement_lock
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -61,5 +61,5 @@ def run(args):
 
 if __name__=="__main__":
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("--build",required=True);p.add_argument("--output",required=True);p.add_argument("--z3",default="z3");args=p.parse_args()
-    with (ROOT/"experiments/runs/effort.lock").open("a") as lock:
+    with measurement_lock() as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB);run(args)

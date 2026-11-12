@@ -24,7 +24,7 @@ class RichBenchmarks(unittest.TestCase):
             "gcc-16", "gcc-14", "gcc-13", "gcc"] if p and shutil.which(p)), None)
         if not self.clang or not self.gcc:
             raise RuntimeError("GCC and Clang are required for corpus validation")
-        self.manifest = json.loads((ROOT / "experiments/rich-benchmarks.json").read_text())
+        self.manifest = json.loads((ROOT / "benchmarks/rich.json").read_text())
 
     def validate(self, manifest=None, expected=0, extra=()):
         path = self.root / "manifest.json"

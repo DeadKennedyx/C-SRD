@@ -56,7 +56,7 @@ int main(void){{
 
 def run(args):
     source = ROOT / "tests/fixtures/buffers.c"
-    catalog = ROOT / "experiments/matrix.json"
+    catalog = ROOT / "benchmarks/matrix.json"
     profiles = json.loads(catalog.read_text())["profiles"]
     records, capabilities, transformations = [], [], []
     output = Path(args.output_dir).resolve() if args.output_dir else None

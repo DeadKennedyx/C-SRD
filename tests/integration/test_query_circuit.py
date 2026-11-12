@@ -16,7 +16,6 @@ TOOL = str(Path(sys.argv.pop(1)).resolve())
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
 from effort_resources import measure
 from verify_circuit import abc_status, check
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "experiments"))
 import grade_saved_answers
 
 

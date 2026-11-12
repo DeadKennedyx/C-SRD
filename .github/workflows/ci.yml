@@ -30,11 +30,11 @@ jobs:
       - name: Record arithmetic contracts
         run: python3 tools/verify_rules.py --report build/rule-contracts.json
       - name: Audit compiled representation
-        run: >-
-          python3 tools/audit_protection.py
-          benchmarks/arithmetic/calculate.c reports/calculate-v05-seed42.c
-          --csrd build/csrd --compiler clang-18 --compiler gcc
-          --objdump llvm-objdump-18 --output-dir build/protection-audit
+        run: |
+          build/csrd transform benchmarks/arithmetic/calculate.c -o build/calculate.c --seed 42
+          python3 tools/audit_protection.py benchmarks/arithmetic/calculate.c build/calculate.c \
+            --csrd build/csrd --compiler clang-18 --compiler gcc \
+            --objdump llvm-objdump-18 --output-dir build/protection-audit
       - uses: actions/upload-artifact@v4
         if: always()
         with:

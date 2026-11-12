@@ -17,7 +17,6 @@ from process_counters import Phase, difference
 from effort_resources import measure, save
 from pcode_reconstruct import reconstruct
 from session_worker import events
-sys.path.insert(0,str(ROOT/"experiments"))
 from summarize_sessions import paired
 
 TOOL=str(Path(sys.argv.pop(1)).resolve())

@@ -16,7 +16,7 @@ import time
 
 from audit_decompiler import scoring_reference
 from audit_protection import executable, file_hash
-from effort_resources import environment, measure, save
+from effort_resources import environment, measure, save, measurement_lock
 from effort_statistics import summarize
 from effort_worker import model_source
 from experiment_support import input_vectors, MASK
@@ -285,9 +285,7 @@ def main():
     try:
         output.mkdir(parents=True, exist_ok=False)
         # No overlap with another participating effort driver in this checkout.
-        lock_path = ROOT / "experiments/runs/effort.lock"
-        lock_path.parent.mkdir(parents=True, exist_ok=True)
-        with lock_path.open("a") as lock:
+        with measurement_lock() as lock:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             result = run(args, output)
         print(f"{result['status']}: {output / 'effort.json'}")

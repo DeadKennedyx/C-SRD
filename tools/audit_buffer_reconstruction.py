@@ -15,7 +15,7 @@ import statistics
 import sys
 
 from audit_protection import AuditError, Runner, executable, file_hash, write_json
-from effort_resources import measure, environment
+from effort_resources import measure, environment, measurement_lock
 from pcode_memory import reconstruct
 from run_matrix import flags_for
 
@@ -55,7 +55,7 @@ def prepare(args, root, report, command):
                         set(installation.glob("Ghidra/Features/Decompiler/os/*/decompile")))
     report["ghidra_components"] = {str(p): file_hash(p) for p in components}
     report["implementation"] = {name: file_hash(ROOT / name) for name in IMPLEMENTATION}
-    catalog = ROOT / "experiments/matrix.json"
+    catalog = ROOT / "benchmarks/matrix.json"
     report["profile_catalog_sha256"] = file_hash(catalog)
     profiles = {p["id"]: p for p in json.loads(catalog.read_text())["profiles"]}
     if not set(args.profile) <= profiles.keys(): raise ValueError("unknown build profile")
@@ -278,8 +278,7 @@ def main():
         p.error("invalid repetition/timeout budget")
     root = Path(args.output_dir).resolve()
     root.mkdir(parents=True, exist_ok=False)
-    lockpath = ROOT / "experiments/runs/effort.lock"; lockpath.parent.mkdir(parents=True, exist_ok=True)
-    with lockpath.open("a") as lock:
+    with measurement_lock() as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         report = run(args, root)
     print(report["status"], report.get("outcomes", report.get("error")), flush=True)

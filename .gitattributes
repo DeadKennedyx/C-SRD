@@ -1,7 +1,0 @@
-# Published evidence hashes bind exact bytes; avoid checkout EOL conversion.
-reports/*-evidence-*/** -text
-# CSV writer output uses CRLF. Preserve it without flagging CR as trailing space.
-reports/*-evidence-*/*.csv whitespace=cr-at-eol
-# Raw tool logs and third-party notices retain their original whitespace.
-reports/*-evidence-*/*.log -whitespace
-reports/*-evidence-*/ABC-COPYRIGHT.txt -whitespace

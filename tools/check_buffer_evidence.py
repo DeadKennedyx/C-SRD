@@ -45,7 +45,7 @@ def check_reconstruction(path):
     implementation(report, path.parent)
     for tool in report["tools"].values(): checked(tool["path"], tool["sha256"])
     for name, digest in report["ghidra_components"].items(): checked(name, digest)
-    checked(ROOT / "experiments/matrix.json", report["profile_catalog_sha256"])
+    checked(ROOT / "benchmarks/matrix.json", report["profile_catalog_sha256"])
     for source in report["sources"]:
         for item in [source, *source["dependencies"]]: checked(item["path"], item["sha256"])
     for group in report["groups"]:

@@ -8,7 +8,7 @@ on:
       - 'tools/**'
       - 'tests/**'
       - 'benchmarks/**'
-      - 'experiments/matrix.json'
+      - 'benchmarks/matrix.json'
       - '.github/workflows/decompiler.yml'
 permissions:
   contents: read

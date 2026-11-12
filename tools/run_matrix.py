@@ -412,7 +412,7 @@ def run(args, root):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--matrix", default=str(ROOT / "experiments/matrix.json"))
+    p.add_argument("--matrix", default=str(ROOT / "benchmarks/matrix.json"))
     p.add_argument("--csrd", default="build/csrd")
     p.add_argument("--compiler", action="append", default=[], help="family=executable; e.g. gcc=gcc-16")
     p.add_argument("--objdump", default="llvm-objdump")

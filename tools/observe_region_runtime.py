@@ -11,7 +11,7 @@ import sys
 
 from audit_protection import file_hash, write_json
 from audit_region_observers import checked_artifacts
-from effort_resources import measure, environment
+from effort_resources import measure, environment, measurement_lock
 from region_observation_cases import oracle, effects, input_text
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -109,6 +109,6 @@ if __name__=="__main__":
     p.add_argument("--step-limit",type=int,default=6000)
     args=p.parse_args()
     if not 1<=args.step_limit<=20000:p.error("step limit must be 1..20000")
-    with (ROOT/"experiments/runs/effort.lock").open("a") as lock:
+    with measurement_lock() as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         run(args)

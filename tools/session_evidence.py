@@ -2,6 +2,7 @@
 from collections import Counter
 import json
 from pathlib import Path
+import statistics
 
 from audit_protection import file_hash
 
@@ -20,6 +21,30 @@ def checked(path, expected):
     if file_hash(path) != expected:
         raise ValueError("changed evidence: " + str(path))
     return path
+
+
+class Evidence:
+    def __init__(self):
+        self.bindings = {}
+
+    def bind(self, path, expected=None):
+        path = Path(path)
+        if not path.is_absolute():
+            path = ROOT / path
+        path = local(path)
+        actual = file_hash(path)
+        if expected is not None and actual != expected:
+            raise ValueError("bound evidence changed: " + str(path))
+        self.bindings[str(path.relative_to(ROOT))] = actual
+        return path
+
+    def read(self, path, expected=None):
+        return json.loads(self.bind(path, expected).read_text())
+
+
+def distribution(values):
+    return {"n": len(values), "median": statistics.median(values) if values else None,
+            "min": min(values) if values else None, "max": max(values) if values else None}
 
 
 def read_sessions(path):

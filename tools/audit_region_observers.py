@@ -15,7 +15,7 @@ import sys
 import time
 
 from audit_protection import file_hash, write_json
-from effort_resources import measure, environment
+from effort_resources import measure, environment, measurement_lock
 from region_observation_cases import FIXTURES, FUNCTIONS, driver, vectors, oracle, input_text, effects, parse_output
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -230,7 +230,7 @@ def main():
     args = p.parse_args()
     if args.grade_cases < 32 or getattr(args, "repetitions", 1) < 1: p.error("at least 32 grading inputs and one repetition required")
     if not 0<=getattr(args,"grade_seed",0)<2**64:p.error("grading seed must be a uint64")
-    with (ROOT/"experiments/runs/effort.lock").open("a") as lock:
+    with measurement_lock() as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         prepare(args) if args.stage == "prepare" else reconstruct_all(args)
 

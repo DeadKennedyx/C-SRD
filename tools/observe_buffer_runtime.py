@@ -14,7 +14,7 @@ import sys
 
 from audit_protection import Runner, executable, file_hash, write_json, AuditError
 from buffer_observation_cases import cases, driver, expected, LAYOUTS
-from effort_resources import measure, environment
+from effort_resources import measure, environment, measurement_lock
 
 ROOT = Path(__file__).resolve().parents[1]
 IMPLEMENTATION = ["tools/observe_buffer_runtime.py", "tools/gdb_buffer_trace.py", "tools/buffer_observation_cases.py",
@@ -151,7 +151,7 @@ def main():
     args = p.parse_args()
     if not 1 <= args.step_limit <= 10000: p.error("step limit must be 1..10000")
     root = Path(args.output_dir).resolve(); root.mkdir(parents=True, exist_ok=False)
-    with (ROOT / "experiments/runs/effort.lock").open("a") as lock:
+    with measurement_lock() as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         report = run(args, root)
     print(report["status"], report.get("outcomes", report.get("error")), flush=True)

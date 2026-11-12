@@ -15,6 +15,13 @@ import sys
 import time
 
 
+def measurement_lock():
+    """Shared lock file for sequential measurement drivers in this checkout."""
+    path = Path(__file__).resolve().parents[1] / "build" / "measurements.lock"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path.open("a")
+
+
 def save(path, value):
     path = Path(path)
     temporary = path.with_suffix(path.suffix + ".tmp")

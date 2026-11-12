@@ -9,7 +9,7 @@ import statistics
 
 from audit_protection import file_hash, write_json
 from audit_region_observers import checked_artifacts, command
-from effort_resources import environment
+from effort_resources import environment, measurement_lock
 
 ROOT = Path(__file__).resolve().parents[1]
 HARNESS = r'''#define _POSIX_C_SOURCE 200809L
@@ -90,5 +90,5 @@ if __name__=="__main__":
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("--build",required=True);p.add_argument("--output",required=True)
     p.add_argument("--iterations",type=int,default=1000000);p.add_argument("--repetitions",type=int,default=7);args=p.parse_args()
     if args.iterations<1 or args.repetitions<3:p.error("positive iterations and at least three repetitions required")
-    with (ROOT/"experiments/runs/effort.lock").open("a") as lock:
+    with measurement_lock() as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB);run(args)

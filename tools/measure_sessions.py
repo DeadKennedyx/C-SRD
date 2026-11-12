@@ -14,7 +14,7 @@ import random
 import sys
 
 from audit_protection import file_hash
-from effort_resources import environment, measure, save
+from effort_resources import environment, measure, save, measurement_lock
 
 ROOT=Path(__file__).resolve().parents[1]
 FROZEN=("pcode_values.py","pcode_wide.py","pcode_vector.py","pcode_cfg.py","pcode_reconstruct.py","ghidra/ExportCSRD.java")
@@ -93,7 +93,7 @@ def main():
             "grading":"withheld source; all distinct answers graded separately after resource collection"}
     save(output/"protocol.json",report)
     indexed={(r["case"],r["profile"],r["variant"]):r for r in records}
-    with (ROOT/"experiments/runs/effort.lock").open("a") as lock:
+    with measurement_lock() as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         for i,cell in enumerate(schedule):
             r=indexed[(cell["case"],cell["profile"],cell["variant"])]

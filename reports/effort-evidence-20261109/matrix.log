@@ -1,7 +1,0 @@
-calculate: clang-O2
-calculate: gcc-O2
-xor: clang-O2
-xor: gcc-O2
-rotate_mix: clang-O2
-rotate_mix: gcc-O2
-completed: /work/experiments/runs/effort-pilot-20261109/matrix/matrix.json
