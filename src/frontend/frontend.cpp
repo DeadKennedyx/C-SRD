@@ -3,6 +3,8 @@
 #include "csrd/config.hpp"
 #include "csrd/algorithms.hpp"
 #include "clang/AST/ASTConsumer.h"
+#include "clang/AST/Expr.h"
+#include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
@@ -63,7 +65,18 @@ public:
   void MacroDefined(const clang::Token &token, const clang::MacroDirective *) override {
     const auto name = token.getIdentifierInfo()->getName();
     if (name == "unsigned" || name == "int" || name == "void" || name == "signed" || name == "long" ||
-        name == "short" || name == "char" || name == "_Bool" || name == "_Static_assert" || name == "sizeof") data.keywordMacro = true;
+        name == "short" || name == "char" || name == "_Bool" || name == "_Static_assert" || name == "sizeof" ||
+        name == "static" || name == "return") data.keywordMacro = true;
+  }
+};
+class SourceLocations final : public clang::RecursiveASTVisitor<SourceLocations> {
+  clang::SourceManager &sm;
+public:
+  bool found=false;
+  explicit SourceLocations(clang::SourceManager &manager):sm(manager) {}
+  bool VisitSourceLocExpr(clang::SourceLocExpr *expression) {
+    if (sm.isWrittenInMainFile(sm.getExpansionLoc(expression->getBeginLoc()))) found=true;
+    return true;
   }
 };
 class Consumer final : public clang::ASTConsumer {
@@ -107,12 +120,18 @@ public:
       if (token.is(clang::tok::raw_identifier)) reserved.insert(token.getRawIdentifier().str());
     } while (!token.is(clang::tok::eof));
     clang::Rewriter rewriter(sm, ctx.getLangOpts());
+    bool outlineLocations=false;
+    if (result.options.scope=="outline-regions") {
+      SourceLocations locations(sm);locations.TraverseDecl(ctx.getTranslationUnitDecl());
+      outlineLocations=locations.found;
+    }
     for (const auto *decl : ctx.getTranslationUnitDecl()->decls()) {
       const auto *f = llvm::dyn_cast<clang::FunctionDecl>(decl);
       if (!f || !f->doesThisDeclarationHaveABody() || !sm.isWrittenInMainFile(sm.getExpansionLoc(f->getLocation()))) continue;
       Decision decision;
       decision.function = f->getNameAsString();
       decision.parameterCount = f->getNumParams();
+      decision.internalLinkage = !f->isExternallyVisible();
       decision.metrics = measure(ctx, *f);
       auto loc = f->getLocation();
       const auto begin = sm.getExpansionLoc(f->getBeginLoc());
@@ -121,6 +140,35 @@ public:
       const bool hazard = std::any_of(pp.hazards.begin(), pp.hazards.end(), [=](unsigned pos) { return pos >= first && pos <= last; });
       if (pp.keywordMacro || hazard || f->getBeginLoc().isMacroID() || f->getEndLoc().isMacroID()) {
         decision.reason = pp.keywordMacro ? "macro definitions for generated C type keywords are unsupported" : "function contains macro expansions or preprocessor directives";
+      } else if (result.options.scope == "outline-regions") {
+        if (!outlineLocations) decision.outlineReferences=csrd::privateReferences(ctx,*f);
+        if (outlineLocations) decision.reason="translation unit uses source-location builtins whose columns could move";
+        else if (validationSource) {
+          const auto original=std::find_if(validationSource->decisions.begin(),validationSource->decisions.end(),
+            [&](const auto &d){return d.function==decision.function;});
+          if (original==validationSource->decisions.end()) continue; // Helpers are checked with their caller.
+          decision.outline=original->outline;
+          std::vector<const OutlineFunction *> functions;
+          for (const auto &d:validationSource->decisions) functions.push_back(&d.outline);
+          decision.outlineContextVerified=outlineContextMatches(original->outlineReferences,decision.outlineReferences,functions,decision.reason);
+          if (!decision.outline.frames.empty()) decision.verification=validateOutline(ctx,*f,decision.outline);
+          decision.status="checked-outline-regions";
+        } else {
+          decision.outline=discoverOutline(ctx,*f);
+          decision.privateBoundaries=decision.outline.boundaries;decision.reason=decision.outline.reason;
+          decision.status=decision.outline.frames.empty() ? "unchanged":rewrite ? "outline-transformed":"supported-outline-regions";
+          if (rewrite && !decision.outline.frames.empty()) {
+            emitOutline(decision.outline,seed,reserved);
+            const auto start=sm.getLocForStartOfFile(file);
+            if (rewriter.InsertTextBefore(start.getLocWithOffset(decision.outline.insertion.begin),decision.outline.insertion.emitted))
+              throw std::runtime_error("outline helpers could not be inserted");
+            for (const auto &frame:decision.outline.frames) {
+              if (rewriter.ReplaceText(clang::CharSourceRange::getCharRange(start.getLocWithOffset(frame.begin),
+                    start.getLocWithOffset(frame.end)),frame.emitted)) throw std::runtime_error("outline expression could not be replaced");
+              decision.operations+=frame.operations;
+            }
+          }
+        }
       } else if (result.options.scope == "control-regions") {
         decision.controlReferences = csrd::privateReferences(ctx, *f);
         if (validationSource) {
@@ -266,6 +314,11 @@ public:
       std::vector<ControlFrame *> frames;
       for (auto &d : result.decisions) for (auto &frame : d.controlFrames) frames.push_back(&frame);
       prepareControlFrames(std::move(frames));
+    }
+    if (rewrite && result.options.scope=="outline-regions") {
+      std::vector<OutlineFunction *> functions;
+      for (auto &d:result.decisions) functions.push_back(&d.outline);
+      prepareOutline(std::move(functions));
     }
     llvm::raw_string_ostream output(result.source);
     rewriter.getEditBuffer(file).write(output);
@@ -467,12 +520,42 @@ bool validateControlCandidate(const std::string &path, TransformResult &result, 
   }
   return true;
 }
+bool validateOutlineCandidate(const std::string &path,TransformResult &result,const std::string &candidate) {
+  std::vector<const OutlineFunction *> functions;
+  for (const auto &d:result.decisions) functions.push_back(&d.outline);
+  const auto edits=outlineEdits(functions);
+  std::string restored=candidate;
+  for (auto it=edits.rbegin();it!=edits.rend();++it) {
+    const auto &edit=**it;
+    if (edit.candidateBegin>edit.candidateEnd || edit.candidateEnd>restored.size()) return false;
+    restored.replace(edit.candidateBegin,edit.candidateEnd-edit.candidateBegin,edit.original);
+  }
+  if (sha256(restored)!=result.inputHash) {llvm::errs()<<"csrd: outline validation rejected a change outside selected edits\n";return false;}
+  TransformResult generated;generated.options=result.options;generated.frontend=result.frontend;
+  if (!parse(path,0,generated,false,&candidate,&result)) return false;
+  result.candidateDependencies=generated.dependencies;result.candidateCompilerArguments=generated.compilerArguments;
+  if (result.target!=generated.target || result.dependencies!=generated.dependencies || result.compilerArguments!=generated.compilerArguments ||
+      (result.compilation && result.compilation->databaseHash!=generated.compilation->databaseHash)) return false;
+  for (auto &decision:result.decisions) {
+    const auto match=std::find_if(generated.decisions.begin(),generated.decisions.end(),[&](const auto &d){return d.function==decision.function;});
+    if (match==generated.decisions.end()) return false;
+    // Functions skipped for preprocessing/context hazards have no outline references.
+    if (decision.outlineReferences.empty() && decision.outline.frames.empty()) continue;
+    decision.outlineContextVerified=match->outlineContextVerified;
+    if (!decision.outlineContextVerified) {llvm::errs()<<"csrd: outline context: "<<match->reason<<"\n";return false;}
+    if (decision.outline.frames.empty()) continue;
+    decision.verification=match->verification;decision.outline=match->outline;
+    if (decision.verification.status!="proved-under-model") {llvm::errs()<<"csrd: outline validation: "<<decision.verification.reason<<"\n";return false;}
+  }
+  return true;
+}
 bool transform(const std::string &path, uint64_t seed, TransformResult &result, const PlanOptions &options, const FrontendOptions &frontend) {
   result.options = options;
   result.frontend = frontend;
   if (!parse(path, seed, result, true, nullptr)) return false;
   if (options.scope == "private-regions") return validatePrivateCandidate(path, result, result.source);
   if (options.scope == "control-regions") return validateControlCandidate(path, result, result.source);
+  if (options.scope == "outline-regions") return validateOutlineCandidate(path,result,result.source);
   TransformResult generated;
   generated.options = options;
   generated.frontend = frontend;

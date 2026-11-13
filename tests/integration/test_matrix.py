@@ -144,6 +144,37 @@ class Matrix(unittest.TestCase):
         if sys.platform.startswith("linux"):
             self.assertEqual(costs["memory_counter_control"]["status"],"passed")
 
+    def test_outlining_compositions_validate_internal_helpers(self):
+        from matrix_regions import check_pass
+        report=self.execute_matrix(extra=("--strategies","identity","--no-select",
+            "--region-recipes","outline","outline-control","control-outline"))
+        records={r["variant"]:r for r in report["records"]}
+        self.assertEqual(len(records),5)
+        passes=records["outline-control-42"]["region_pipeline"][0]["passes"]
+        self.assertEqual(len(passes),2)
+        step=passes[1]
+        self.assertTrue(any(r["internal_linkage"] for r in step["functions_coverage"]))
+        # A second outline pass changes the helper while the public caller is
+        # unchanged. Verification must cover that change too.
+        source=passes[0]["candidate"]
+        candidate=self.root/"second.i";proof=self.root/"second.json"
+        result=subprocess.run([TOOL,"transform",source,"-o",str(candidate),"--scope","outline-regions",
+                               "--seed","42","--report",str(proof)],capture_output=True,text=True,timeout=30)
+        self.assertEqual(result.returncode,0,result.stderr)
+        data=json.loads(proof.read_text())
+        public=check_pass(data,source,candidate,"outline-regions",42,
+                          {"function":"calculate","parameter_count":2},data["target"])
+        self.assertEqual(public["status"],"unchanged")
+        helper=next(r for r in data["functions"] if r["internal_linkage"] and r["status"]=="outline-transformed")
+        helper["verification"]="not-verified"
+        with self.assertRaisesRegex(ValueError,"lacks frame/graph/binding"):
+            check_pass(data,source,candidate,"outline-regions",42,
+                       {"function":"calculate","parameter_count":2},data["target"])
+        helper["internal_linkage"]=False
+        with self.assertRaisesRegex(ValueError,"public interface"):
+            check_pass(data,source,candidate,"outline-regions",42,
+                       {"function":"calculate","parameter_count":2},data["target"])
+
     def test_independent_oracle_rejects_matching_but_wrong_programs(self):
         source = self.root/"wrong.c"
         source.write_text("#include <stdint.h>\nuint32_t kernel(uint32_t x){return x;}\n")

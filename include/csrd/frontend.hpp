@@ -10,6 +10,7 @@
 #include "csrd/private_regions.hpp"
 #include "csrd/compilation.hpp"
 #include "csrd/control_regions.hpp"
+#include "csrd/outline.hpp"
 namespace csrd {
 struct Decision {
   std::string function, status, reason;
@@ -22,6 +23,7 @@ struct Decision {
   Emission emission;
   uint32_t xorMask = 0;
   unsigned parameterCount = 0;
+  bool internalLinkage = false;
   Metrics metrics;
   std::vector<PrivateFrame> privateFrames;
   std::vector<PrivateBoundary> privateBoundaries;
@@ -30,6 +32,9 @@ struct Decision {
   std::vector<ControlFrame> controlFrames;
   std::vector<PrivateReference> controlReferences;
   bool controlContextVerified = false;
+  OutlineFunction outline;
+  std::vector<PrivateReference> outlineReferences;
+  bool outlineContextVerified = false;
 };
 struct TransformResult {
   std::string source;
@@ -53,5 +58,6 @@ bool preprocess(const std::string &path, TransformResult &result);
 // Reparse actual C, enforce unchanged surrounding bytes, then check every frame.
 bool validatePrivateCandidate(const std::string &path, TransformResult &result, const std::string &candidate);
 bool validateControlCandidate(const std::string &path, TransformResult &result, const std::string &candidate);
+bool validateOutlineCandidate(const std::string &path, TransformResult &result, const std::string &candidate);
 std::string sha256(const std::string &data);
 }

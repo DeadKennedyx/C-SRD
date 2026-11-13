@@ -37,6 +37,7 @@ optimization and sanitizer configurations; optional external tools report skips.
 build/csrd transform input.c -o output.c --seed 42
 build/csrd transform input.c -o output.c --scope private-regions --seed 42
 build/csrd transform input.c -o output.c --scope control-regions --seed 42
+build/csrd transform input.c -o output.c --scope outline-regions --seed 42
 build/csrd analyze input.c --scope private-regions --report build/analysis.json
 build/csrd --help
 ```
@@ -1268,4 +1269,161 @@ python3 tools/measure_matrix_costs.py --matrix-report "$CSRD_RECOVERY/matrix/mat
   --profile clang-O3 --profile gcc-O3 --iterations 10000000 --repetitions 7 \
   --output-dir "$CSRD_RECOVERY/costs"
 python3 tests/integration/test_effort.py build-linux-integers/csrd
+```
+
+## Function outlining prototype and capture admission correction (0.17.0)
+
+**Problem and hypothesis.** The previous passes change scalar representation and
+structured control, but do not offer a reusable transformation of function
+boundaries. The hypothesis is that moving pure integer expressions into helper
+functions can affect compiled structure and recovery cost, including in combination
+with existing passes. Correct source substitution is necessary; protection benefit
+is an experimental question. This prototype follows the published
+[Tigress Split design](https://tigress.wtf/split.html) at a much narrower expression
+scope and makes no novelty claim. It adds neither anti-inlining attributes nor
+debugger detection.
+
+**Technical specification.** `--scope outline-regions` selects eligible integer
+initializers, return expressions, and RHSs of plain assignment statements directly
+inside compound blocks. Each selected expression moves into a fresh `static`
+helper, with its private automatic integer inputs passed by value. The seed
+determines helper identifiers and parameter order. The public signature and
+surrounding memory accesses, calls and control flow remain in the caller. Multiple
+helpers can be emitted across a translation unit. Generated C has no additional
+runtime dependency. This is function-structure diversification, not a different
+algorithm or a cryptographic encoding.
+
+Eligibility requires at least two operators and one captured value. Limits are
+16 captures and 256 operators per expression, depth 128, and 64 expressions per
+function. Unqualified standard integer types through 64 bits are supported;
+their original promotions, conversions and operators are retained. Moving an
+existing signed operation, division or variable multiplication does **not** extend
+the affine arithmetic rules. Undefined source executions remain outside the
+contract. Pointer, floating, atomic, volatile, address-escaped and effectful
+operands are not captured. Macros, function attributes, nonlocal control and
+explicit compiler builtins are conservative boundaries. Main-file source-location
+builtins disable outlining throughout that translation unit, including when used
+in an enum or declaration outside a function. Original newline counts are retained.
+
+The validator reparses the actual generated C and compares typed expression trees
+under the captured-variable substitution. It checks operators, literal values,
+conversion kinds, helper signatures, argument order, call targets, declaration
+identities and the absence of additional helper statements/declarations.
+Surrounding references must bind to the same declarations, and restoring selected
+edits must reproduce the original source hash. Target, preprocessing dependencies
+and compiler arguments are bound to the proof. `proved-under-model` here means
+typed expression alpha-equivalence under **defined sequential C execution**, with
+private scalar inputs and no observations of stack frames, raw addresses, timing,
+resource exhaustion, signals or concurrent access. Clang and the downstream C
+compiler are trusted. It is not a proof of arbitrary C programs or machine code.
+
+**Research journal: a capture counterexample.** Admission review uncovered a real
+gap in the older private-region pass:
+
+```c
+unsigned f(unsigned c) {
+    unsigned x;
+    unsigned y = c ? x + 1u : 0u;
+    return y;
+}
+```
+
+For `c == 0`, the original returns zero without reading `x`. The old pass eagerly
+encoded `x` at frame entry, introducing a read of an uninitialized automatic
+object. Its scalar-value proof did not establish that every captured source
+object was initialized. The retained reproduction in
+`build-outline/capture-regression/` shows the old tool reporting
+`regions-transformed`/`proved-under-model`, and the corrected tool reporting
+`unchanged`/`not-verified` with an initialization diagnostic. This is an admission
+bug, not a failure of the affine arithmetic identities; previous model proofs
+must not be read as unrestricted source-C correctness guarantees.
+
+Private regions now admit an input only if it is a parameter or its entry value
+is necessarily read by the original straight-line frame before an overwrite.
+Conditional branches contribute only reads common to both branches. Outlining
+uses the same conservative principle at expression boundaries. Nested assignment
+RHSs are excluded: eager parameter capture there could introduce a read
+unsequenced relative to an enclosing write. Regression controls cover both gaps.
+This deliberately rejects some safe initialized-local cases until a stronger
+initialization analysis exists.
+
+**Integration and experimental status.** Project replay accepts outlining as an
+ordered pass. Matrix recipes include outlining alone, both orders with private
+affine/control passes, and two three-pass combinations. Matrix reports retain
+coverage for every input helper as well as the public function; helper
+transformations must also pass validation. Additional internal helpers do not
+count as a public-interface change. Correctness tests check helper mutations,
+declaration shadowing, integer edge cases, buffer writes, callback traces, seeded
+reproducibility, preprocessing hazards and pass combinations.
+
+**Validation results.** Linux LLVM 18 completed the 64 CTest groups: the initial
+run passed 62 and failed two new tests (a missing C-file trailing newline and an
+incorrect expectation that a one-statement helper would be control-transformed).
+After correcting those test cases, both affected groups passed in 14.35 seconds.
+The original full run took 357.73 seconds. CBMC is unavailable and live Ghidra was
+not configured in that test invocation; their optional integration cases are
+skipped, not successful external-tool checks. Z3 contract checks ran. Logs are
+`build-outline/linux-tests.log` and `linux-retest.log`. The final five affected
+native LLVM 23 groups (private capture validation, outline validation/differential
+checks, project replay and matrix validation) pass in 85.50 seconds, recorded in
+`build-outline/native-tests.log`. Output differential tests use GCC/Clang `-O0`
+and `-O2`, plus Clang AddressSanitizer/UndefinedBehaviorSanitizer configurations.
+
+**Compiled-code pilot.** The frozen Linux build was then measured serially on
+CRC-32 byte updates, Jenkins word hashing, Morton interleaving and integer RGB
+weighting. GCC 13 and Clang 18 each use `-O0` and `-O2`. Seven variants are retained:
+original, identity emission, exact binary copy, control alone, outlining alone,
+outline then control, and control then outline. Seed 42 is fixed. All **112 cells**
+complete, with **68,628 independent-oracle comparisons** and **560 timed executions**
+(five repetitions of one million harness iterations per cell).
+
+| Outlining alone | GCC/Clang `-O0` (8 cells) | GCC/Clang `-O2` (8 cells) |
+| --- | --- | --- |
+| Linked `.text` identical to original | 0/8 | **7/8** |
+| Linked `.text` size / original | 1.063–1.159 | 1.000 in every cell |
+| Median paired application CPU ratio, range across cells | 1.032–1.775 | 0.997–1.012 |
+| Exact-copy control CPU ratio, range | 0.996–1.009 | 0.990–1.024 |
+
+The remaining different `-O2` text is GCC RGB weighting; a byte difference of the
+same size does not demonstrate harder reconstruction. At `-O2`, control then
+outline matches control-only text in 7/8 cells, and outline then control in 3/8.
+Both composed recipes reach about 2.9 times baseline application CPU in this
+pilot, similar to control alone. These are whole-harness costs, not attacker CPU
+costs. Linux executable VmHWM for outlining alone ranges from 1,269,760 to
+1,286,144 bytes across the two optimization levels, including the loader and
+harness; this is not a measurement of memory-analysis resistance.
+
+Artifacts are `build-outline/pilot-1/matrix/matrix.json` and
+`build-outline/pilot-1/sizes/sizes.json`. The matrix's older fixed-basis/library
+recovery observer fails on **all four original families** as well, so its failures
+cannot be attributed to outlining. Independent Ghidra and bit-linear recovery-cost
+comparisons, runtime-value recovery, private-affine compositions, other optimization
+profiles, additional seeds and reserved families remain pending for this prototype.
+Earlier region-pass recovery results above are not results for outlining. The
+pilot falsifies preservation of a compiled structural difference in seven of the
+eight optimized outlining-only cells; it establishes no protection advantage.
+A decompiler adapter's inability to traverse a new helper call must likewise be
+recorded as a coverage limitation, not evidence of protection. The next increment
+is the independent recovery comparison on these frozen artifacts before adding
+another transformation.
+
+To reproduce the pilot in the Linux validation environment, use a fresh directory
+and run each collector serially:
+
+```sh
+cmake -S . -B build-linux-outline -G Ninja \
+  -DCMAKE_PREFIX_PATH=/usr/lib/llvm-18 -DCMAKE_BUILD_TYPE=Release
+cmake --build build-linux-outline --parallel 2
+ctest --test-dir build-linux-outline --output-on-failure -j 1
+python3 tools/run_matrix.py --matrix benchmarks/rich.json \
+  --csrd build-linux-outline/csrd --compiler clang=clang-18 --compiler gcc=gcc \
+  --objdump llvm-objdump-18 --tier core \
+  --profile clang-O0 --profile gcc-O0 --profile clang-O2 --profile gcc-O2 \
+  --strategies identity --seeds 42 --no-select --binary-copy-control \
+  --region-recipes control outline outline-control control-outline \
+  --inputs 256 --iterations 1000000 --repetitions 5 --require-selected-profiles \
+  --output-dir build-outline-reproduction/matrix
+python3 tools/measure_code_size.py \
+  --matrix-report build-outline-reproduction/matrix/matrix.json \
+  --output-dir build-outline-reproduction/sizes
 ```

@@ -15,9 +15,17 @@ RECIPES = {
     "control": [("control-regions", "identity")],
     "private-affine-control": [("private-regions", "affine"), ("control-regions", "identity")],
     "control-private-affine": [("control-regions", "identity"), ("private-regions", "affine")],
+    "outline": [("outline-regions", "identity")],
+    "outline-private-affine": [("outline-regions", "identity"), ("private-regions", "affine")],
+    "private-affine-outline": [("private-regions", "affine"), ("outline-regions", "identity")],
+    "outline-control": [("outline-regions", "identity"), ("control-regions", "identity")],
+    "control-outline": [("control-regions", "identity"), ("outline-regions", "identity")],
+    "private-affine-outline-control": [("private-regions", "affine"), ("outline-regions", "identity"), ("control-regions", "identity")],
+    "control-outline-private-affine": [("control-regions", "identity"), ("outline-regions", "identity"), ("private-regions", "affine")],
 }
 MODELS = {"private-regions": "private-integer-frame-c11-v3",
-          "control-regions": "opaque-effects-control-graph-c11-v1"}
+          "control-regions": "opaque-effects-control-graph-c11-v1",
+          "outline-regions": "pure-integer-outlining-c11-v1"}
 
 
 class ResourceRunner(Runner):
@@ -64,17 +72,21 @@ def check_pass(data, source, candidate, scope, seed, function, target):
             or data.get("dependencies") != [] or data.get("candidate_dependencies") != []):
         raise ValueError("region pass input/output/environment binding mismatch")
     rows = data.get("functions", [])
-    if len(rows) != 1 or (rows[0]["function"], rows[0]["parameter_count"]) != (function["function"], function["parameter_count"]):
+    public = [row for row in rows if not row.get("internal_linkage", False)]
+    if (len(public) != 1 or len({row["function"] for row in rows}) != len(rows)
+            or (public[0]["function"], public[0]["parameter_count"]) != (function["function"], function["parameter_count"])):
         raise ValueError("region pass changed the scalar public interface")
-    row = rows[0]
-    transformed = "control-transformed" if scope == "control-regions" else "regions-transformed"
-    if row["status"] == "unchanged":
-        if data["source_sha256"] != data["candidate_sha256"]:
-            raise ValueError("unchanged region pass changed source bytes")
-    elif (row["status"] != transformed or row.get("verification") != "proved-under-model"
-          or not row.get("context_bindings_verified") or row.get("semantic_model") != MODELS[scope]):
-        raise ValueError("region pass lacks frame/graph/binding verification")
-    return row
+    transformed = {"private-regions": "regions-transformed", "control-regions": "control-transformed",
+                   "outline-regions": "outline-transformed"}[scope]
+    for row in rows:
+        if row["status"] == "unchanged":
+            continue
+        if (row["status"] != transformed or row.get("verification") != "proved-under-model"
+                or not row.get("context_bindings_verified") or row.get("semantic_model") != MODELS[scope]):
+            raise ValueError("region pass lacks frame/graph/binding verification")
+    if all(row["status"] == "unchanged" for row in rows) and data["source_sha256"] != data["candidate_sha256"]:
+        raise ValueError("unchanged region pass changed source bytes")
+    return public[0]
 
 
 def apply_pipeline(command, csrd, source, variant, directory, function, target, timeout_ms):
@@ -91,6 +103,7 @@ def apply_pipeline(command, csrd, source, variant, directory, function, target, 
         passes.append({"scope": scope, "strategy": strategy, "report": str(report), "sha256": file_hash(report),
                        "source": str(current), "source_sha256": file_hash(current),
                        "candidate": str(candidate), "candidate_sha256": file_hash(candidate),
-                       "coverage": row})
+                       "coverage": row, "functions_coverage": data["functions"],
+                       "functions_transformed": sum(f["status"] != "unchanged" for f in data["functions"])})
         current = candidate
     return current, passes

@@ -92,6 +92,16 @@ int main() {
     auto d = csrd::discoverPrivateRegions(other->getASTContext(), function(*other));
     require(d.frames.size() == 1 && d.frames[0].inputs.empty(), "overwritten uninitialized locals must not be captured");
     require(grade(overwrite, d.frames[0], csrd::emitPrivateFrame(d.frames[0], csrd::IntegerCodec::fromSeed(42,"f"), {}).body).status == "proved-under-model", "write-only initialization frame failed");
+    for (const auto &lazy : {
+        "unsigned f(unsigned c){unsigned x;unsigned y=c ? x+1u : 0u;return y;}\n",
+        "unsigned f(unsigned c){unsigned x;unsigned y=c ? x+1u : 0u;x=7u;y=y+x;return y;}\n"}) {
+      auto tree=parse(lazy);auto regions=csrd::discoverPrivateRegions(tree->getASTContext(),function(*tree));
+      require(regions.frames.empty(),"conditionally unused indeterminate entry value was eagerly captured");
+      require(!regions.boundaries.empty(),"conditional capture needs an explicit diagnostic");
+    }
+    auto lazyParameter=parse("unsigned f(unsigned c,unsigned x){unsigned y=c ? x+1u : 0u;return y;}\n");
+    require(csrd::discoverPrivateRegions(lazyParameter->getASTContext(),function(*lazyParameter)).frames.size()==1,
+            "defined parameter value may be captured before a conditional read");
     // Declarations remain visible across effects and later frames; same-spelled
     // outer and inner objects have distinct output identities.
     const std::string declarations = "extern void sink(unsigned int);unsigned int f(unsigned int x,unsigned int y){"

@@ -235,7 +235,7 @@ def build_project(tool, specification, destination):
                     data = json.loads(report.read_text())
                     if not data["output_written"] or data["source_sha256"] != digest(current) or data["candidate_sha256"] != digest(candidate):
                         raise RuntimeError("transformation output/report provenance mismatch")
-                    transformed = [f for f in data["functions"] if f["status"] in {"transformed", "regions-transformed", "control-transformed"}]
+                    transformed = [f for f in data["functions"] if f["status"] in {"transformed", "regions-transformed", "control-transformed", "outline-transformed"}]
                     if any(f["verification"] != "proved-under-model" for f in transformed):
                         raise RuntimeError("unproved transformation in project")
                     records.append({"report": str(report), "source_sha256": data["source_sha256"],
@@ -244,6 +244,7 @@ def build_project(tool, specification, destination):
                                     "control_nodes": sum(len(r["nodes"]) for f in transformed for r in f.get("control_regions", [])),
                                     "control_branches": sum(r["branches_lowered"] for f in transformed for r in f.get("control_regions", [])),
                                     "control_loops": sum(r["loops_lowered"] for f in transformed for r in f.get("control_regions", [])),
+                                    "outlined_expressions": sum(len(f.get("outline_regions", [])) for f in transformed),
                                     "functions_unchanged": len(data["functions"]) - len(transformed)})
                     current = candidate
                 outputs[name] = current

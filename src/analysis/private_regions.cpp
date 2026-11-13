@@ -181,6 +181,17 @@ void references(const IntegerExpr &e, const std::function<void(const std::string
   if (e.right) references(*e.right, visit);
   if (e.third) references(*e.third, visit);
 }
+std::set<std::string> requiredReads(const IntegerExpr &e) {
+  if (e.kind == IntegerExpr::Kind::Reference) return {e.name};
+  auto result = e.left ? requiredReads(*e.left) : std::set<std::string>{};
+  if (e.kind == IntegerExpr::Kind::Select) {
+    const auto yes = requiredReads(*e.right), no = requiredReads(*e.third);
+    for (const auto &name : yes) if (no.count(name)) result.insert(name);
+  } else if (e.right) {
+    const auto right = requiredReads(*e.right); result.insert(right.begin(), right.end());
+  }
+  return result;
+}
 unsigned tokenEnd(clang::ASTContext &ctx, clang::SourceLocation loc) {
   const auto end = clang::Lexer::getLocForEndOfToken(loc, 0, ctx.getSourceManager(), ctx.getLangOpts());
   if (end.isInvalid() || end.isMacroID()) throw std::invalid_argument("unrewritable private source range");
@@ -220,6 +231,8 @@ PrivateDiscovery discoverPrivateRegions(clang::ASTContext &ctx, const clang::Fun
   auto &sm = ctx.getSourceManager();
   const auto source = sm.getBufferData(sm.getMainFileID());
   std::map<std::string, PrivateBinding> bindings;
+  std::set<std::string> parameters;
+  for (const auto *parameter : f.parameters()) parameters.insert(declarationId(ctx, parameter));
   for (const auto *decl : privateObjects.objects) {
     const auto *v = llvm::cast<clang::VarDecl>(decl);
     bindings.emplace(declarationId(ctx, decl), PrivateBinding{decl->getNameAsString(), sm.getFileOffset(decl->getLocation()),
@@ -232,8 +245,24 @@ PrivateDiscovery discoverPrivateRegions(clang::ASTContext &ctx, const clang::Fun
     std::set<std::string> written;
     auto flush = [&]() {
       if (pending.original && pending.original->operations) {
-        pending.originalText = source.substr(pending.begin, pending.end-pending.begin).str();
-        result.frames.push_back(std::move(pending));
+        // Entry encoding eagerly reads every captured input. A conditional
+        // read alone does not establish that an automatic object holds a value
+        // on every defined source execution. Later reads after an overwrite
+        // cannot establish that its *entry* value was initialized either.
+        auto required = parameters;
+        std::set<std::string> assigned;
+        for (const auto &statement : pending.original->statements) {
+          for (const auto &name : requiredReads(*statement.expression))
+            if (!assigned.count(name)) required.insert(name);
+          assigned.insert(statement.name);
+        }
+        const bool safe = std::all_of(pending.inputs.begin(), pending.inputs.end(),
+          [&](const auto &name) { return required.count(name); });
+        if (safe) {
+          pending.originalText = source.substr(pending.begin, pending.end-pending.begin).str();
+          result.frames.push_back(std::move(pending));
+        } else result.boundaries.push_back({pending.line, pending.column, "private frame",
+          "entry encoding could eagerly read a conditionally used local scalar; initialization is not established"});
       }
       pending = PrivateFrame{}; written.clear();
     };

@@ -24,9 +24,12 @@ class ProjectBuild(unittest.TestCase):
             configured = json.loads(spec.read_text())
             affine = {"scope": "private-regions", "strategy": "affine", "seed": 42}
             control = {"scope": "control-regions", "seed": 42}
+            outline = {"scope": "outline-regions", "seed": 42}
             configured["variants"] += [{"name": "control", "passes": [control]},
                                        {"name": "affine_control", "passes": [affine, control]},
-                                       {"name": "control_affine", "passes": [control, affine]}]
+                                       {"name": "control_affine", "passes": [control, affine]},
+                                       {"name": "outline", "passes": [outline]},
+                                       {"name": "affine_outline_control", "passes": [affine, outline, control]}]
             spec.write_text(json.dumps(configured))
             result = transform_project.build_project(TOOL, spec, tmp / "artifacts")
             self.assertEqual(result["status"], "built; application behavior not yet tested")
@@ -35,6 +38,8 @@ class ProjectBuild(unittest.TestCase):
             self.assertTrue(all(len(unit["passes"]["affine_identity"]) == 2 for unit in result["units"]))
             self.assertGreater(sum(unit["passes"]["affine_identity"][1]["operations_transformed"] for unit in result["units"]), 0)
             self.assertGreater(sum(unit["passes"]["control"][0]["control_nodes"] for unit in result["units"]), 0)
+            self.assertGreater(sum(unit["passes"]["outline"][0]["outlined_expressions"] for unit in result["units"]), 0)
+            self.assertTrue(all(len(unit["passes"]["affine_outline_control"]) == 3 for unit in result["units"]))
             self.assertTrue(all(len(unit["passes"]["control_affine"]) == 2 for unit in result["units"]))
             self.assertTrue(all(len(unit["passes"]["affine_control"]) == 2 for unit in result["units"]))
             for variant, build in result["builds"].items():
