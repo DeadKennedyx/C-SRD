@@ -8,13 +8,8 @@
 #include "csrd/graph_emitter.hpp"
 #include "csrd/metrics.hpp"
 #include "csrd/private_regions.hpp"
+#include "csrd/compilation.hpp"
 namespace csrd {
-// Compilation environment is separate from representation selection. A generated
-// candidate must be parsed with the same environment as its source.
-struct FrontendOptions {
-  std::string target, sysroot;
-  std::vector<std::string> includeDirectories, definitions;
-};
 struct Decision {
   std::string function, status, reason;
   unsigned line = 0, column = 0, operations = 0, conversions = 0;
@@ -40,6 +35,7 @@ struct TransformResult {
   std::vector<std::pair<std::string, std::string>> dependencies;
   PlanOptions options;
   FrontendOptions frontend;
+  std::optional<CompilationConfiguration> compilation;
   std::vector<std::string> compilerArguments, candidateCompilerArguments;
   std::vector<std::pair<std::string, std::string>> candidateDependencies;
   bool outputWritten = false;

@@ -29,6 +29,17 @@ struct Preprocessing {
   bool keywordMacro = false;
   std::vector<std::pair<std::string, std::string>> dependencies;
 };
+bool supportedCompilationSemantics(clang::CompilerInstance &ci) {
+  const auto &lang = ci.getLangOpts();
+  if (lang.CPlusPlus || lang.ObjC || lang.OpenCL || lang.OpenMP || !lang.C11 ||
+      lang.getSignedOverflowBehavior() != clang::LangOptions::SOB_Undefined) {
+    const auto id = ci.getDiagnostics().getCustomDiagID(clang::DiagnosticsEngine::Error,
+      "C-SRD requires C11-compatible sequential C with default signed-overflow semantics; this compilation configuration is unsupported");
+    ci.getDiagnostics().Report(id);
+    return false;
+  }
+  return true;
+}
 class Callbacks final : public clang::PPCallbacks {
   clang::SourceManager &sm;
   Preprocessing &data;
@@ -237,6 +248,7 @@ class Action final : public clang::ASTFrontendAction {
   const TransformResult *validationSource;
 public:
   Action(uint64_t s, TransformResult &r, bool w, const TransformResult *v) : seed(s), result(r), rewrite(w), validationSource(v) {}
+  bool BeginSourceFileAction(clang::CompilerInstance &ci) override { return supportedCompilationSemantics(ci); }
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance &ci, llvm::StringRef) override {
     ci.getPreprocessor().addPPCallbacks(std::make_unique<Callbacks>(ci.getSourceManager(), pp));
     return std::make_unique<Consumer>(ci, pp, seed, result, rewrite, validationSource);
@@ -256,6 +268,7 @@ class PreprocessAction final : public clang::PreprocessorFrontendAction {
   Preprocessing pp;
 public:
   explicit PreprocessAction(TransformResult &r) : result(r) {}
+  bool BeginSourceFileAction(clang::CompilerInstance &ci) override { return supportedCompilationSemantics(ci); }
   void ExecuteAction() override {
     auto &ci = getCompilerInstance();
     auto &sm = ci.getSourceManager();
@@ -302,11 +315,25 @@ std::vector<std::string> compilerArguments(const std::string &path, const Fronte
 }
 bool runTool(const std::string &path, TransformResult &result, clang::tooling::FrontendActionFactory &factory,
              const std::string *contents, bool preprocessing = false) {
-  result.compilerArguments = compilerArguments(path, result.frontend, preprocessing);
-  clang::tooling::FixedCompilationDatabase db(std::filesystem::current_path().string(), result.compilerArguments);
   const auto absolute = std::filesystem::absolute(path).lexically_normal().string();
-  clang::tooling::ClangTool tool(db, {absolute});
-  if (preprocessing) tool.clearArgumentsAdjusters(); // Keep -E, rather than the default -fsyntax-only adjuster.
+  std::unique_ptr<clang::tooling::CompilationDatabase> db;
+  if (result.frontend.compilationDatabase.empty()) {
+    result.compilerArguments = compilerArguments(path, result.frontend, preprocessing);
+    db = std::make_unique<clang::tooling::FixedCompilationDatabase>(std::filesystem::current_path().string(), result.compilerArguments);
+  } else {
+    result.compilation = loadCompilationConfiguration(path, result.frontend, preprocessing);
+    const auto &configuration = *result.compilation;
+    result.compilerArguments = configuration.arguments;
+    class Single final : public clang::tooling::CompilationDatabase {
+      clang::tooling::CompileCommand command;
+    public:
+      explicit Single(clang::tooling::CompileCommand c) : command(std::move(c)) {}
+      std::vector<clang::tooling::CompileCommand> getCompileCommands(llvm::StringRef) const override { return {command}; }
+    };
+    db = std::make_unique<Single>(clang::tooling::CompileCommand(configuration.directory, absolute, configuration.arguments, ""));
+  }
+  clang::tooling::ClangTool tool(*db, {absolute});
+  if (preprocessing || result.compilation) tool.clearArgumentsAdjusters();
   if (contents) tool.mapVirtualFile(absolute, *contents);
   return tool.run(&factory) == 0;
 }
@@ -341,7 +368,8 @@ bool validatePrivateCandidate(const std::string &path, TransformResult &result, 
   result.candidateDependencies = generated.dependencies;
   result.candidateCompilerArguments = generated.compilerArguments;
   if (result.target != generated.target || result.dependencies != generated.dependencies ||
-      result.compilerArguments != generated.compilerArguments) return false;
+      result.compilerArguments != generated.compilerArguments ||
+      (result.compilation && result.compilation->databaseHash != generated.compilation->databaseHash)) return false;
   for (auto &decision : result.decisions) {
     if (decision.privateFrames.empty()) continue;
     const auto match = std::find_if(generated.decisions.begin(), generated.decisions.end(),
@@ -380,7 +408,8 @@ bool transform(const std::string &path, uint64_t seed, TransformResult &result, 
   result.candidateDependencies = generated.dependencies;
   result.candidateCompilerArguments = generated.compilerArguments;
   if (result.target != generated.target || result.dependencies != generated.dependencies ||
-      result.compilerArguments != generated.compilerArguments) {
+      result.compilerArguments != generated.compilerArguments ||
+      (result.compilation && result.compilation->databaseHash != generated.compilation->databaseHash)) {
     llvm::errs() << "csrd: verification rejected a target or include-environment change\n"; return false;
   }
   for (auto &d : result.decisions) {

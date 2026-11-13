@@ -25,8 +25,11 @@ void usage() {
     "         [--recursion-observation events|bounded-body] (verify only; bounded-body expands ranked self-calls)\n"
     "       csrd analyze input.c [--function NAME] [--report report.json] [--scope functions|private-regions]\n"
     "       csrd preprocess input.c -o input.i [--report report.json]\n"
-    "All commands accept: [--target TRIPLE] [--sysroot DIRECTORY]\n"
+    "       csrd compile-command input.c --compilation-database FILE_OR_DIRECTORY [--compile-command INDEX] [--report report.json]\n"
+    "Source commands accept: [--target TRIPLE] [--sysroot DIRECTORY]\n"
     "       [--include-dir DIRECTORY] [--define NAME[=VALUE]] (include-dir/define may repeat)\n"
+    "Or use: --compilation-database FILE_OR_DIRECTORY [--compile-command INDEX]\n"
+    "       INDEX is zero-based in database order; it also selects settings for frozen/replacement input.\n"
     "Preprocessed .i input is specific to its target, headers and macro configuration.\n"
     "Transformations are checked against reparsed emitted C before output is written.\n";
 }
@@ -367,7 +370,14 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
     {"requested_sysroot", result.frontend.sysroot}, {"include_directories", strings(result.frontend.includeDirectories)},
     {"definitions", strings(result.frontend.definitions)}, {"compiler_arguments", strings(result.compilerArguments)},
     {"candidate_compiler_arguments", strings(result.candidateCompilerArguments)}};
+  if (result.compilation) {
+    const auto &c = *result.compilation;
+    root["compilation_command"] = llvm::json::Object{{"database", c.database}, {"database_sha256", c.databaseHash},
+      {"index", c.index}, {"directory", c.directory}, {"source", c.source}, {"output", c.output},
+      {"original_arguments", strings(c.originalArguments)}, {"expanded_arguments", strings(c.expandedArguments)}};
+  }
   if (action == "preprocess") root["verification"] = "not-proved; Clang preprocessing with recorded source/header/configuration provenance";
+  if (action == "compile-command") root["verification"] = "not-verified; compilation command metadata only, no source analysis";
   if (!result.options.callContractsHash.empty()) root["call_contracts_sha256"] = result.options.callContractsHash;
   std::string out;
   llvm::raw_string_ostream stream(out);
@@ -380,7 +390,7 @@ int main(int argc, char **argv) {
     if (argc == 2 && (std::string(argv[1]) == "--help" || std::string(argv[1]) == "--version")) { usage(); return 0; }
     if (argc < 3) { usage(); return 2; }
     const std::string action = argv[1], input = argv[2];
-    if (action != "transform" && action != "verify" && action != "analyze" && action != "preprocess") { usage(); return 2; }
+    if (action != "transform" && action != "verify" && action != "analyze" && action != "preprocess" && action != "compile-command") { usage(); return 2; }
     if (action == "verify" && argc < 4) { usage(); return 2; }
     std::string output, reportPath, function, contractsPath;
     uint64_t seed = 0;
@@ -396,6 +406,15 @@ int main(int argc, char **argv) {
       const std::string value = argv[++i];
       if (key == "-o" && (action == "transform" || action == "preprocess") && output.empty()) output = value;
       else if (key == "--report" && reportPath.empty()) reportPath = value;
+      else if (key == "--compilation-database" && frontend.compilationDatabase.empty()) {
+        if (value.empty()) throw std::runtime_error("compilation-database path must not be empty");
+        frontend.compilationDatabase = std::filesystem::absolute(value).lexically_normal().string();
+      }
+      else if (key == "--compile-command" && !frontend.compileCommand) {
+        const auto index = number(value);
+        if (index > UINT32_MAX) throw std::runtime_error("compile-command index out of range");
+        frontend.compileCommand = unsigned(index);
+      }
       else if (key == "--target" && frontend.target.empty()) {
         if (value.empty()) throw std::runtime_error("target must not be empty");
         frontend.target = value;
@@ -411,7 +430,7 @@ int main(int argc, char **argv) {
         frontend.definitions.push_back(value);
       }
       else if (key == "--function" && (action == "verify" || action == "analyze") && function.empty()) function = value;
-      else if (key == "--call-contracts" && action != "preprocess" && contractsPath.empty()) contractsPath = value;
+      else if (key == "--call-contracts" && (action == "transform" || action == "analyze" || action == "verify") && contractsPath.empty()) contractsPath = value;
       else if (key == "--heap-observation" && action == "verify" && !heapObservationSet) {
         if (value != "events" && value != "successful-private") throw std::runtime_error("unknown heap observation contract");
         options.heapObservation=value;heapObservationSet=true;
@@ -450,7 +469,12 @@ int main(int argc, char **argv) {
         timeout = unsigned(n); timeoutSet = true;
       } else throw std::runtime_error("unknown or repeated option: " + key);
     }
-    if (output.empty() && action != "analyze") throw std::runtime_error("an output/candidate file is required");
+    if (output.empty() && action != "analyze" && action != "compile-command") throw std::runtime_error("an output/candidate file is required");
+    if (action == "compile-command" && frontend.compilationDatabase.empty()) throw std::runtime_error("compile-command requires a compilation database");
+    if (frontend.compileCommand && frontend.compilationDatabase.empty()) throw std::runtime_error("compile-command requires a compilation database");
+    if (!frontend.compilationDatabase.empty() && (!frontend.target.empty() || !frontend.sysroot.empty() ||
+        !frontend.includeDirectories.empty() || !frontend.definitions.empty()))
+      throw std::runtime_error("compilation database is authoritative; do not mix it with target/sysroot/include/define overrides");
     if ((coverageSet || objectiveSet) && options.strategy != "planned") throw std::runtime_error("coverage/objective require --strategy planned");
     if (csrd::limbBits(options.strategy) && options.controlFlow != "none") throw std::runtime_error(options.strategy + " requires --control-flow none");
     if (options.scope == "private-regions" && ((options.strategy != "affine" && options.strategy != "identity") ||
@@ -474,10 +498,20 @@ int main(int argc, char **argv) {
     if (((action == "transform" || action == "preprocess") && samePath(input, output)) ||
         (!reportPath.empty() && (samePath(input, reportPath) || (!output.empty() && samePath(output, reportPath)))))
       throw std::runtime_error("input, output and report paths must be distinct");
+    if (!frontend.compilationDatabase.empty()) {
+      auto database = std::filesystem::path(frontend.compilationDatabase);
+      if (std::filesystem::is_directory(database)) database /= "compile_commands.json";
+      if ((!output.empty() && action != "verify" && samePath(database.string(), output)) ||
+          (!reportPath.empty() && samePath(database.string(), reportPath)))
+        throw std::runtime_error("compilation database must be distinct from output/report");
+    }
     csrd::TransformResult result;
     result.options = options;
     result.frontend = frontend;
-    if (action == "transform") {
+    if (action == "compile-command") {
+      result.compilation = csrd::loadCompilationConfiguration(input, frontend, false);
+      result.compilerArguments = result.compilation->arguments;
+    } else if (action == "transform") {
       if (!csrd::transform(input, seed, result, options, frontend)) {
         if (!reportPath.empty() && !result.inputHash.empty()) writeFile(reportPath, report(result, seed, action));
         return 1;
@@ -492,7 +526,9 @@ int main(int argc, char **argv) {
       csrd::TransformResult candidate;
       candidate.options = options;
       candidate.frontend = frontend;
-      if (!csrd::inspect(input, result) || !csrd::inspect(output, candidate)) return 1;
+      if (!csrd::inspect(input, result)) return 1;
+      if (result.compilation) candidate.frontend.compileCommand = result.compilation->index;
+      if (!csrd::inspect(output, candidate)) return 1;
       result.outputHash = candidate.inputHash;
       result.candidateDependencies = candidate.dependencies;
       result.candidateCompilerArguments = candidate.compilerArguments;
@@ -520,7 +556,7 @@ int main(int argc, char **argv) {
       if (!function.empty() && result.decisions.empty()) throw std::runtime_error("selected function not found");
     }
     if (!reportPath.empty()) writeFile(reportPath, report(result, seed, action));
-    else if (action == "analyze") std::cout << report(result, seed, action);
+    else if (action == "analyze" || action == "compile-command") std::cout << report(result, seed, action);
     if (action == "verify") {
       for (const auto &d : result.decisions) if (d.verification.status != "proved-under-model") return 3;
     }

@@ -62,10 +62,76 @@ build/csrd transform build/input.i -o build/output.i --scope private-regions \
 ```
 
 Frozen input/output must use the recorded target and configuration; `.i` files
-are not portable source packages. This increment does not import compilation
-databases, select every build configuration, or transform/link a multi-file project.
-Those remain build-integration work; explicit target support does not expand the
-set of arithmetic, memory or control-flow transformations.
+are not portable source packages. Version 0.15.0 adds compilation-database import,
+which accepts either
+a `compile_commands.json` file or its directory. Relative paths, command quoting,
+response files and the working directory come from that command. Cross-compiler
+names contribute their target, while explicit target flags take precedence.
+Ambiguous configurations require an explicit zero-based database entry index:
+
+```sh
+build/csrd transform input.c -o build/output.c --scope private-regions \
+  --compilation-database project/build --compile-command 0 --seed 42 \
+  --report build/transformation.json
+```
+
+Manual target/include/macro overrides cannot be mixed with database settings.
+Reports bind the database hash, original/expanded arguments and the settings used
+to reparse emitted C. `compile-command` exports this metadata without parsing the
+source or claiming verification. Unsupported semantic settings such as `-fwrapv`,
+`-ftrapv`, pre-C11 modes and OpenMP are rejected by source analysis. Opaque
+frontend extensions, plugins, PCH and modules are currently rejected. Imported
+commands also reject unknown pragmas/attributes instead of silently ignoring
+compiler-specific semantics, including GCC's per-function optimization settings.
+
+`tools/transform_project.py` runs trusted GCC/Clang C compile commands, freezes
+each selected translation unit with its **original compiler**, validates every
+requested transformation pass, compiles the resulting objects and executes
+explicit link recipes. A compilation database contains no link commands, so the
+runner does not infer them ([Clang database format](https://clang.llvm.org/docs/JSONCompilationDatabase.html)).
+A minimal `project.json` beside a project build is:
+
+```json
+{
+  "schema_version": 1,
+  "compilation_database": "build/compile_commands.json",
+  "commands": [0, 1],
+  "links": [{
+    "name": "application",
+    "directory": "build",
+    "arguments": ["cc", "{object:0}", "{object:1}", "-o", "{output}"]
+  }]
+}
+```
+
+```sh
+python3 tools/transform_project.py project.json --csrd build/csrd \
+  --output build/project-experiment
+```
+
+The destination must be new. Original, frozen, identity and affine controls are
+built by default. Optional `variants` entries have `name` and an ordered `passes`
+array; each pass accepts the implemented `scope`, `strategy`, `seed`,
+`control_flow`, `algorithm` and `call_contracts` settings. Every pass is validated
+separately; unsupported configurations fail with retained reports. CPU, wall
+time, peak process RSS, object/executable sizes, source/frozen hashes and pass
+coverage are recorded. Successful builds are explicitly **not** labeled as
+whole-program correctness or protection results.
+
+Optional `transform_commands` selects a subset of the compiled entry indexes.
+Excluded units are frozen/recompiled by their original compiler, with explicit
+manifest status stating that C-SRD did not parse, transform or verify them. This
+allows partial-project adoption without disguising coverage gaps. Selected units
+still fail on frontend/verification errors; the runner never silently falls back.
+
+Current project limits: one C source per direct compiler invocation, explicit
+link argv, and a stable source/header/build environment during the run. Compiler
+wrappers, arbitrary build scripts, archive recipes, plugins/PCH/modules and some
+driver flags need further integration. Frozen GCC extensions must also be
+accepted by Clang; compiler-specific declarations can still stop analysis.
+No shell is invoked; these trusted build commands are not sandboxed. Compilation
+and preprocessing remain trusted toolchain behavior. This broadens build
+integration without adding new arithmetic, memory or control-flow passes.
 
 `--scope functions` is the default. It admits pure `uint32_t` arithmetic,
 selected bitwise operations, selections, bounded loops and lookup tables, plus
@@ -192,7 +258,7 @@ not a promise of universal C support.
 | 11 | Networking, partial transfers and failures | Pending |
 | 12 | Exact floating-point behavior | Pending |
 | 13 | Thread-local/shared/atomic/volatile behavior | Pending |
-| 14 | Multi-file builds, preprocessing, combined coverage | Explicit target/preprocessing support added; project integration pending |
+| 14 | Multi-file builds, preprocessing, combined coverage | Compilation-database import and multi-file runner added; broader project validation in progress |
 
 Tests are executable contracts under `tests/`; compiler-profile catalogs and
 benign programs are under `benchmarks/`. `tools/` contains verification,
@@ -287,8 +353,12 @@ supplemental observation modes described above; keep strict reports unchanged.
 Ghidra ARM64 signed-byte lifting requires the checked overlay produced by
 `tools/patch_ghidra_signed_byte.py`. The networking increment remains pending,
 including partial transfers, EOF/failures and matched correctness/recovery/cost
-measurements. The immediate build-integration task is compilation-database import
-and a multi-file driver, followed by broader reusable transformation passes.
+measurements. The four-part development path is real-project build support,
+broader reusable transformation passes, safe pass composition, and evaluation on
+varied programs. Build integration is in progress; broader control-flow/data/
+function-structure passes remain work to do. Correctness, pass combinations and
+application/reconstruction costs are evaluated at each meaningful increment,
+not deferred until all four areas are finished.
 
 ## Benign AES recognition checkpoint (0.14.0)
 
@@ -362,3 +432,90 @@ groups pass. All 58 Linux CTest groups also pass with LLVM 18; nine optional che
 were skipped there (one MinGW, six CBMC and two live Ghidra checks). The native
 MinGW test ran successfully. This advances build compatibility, with AES
 transformation coverage still limited to index arithmetic.
+
+## Project integration checkpoint (0.15.0)
+
+The full Linux regression passed **60/60 CTest groups** in 329.91 seconds, with
+the same nine optional MinGW/CBMC/live-Ghidra checks skipped. Seven selected
+native regression groups also passed. The final compilation-database and project
+groups were rerun on both platforms after adding semantic-option guards and
+explicit per-file selection: ten configuration tests and four project tests pass.
+
+The new fixture in `benchmarks/projects/buffer_pipeline/` has three source files,
+forced headers, paths containing spaces and compiler-dependent macro branches.
+It uses cross-file calls, buffer iteration, allocation and file output. Five
+arithmetic operations in `adjust` and `reduce_values` are transformed. These are
+private-frame proofs; the surrounding loops, pointers and I/O are preserved.
+The combination control runs affine followed by identity, validates both passes,
+and actually transforms generated statements on its second pass. It is not a
+new protection technique or evidence for arbitrary pass combinations.
+
+The first attempts in `build-project-integration/checkpoint-1/` and
+`linux-checkpoint-1/` exposed real frontend interoperability limits. GCC 16's
+macOS `stddef.h` expands a `__float128` field unsupported by Clang on that target.
+GCC 13's Linux `stdio.h` expands argument-bearing `malloc` attributes unsupported
+by the installed Clang frontend. Both attempts fail conservatively, with commands
+and diagnostics retained. The unchanged native GCC original/frozen baseline
+subsequently compiled and passed eight execution checks; no transformed GCC 16
+macOS result is claimed. Earlier configuration testing also caught and fixed
+missing cross-target inference before accepting the command importer.
+
+The next experiment explicitly selects files 0 and 1 for transformation and
+keeps file 2, the I/O entry point, outside C-SRD analysis. This selection is
+recorded in every manifest and used consistently across all controls. The
+native and Linux `*-checkpoint-2/` matrices cover Apple Clang 17, Linux Clang 18
+and Linux GCC 13, each with `-O0`, `-O2`, `-O3`, `-Os`, `-O2 -flto`, and
+`-O1 -fsanitize=address,undefined`. Original, frozen, identity, affine,
+affine-then-identity and identical-binary controls all pass. Across 18 cells:
+
+- 32 deterministic vectors per variant produce **3,456 checked executions**.
+- **108 file-open failure checks** preserve exit status and output behavior.
+- **540 timed executions** also match the independent Python oracle, including
+  the full output buffer, guard word, stdout and return status.
+- Timing uses five randomized matched repetitions and 500,000 internal iterations
+  over 64 values. Whole-process CPU/wall/RSS include startup, allocation and I/O.
+  Different-input oracle controls are rejected; these are grader checks, not
+  estimates of recognition false-positive rates.
+
+Measured affine results at `-O2` (ratios to the original):
+
+| Environment | Linked text bytes identical? | Text size | Application CPU | Copy-control CPU |
+| --- | --- | --- | --- | --- |
+| macOS ARM64 / Apple Clang 17 | Yes | 1.000 | 0.983 | 0.985 |
+| Linux ARM64 / Clang 18 | Yes | 1.000 | 1.007 | 1.001 |
+| Linux ARM64 / GCC 13 | No | 1.188 | 3.044 | 1.000 |
+
+Clang also produces identical text for the affine and combined variants at
+`-O3`, `-Os`, LTO and the sanitizer profile. At `-O0`, affine text grows about
+25–31% across the three environments and application CPU rises about 3.07–4.40×.
+GCC retains code differences at optimized levels; this does not establish
+increased reconstruction effort. Peak process RSS medians are unchanged on this
+small fixture. Ratios near one are descriptive measurements with copy-control
+noise, not speedup claims. Text measurements include linked startup/instrumentation
+code; sanitizer timings are not production performance estimates.
+
+Manifests retain source/frozen hashes, compiler versions, executable snapshots,
+per-pass proof/coverage reports, commands and CPU/wall/RSS collection. Compiler
+preprocessing, transformation plus validation, compilation and linking are separate
+command measurements; solver-only timing is not isolated. Raw-to-frozen compilation
+cost differences must not be mistaken for reduced total transformation cost.
+**Reconstruction and runtime-value recovery are unmeasured on this project. No
+protection gain is established.** This checkpoint advances project integration
+and the experiment harness; broader reusable passes and their recovery evaluation
+remain the next development work.
+
+Reproduce the Linux matrix in the validation container (use a fresh output path):
+
+```sh
+ctest --test-dir build-linux-integers --output-on-failure
+python3 tools/audit_project_pipeline.py --csrd build-linux-integers/csrd \
+  --compiler clang=clang-18 --compiler gcc=gcc \
+  --profile O0 --profile O2 --profile O3 --profile Os --profile lto --profile sanitize \
+  --transform-command 0 --transform-command 1 --objdump /usr/bin/objdump \
+  --repetitions 5 --iterations 500000 --cases 24 \
+  --output-dir build-project-integration/reproduction
+```
+
+This is one project, with repeated configurations and controls. Broader program
+coverage, complete GCC-header interoperability and measurements of recovery
+effort remain open. The four development areas are not complete.
