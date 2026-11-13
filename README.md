@@ -1055,3 +1055,217 @@ whole-application recovery remain unmeasured. The two adapter refusals and the
 inconclusive source grade remain open. Broader reusable pass families and realistic
 project coverage are still required by the four-part development path; this
 checkpoint closes a measurement gap, not the whole roadmap.
+
+## Independent recovery and reserved-family protocol
+
+**Question declared before reserved reconstruction.** Do the reconstruction-cost
+increases observed with Ghidra survive an independent input/output observer, and
+do the same frozen region passes behave similarly on the four reserved families?
+The earlier result is specific to one observer; an increase in its work does not
+establish an increase in the work needed by other methods.
+
+The transformer, candidate recipes and semantic observers are frozen at commit
+`581f1e9`. The existing `bitlinear` observer
+learns an affine map over GF(2) using a zero input and single-bit basis inputs.
+It receives the executable and scalar interface, not the source, family name or
+representation seed. A fitted basis is only a hypothesis: separate probes can
+reject it, and the source-model grader checks the frozen candidate afterward.
+The development comparison uses all seven previous `-O2` variants, both compilers,
+33/65/128-query budgets, three fresh-process repetitions, no warm-ups, a 30-second
+worker wall budget and the existing ten-second source-grading budget. False
+hypotheses, refusals and inconclusive grades remain separate outcomes.
+
+The reserved experiment uses all four families already declared in
+`benchmarks/rich.json`: Fletcher-16, Internet checksum, Gray decoding and FNV-1a.
+It retains seed 42, all four region recipes, both orders, identity emission and an
+exact original binary copy. No candidate is selected or retuned using reserved
+results. The existing holdout catalog supplies six profiles: Clang/GCC `-O3` and
+`-Oz`, Clang `-O3 -flto=thin` and GCC `-O3 -flto`. Every successful build must pass
+the independent oracle and the same per-pass validation as development. Ghidra
+and input/output reconstruction use the two non-LTO `-O3` profiles, with the
+previous observer implementations and declared budgets. Repeated linked-harness
+costs and exact linked-text comparisons use the same binaries; observer grades
+remain separate from transformation correctness.
+
+**Development observation.** The completed independent run contains **504 trials
+and 37,968 training queries**. There are 168 source-model-proved recoveries,
+84 incorrect submitted candidates and 252 trials without a candidate. Each table
+entry below covers 42 runs: seven variants, two compilers and three repetitions.
+
+| Family | 33 queries | 65 queries | 128 queries |
+| --- | --- | --- | --- |
+| CRC-32 byte update | Insufficient basis | 42 recoveries | 42 recoveries |
+| Morton interleaving | Insufficient basis | 42 recoveries | 42 recoveries |
+| Jenkins word hash | Insufficient basis | 42 incorrect candidates | No fitting candidate |
+| Integer RGB weighting | 42 incorrect candidates | No fitting candidate | No fitting candidate |
+
+An incorrect candidate means the observer guessed the wrong function; it does
+not mean the transformed application failed. All 252 submitted candidates also
+have a deliberately corrupted result-plus-one control, and every control is
+rejected with a counterexample. Failure to fit the nonlinear functions occurs on
+the originals as well, so it does not establish protection from diversification.
+
+`tools/summarize_query_recovery.py` checks the collection's artifact bindings,
+trial grid, saved answers, query transcripts, counters, candidate source grades
+and negative controls before joining each trial to its original. It keeps a
+matching incorrect hypothesis separate from a successful recovery. Across all
+504 matched pairs, the query inputs and returned outputs agree. All 252 submitted
+models and candidate C files are identical to the matched original's learned
+answer, including the 84 incorrect hypotheses. Every successful pair uses the
+same query count, a ratio of **1.000**. This is a result for the tested observer
+and grid, not a theoretical minimum-query bound for arbitrary C functions.
+
+Over the 24 successful matched runs per variant, median whole-observer CPU ratios
+for the four region recipes span **0.997–1.011**, versus **0.997** for the exact
+binary-copy control. Median absolute CPU is about 24–25 milliseconds. One exact
+copy sample has a 1.719× ratio, illustrating host/process-start variability. These
+measurements include Python startup and child query execution; they are not
+directly comparable to the persistent Ghidra phase timings above. They do not
+establish an increase in query-recovery cost for the linear families, despite
+some larger Ghidra reconstruction costs on those same binaries.
+
+The affected suite contains **nine tests**: all pass on Linux; eight pass on
+macOS with one Linux-only test skipped. The integration test
+uses real compiled binaries and source grading, then alters a saved trial and
+checks that summary publication fails. A separate regression verifies that
+matching incorrect guesses and absent transcripts cannot become successful
+query-recovery evidence. This increment changes reporting and tests; the
+transformer and semantic observer implementations remain frozen.
+
+**Reserved observations.** All **168 build cells** complete with no unavailable
+profiles: four reserved families, six profiles and seven variants. They pass
+102,942 independent-oracle comparisons and 840 initial timed executions. All
+144 region-pass applications report validated transformations (72 private-affine
+and 72 control applications). The implementation, corpus manifest, transformer,
+objdump and compiler executable hashes match the development collection. Across
+the 24 family/profile cells, linked text is identical to the original in three
+private-affine cases, two control cases and one control→private-affine case;
+private-affine→control has none. Exact binary copies match in all 24 cells.
+These collapses occur despite actual source transformations.
+
+The reserved input/output collection also completes **504 trials and 37,968
+training queries**. Gray decoding is recovered in all 126 runs, starting at the
+33-query budget, with identical learned candidates and no increase in query count
+for any variant. Fletcher, Internet checksum and FNV-1a each produce 42 incorrect
+65-query hypotheses; the larger probe set rejects them before submission. Their
+33-query runs lack a complete basis. Across the collection, this gives 126 proved
+recoveries, 126 incorrect candidates and 252 trials without a candidate. All 252
+corrupted-output controls are rejected. All 504 paired query transcripts agree;
+all 252 submitted candidate files match the corresponding original's learned
+candidate. Median successful paired observer CPU ratios for region recipes are
+1.005–1.017, versus 0.993 for the exact copy; these small differences do not
+establish an increase in recovery work.
+
+The separate fresh-process Ghidra collection completes **56 trials**:
+
+| Reserved family | Source-model-equivalent reconstructions | Adapter refusals |
+| --- | ---: | ---: |
+| Fletcher-16 | 0/14 | 14/14, including both originals and exact copies |
+| FNV-1a | 14/14 | 0/14 |
+| Gray decoding | 12/14 | 2/14 |
+| Internet checksum | 14/14 | 0/14 |
+
+Fletcher reaches the adapter's complete-control-flow expansion limits: eleven
+terminal-path limits and three block limits. Gray's two Clang control variants
+encounter an unsupported nonconstant shift. Ghidra produces an intermediate graph
+in these cases; the C reconstruction adapter refuses it. The independent
+input/output observer nevertheless recovers both Gray variants. All 40 submitted
+Ghidra reconstructions pass source-model grading and all 40 corrupted controls
+are rejected. No observer rules or budgets were adjusted after these outcomes.
+This static collection has one fresh process per cell; it does not reproduce the
+earlier persistent-session CPU-ratio measurements on the reserved corpus.
+
+The longer application collection passes **392 executions** on the frozen
+non-LTO `-O3` binaries, seven repetitions of ten million iterations per cell.
+Paired checksums agree. Ratios below range over the eight family/compiler cell
+medians and include every candidate, regardless of observer success.
+
+| Variant | Application CPU ratio range | Linked text size ratio range |
+| --- | ---: | ---: |
+| Exact original copy | 0.992–1.013 | 1.000 |
+| Private affine | 1.000–8.726 | 1.000–1.374 |
+| Control regions | 1.003–3.147 | 0.964–1.521 |
+| Private affine → control | 1.038–8.447 | 1.067–1.608 |
+| Control → private affine | 0.995–10.769 | 1.000–1.717 |
+
+Executable peak-RSS medians range from 1,273,856 to 1,286,144 bytes, including
+the loader and harness. The memory counter control passes: after the 64 MiB
+launcher allocation and exec, `getrusage` reports 75,628,544 bytes while executable
+`VmHWM` reports 1,282,048 bytes. The distinction remains necessary; neither metric
+isolates kernel memory or establishes a memory-analysis barrier.
+
+**Interpretation and next implementation.** The tested region passes preserve the
+reserved contracts, but their recovery-cost benefit does not generalize across
+observers on the linear families. Some builds incur substantial application cost
+or collapse under optimization. For Fletcher, both reconstruction methods are
+limited even on the original, so this experiment cannot attribute their failure
+to diversification. These are useful negative and coverage results; they neither
+prove universal protection nor rule out other techniques.
+
+The next implementation increment is a restricted, validated function-outlining
+prototype, followed by its individual and composed-pass measurements. Outlining
+regions into helper functions and passing live variables as parameters is
+established in [Tigress's published Split design](https://tigress.wtf/split.html);
+we make no novelty claim. The prototype must preserve the public interface,
+validate parameter substitution and declaration bindings, and explicitly handle
+the risk of compiler inlining erasing the split. It is not implemented by this
+measurement checkpoint. Human effort, runtime-value recovery for these kernels,
+other architectures, additional seeds and broad application coverage remain open.
+
+**Artifacts and reproduction.** The development query reports are
+`build-control-algorithms/bitlinear-1/` and `bitlinear-summary-2/`. Reserved reports
+are `holdout-1/matrix/`, `holdout-sizes-1/`, `holdout-bitlinear-1/`,
+`holdout-bitlinear-summary-2/`, `holdout-cold-1/` and `holdout-costs-1/` under that
+same root. Earlier `*-summary-1/` files predate the final matrix/interface binding
+checks; the final `*-summary-2/` files revalidate the same frozen measurements.
+The new summarizer writes `pairs.json` and `summary.json`, including explicit
+outcomes and unknown comparisons. The full compiler suite was not rerun for
+these reporting-only changes; the final affected nine-test suite passes as above.
+
+After reproducing the development matrix from the preceding section, use Bash
+inside the same Linux container and run the following commands serially. Use fresh
+output paths. The arrays only reduce repeated command-line text:
+
+```bash
+CSRD_DEV=build-control-algorithms-reproduction/matrix/matrix.json
+CSRD_RECOVERY=build-region-recovery-reproduction
+CSRD_VARIANTS=(--variant original --variant identity --variant private-affine-42
+  --variant control-42 --variant private-affine-control-42
+  --variant control-private-affine-42 --variant original-copy)
+CSRD_QUERY=(--observer bitlinear --repetitions 3 --warmups 0 --wall-budgets 30
+  --query-budgets 33 65 128 --timeout-ms 10000)
+CSRD_RESERVED=(--case fletcher16_word --case internet_checksum
+  --case gray_decode32 --case fnv1a_word --profile clang-O3 --profile gcc-O3)
+
+python3 tools/measure_effort.py --matrix-report "$CSRD_DEV" \
+  --csrd build-linux-integers/csrd --case crc32_byte --case jenkins_word \
+  --case morton16 --case rgb_luma8 --profile clang-O2 --profile gcc-O2 \
+  "${CSRD_VARIANTS[@]}" "${CSRD_QUERY[@]}" --output-dir "$CSRD_RECOVERY/development"
+python3 tools/summarize_query_recovery.py \
+  --effort-report "$CSRD_RECOVERY/development/effort.json" \
+  --output-dir "$CSRD_RECOVERY/development-summary"
+python3 tools/run_matrix.py --matrix benchmarks/rich.json \
+  --csrd build-linux-integers/csrd --compiler clang=clang-18 --compiler gcc=gcc \
+  --objdump llvm-objdump-18 --tier holdout --selection "$CSRD_DEV" \
+  --profile clang-O3 --profile gcc-O3 --profile clang-Oz --profile gcc-Oz \
+  --profile clang-O3-thinlto --profile gcc-O3-lto --strategies identity --seeds 42 \
+  --region-recipes private-affine control private-affine-control control-private-affine \
+  --binary-copy-control --no-select --inputs 256 --iterations 1000000 \
+  --repetitions 5 --require-selected-profiles --output-dir "$CSRD_RECOVERY/matrix"
+python3 tools/measure_code_size.py --matrix-report "$CSRD_RECOVERY/matrix/matrix.json" \
+  --output-dir "$CSRD_RECOVERY/sizes"
+python3 tools/measure_effort.py --matrix-report "$CSRD_RECOVERY/matrix/matrix.json" \
+  --csrd build-linux-integers/csrd "${CSRD_RESERVED[@]}" "${CSRD_VARIANTS[@]}" \
+  "${CSRD_QUERY[@]}" --output-dir "$CSRD_RECOVERY/reserved-query"
+python3 tools/summarize_query_recovery.py \
+  --effort-report "$CSRD_RECOVERY/reserved-query/effort.json" \
+  --output-dir "$CSRD_RECOVERY/reserved-query-summary"
+python3 tools/measure_effort.py --matrix-report "$CSRD_RECOVERY/matrix/matrix.json" \
+  --csrd build-linux-integers/csrd "${CSRD_RESERVED[@]}" "${CSRD_VARIANTS[@]}" \
+  --observer ghidra --repetitions 1 --warmups 0 --wall-budgets 90 --timeout-ms 10000 \
+  --headless /opt/ghidra/support/analyzeHeadless --output-dir "$CSRD_RECOVERY/reserved-static"
+python3 tools/measure_matrix_costs.py --matrix-report "$CSRD_RECOVERY/matrix/matrix.json" \
+  --profile clang-O3 --profile gcc-O3 --iterations 10000000 --repetitions 7 \
+  --output-dir "$CSRD_RECOVERY/costs"
+python3 tests/integration/test_effort.py build-linux-integers/csrd
+```

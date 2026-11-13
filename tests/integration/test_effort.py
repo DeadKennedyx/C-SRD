@@ -18,6 +18,7 @@ from effort_resources import measure, save
 from effort_statistics import summarize
 from effort_worker import blackbox, model_source
 from human_effort import start, event
+from summarize_query_recovery import paired_trials, summarize as summarize_queries
 
 
 class Resources(unittest.TestCase):
@@ -69,6 +70,25 @@ class Resources(unittest.TestCase):
 
 
 class Statistics(unittest.TestCase):
+    def test_matching_wrong_hypotheses_and_missing_transcripts_are_not_recovery(self):
+        base = {"case":"f", "profile":"p", "budget_id":0, "budget":{"query_budget":3},
+                "warmup":False, "repetition":0, "status":"wrong-candidate", "id":0,
+                "variant":"original", "candidate_sha256":"same-candidate",
+                "resources":{"cpu_seconds":1}, "answer":{"training_queries":3,"model":{"kind":"wrong"}}}
+        rows = [base, {**base,"id":1,"variant":"candidate"}]
+        transcript = {"inputs":[[0],[1],[2]],"outputs":[0,1,4]}
+        pairs = paired_trials(rows,{0:transcript,1:transcript})
+        candidate = next(r for r in summarize_queries(pairs) if r["variant"]=="candidate")
+        self.assertEqual(candidate["comparisons"]["models_identical"],{"compared":1,"identical":1})
+        self.assertEqual(candidate["paired_recovery_query_ratio"]["n"],0)
+        self.assertEqual(candidate["paired_recovery_cpu_ratio"]["n"],0)
+        rows[0]["status"] = rows[1]["status"] = "recovered-under-source-model"
+        pairs = paired_trials(rows,{0:transcript})
+        self.assertIsNone(pairs[1]["inputs_identical"])
+        self.assertIsNone(pairs[1]["outputs_identical"])
+        self.assertIsNone(pairs[1]["recovery_query_ratio"])
+        self.assertEqual(pairs[0]["recovery_query_ratio"],1)
+
     def test_identical_binary_control_flags_even_large_measured_cost_differences(self):
         base = {"case": "f", "profile": "p", "budget_id": 0, "warmup": False, "repetition": 0,
                 "status": "recovered-under-source-model", "binary_sha256": "same-artifact",
@@ -174,6 +194,26 @@ class EffortIntegration(unittest.TestCase):
                             "wrong-candidate" if trial["budget_id"] == 1 else "no-candidate")
                 self.assertEqual(trial["status"], expected, trial)
                 self.assertEqual(trial["query_accounting"]["completed"], trial["budget"]["query_budget"])
+            run([ROOT/"tools/summarize_query_recovery.py","--effort-report",root/"bitlinear/effort.json",
+                 "--output-dir",root/"query-summary"])
+            query_summary=json.loads((root/"query-summary/summary.json").read_text())
+            self.assertEqual(query_summary["trial_pairs"],6)
+            self.assertEqual(query_summary["outcomes"],{"no-candidate":3,"wrong-candidate":1,"recovered-under-source-model":2})
+            trial_path=root/"bitlinear/trial-00000/trial.json"
+            original_trial=trial_path.read_bytes()
+            trial_path.write_text('{}')
+            run([ROOT/"tools/summarize_query_recovery.py","--effort-report",root/"bitlinear/effort.json",
+                 "--output-dir",root/"tampered-query-summary"],code=1)
+            self.assertFalse((root/"tampered-query-summary/summary.json").exists())
+            trial_path.write_bytes(original_trial)
+            config_path=root/"bitlinear/trial-00000/observer/config.json"
+            original_config=config_path.read_bytes()
+            config=json.loads(original_config);config["function"]="wrong_interface"
+            config_path.write_text(json.dumps(config))
+            run([ROOT/"tools/summarize_query_recovery.py","--effort-report",root/"bitlinear/effort.json",
+                 "--output-dir",root/"wrong-interface-summary"],code=1)
+            self.assertFalse((root/"wrong-interface-summary/summary.json").exists())
+            config_path.write_bytes(original_config)
             # A partial matrix is opt-in and never authorizes failed cells.
             original_matrix = json.loads(matrix_path.read_text())
             partial = copy.deepcopy(original_matrix)
