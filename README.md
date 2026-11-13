@@ -5,6 +5,13 @@ representations. Built with C++17, Clang LibTooling and Z3. Generated programs
 need no C-SRD runtime library. This is software-diversification research for
 benign programs, not cryptographic protection or security-product evasion.
 
+The engineering goal is a general-purpose C-to-C obfuscator: reusable passes
+that operate on real program build configurations, with explicit coverage and
+correctness contracts. Broad input support and resistance to reconstruction are
+separate requirements. Evaluation tasks measure the resulting tool across programs;
+they do not restrict its implementation to one algorithm or benchmark. The current
+release remains a prototype with the scoped transformation coverage listed below.
+
 ## Build and test
 
 Linux requires CMake 3.20+, Clang/LLVM development libraries, Z3, Python 3,
@@ -32,6 +39,33 @@ build/csrd transform input.c -o output.c --scope private-regions --seed 42
 build/csrd analyze input.c --scope private-regions --report build/analysis.json
 build/csrd --help
 ```
+
+Version 0.14.1 adds `--target TRIPLE`, `--sysroot DIRECTORY`, repeatable
+`--include-dir DIRECTORY` and repeatable `--define NAME[=VALUE]` to all commands.
+An explicit target never inherits the host SDK. Transformations and their emitted
+C are parsed with identical settings; reports record the flags and header hashes.
+`preprocess` uses Clang to freeze one build configuration into a `.i` file, retaining
+line markers. This enables analysis of expanded macros without rewriting macro
+definitions. Preprocessing itself is trusted compiler behavior, not formally proved.
+
+For example, with a MinGW Windows sysroot installed:
+
+```sh
+build/csrd preprocess input.c -o build/input.i \
+  --target x86_64-w64-windows-gnu \
+  --sysroot "$(x86_64-w64-mingw32-gcc -print-sysroot)" \
+  --report build/preprocessing.json
+build/csrd transform build/input.i -o build/output.i --scope private-regions \
+  --target x86_64-w64-windows-gnu \
+  --sysroot "$(x86_64-w64-mingw32-gcc -print-sysroot)" \
+  --seed 42 --report build/transformation.json
+```
+
+Frozen input/output must use the recorded target and configuration; `.i` files
+are not portable source packages. This increment does not import compilation
+databases, select every build configuration, or transform/link a multi-file project.
+Those remain build-integration work; explicit target support does not expand the
+set of arithmetic, memory or control-flow transformations.
 
 `--scope functions` is the default. It admits pure `uint32_t` arithmetic,
 selected bitwise operations, selections, bounded loops and lookup tables, plus
@@ -158,7 +192,7 @@ not a promise of universal C support.
 | 11 | Networking, partial transfers and failures | Pending |
 | 12 | Exact floating-point behavior | Pending |
 | 13 | Thread-local/shared/atomic/volatile behavior | Pending |
-| 14 | Multi-file builds, preprocessing, combined coverage | Pending |
+| 14 | Multi-file builds, preprocessing, combined coverage | Explicit target/preprocessing support added; project integration pending |
 
 Tests are executable contracts under `tests/`; compiler-profile catalogs and
 benign programs are under `benchmarks/`. `tools/` contains verification,
@@ -251,11 +285,12 @@ The same tools accept `--corpus byte`, `call`, `record`, `control`, `heap` and
 `dispatch` for earlier scoped fixtures. Heap and recursion grading have the
 supplemental observation modes described above; keep strict reports unchanged.
 Ghidra ARM64 signed-byte lifting requires the checked overlay produced by
-`tools/patch_ghidra_signed_byte.py`. The next increment is scoped networking,
+`tools/patch_ghidra_signed_byte.py`. The networking increment remains pending,
 including partial transfers, EOF/failures and matched correctness/recovery/cost
-measurements before further expansion.
+measurements. The immediate build-integration task is compilation-database import
+and a multi-file driver, followed by broader reusable transformation passes.
 
-## Benign AES recognition checkpoint
+## Benign AES recognition checkpoint (0.14.0)
 
 `tools/audit_crypto_recognition.py` compares pinned tiny-AES-C AES-256 builds
 with current C-SRD output and a no-crypto input/output control. It uses the seven
@@ -311,4 +346,19 @@ and GNU strip reinserting PE timestamps. The runner now supplies pinned signatur
 and `SOURCE_DATE_EPOCH=0`, checks the PE layout, and records errors separately
 from negative matches. Five automated measurement-control tests pass. Scanner
 results and native transformation coverage must remain separate when extending
-this experiment; target-aware frontend support is required for transformed PE tests.
+this experiment.
+
+The subsequent 0.14.1 build-compatibility check in
+`build-frontend-targets/checkpoint-2/` exercises the new target/preprocessing path.
+It validates two Windows `KeyExpansion` regions (five index-arithmetic operations)
+under the LLP64 model, and compiles original/transformed inputs in all seven
+Windows profiles: 14 builds. Windows execution and new recognition measurements
+are not claimed. Native preprocessing/transformation passes 2,010 executions
+against the saved OpenSSL references, preserving full key-schedule/IV state, and
+36 upstream known-answer checks across `-O0`, `-O2` and ASan/UBSan configurations.
+Six frontend integration tests cover LP64/LLP64 differences, header/definition
+settings, provenance and failure handling. All nine selected native regression
+groups pass. All 58 Linux CTest groups also pass with LLVM 18; nine optional checks
+were skipped there (one MinGW, six CBMC and two live Ghidra checks). The native
+MinGW test ran successfully. This advances build compatibility, with AES
+transformation coverage still limited to index arithmetic.

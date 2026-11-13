@@ -6,6 +6,7 @@
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
+#include "clang/Frontend/Utils.h"
 #include "clang/Lex/Lexer.h"
 #include "clang/Lex/PPCallbacks.h"
 #include "clang/Lex/Preprocessor.h"
@@ -250,22 +251,74 @@ public:
   Factory(uint64_t s, TransformResult &r, bool w, const TransformResult *v) : seed(s), result(r), rewrite(w), validationSource(v) {}
   std::unique_ptr<clang::FrontendAction> create() override { return std::make_unique<Action>(seed, result, rewrite, validationSource); }
 };
-bool parse(const std::string &path, uint64_t seed, TransformResult &result, bool rewrite, const std::string *contents,
-           const TransformResult *validationSource = nullptr) {
+class PreprocessAction final : public clang::PreprocessorFrontendAction {
+  TransformResult &result;
+  Preprocessing pp;
+public:
+  explicit PreprocessAction(TransformResult &r) : result(r) {}
+  void ExecuteAction() override {
+    auto &ci = getCompilerInstance();
+    auto &sm = ci.getSourceManager();
+    ci.getPreprocessor().addPPCallbacks(std::make_unique<Callbacks>(sm, pp));
+    result.inputHash = sha256(sm.getBufferData(sm.getMainFileID()).str());
+    result.target = ci.getTarget().getTriple().str();
+    result.source.clear();
+    llvm::raw_string_ostream output(result.source);
+    auto options = ci.getPreprocessorOutputOpts();
+    options.ShowCPP = 1;
+    options.ShowLineMarkers = 1;
+    clang::DoPrintPreprocessedInput(ci.getPreprocessor(), &output, options);
+    output.flush();
+    result.outputHash = sha256(result.source);
+    result.dependencies = pp.dependencies;
+    std::sort(result.dependencies.begin(), result.dependencies.end());
+    result.dependencies.erase(std::unique(result.dependencies.begin(), result.dependencies.end()), result.dependencies.end());
+  }
+};
+class PreprocessFactory final : public clang::tooling::FrontendActionFactory {
+  TransformResult &result;
+public:
+  explicit PreprocessFactory(TransformResult &r) : result(r) {}
+  std::unique_ptr<clang::FrontendAction> create() override { return std::make_unique<PreprocessAction>(result); }
+};
+std::vector<std::string> compilerArguments(const std::string &path, const FrontendOptions &options, bool preprocessing) {
   // Compiler-frozen .i files retain line markers and system-header provenance.
   // Let Clang consume its actual preprocessed-C input format instead of treating
   // those markers as GNU extensions in a fresh C source translation unit.
   const auto language=std::filesystem::path(path).extension()==".i" ? "cpp-output" : "c";
-  std::vector<std::string> flags = {"-x", language, "-std=c11", "-pedantic-errors", "-Wno-keyword-macro", "-fsyntax-only", "-resource-dir=" CSRD_RESOURCE_DIR};
+  std::vector<std::string> flags = {"-x", language, "-std=c11", "-pedantic-errors", "-Wno-keyword-macro",
+    preprocessing ? "-E" : "-fsyntax-only", "-resource-dir=" CSRD_RESOURCE_DIR};
   if (std::filesystem::path(path).extension()==".i") flags.push_back("-Wno-gnu-line-marker");
-  if (std::string(CSRD_SYSROOT).size()) { flags.push_back("-isysroot"); flags.push_back(CSRD_SYSROOT); }
-  clang::tooling::FixedCompilationDatabase db(std::filesystem::current_path().string(), flags);
+  if (!options.target.empty()) flags.push_back("--target=" + options.target);
+  if (!options.sysroot.empty()) flags.push_back("--sysroot=" + options.sysroot);
+  // An explicit target must never inherit the host SDK. Cross targets use their
+  // supplied sysroot/include paths or Clang's target-specific defaults.
+  else if (options.target.empty() && std::string(CSRD_SYSROOT).size()) {
+    flags.push_back("-isysroot"); flags.push_back(CSRD_SYSROOT);
+  }
+  for (const auto &directory : options.includeDirectories) flags.push_back("-I" + directory);
+  for (const auto &definition : options.definitions) flags.push_back("-D" + definition);
+  return flags;
+}
+bool runTool(const std::string &path, TransformResult &result, clang::tooling::FrontendActionFactory &factory,
+             const std::string *contents, bool preprocessing = false) {
+  result.compilerArguments = compilerArguments(path, result.frontend, preprocessing);
+  clang::tooling::FixedCompilationDatabase db(std::filesystem::current_path().string(), result.compilerArguments);
   const auto absolute = std::filesystem::absolute(path).lexically_normal().string();
   clang::tooling::ClangTool tool(db, {absolute});
+  if (preprocessing) tool.clearArgumentsAdjusters(); // Keep -E, rather than the default -fsyntax-only adjuster.
   if (contents) tool.mapVirtualFile(absolute, *contents);
-  Factory factory(seed, result, rewrite, validationSource);
   return tool.run(&factory) == 0;
 }
+bool parse(const std::string &path, uint64_t seed, TransformResult &result, bool rewrite, const std::string *contents,
+           const TransformResult *validationSource = nullptr) {
+  Factory factory(seed, result, rewrite, validationSource);
+  return runTool(path, result, factory, contents);
+}
+}
+bool preprocess(const std::string &path, TransformResult &result) {
+  PreprocessFactory factory(result);
+  return runTool(path, result, factory, nullptr, true);
 }
 bool inspect(const std::string &path, TransformResult &result, const std::string *contents) {
   return parse(path, 0, result, false, contents);
@@ -283,10 +336,12 @@ bool validatePrivateCandidate(const std::string &path, TransformResult &result, 
   if (sha256(restored) != result.inputHash) {
     llvm::errs() << "csrd: private validation rejected a change outside the selected regions\n"; return false;
   }
-  TransformResult generated; generated.options = result.options;
+  TransformResult generated; generated.options = result.options; generated.frontend = result.frontend;
   if (!parse(path, 0, generated, false, &candidate, &result)) return false;
   result.candidateDependencies = generated.dependencies;
-  if (result.target != generated.target || result.dependencies != generated.dependencies) return false;
+  result.candidateCompilerArguments = generated.compilerArguments;
+  if (result.target != generated.target || result.dependencies != generated.dependencies ||
+      result.compilerArguments != generated.compilerArguments) return false;
   for (auto &decision : result.decisions) {
     if (decision.privateFrames.empty()) continue;
     const auto match = std::find_if(generated.decisions.begin(), generated.decisions.end(),
@@ -313,15 +368,19 @@ bool validatePrivateCandidate(const std::string &path, TransformResult &result, 
   }
   return true;
 }
-bool transform(const std::string &path, uint64_t seed, TransformResult &result, const PlanOptions &options) {
+bool transform(const std::string &path, uint64_t seed, TransformResult &result, const PlanOptions &options, const FrontendOptions &frontend) {
   result.options = options;
+  result.frontend = frontend;
   if (!parse(path, seed, result, true, nullptr)) return false;
   if (options.scope == "private-regions") return validatePrivateCandidate(path, result, result.source);
   TransformResult generated;
   generated.options = options;
+  generated.frontend = frontend;
   if (!inspect(path, generated, &result.source)) return false;
   result.candidateDependencies = generated.dependencies;
-  if (result.target != generated.target || result.dependencies != generated.dependencies) {
+  result.candidateCompilerArguments = generated.compilerArguments;
+  if (result.target != generated.target || result.dependencies != generated.dependencies ||
+      result.compilerArguments != generated.compilerArguments) {
     llvm::errs() << "csrd: verification rejected a target or include-environment change\n"; return false;
   }
   for (auto &d : result.decisions) {

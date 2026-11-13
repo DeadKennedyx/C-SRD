@@ -24,6 +24,10 @@ void usage() {
     "         [--heap-observation events|successful-private] (verify only; default events checks allocation failures)\n"
     "         [--recursion-observation events|bounded-body] (verify only; bounded-body expands ranked self-calls)\n"
     "       csrd analyze input.c [--function NAME] [--report report.json] [--scope functions|private-regions]\n"
+    "       csrd preprocess input.c -o input.i [--report report.json]\n"
+    "All commands accept: [--target TRIPLE] [--sysroot DIRECTORY]\n"
+    "       [--include-dir DIRECTORY] [--define NAME[=VALUE]] (include-dir/define may repeat)\n"
+    "Preprocessed .i input is specific to its target, headers and macro configuration.\n"
     "Transformations are checked against reparsed emitted C before output is written.\n";
 }
 bool samePath(const std::string &a, const std::string &b) {
@@ -356,6 +360,14 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
   root["coverage_percent"] = result.options.coverage;
   root["timeout_ms"] = result.options.timeoutMs;
   root["output_written"] = result.outputWritten;
+  auto strings = [](const std::vector<std::string> &values) {
+    llvm::json::Array array; for (const auto &value : values) array.push_back(value); return array;
+  };
+  root["frontend"] = llvm::json::Object{{"requested_target", result.frontend.target},
+    {"requested_sysroot", result.frontend.sysroot}, {"include_directories", strings(result.frontend.includeDirectories)},
+    {"definitions", strings(result.frontend.definitions)}, {"compiler_arguments", strings(result.compilerArguments)},
+    {"candidate_compiler_arguments", strings(result.candidateCompilerArguments)}};
+  if (action == "preprocess") root["verification"] = "not-proved; Clang preprocessing with recorded source/header/configuration provenance";
   if (!result.options.callContractsHash.empty()) root["call_contracts_sha256"] = result.options.callContractsHash;
   std::string out;
   llvm::raw_string_ostream stream(out);
@@ -368,23 +380,38 @@ int main(int argc, char **argv) {
     if (argc == 2 && (std::string(argv[1]) == "--help" || std::string(argv[1]) == "--version")) { usage(); return 0; }
     if (argc < 3) { usage(); return 2; }
     const std::string action = argv[1], input = argv[2];
-    if (action != "transform" && action != "verify" && action != "analyze") { usage(); return 2; }
+    if (action != "transform" && action != "verify" && action != "analyze" && action != "preprocess") { usage(); return 2; }
     if (action == "verify" && argc < 4) { usage(); return 2; }
     std::string output, reportPath, function, contractsPath;
     uint64_t seed = 0;
     unsigned timeout = 10000;
     bool seedSet = false, timeoutSet = false, heapObservationSet = false, recursionObservationSet = false;
     csrd::PlanOptions options;
+    csrd::FrontendOptions frontend;
     bool strategySet = false, coverageSet = false, objectiveSet = false, algorithmSet = false, controlFlowSet = false, scopeSet = false;
     if (action == "verify") output = argv[3];
     for (int i = action == "verify" ? 4 : 3; i < argc; ++i) {
       const std::string key = argv[i];
       if (i + 1 >= argc) throw std::runtime_error("missing value for " + key);
       const std::string value = argv[++i];
-      if (key == "-o" && action == "transform" && output.empty()) output = value;
+      if (key == "-o" && (action == "transform" || action == "preprocess") && output.empty()) output = value;
       else if (key == "--report" && reportPath.empty()) reportPath = value;
-      else if (key == "--function" && action != "transform" && function.empty()) function = value;
-      else if (key == "--call-contracts" && contractsPath.empty()) contractsPath = value;
+      else if (key == "--target" && frontend.target.empty()) {
+        if (value.empty()) throw std::runtime_error("target must not be empty");
+        frontend.target = value;
+      }
+      else if ((key == "--sysroot" && frontend.sysroot.empty()) || key == "--include-dir") {
+        if (value.empty() || !std::filesystem::is_directory(value)) throw std::runtime_error(key + " requires an existing directory");
+        const auto directory = std::filesystem::absolute(value).lexically_normal().string();
+        if (key == "--sysroot") frontend.sysroot = directory;
+        else frontend.includeDirectories.push_back(directory);
+      }
+      else if (key == "--define") {
+        if (value.empty()) throw std::runtime_error("definition must not be empty");
+        frontend.definitions.push_back(value);
+      }
+      else if (key == "--function" && (action == "verify" || action == "analyze") && function.empty()) function = value;
+      else if (key == "--call-contracts" && action != "preprocess" && contractsPath.empty()) contractsPath = value;
       else if (key == "--heap-observation" && action == "verify" && !heapObservationSet) {
         if (value != "events" && value != "successful-private") throw std::runtime_error("unknown heap observation contract");
         options.heapObservation=value;heapObservationSet=true;
@@ -394,7 +421,7 @@ int main(int argc, char **argv) {
         options.recursionObservation=value;recursionObservationSet=true;
       }
       else if (key == "--seed" && action == "transform" && !seedSet) { seed = number(value); seedSet = true; }
-      else if (key == "--scope" && action != "verify" && !scopeSet) {
+      else if (key == "--scope" && (action == "transform" || action == "analyze") && !scopeSet) {
         if (value != "functions" && value != "private-regions") throw std::runtime_error("unknown transformation scope");
         options.scope = value; scopeSet = true;
       }
@@ -417,7 +444,7 @@ int main(int argc, char **argv) {
         if (value != "balanced" && value != "runtime" && value != "size") throw std::runtime_error("unknown planning objective");
         options.objective = value; objectiveSet = true;
       }
-      else if (key == "--timeout-ms" && action != "analyze" && !timeoutSet) {
+      else if (key == "--timeout-ms" && (action == "transform" || action == "verify") && !timeoutSet) {
         auto n = number(value);
         if (n == 0 || n > 600000) throw std::runtime_error("timeout must be 1..600000 milliseconds");
         timeout = unsigned(n); timeoutSet = true;
@@ -442,24 +469,33 @@ int main(int argc, char **argv) {
       options.callContracts = csrd::parseCallContracts(contents);
       options.callContractsHash = csrd::sha256(contents);
     }
-    if ((action == "transform" && samePath(input, output)) ||
+    if (action == "preprocess" && std::filesystem::path(output).extension() != ".i")
+      throw std::runtime_error("preprocess output must have the .i extension");
+    if (((action == "transform" || action == "preprocess") && samePath(input, output)) ||
         (!reportPath.empty() && (samePath(input, reportPath) || (!output.empty() && samePath(output, reportPath)))))
       throw std::runtime_error("input, output and report paths must be distinct");
     csrd::TransformResult result;
     result.options = options;
+    result.frontend = frontend;
     if (action == "transform") {
-      if (!csrd::transform(input, seed, result, options)) {
+      if (!csrd::transform(input, seed, result, options, frontend)) {
         if (!reportPath.empty() && !result.inputHash.empty()) writeFile(reportPath, report(result, seed, action));
         return 1;
       }
       writeFile(output, result.source);
       result.outputWritten = true;
+    } else if (action == "preprocess") {
+      if (!csrd::preprocess(input, result)) return 1;
+      writeFile(output, result.source);
+      result.outputWritten = true;
     } else if (action == "verify") {
       csrd::TransformResult candidate;
       candidate.options = options;
+      candidate.frontend = frontend;
       if (!csrd::inspect(input, result) || !csrd::inspect(output, candidate)) return 1;
       result.outputHash = candidate.inputHash;
       result.candidateDependencies = candidate.dependencies;
+      result.candidateCompilerArguments = candidate.compilerArguments;
       if (result.target != candidate.target) throw std::runtime_error("target mismatch");
       if (!function.empty()) result.decisions.erase(std::remove_if(result.decisions.begin(), result.decisions.end(),
         [&](const csrd::Decision &d) { return d.function != function; }), result.decisions.end());

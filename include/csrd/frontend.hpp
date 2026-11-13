@@ -9,6 +9,12 @@
 #include "csrd/metrics.hpp"
 #include "csrd/private_regions.hpp"
 namespace csrd {
+// Compilation environment is separate from representation selection. A generated
+// candidate must be parsed with the same environment as its source.
+struct FrontendOptions {
+  std::string target, sysroot;
+  std::vector<std::string> includeDirectories, definitions;
+};
 struct Decision {
   std::string function, status, reason;
   unsigned line = 0, column = 0, operations = 0, conversions = 0;
@@ -33,11 +39,17 @@ struct TransformResult {
   std::string inputHash, outputHash;
   std::vector<std::pair<std::string, std::string>> dependencies;
   PlanOptions options;
+  FrontendOptions frontend;
+  std::vector<std::string> compilerArguments, candidateCompilerArguments;
   std::vector<std::pair<std::string, std::string>> candidateDependencies;
   bool outputWritten = false;
 };
-bool transform(const std::string &path, uint64_t seed, TransformResult &result, const PlanOptions &options = {});
+bool transform(const std::string &path, uint64_t seed, TransformResult &result,
+               const PlanOptions &options = {}, const FrontendOptions &frontend = {});
 bool inspect(const std::string &path, TransformResult &result, const std::string *contents = nullptr);
+// Freeze the chosen preprocessing configuration into Clang's .i input format.
+// This records provenance, not a proof of the preprocessor implementation.
+bool preprocess(const std::string &path, TransformResult &result);
 // Reparse actual C, enforce unchanged surrounding bytes, then check every frame.
 bool validatePrivateCandidate(const std::string &path, TransformResult &result, const std::string &candidate);
 std::string sha256(const std::string &data);
