@@ -10,6 +10,7 @@ struct PlanOptions {
   std::string algorithm = "none";
   std::string controlFlow = "none";
   std::string heapObservation = "events"; // Verification only; transforms always check all outcomes.
+  std::string recursionObservation = "events"; // Verification only; transforms use ranked induction.
   unsigned coverage = 50, timeoutMs = 10000;
   CallContracts callContracts;
   std::string callContractsHash;

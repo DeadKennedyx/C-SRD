@@ -38,6 +38,8 @@ struct Statement {
     uint32_t bound = 0;
   };
   std::string callee;
+  std::string indirectTarget; // Original function-pointer parameter, never encoded.
+  bool recursiveCall = false;
   std::vector<Argument> arguments;
   bool declaresCallResult = false;
   std::string pointer; // Owned pointer source; empty denotes null.
@@ -66,9 +68,12 @@ struct Region {
   unsigned operations = 0;
   bool extendedMemory = false, littleEndian = true;
   bool orderedCalls = false;
+  bool guardedCalls = false;
+  std::map<std::string, std::string> functionPointers; // Parameter -> contract key.
+  std::string recursiveContract;
   bool memoryControl = false;
   bool ownedHeap = false;
   CallContracts calls;
-  bool ordered() const { return !buffers.empty() || orderedCalls || ownedHeap; }
+  bool ordered() const { return !buffers.empty() || orderedCalls || ownedHeap || !functionPointers.empty(); }
 };
 } // namespace csrd

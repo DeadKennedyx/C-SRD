@@ -38,6 +38,24 @@ public class ExportCSRDBuffers extends HeadlessScript {
         }
         return type;
     }
+    private DataType callType(JsonObject argument) {
+        String kind=argument.get("kind").getAsString();
+        DataType type=UnsignedIntegerDataType.dataType;
+        if (kind.equals("unsigned-char-buffer")) type=UnsignedCharDataType.dataType;
+        else if (kind.equals("signed-char-buffer")) type=SignedCharDataType.dataType;
+        else if (kind.equals("char-buffer")) type=CharDataType.dataType;
+        else if (!kind.equals("uint32") && !kind.equals("uint32-buffer")) throw new IllegalArgumentException("unknown call ABI");
+        return kind.equals("uint32") ? type : new PointerDataType(type,currentProgram.getDefaultPointerSize());
+    }
+    private DataType callbackType(JsonObject signature) {
+        FunctionDefinitionDataType type=new FunctionDefinitionDataType("csrd_callback_"+signature.get("name").getAsString());
+        type.setReturnType(signature.get("returns").getAsString().equals("void") ? VoidDataType.dataType : UnsignedIntegerDataType.dataType);
+        JsonArray parameters=signature.getAsJsonArray("parameters");
+        ParameterDefinition[] args=new ParameterDefinition[parameters.size()];
+        for(int i=0;i<args.length;i++)args[i]=new ParameterDefinitionImpl("arg"+i,callType(parameters.get(i).getAsJsonObject()),null);
+        type.setArguments(args);type.setVarArgs(false);
+        return type;
+    }
     private void configureCall(Function function, JsonObject contracts) throws Exception {
         if (!contracts.has(function.getName())) return;
         JsonObject contract = contracts.getAsJsonObject(function.getName());
@@ -69,11 +87,14 @@ public class ExportCSRDBuffers extends HeadlessScript {
         report.addProperty("compiler_spec", currentProgram.getCompilerSpec().getCompilerSpecID().toString());
         report.addProperty("function", args[0]);
         JsonObject contracts = new JsonObject();
+        boolean guarded=false;
         if (args.length == 5) {
             JsonObject input = JsonParser.parseString(Files.readString(Paths.get(args[4]))).getAsJsonObject();
-            if (!input.get("model").getAsString().equals("opaque-sequenced-v1")) throw new IllegalArgumentException("unknown call model");
+            guarded=input.get("model").getAsString().equals("opaque-guarded-v2");
+            if (!guarded && !input.get("model").getAsString().equals("opaque-sequenced-v1")) throw new IllegalArgumentException("unknown call model");
             for (JsonElement value : input.getAsJsonArray("functions")) {
                 JsonObject contract = value.getAsJsonObject(), publicContract = new JsonObject();
+                if(contract.has("indirect_parameter"))continue; // Typed via the public parameter ABI below.
                 publicContract.add("returns", contract.get("returns"));
                 JsonArray parameters = new JsonArray();
                 for (JsonElement p : contract.getAsJsonArray("parameters")) {
@@ -97,6 +118,10 @@ public class ExportCSRDBuffers extends HeadlessScript {
             report.addProperty("memory_model", "records-state-buffers-v1");
             report.add("call_signatures", contracts);
         }
+        if(guarded) {
+            report.addProperty("schema_version",9);
+            report.addProperty("memory_model","guarded-calls-buffers-v2");
+        }
         if (abi.length < 1 || abi.length > 8) throw new IllegalArgumentException("one to eight parameters required");
         report.addProperty("arity", abi.length);
         AddressSpace space = currentProgram.getAddressFactory().getDefaultAddressSpace();
@@ -113,6 +138,10 @@ public class ExportCSRDBuffers extends HeadlessScript {
             Function target = null;
             for (Function f : currentProgram.getFunctionManager().getFunctions(true)) {
                 if (f.getName().equals(args[0]) || f.getName().equals("_" + args[0])) {
+                    // ELF may contain both the real definition and a same-name
+                    // PLT thunk for an interposable self-call. Observe the body.
+                    var block=currentProgram.getMemory().getBlock(f.getEntryPoint());
+                    if(f.isThunk() && block!=null && Set.of(".plt",".plt.sec",".plt.got").contains(block.getName()))continue;
                     if (target != null) throw new IllegalStateException("ambiguous function symbol");
                     target = f;
                 }
@@ -125,7 +154,8 @@ public class ExportCSRDBuffers extends HeadlessScript {
                 if (publicAbi != null) {
                     JsonObject item = publicAbi.getAsJsonArray("parameters").get(i).getAsJsonObject();
                     String kind = item.get("kind").getAsString();
-                    DataType type = kind.equals("record-buffer") ? recordType(item.getAsJsonObject("record")) :
+                    DataType type = kind.equals("function-pointer") ? callbackType(item) :
+                        kind.equals("record-buffer") ? recordType(item.getAsJsonObject("record")) :
                         kind.equals("unsigned-char-buffer") ? UnsignedCharDataType.dataType :
                         kind.equals("signed-char-buffer") ? SignedCharDataType.dataType :
                         kind.equals("char-buffer") ? CharDataType.dataType : UnsignedIntegerDataType.dataType;

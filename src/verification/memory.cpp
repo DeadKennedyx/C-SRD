@@ -26,9 +26,21 @@ public:
 };
 struct CallEvent {
   std::string callee;
-  z3::expr memory;
+  bool indirect;
+  z3::expr active, ordinal, target, memory;
   std::vector<z3::expr> arguments;
 };
+bool sameCallSignature(const CallContract &a,const CallContract &b) {
+  if (a.returnsVoid!=b.returnsVoid || a.parameters.size()!=b.parameters.size()) return false;
+  for (unsigned i=0;i<a.parameters.size();++i) {
+    const auto &x=a.parameters[i], &y=b.parameters[i];
+    if (x.kind!=y.kind || x.readOnly!=y.readOnly || x.minimumElements!=y.minimumElements) return false;
+  }
+  return true;
+}
+z3::expr callResult(z3::context &ctx,const z3::expr &ordinal) {
+  return z3::select(ctx.constant("call_results",ctx.array_sort(ctx.int_sort(),ctx.bv_sort(32))),ordinal);
+}
 struct Execution {
   z3::expr first, second;
   z3::expr bounds;
@@ -39,13 +51,13 @@ struct Execution {
 };
 class MemoryModel {
   z3::context &ctx;
-  bool bytes, littleEndian, enumerate, control;
+  bool bytes, littleEndian, enumerate, control, expandRecursion, outsideRecursionRange;
   mutable z3::expr ranges;
   mutable ExpandedReads reads;
   z3::params normalization;
   z3::expr normalize(const z3::expr &value) const { return value.simplify(normalization); }
 public:
-  MemoryModel(z3::context &c, bool b, bool little, bool finite, bool guarded) : ctx(c), bytes(b), littleEndian(little), enumerate(finite), control(guarded), ranges(c.bool_val(true)), normalization(c) {
+  MemoryModel(z3::context &c, bool b, bool little, bool finite, bool guarded, bool recurse, bool outside) : ctx(c), bytes(b), littleEndian(little), enumerate(finite), control(guarded), expandRecursion(recurse), outsideRecursionRange(outside), ranges(c.bool_val(true)), normalization(c) {
     if (control) {
       normalization.set("som",true); normalization.set("push_ite_bv",true);
       normalization.set("blast_select_store",true);
@@ -134,13 +146,14 @@ public:
   }
   }
   struct State {
-    Environment scalars;
-    z3::expr memory, active, output;
+    Environment scalars, entryScalars;
+    z3::expr memory, active, output, callOrdinal;
     std::vector<CallEvent> events;
     std::vector<z3::expr> writes;
     std::vector<z3::expr> conditions;
     unsigned visits = 0;
     verification_detail::HeapState heap;
+    unsigned recursionDepth = 0;
   };
   void statements(const Region &r, const std::vector<Statement> &body, const Environment &bases,
                   State &state, const z3::expr &guard) const {
@@ -195,24 +208,61 @@ public:
       continue;
     }
     if (s.kind == Statement::Kind::Call) {
-      if (!active.is_true()) throw std::invalid_argument("conditional opaque calls are not modeled");
+      if (!active.is_true() && !r.guardedCalls) throw std::invalid_argument("conditional calls require guarded-v2 contracts");
+      if (events.size()>=64) throw std::invalid_argument("call model exceeds 64 expanded events");
       const auto &contract = r.calls.at(s.callee);
       if (s.arguments.size() != contract.parameters.size()) throw std::invalid_argument("call IR arity mismatch");
-      CallEvent event{s.callee, memory, {}};
+      const auto ordinal=state.callOrdinal;
+      CallEvent event{s.callee,!s.indirectTarget.empty(),active,ordinal,
+        s.indirectTarget.empty() ? ctx.int_val(0) : bases.at(s.indirectTarget),memory,{}};
       for (const auto &arg : s.arguments) {
         const auto v = eval(*arg.value);
+        if (!arg.buffer.empty()) ranges=ranges && z3::implies(active,z3::ule(v,ctx.bv_val(arg.bound,32)));
         event.arguments.push_back(arg.buffer.empty() ? v :
           address(bases.at(arg.buffer), v, r.buffers.at(arg.buffer).elementBits));
       }
-      const auto id = std::to_string(events.size());
+      if (s.recursiveCall) {
+        if (!contract.recursive || !s.indirectTarget.empty() || s.callee!=r.name || contract.rankParameter>=r.parameters.size())
+          throw std::invalid_argument("invalid recursive rank contract");
+        const auto incoming=state.entryScalars.at(r.parameters[contract.rankParameter]);
+        ranges=ranges && z3::implies(active,z3::ule(incoming,ctx.bv_val(contract.maximumRank,32)) &&
+          z3::ult(event.arguments.at(contract.rankParameter),incoming));
+        if (expandRecursion) {
+          auto result=ctx.bv_val(0,32);
+          if (state.recursionDepth>=contract.maximumRank) {
+            // A checked exit obligation, never silent truncation. If this call
+            // can execute the proof fails, regardless of its discarded result.
+            ranges=ranges && !active;
+          } else {
+            Environment arguments,childBases=bases;
+            for (unsigned i=0;i<r.parameters.size();++i) {
+              if (contract.parameters[i].kind=="uint32") arguments.emplace(r.parameters[i],event.arguments[i]);
+              else childBases.insert_or_assign(r.parameters[i],event.arguments[i]);
+            }
+            State child{arguments,arguments,memory,active,ctx.bv_val(0,32),ordinal,{}, {}, {},state.visits,verification_detail::HeapState(ctx)};
+            child.recursionDepth=state.recursionDepth+1;
+            statements(r,r.statements,childBases,child,active);
+            ranges=ranges && !child.active && child.heap.valid;
+            state.visits=child.visits;memory=child.memory;result=child.output;state.callOrdinal=child.callOrdinal;
+            events.insert(events.end(),child.events.begin(),child.events.end());
+            if (events.size()>64) throw std::invalid_argument("expanded recursion exceeds 64 external call events");
+            state.writes.insert(state.writes.end(),child.writes.begin(),child.writes.end());
+            state.conditions.insert(state.conditions.end(),child.conditions.begin(),child.conditions.end());
+          }
+          if (!s.name.empty()) scalars.insert_or_assign(s.name,s.declaresCallResult ? result : normalize(z3::ite(active,result,scalars.at(s.name))));
+          continue;
+        }
+      }
       events.push_back(std::move(event));
-      // Couple the environment choices at the same event number. Equivalence
-      // also requires equal event prefixes, arguments and pre-call memory.
-      // Havoc is deliberately broader than a callee's actual write footprint.
-      memory = ctx.constant(("call_memory_" + id).c_str(), memory.get_sort());
+      state.callOrdinal=normalize(ordinal+z3::ite(active,ctx.int_val(1),ctx.int_val(0)));
+      // Couple only executed event ordinals. Inactive branch sites consume no
+      // environment choice and cannot change memory or an existing local.
+      const auto environment=ctx.constant("call_memories",ctx.array_sort(ctx.int_sort(),memory.get_sort()));
+      memory=normalize(z3::ite(active,z3::select(environment,ordinal),memory));
       if (!s.name.empty()) {
         if (contract.returnsVoid) throw std::invalid_argument("void call used as a value");
-        scalars.insert_or_assign(s.name, ctx.bv_const(("call_result_" + id).c_str(), 32));
+        const auto value=callResult(ctx,ordinal);
+        scalars.insert_or_assign(s.name,s.declaresCallResult ? value : normalize(z3::ite(active,value,scalars.at(s.name))));
       }
       continue;
     }
@@ -249,15 +299,19 @@ public:
   Execution execute(const Region &r, Environment scalars,
                     const Environment &bases, z3::expr memory) const {
     ranges = ctx.bool_val(true);
-    State state{std::move(scalars), memory, ctx.bool_val(true), ctx.bv_val(0,32), {}, {}, {}, 0, verification_detail::HeapState(ctx)};
+    State state{scalars,scalars,memory,ctx.bool_val(true),ctx.bv_val(0,32),ctx.int_val(0),{}, {}, {}, 0, verification_detail::HeapState(ctx)};
+    // The outside partition must contain no self-call by the rank contract.
+    // Reuse the checked expansion exit to prove that fact without expanding.
+    if (outsideRecursionRange) state.recursionDepth=32;
     statements(r, r.statements, bases, state, ctx.bool_val(true));
     return {state.output, state.memory, ranges && state.heap.valid && !state.active, std::move(state.events),
             std::move(state.writes), std::move(state.conditions), std::move(state.heap.events)};
   }
 };
 }
-Verification verifyMemory(const Region &original, const Region &candidate, unsigned timeoutMs,
-                          bool successfulPrivateAllocations) {
+static Verification verifyMemoryCase(const Region &original, const Region &candidate, unsigned timeoutMs,
+                          bool successfulPrivateAllocations, bool expandRecursion,
+                          int rankParameter=-1,int fixedRank=-1,unsigned maximumRank=0) {
   Verification proof;
   const auto hasRecords = [](const Region &r) {
     return std::any_of(r.buffers.begin(), r.buffers.end(), [](const auto &entry) {
@@ -276,6 +330,8 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
   proof.strategy = std::string(bytes ? "shared-byte-memory" : "shared-word-memory") +
                    (wordProjection ? "/aligned-word-projection/blast-select-store/bv-sort-ac" : "") +
                    (original.orderedCalls || candidate.orderedCalls ? "/ordered-opaque-calls" : "") +
+                   (!original.recursiveContract.empty() || !candidate.recursiveContract.empty() ?
+                     (expandRecursion ? "/bounded-self-recursion/checked-body-expansion/exclude-self-call-events" : "/bounded-self-recursion/induction-on-entry-rank") : "") +
                    (original.ownedHeap || candidate.ownedHeap ? "/owned-heap-lifetime-initialization/coupled-allocation-outcomes" : "") +
                    (original.memoryControl || candidate.memoryControl ? "/guarded-effects/checked-loop-exits/expanded-memory-reads/bv-extract-prop/ctx-simplify" : "") +
                    "/simplify/blast-term-ite/simplify/smt";
@@ -287,6 +343,7 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
     z3::context ctx;
     Environment leftScalars, rightScalars, leftBases, rightBases;
     std::vector<z3::expr> inputs;
+    std::vector<std::pair<std::string,z3::expr>> functionTargets;
     auto compatible = [](const Region::Buffer &a, const Region::Buffer &b) {
       if (a.persistent != b.persistent || a.recordTag != b.recordTag || a.isUnion != b.isUnion ||
           a.recordBytes != b.recordBytes || a.recordAlignment != b.recordAlignment || a.fields != b.fields)
@@ -299,12 +356,22 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
     };
     for (unsigned i = 0; i < original.parameters.size(); ++i) {
       const auto &left = original.parameters[i], &right = candidate.parameters[i];
+      const auto af=original.functionPointers.find(left), bf=candidate.functionPointers.find(right);
+      if ((af==original.functionPointers.end())!=(bf==candidate.functionPointers.end()))
+        throw std::invalid_argument("function-pointer parameter kind mismatch");
+      if (af!=original.functionPointers.end()) {
+        if (!sameCallSignature(original.calls.at(af->second),candidate.calls.at(bf->second)))
+          throw std::invalid_argument("function-pointer contracts differ");
+        const auto target=ctx.int_const(("function_target_"+std::to_string(i)).c_str());
+        leftBases.emplace(left,target);rightBases.emplace(right,target);functionTargets.emplace_back(left,target);continue;
+      }
       const auto a = original.buffers.find(left), b = candidate.buffers.find(right);
       if ((a == original.buffers.end()) != (b == candidate.buffers.end()))
         throw std::invalid_argument("scalar/pointer parameter kind mismatch");
       if (a == original.buffers.end()) {
         const auto input = ctx.bv_const(("input_" + std::to_string(i)).c_str(), 32);
-        leftScalars.emplace(left, input); rightScalars.emplace(right, input); inputs.push_back(input);
+        const auto value=int(i)==rankParameter && fixedRank>=0 ? ctx.bv_val(unsigned(fixedRank),32) : input;
+        leftScalars.emplace(left, value); rightScalars.emplace(right, value); inputs.push_back(input);
       } else {
         compatible(a->second, b->second);
         const auto base = ctx.int_const(("base_" + std::to_string(i)).c_str());
@@ -324,7 +391,7 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
     for (const auto &[name, buffer] : candidate.buffers) if (buffer.persistent && !leftBases.count(name))
       throw std::invalid_argument("candidate introduces a persistent object");
     const auto memory = ctx.constant("initial_memory", ctx.array_sort(ctx.int_sort(), ctx.bv_sort(bytes ? 8 : 32)));
-    const MemoryModel model(ctx, bytes, original.littleEndian, wordProjection, original.memoryControl || candidate.memoryControl);
+    const MemoryModel model(ctx, bytes, original.littleEndian, wordProjection, original.memoryControl || candidate.memoryControl, expandRecursion,rankParameter>=0 && fixedRank<0);
     const auto left = model.execute(original, leftScalars, leftBases, memory);
     const auto right = model.execute(candidate, rightScalars, rightBases, memory);
     z3::params params(ctx); params.set("som", true); params.set("push_ite_bv", true);
@@ -334,6 +401,14 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
     auto middle = z3::tactic(ctx, original.memoryControl || candidate.memoryControl ? "ctx-simplify" : "skip");
     auto solver = (simplify & z3::tactic(ctx, "blast-term-ite") & middle & simplify & z3::tactic(ctx, "smt")).mk_solver();
     solver.set("timeout", timeoutMs);
+    if (rankParameter>=0) {
+      const auto rank=ctx.bv_const(("input_"+std::to_string(rankParameter)).c_str(),32);
+      solver.add(fixedRank>=0 ? rank==ctx.bv_val(unsigned(fixedRank),32) : z3::ugt(rank,ctx.bv_val(maximumRank,32)));
+    }
+    // Only equality of code identities is observable. N labels represent every
+    // equality pattern among N valid function pointers, including aliases.
+    for (const auto &[name,target]:functionTargets)
+      solver.add(target>=ctx.int_val(1) && target<=ctx.int_val(unsigned(functionTargets.size())));
     if (successfulPrivateAllocations) for (unsigned i=0;i<std::max(left.heapEvents.size(),right.heapEvents.size());++i)
       solver.add(verification_detail::HeapState::outcome(ctx,ctx.int_val(i)));
     if (bytes) for (const auto &[name, buffer] : original.buffers)
@@ -364,8 +439,7 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
       }
     }
     auto memoryMismatch = left.second != right.second;
-    if (original.memoryControl || candidate.memoryControl) {
-      if (!left.events.empty() || !right.events.empty()) throw std::invalid_argument("control-flow call effects are unsupported");
+    if ((original.memoryControl || candidate.memoryControl) && left.events.empty() && right.events.empty()) {
       // Both executions start with the same array and only guarded stores can
       // change it. Checking the union of all store addresses is therefore exact
       // whole-memory equality, not a sample of the caller's memory.
@@ -375,14 +449,13 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
         for (const auto &at : *writes)
           memoryMismatch = memoryMismatch || reads.select(left.second, at) != reads.select(right.second, at);
     }
-    auto mismatch = !left.bounds || !right.bounds || left.first != right.first || memoryMismatch ||
-                    ctx.bool_val(left.events.size() != right.events.size());
+    auto mismatch = !left.bounds || !right.bounds || left.first != right.first || memoryMismatch;
+    auto count = [&](const auto &events) {
+      auto total=ctx.int_val(0);
+      for (const auto &event:events) total=total+z3::ite(event.active,ctx.int_val(1),ctx.int_val(0));
+      return total;
+    };
     if (!successfulPrivateAllocations) {
-      auto count = [&](const auto &events) {
-        auto total=ctx.int_val(0);
-        for (const auto &event:events) total=total+z3::ite(event.active,ctx.int_val(1),ctx.int_val(0));
-        return total;
-      };
       mismatch=mismatch || count(left.heapEvents)!=count(right.heapEvents);
       // Active ordinals are unique and contiguous in each execution. Equal
       // lengths plus pairwise agreement at equal ordinals is exact sequence
@@ -394,21 +467,18 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
           a.count!=b.count || a.object!=b.object || a.offset!=b.offset || a.publicMemory!=b.publicMemory));
       }
     }
-    for (unsigned i = 0; i < std::min(left.events.size(), right.events.size()); ++i) {
-      const auto &a = left.events[i], &b = right.events[i];
-      if (a.callee != b.callee || a.arguments.size() != b.arguments.size()) {
-        mismatch = ctx.bool_val(true); continue;
-      }
+    mismatch=mismatch || count(left.events)!=count(right.events);
+    for (const auto &a:left.events) for (const auto &b:right.events) {
+      const auto aligned=(a.active && b.active && a.ordinal==b.ordinal).simplify(params);
+      if (aligned.is_false()) continue;
       const auto &ac = original.calls.at(a.callee), &bc = candidate.calls.at(b.callee);
-      if (ac.returnsVoid != bc.returnsVoid || ac.parameters.size() != bc.parameters.size())
-        throw std::invalid_argument("call contracts differ");
-      for (unsigned j = 0; j < ac.parameters.size(); ++j) {
-        const auto &ap = ac.parameters[j], &bp = bc.parameters[j];
-        if (ap.kind != bp.kind || ap.readOnly != bp.readOnly || ap.minimumElements != bp.minimumElements)
-          throw std::invalid_argument("call parameter contracts differ");
-        mismatch = mismatch || a.arguments[j] != b.arguments[j];
+      if (a.indirect!=b.indirect || (!a.indirect && a.callee!=b.callee) ||
+          ac.recursive!=bc.recursive || !sameCallSignature(ac,bc) || a.arguments.size()!=b.arguments.size()) {
+        mismatch=mismatch || aligned;continue;
       }
-      mismatch = mismatch || a.memory != b.memory;
+      auto different=a.target!=b.target || a.memory!=b.memory;
+      for (unsigned j=0;j<a.arguments.size();++j) different=different || a.arguments[j]!=b.arguments[j];
+      mismatch=mismatch || (aligned && different);
     }
     const auto domain = solver.assertions();
     solver.add(mismatch);
@@ -486,6 +556,8 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
       const auto model = solver.get_model();
       auto word = [&](const z3::expr &e) { return uint32_t(model.eval(e, true).get_numeral_uint64()); };
       for (const auto &input : inputs) proof.inputs.push_back(word(input));
+      for (const auto &[name,target]:functionTargets)
+        proof.localValues.emplace_back("function_target:"+name,uint32_t(model.eval(target,true).get_numeral_uint64()));
       proof.originalOutput = word(left.first); proof.candidateOutput = word(right.first);
       if (original.ownedHeap || candidate.ownedHeap) {
         proof.reason = "heap safety/initialization/cleanup, return, public memory or allocator trace obligation failed";
@@ -495,10 +567,10 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
         }
       }
       if (!left.events.empty() || !right.events.empty()) {
-        proof.reason = "return, final memory or ordered call trace differs under shared environment choices";
+        proof.reason = "call footprint/recursion bound, return, final memory or ordered call trace obligation failed under shared environment choices";
         for (unsigned i = 0; i < std::max(left.events.size(), right.events.size()); ++i) {
           const auto name = "call_result_" + std::to_string(i);
-          proof.localValues.emplace_back(name, word(ctx.bv_const(name.c_str(), 32)));
+          proof.localValues.emplace_back(name, word(callResult(ctx,ctx.int_val(i))));
         }
       }
       std::set<std::string> seen;
@@ -517,5 +589,51 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
   } catch (const z3::exception &e) { proof.status = "inconclusive"; proof.reason = e.msg(); }
     catch (const std::exception &e) { proof.status = "unsupported"; proof.reason = e.what(); }
   return proof;
+}
+Verification verifyMemory(const Region &original,const Region &candidate,unsigned timeoutMs,
+                          bool successfulPrivateAllocations,bool expandRecursion) {
+  if (!expandRecursion || (original.recursiveContract.empty() && candidate.recursiveContract.empty()))
+    return verifyMemoryCase(original,candidate,timeoutMs,successfulPrivateAllocations,expandRecursion);
+  const auto &r=original.recursiveContract.empty() ? candidate : original;
+  const auto &contract=r.calls.at(r.recursiveContract);
+  Verification result;
+  result.strategy="complete-ranked-body-expansion/exhaustive-entry-rank-partitions/external-call-trace";
+  // Keep this optional observer comparison small. The transformation proof
+  // still supports ranked induction through 32; body expansion stops honestly.
+  if (contract.maximumRank>8) {
+    result.status="unsupported";result.reason="bounded-body comparison currently requires maximum_rank <= 8";return result;
+  }
+  for (const auto *region:{&original,&candidate}) if (!region->recursiveContract.empty()) {
+    const auto &other=region->calls.at(region->recursiveContract);
+    if (other.rankParameter!=contract.rankParameter || other.maximumRank!=contract.maximumRank) {
+      result.status="unsupported";result.reason="recursive rank contracts differ";return result;
+    }
+  }
+  const auto begin=std::chrono::steady_clock::now();
+  auto stronger=verifyMemoryCase(original,candidate,timeoutMs,successfulPrivateAllocations,false);
+  stronger.label="stronger inductive self-call-event comparison";
+  if (stronger.status=="proved-under-model") {
+    // Matching self-call events plus proved rank descent is an inductive proof
+    // of the weaker body-observable contract too. Do not expand it needlessly.
+    stronger.strategy+="/stronger-inductive-contract-implies-body-observations";
+    stronger.reason="ranked induction proves the stronger self-call-event contract; complete body expansion is unnecessary";
+    return stronger;
+  }
+  result.priorAttempts.push_back(stronger);
+  for (unsigned i=0;i<=contract.maximumRank+1;++i) {
+    const auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-begin).count();
+    if (elapsed>=timeoutMs) { result.status="inconclusive";result.reason="rank partition verification budget exhausted";return result; }
+    const bool outside=i>contract.maximumRank;
+    auto proof=verifyMemoryCase(original,candidate,timeoutMs-unsigned(elapsed),successfulPrivateAllocations,true,
+      int(contract.rankParameter),outside ? -1 : int(i),contract.maximumRank);
+    proof.label=outside ? "entry rank above maximum" : "entry rank = "+std::to_string(i);
+    if (proof.status!="proved-under-model") {
+      proof.steps.insert(proof.steps.begin(),result.steps.begin(),result.steps.end());proof.priorAttempts.push_back(stronger);return proof;
+    }
+    result.steps.push_back(std::move(proof));
+  }
+  result.status="proved-under-model";
+  result.reason="all entry ranks covered; complete self-call bodies compared; expansion exits, memory and external events checked";
+  return result;
 }
 }

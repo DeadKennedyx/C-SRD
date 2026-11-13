@@ -16,7 +16,7 @@ import sys
 
 from audit_protection import AuditError, Runner, executable, file_hash, write_json
 from effort_resources import measure, environment, measurement_lock
-from pcode_memory import reconstruct
+from pcode_memory import reconstruct, has_scalar_call_argument
 from run_matrix import flags_for
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -42,18 +42,20 @@ def load_matrix(path, replay_path=None):
             if any(row[k]!=prior[k] for k in ('function','profile','variant','export_sha256','binary_sha256')):
                 raise ValueError('replay changed observed artifact identity')
         evidence={'path':str(replay_path),'sha256':file_hash(replay_path),'status':replay['status'],'outcomes':replay['outcomes'],
-                  'heap_observation':replay.get('heap_observation','events')}
+                  'heap_observation':replay.get('heap_observation','events'),
+                  'recursion_observation':replay.get('recursion_observation','events')}
     if matrix['status'] not in ('completed','completed-with-gaps'):
         if matrix['status']!='failed' or evidence is None or len(matrix.get('schedule',[]))!=len(matrix['observations']):
             raise ValueError('requires finished collection and grading, or a bound revised observer replay')
     return matrix,evidence
 
 
-def grade(command, csrd, reference, candidate, function, output, timeout_ms, call_contracts=None, heap_observation="events"):
+def grade(command, csrd, reference, candidate, function, output, timeout_ms, call_contracts=None, heap_observation="events",recursion_observation="events"):
     try:
         command([csrd, "verify", reference, candidate, "--function", function, "--report", output,
                  "--timeout-ms", timeout_ms, *(["--call-contracts",call_contracts] if call_contracts else []),
-                 *(["--heap-observation",heap_observation] if heap_observation!="events" else [])], timeout=timeout_ms / 1000 + 30)
+                 *(["--heap-observation",heap_observation] if heap_observation!="events" else []),
+                 *(["--recursion-observation",recursion_observation] if recursion_observation!="events" else [])], timeout=timeout_ms / 1000 + 30)
     except AuditError as error:
         if not output.is_file():
             # A crashed/timed-out grader is missing evidence, not a failed
@@ -113,7 +115,7 @@ def prepare(args, root, report, command):
         analysis = json.loads(analysis_path.read_text())
         functions = [f for f in analysis["functions"] if not args.function or f["function"] in args.function]
         if not functions: continue
-        if any(f["status"] != "supported" or f.get("semantic_model") not in ("buffers-u32-c11-v1","buffers-byte-c11-v2","ordered-calls-byte-c11-v1","records-state-byte-c11-v1","guarded-memory-c11-v1","owned-heap-c11-v1") for f in functions):
+        if any(f["status"] != "supported" or f.get("semantic_model") not in ("buffers-u32-c11-v1","buffers-byte-c11-v2","ordered-calls-byte-c11-v1","records-state-byte-c11-v1","guarded-memory-c11-v1","owned-heap-c11-v1","guarded-calls-c11-v2") for f in functions):
             raise ValueError("selected source functions must use the admitted buffer contract")
         if seen_functions & {f["function"] for f in functions}: raise ValueError("duplicate selected function symbol")
         seen_functions.update(f["function"] for f in functions)
@@ -156,10 +158,13 @@ def prepare(args, root, report, command):
                 for public, parameter in zip(params,function["parameters"]):
                     if parameter.get("element_bits")==8: public["element_signed"]=parameter["element_signed"]
                     if "record" in parameter: public["record"]=parameter["record"]
+                    if parameter['kind']=='function-pointer':
+                        public.update(name=parameter['name'],returns=parameter['returns'],
+                            parameters=[{'kind':p['kind'],'read_only':p.get('read_only',False)} for p in parameter['parameters']])
                 group = {"function": function["function"], "profile": profile["id"], "parameters": params,
                          "reference": str(folder / "original.i"), "reference_sha256": file_hash(folder / "original.i"),
                          "variants": variants}
-                if function["semantic_model"] in ("records-state-byte-c11-v1","guarded-memory-c11-v1"):
+                if function["semantic_model"] in ("records-state-byte-c11-v1","guarded-memory-c11-v1","guarded-calls-c11-v2"):
                     globals_=[{k:g[k] for k in ("name","kind","record") if k in g} for g in function.get("persistent_objects",[])]
                     interface=folder/f"{function['function']}-public-abi.json"
                     write_json(interface,{"parameters":params,"persistent_objects":globals_})
@@ -249,8 +254,7 @@ def observe(args, root, report, command, csrd, headless):
         controls = {"return-plus-one": {"result_offset": 1}}
         if item["adapter"]["metrics"].get("public_stores",item["adapter"]["metrics"]["stores"]): controls["last-store-plus-one"] = {"final_store_offset": 1}
         if item["adapter"]["metrics"].get("calls"):
-            scalar_site=any(p["kind"]=="uint32" for op in export["operations"] if op["opcode"]=="CALL"
-                            for p in export.get("call_signatures",{}).get(op.get("callee"),{}).get("parameters",[]))
+            scalar_site=has_scalar_call_argument(export)
             if scalar_site: controls["call-argument-plus-one"] = {"call_argument_offset": 1}
             else: item["control_skips"]={"call-argument-plus-one":"no scalar call argument to mutate"}
         for label, mutation in controls.items():

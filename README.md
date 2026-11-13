@@ -35,7 +35,7 @@ build/csrd --help
 
 `--scope functions` is the default. It admits pure `uint32_t` arithmetic,
 selected bitwise operations, selections, bounded loops and lookup tables, plus
-a separate ordered byte/`uint32_t` buffer and direct-call path. `--scope private-regions` selects
+a separate ordered byte/`uint32_t` buffer and contracted-call path. `--scope private-regions` selects
 private integer declarations/assignments inside richer functions. Calls, loops
 and memory boundaries outside those frames remain unchanged and are reported.
 Unsupported syntax is diagnosed; failed translation validation prevents output.
@@ -63,7 +63,25 @@ pre-call memory at each event, then allows arbitrary shared memory/return values
 before continuing encoded computation. Contracts assert synchronous execution,
 no callbacks/reentry, retained pointers, nonlocal jumps, frame inspection or
 invalidation of caller buffers. Callee implementations are not proved by their
-declarations. Nested call expressions, varargs and indirect calls remain unsupported.
+declarations. Nested call expressions and varargs remain unsupported.
+
+`--call-contracts tests/fixtures/guarded_calls.json` selects `opaque-guarded-v2`:
+calls in branches and bounded loops, calls through explicitly contracted function-pointer
+parameters, and direct self-recursion with a decreasing unsigned entry rank.
+Code pointers and call interfaces stay ordinary. The verifier checks executed
+target identities, arguments, pre-call memory and order, including when two
+callback parameters designate the same function. No local code-pointer aliases,
+mutual/indirect recursion, reentrant callbacks or mixing owned heaps with opaque
+calls are admitted. Recursive contracts must cover the function's own buffer
+footprint; self-calls must bind to that definition and sufficient stack storage is assumed.
+
+Transformations use rank induction and preserve self-call events, with declared
+maximum ranks through 32. For compiler-generated inlining, verification-only
+`--recursion-observation bounded-body` compares returns, whole memory and external
+events while excluding internal self-call events. It uses the stronger induction
+proof when sufficient, otherwise checked body expansion across every entry-rank
+partition, including all out-of-range inputs. This supplemental mode currently
+requires a maximum rank of at most 8; it never weakens transformation validation.
 
 The record/state path admits named, padding-free structs/unions with 1..16
 `uint32_t` fields, bounded record-pointer views, and mutable file-scope scalar or
@@ -79,7 +97,8 @@ The control-flow path admits call-free memory branches, early returns and
 `for` loops with fresh `uint32_t` counters, `++`, and immutable scalar trip limits
 bounded by 32. Private locals can be declared inside these bodies. Verification
 checks guarded memory effects and every loop exit; finite expansion is never
-silently truncated. Break/continue, while loops and conditional calls are excluded.
+silently truncated. Break/continue and while loops are excluded; conditional
+calls require the separate `opaque-guarded-v2` contract above.
 
 The owned-heap path admits local, nonescaping `uint32_t` arrays of at most 32
 elements through `malloc`, `calloc`, positive-size `realloc` and `free`. It
@@ -120,7 +139,7 @@ not a promise of universal C support.
 | 6 | Structs/unions, globals, persistent state | Scoped checkpoint measured |
 | 7 | Branches, exits, input-dependent loops | Scoped checkpoint measured; two reconstruction proof gaps |
 | 8 | Allocation, failure and lifetime | Scoped checkpoint measured; four reconstruction coverage gaps |
-| 9 | Recursion and indirect calls | Pending |
+| 9 | Recursion and indirect calls | Scoped checkpoint measured; four affine value-fitting gaps |
 | 10 | File/console I/O and ordered events | Pending |
 | 11 | Networking, partial transfers and failures | Pending |
 | 12 | Exact floating-point behavior | Pending |
@@ -134,45 +153,58 @@ bounded GDB value-recovery tooling. Write generated measurements to ignored
 `build*/` directories. CPU/RSS, recovery correctness and application costs are
 separate measurements; fingerprints and finite tests are not equivalence proofs.
 
-The owned-heap checkpoint (0.12.0) passed all 49 Linux test groups across the
-regression run and corrected targeted reruns. Six benign fixtures passed
-46,361,040 native/Linux differential comparisons of returns and caller memory.
-Failure tests inject allocator outcomes and force moving reallocations through
-renamed allocator calls; separate runs exercise the real standard library.
+The recursion/callback checkpoint (0.13.0) passed 52 Linux test groups in the
+full regression and the subsequently added evidence-checker group separately
+(eight evidence-link tests, also passed natively). Six benign fixtures passed
+43,633,920 differential comparisons: 132 native and 88 Linux compiler/strategy
+cells, including available `-O0`, `-O1`, `-O2`, `-O3`, `-Og`, `-Os`, `-Oz`, LTO
+and sanitizer configurations. Tests compare returns, all caller memory, external
+state and executed callback events; all four callback bindings and eight buffer
+alias layouts are exercised.
 
-Across Clang/GCC `-O0`/`-O2`, the adapter reconstructed 92/96 binary cases.
-Of these, 69 passed the strict allocator-event contract. Compiler allocation
-elision/API simplification made the other 23 fail that stronger comparison.
-All 92 passed the explicit successful-allocation comparison; four optimized
-affine cases contain unmodeled memory-effect instructions. Three adapter
-repetitions agreed. All 43 distinct reference/answer pairs (39 unique reconstructed
-programs) passed 46,784 compiled checks with both compilers; corruption controls produced counterexamples over
-93,568 executions. These results do not prove binary lifting or compiler correctness.
+Ghidra 12.2 plus the adapter reconstructed all 96 Clang/GCC `-O0`/`-O2` binary
+cases. Of these, 93 passed the strict self-call-event model; GCC inlining changed
+three recursive cases' internal traces. The separate bounded-body comparison
+proved their return/memory/external-event obligations under its model. The original
+strict failures remain recorded. Three adapter repetitions agreed. All 54 distinct
+reference/answer pairs passed 60,480 compiled checks with both compilers;
+corruption controls were rejected across 131,040 control executions. These results
+do not prove binary lifting or compiler correctness.
 
-All 3,072 runtime traces matched independent return/memory oracles, with complete
-heap tracking and cleanup. They exercise successful allocations. For every
-variant, fitting recovered 64/64 intermediate target cases and 48/48 public-return
-cases; no negative control validated. Three fitting repetitions agreed. Ordinary intermediate values appeared in
-308/1,024 affine target/trace pairs versus 960/1,024 original pairs. In sampled heap
-storage alone, the counts were 8 versus 704. Reduced literal visibility did not
-prevent recovery: these results establish no useful protection advantage.
+All 4,608 runtime traces matched independent return/memory/state/event oracles.
+They use 24 vectors, two alias layouts and a 1,024-step cap (maximum observed: 267).
+Child calls execute normally but their interiors are stepped over; this measures
+the root activation, including any compiler inlining. Absent recursive values on
+base/out-of-range paths are excluded from scoring. Affine fitting recovered
+100/104 intermediate target cases versus 98/104 originals; all variants recovered
+48/48 public-return cases. No negative control validated, and three fitting
+repetitions agreed. The fixed-location fitter cannot join every path-dependent
+location: some missed original values were literally visible on every trace.
+These misses are observer limitations, not evidence of protection.
+
+Ordinary intermediate values appeared in 1,880/2,240 affine target/trace pairs
+versus 2,192/2,240 original pairs. Static reconstruction required no target
+executions; runtime fitting uses known labels, with 12 training and 12 heldout
+traces per layout. Replaying fits makes no new target queries. Neither analysis
+measures blind algorithm discovery or human effort. No useful protection advantage
+was demonstrated on this corpus.
 
 Median matched `-O2` ratios against originals on Linux ARM64:
 
 | Compiler | Adapter CPU | Fit CPU | Fit peak RSS | Application CPU | Function bytes |
 | --- | --- | --- | --- | --- | --- |
-| Clang 18 | 0.99 | 1.47 | 1.16 | 1.014 | 1.52 |
-| GCC 13 | 1.00 | 1.41 | 1.16 | 1.039 | 1.67 |
+| Clang 18 | 1.01 | 1.31 | 1.11 | 1.038 | 1.35 |
+| GCC 13 | 0.99 | 1.61 | 1.25 | 1.216 | 1.58 |
 
-Adapter CPU includes Python startup and excludes Ghidra; it uses four successfully
-graded matched functions per compiler. Fit ratios use twelve function/layout
-pairs; application/size ratios use all six functions. Median optimized affine
-fitting CPU was about 126 ms, including startup and trace loading. Application
-measurements use seven repetitions of one million calls with identical-copy
-controls. Three of twelve optimized affine cases retained the baseline opcode
-sequence (operands excluded), including two with identical function bytes.
-All twelve optimized identity controls retained identical function bytes.
-Structural difference and these observer costs do not establish useful protection.
+Adapter CPU includes Python startup and excludes Ghidra; ratios use six matched
+functions per compiler. Fit ratios use twelve function/layout pairs; optimized
+affine fitting took median 215 ms (Clang) / 246 ms (GCC), including startup and
+trace loading. Identical-copy fit CPU ratios were 0.99/0.99. Application timing
+uses seven repetitions of one million calls; copy-control ratios were 1.000/1.001.
+Cold Ghidra CPU ratios were 1.01/1.05 with only one collection per binary, so
+startup/noise limits interpretation. One of twelve optimized affine cases retained
+the baseline opcode sequence (operands excluded); none retained identical function
+bytes. Eight optimized identity controls retained identical bytes.
 
 Reproduce buffer/call/record/control measurements with `tools/audit_buffer_reconstruction.py`,
 `tools/replay_buffer_observers.py`, `tools/grade_byte_reconstruction.py`,
@@ -189,12 +221,22 @@ types/global names to Ghidra and assumes stable, resolved loader bindings. Each 
 overlay produced by `tools/patch_ghidra_signed_byte.py`. Generated artifacts stay
 under ignored `build*/` paths; the repository keeps no measurement archives.
 
-Heap measurements use `--source tests/fixtures/owned_heap.c` for reconstruction
-and `--corpus heap` for execution tools. Use `--heap-observation successful-private`
-on the supplemental observer replay, keeping the strict audit report unchanged.
-Run heap correctness checks with `ctest --test-dir build --output-on-failure -R owned_heap`.
-The next increment is bounded recursion and explicitly contracted indirect calls,
-followed by the same correctness and measurement gates.
+Heap measurements use `--source tests/fixtures/owned_heap.c`, `--corpus heap`
+and supplemental `--heap-observation successful-private`. Recursion/callback
+measurements use `--source tests/fixtures/guarded_calls.c`,
+`--call-contracts tests/fixtures/guarded_calls.json`, `--corpus dispatch` and a
+supplemental replay with `--recursion-observation bounded-body`. Keep strict
+reports unchanged. Run correctness checks with:
+
+```sh
+ctest --test-dir build --output-on-failure -R 'guarded_call|observer_evidence_links'
+```
+
+`tools/check_buffer_evidence.py --reconstruction-report MATRIX --replay-report REPLAY
+--runtime-report RUNTIME --output RESULT` validates artifact/proof bindings,
+repetition coverage and runtime oracles, and replays the saved fits. Run collectors
+serially in the same environment. The next increment is scoped file/console I/O
+with ordered events, EOF/error paths and the same correctness and measurement gates.
 
 Maintainer: [DeadKennedyx](https://github.com/DeadKennedyx),
 `juan.dw.ft@gmail.com`. [MIT license](LICENSE).

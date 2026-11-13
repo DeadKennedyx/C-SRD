@@ -106,7 +106,7 @@ class MemoryEmitter {
     values.insert_or_assign(source, name);
   }
   void call(const Statement &s) {
-    std::string invocation = s.callee + "(";
+    std::string invocation = (s.indirectTarget.empty() ? s.callee : s.indirectTarget) + "(";
     for (unsigned i = 0; i < s.arguments.size(); ++i) {
       if (i) invocation += ", ";
       const auto &arg = s.arguments[i];
@@ -203,7 +203,7 @@ public:
     if (!region->ordered()) throw std::invalid_argument("ordered emission requires memory or calls");
     result.body = "{";
     for (const auto &name : region->parameters) {
-      if (region->buffers.count(name)) result.body += " (void)" + name + ";";
+      if (region->buffers.count(name) || region->functionPointers.count(name)) result.body += " (void)" + name + ";";
       else declare(name, encode(name));
     }
     statements(region->statements);

@@ -22,19 +22,22 @@ CallContracts parseCallContracts(const std::string &text) {
   const auto *root = parsed->getAsObject();
   if (!root) throw std::invalid_argument("call contracts must be an object");
   keys(*root, {"model", "functions"});
-  if (string(*root, "model") != "opaque-sequenced-v1") throw std::invalid_argument("unsupported call-contract model");
+  const auto model=string(*root,"model");
+  const bool guarded=model=="opaque-guarded-v2";
+  if (model != "opaque-sequenced-v1" && !guarded) throw std::invalid_argument("unsupported call-contract model");
   const auto *functions = root->getArray("functions");
   if (!functions || functions->empty() || functions->size() > 64) throw std::invalid_argument("require 1..64 call contracts");
   CallContracts result;
   for (const auto &value : *functions) {
     const auto *function = value.getAsObject();
     if (!function) throw std::invalid_argument("call contract must be an object");
-    keys(*function, {"name", "returns", "parameters"});
+    if (guarded) keys(*function, {"name", "returns", "parameters", "indirect_parameter", "recursion"});
+    else keys(*function, {"name", "returns", "parameters"});
     const auto name = string(*function, "name"), returns = string(*function, "returns");
     if (name.empty() || (returns != "uint32" && returns != "void")) throw std::invalid_argument("invalid call name or return kind");
     const auto *parameters = function->getArray("parameters");
     if (!parameters || parameters->size() > 8) throw std::invalid_argument("require 0..8 call parameters");
-    CallContract contract; contract.returnsVoid = returns == "void";
+    CallContract contract; contract.returnsVoid = returns == "void"; contract.guarded=guarded;
     for (const auto &p : *parameters) {
       const auto *parameter = p.getAsObject();
       if (!parameter) throw std::invalid_argument("call parameter must be an object");
@@ -51,7 +54,25 @@ CallContracts parseCallContracts(const std::string &text) {
       }
       contract.parameters.push_back(std::move(arg));
     }
-    if (!result.emplace(name, std::move(contract)).second) throw std::invalid_argument("duplicate call contract: " + name);
+    std::string key=name;
+    if (function->get("indirect_parameter")) {
+      contract.indirectParameter=string(*function,"indirect_parameter");
+      if (contract.indirectParameter.empty() || name.find("::")!=std::string::npos || contract.indirectParameter.find("::")!=std::string::npos)
+        throw std::invalid_argument("indirect contracts require an unambiguous function and parameter name");
+      key=indirectContractKey(name,contract.indirectParameter);
+    }
+    if (function->get("recursion")) {
+      const auto *recursion=function->getObject("recursion");
+      if (!recursion || !contract.indirectParameter.empty() || contract.returnsVoid)
+        throw std::invalid_argument("recursion requires a direct uint32 function contract");
+      keys(*recursion,{"rank_parameter","maximum_rank"});
+      const auto rank=recursion->getInteger("rank_parameter"), maximum=recursion->getInteger("maximum_rank");
+      if (!rank || !maximum || *rank<0 || uint64_t(*rank)>=contract.parameters.size() ||
+          contract.parameters[size_t(*rank)].kind!="uint32" || *maximum<1 || *maximum>32)
+        throw std::invalid_argument("recursion requires a uint32 rank parameter index and maximum_rank in 1..32");
+      contract.recursive=true;contract.rankParameter=unsigned(*rank);contract.maximumRank=unsigned(*maximum);
+    }
+    if (!result.emplace(key, std::move(contract)).second) throw std::invalid_argument("duplicate call contract: " + key);
   }
   return result;
 }

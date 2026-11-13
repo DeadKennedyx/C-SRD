@@ -87,6 +87,21 @@ class BufferRuntime(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "incomplete"):
                     fit({"traces": [{"path": str(path), "sha256": file_hash(path)}], "targets": {}})
 
+    def test_unexecuted_branch_targets_are_excluded_explicitly(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config={'traces':[],'targets':{'child':[None,3,8,29,None,101,105]}}
+            for i,value in enumerate(config['targets']['child']):
+                trace={'status':'completed','stack_read_failures':0,'samples':[
+                    {'offset':4,'visit':0,'values':{'reg:x1':value if value is not None else 0}}]}
+                path=Path(tmp)/f'{i}.json';path.write_text(json.dumps(trace))
+                config['traces'].append({'path':str(path),'sha256':file_hash(path),'split':'training' if i<4 else 'heldout'})
+            result=fit(config)['targets']['child']
+            self.assertEqual(result['training_cases'],[1,2,3]);self.assertEqual(result['heldout_cases'],[5,6])
+            self.assertEqual(result['unexecuted_cases'],[0,4]);self.assertIsNone(result['literal_presence'][0])
+            self.assertEqual(result['recovery']['validated_models'],1)
+            config['targets']['child'][2]=None
+            with self.assertRaisesRegex(ValueError,'insufficient executed'):fit(config)
+
     def test_literal_and_return_recovery_without_an_odd_training_difference(self):
         targets=[2,6,10,14,3,99]
         with tempfile.TemporaryDirectory() as temp:

@@ -29,6 +29,7 @@ class Analyzer {
   std::unordered_set<const clang::ValueDecl *> pointers;
   std::unordered_set<const clang::ValueDecl *> persistent;
   std::unordered_set<const clang::ValueDecl *> heapPointers;
+  std::unordered_set<const clang::ValueDecl *> functionPointers;
   // Local pointers capture an offset into one original parameter. Their
   // offsets are scalar IR declarations, frozen when the pointer is initialized.
   std::unordered_map<const clang::ValueDecl *, std::string> pointerOrigins;
@@ -617,34 +618,62 @@ class Analyzer {
   const clang::CallExpr *directCall(const clang::Expr *e) const {
     return llvm::dyn_cast<clang::CallExpr>(e->IgnoreParens());
   }
+  bool callSignature(const clang::FunctionProtoType *type, const CallContract &spec, clang::SourceLocation loc) {
+    if (!type || type->isVariadic() || type->getNumParams()!=spec.parameters.size() ||
+        type->getExtInfo()!=clang::FunctionType::ExtInfo() || type->hasExtParameterInfos() ||
+        (spec.returnsVoid ? !type->getReturnType()->isVoidType() : !u32(type->getReturnType())))
+      return fail(loc,"callee signature or calling convention does not match its contract");
+    for (unsigned i=0;i<spec.parameters.size();++i) {
+      const auto parameter=type->getParamType(i); const auto &expected=spec.parameters[i];
+      if (parameter.hasQualifiers()) return fail(loc,"qualified call parameter types are unsupported");
+      if (expected.kind=="uint32") {
+        if (!u32(parameter)) return fail(loc,"call scalar parameter must be uint32_t");
+      } else {
+        if (!parameter->isPointerType()) return fail(loc,"call contract requires a buffer pointer");
+        const auto element=parameter->getPointeeType(), plain=element.getUnqualifiedType();
+        const bool valid=expected.kind=="uint32-buffer" ? u32(plain) :
+          expected.kind=="char-buffer" ? ctx.hasSameType(plain,ctx.CharTy) :
+          expected.kind=="signed-char-buffer" ? ctx.hasSameType(plain,ctx.SignedCharTy) : ctx.hasSameType(plain,ctx.UnsignedCharTy);
+        if (!valid || element.isConstQualified()!=expected.readOnly ||
+            (element.hasQualifiers() && element.getQualifiers()!=clang::Qualifiers::fromCVRMask(clang::Qualifiers::Const)))
+          return fail(loc,"call buffer type/constness does not match its contract");
+      }
+    }
+    return true;
+  }
   bool call(const clang::CallExpr *e, const std::string &target, bool declare,
             std::vector<Statement> &output) {
     const auto *callee = e->getDirectCallee();
     const auto *reference = llvm::dyn_cast<clang::DeclRefExpr>(e->getCallee()->IgnoreParenImpCasts());
-    if (!callee || !reference || reference->getDecl() != callee || callee->getBuiltinID() ||
-        callee->getCanonicalDecl() == currentFunction->getCanonicalDecl())
-      return fail(e->getExprLoc(), "calls require a direct nonrecursive function name (no builtins or function pointers)");
+    const bool indirect=!callee && reference && functionPointers.count(reference->getDecl());
+    const bool recursive=callee && callee->getCanonicalDecl()==currentFunction->getCanonicalDecl();
+    if (!reference || (!indirect && (!callee || reference->getDecl()!=callee || callee->getBuiltinID())))
+      return fail(e->getExprLoc(),"calls require a declared function or a contracted function-pointer parameter");
     if (e->getBeginLoc().isMacroID() || e->getEndLoc().isMacroID())
       return fail(e->getExprLoc(), "macro calls are unsupported");
-    const auto name = callee->getNameAsString();
+    const auto indirectName=indirect ? reference->getDecl()->getNameAsString() : "";
+    const auto name = indirect ? region.functionPointers.at(indirectName) : callee->getNameAsString();
     auto contract = contracts.find(name);
     if (contract == contracts.end()) return fail(e->getExprLoc(), "direct call requires an explicit --call-contracts entry: " + name);
     const auto &spec = contract->second;
+    if (recursive && (!spec.recursive || !spec.guarded))
+      return fail(e->getExprLoc(),"self-recursion requires its own explicit guarded decreasing-rank contract");
+    if (indirect && (!spec.guarded || spec.indirectParameter!=indirectName))
+      return fail(e->getExprLoc(),"indirect call does not match its function-scoped parameter contract");
     if (++callCount > 64) return fail(e->getExprLoc(), "ordered call regions are limited to 64 calls");
-    if (callee->isVariadic() || !callee->hasPrototype() || callee->getNumParams() != spec.parameters.size() ||
-        e->getNumArgs() != spec.parameters.size() ||
-        (spec.returnsVoid ? !callee->getReturnType()->isVoidType() : !u32(callee->getReturnType())) ||
-        (spec.returnsVoid && !target.empty()))
+    const auto type=indirect ? reference->getDecl()->getType()->getPointeeType() : callee->getType();
+    const auto *prototype=type->getAs<clang::FunctionProtoType>();
+    if (!callSignature(prototype,spec,e->getExprLoc()) || e->getNumArgs()!=spec.parameters.size() || (spec.returnsVoid && !target.empty()))
       return fail(e->getExprLoc(), "callee signature does not match its call contract");
-    for (const auto *decl : callee->redecls()) if (decl->hasAttrs())
+    if (callee) for (const auto *decl : callee->redecls()) if (decl->hasAttrs())
       return fail(e->getExprLoc(), "callee attributes are unsupported by the synchronous call contract");
     Statement out(Statement::Kind::Call, target, nullptr);
-    out.callee = name; out.declaresCallResult = declare;
+    out.callee = name; out.declaresCallResult = declare; out.indirectTarget=indirectName; out.recursiveCall=recursive;
     for (unsigned i = 0; i < e->getNumArgs(); ++i) {
       const auto &expected = spec.parameters[i];
-      const auto *parameter = callee->getParamDecl(i);
-      const auto type = parameter->getType();
-      if (parameter->hasAttrs() || parameter->getOriginalType()->isArrayType() || type.hasQualifiers())
+      const auto *parameter = callee ? callee->getParamDecl(i) : nullptr;
+      const auto type = prototype->getParamType(i);
+      if (parameter && (parameter->hasAttrs() || parameter->getOriginalType()->isArrayType() || type.hasQualifiers()))
         return fail(e->getArg(i)->getExprLoc(), "call parameter attributes, qualifiers and array declarators are unsupported");
       Statement::Argument arg;
       if (expected.kind == "uint32") {
@@ -675,6 +704,7 @@ class Analyzer {
       out.arguments.push_back(std::move(arg));
     }
     region.calls.emplace(name, spec);
+    if (recursive) region.recursiveContract=name;
     output.push_back(std::move(out));
     if (!target.empty()) loopBounds[target] = UINT32_MAX;
     return true;
@@ -691,14 +721,14 @@ class Analyzer {
       if (ref && heapPointers.count(ref->getDecl()))
         return fail(s->getBeginLoc(), "discarded owned pointer reads require an explicit lifetime-checked use");
       if (discard->getCastKind() == clang::CK_ToVoid && ref &&
-          (pointers.count(ref->getDecl()) || pointerOrigins.count(ref->getDecl()))) return true;
+          (pointers.count(ref->getDecl()) || pointerOrigins.count(ref->getDecl()) || functionPointers.count(ref->getDecl()))) return true;
       if (discard->getCastKind() == clang::CK_ToVoid &&
           llvm::isa<clang::DeclRefExpr>(discard->getSubExpr()->IgnoreParenImpCasts()) &&
           expression(discard->getSubExpr())) return true;
       return fail(s->getBeginLoc(), "only a discarded pure uint32_t reference is accepted as a void cast statement");
     }
     if (auto *branch = llvm::dyn_cast<clang::IfStmt>(s)) {
-      if (region.orderedCalls) return fail(s->getBeginLoc(), "call regions currently require straight-line statements");
+      if (region.orderedCalls && !region.guardedCalls) return fail(s->getBeginLoc(), "sequenced-v1 call contracts require straight-line statements");
       if (region.ordered()) region.memoryControl = true;
       auto condition = expression(branch->getCond());
       if (!condition) return false;
@@ -711,7 +741,7 @@ class Analyzer {
       output.push_back(std::move(out)); return true;
     }
     if (auto *loop = llvm::dyn_cast<clang::ForStmt>(s)) {
-      if (region.orderedCalls) return fail(s->getBeginLoc(), "call regions currently require straight-line statements");
+      if (region.orderedCalls && !region.guardedCalls) return fail(s->getBeginLoc(), "sequenced-v1 call contracts require straight-line statements");
       if (region.ordered()) region.memoryControl = true;
       const auto *decl = llvm::dyn_cast_or_null<clang::DeclStmt>(loop->getInit());
       const auto *index = decl && decl->isSingleDecl() ? llvm::dyn_cast<clang::VarDecl>(decl->getSingleDecl()) : nullptr;
@@ -754,7 +784,7 @@ class Analyzer {
       output.push_back(std::move(out)); return true;
     }
     if (auto *d = llvm::dyn_cast<clang::DeclStmt>(s)) {
-      if (nested && (!region.ordered() || region.orderedCalls)) return fail(s->getBeginLoc(), "declarations inside these control-flow bodies are unsupported");
+      if (nested && (!region.ordered() || (region.orderedCalls && !region.guardedCalls))) return fail(s->getBeginLoc(), "declarations inside these control-flow bodies are unsupported");
       if (!d->isSingleDecl()) return fail(s->getBeginLoc(), "use a single initialized variable per declaration");
       auto *v = llvm::dyn_cast<clang::VarDecl>(d->getSingleDecl());
       if (v && region.ordered() && names.count(v->getNameAsString()))
@@ -852,8 +882,8 @@ class Analyzer {
       return true;
     }
     if (auto *r = llvm::dyn_cast<clang::ReturnStmt>(s)) {
-      if (!r->getRetValue() || (!final && (!region.ordered() || region.orderedCalls)))
-        return fail(s->getBeginLoc(), "early returns require call-free memory regions; every return needs a value");
+      if (!r->getRetValue() || (!final && (!region.ordered() || (region.orderedCalls && !region.guardedCalls))))
+        return fail(s->getBeginLoc(), "early returns require memory or guarded call regions; every return needs a value");
       if (!final) region.memoryControl = true;
       if (const auto *invoke = directCall(r->getRetValue())) {
         std::string name = "csrd_call_return";
@@ -874,9 +904,11 @@ public:
   Analysis run(const clang::FunctionDecl &f) {
     currentFunction = &f;
     region.orderedCalls = containsCall(f.getBody());
+    region.guardedCalls = region.orderedCalls && std::any_of(contracts.begin(),contracts.end(),
+      [](const auto &entry) { return entry.second.guarded; });
     region.ownedHeap = containsCall(f.getBody(), true);
     region.extendedMemory = region.orderedCalls || region.ownedHeap;
-    region.memoryControl = region.ownedHeap;
+    region.memoryControl = region.ownedHeap || region.guardedCalls;
     if (region.ownedHeap && ctx.getTypeSize(ctx.CharTy) != 8) {
       fail(f.getLocation(), "owned uint32_t heaps require 8-bit bytes"); return std::move(result);
     }
@@ -894,6 +926,22 @@ public:
       if (decl->hasAttrs()) { fail(f.getLocation(), "function attributes are unsupported"); return std::move(result); }
     }
     for (const auto *p : f.parameters()) {
+      if (p->getType()->isFunctionPointerType()) {
+        if (region.ownedHeap) { fail(p->getLocation(),"owned heaps cannot be combined with function-pointer parameters");return std::move(result); }
+        const auto name=p->getNameAsString(), key=indirectContractKey(region.name,name);
+        const auto found=contracts.find(key);
+        if (found==contracts.end() || !found->second.guarded) {
+          fail(p->getLocation(),"function-pointer parameter requires an explicit guarded contract: "+key);return std::move(result);
+        }
+        if (p->getType().hasQualifiers() || p->hasAttrs() || name.empty() || p->getStorageClass()!=clang::SC_None ||
+            !callSignature(p->getType()->getPointeeType()->getAs<clang::FunctionProtoType>(),found->second,p->getLocation())) {
+          fail(p->getLocation(),"require an unqualified ordinary C function-pointer parameter");return std::move(result);
+        }
+        functionPointers.insert(p);names.insert(name);region.parameters.push_back(name);
+        region.functionPointers.emplace(name,key);region.calls.emplace(key,found->second);
+        region.orderedCalls=region.guardedCalls=region.memoryControl=region.extendedMemory=true;
+        continue;
+      }
       if (p->getType()->isPointerType()) {
         const auto element = p->getType()->getPointeeType();
         if (ctx.getTypeSize(ctx.CharTy) != 8 || p->getType().hasQualifiers() ||
@@ -928,6 +976,15 @@ public:
     }
     if (!collectPersistent(body)) return std::move(result);
     for (auto *s : body->body()) if (!statement(s, s == body->body_back(), region.statements)) return std::move(result);
+    if (!region.recursiveContract.empty()) {
+      const auto &spec=region.calls.at(region.recursiveContract);
+      for (unsigned i=0;i<region.parameters.size();++i) {
+        const auto buffer=region.buffers.find(region.parameters[i]);
+        if (buffer!=region.buffers.end() && buffer->second.minimumElements>spec.parameters.at(i).minimumElements) {
+          fail(f.getLocation(),"recursive call contract understates the function's own buffer footprint");return std::move(result);
+        }
+      }
+    }
     result.region = std::move(region);
     return std::move(result);
   }

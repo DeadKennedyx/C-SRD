@@ -38,8 +38,11 @@ def validated_graph(export, *, heap=False):
     graph.definitions={}
     for oi,op in enumerate(ops):
         code=op["opcode"]
-        calls={"CALL"} if heap or (export.get("schema_version"),export.get("memory_model")) in ((7,"ordered-calls-buffers-v1"),(8,"records-state-buffers-v1")) else set()
+        guarded=(export.get('schema_version'),export.get('memory_model'))==(9,'guarded-calls-buffers-v2')
+        calls={"CALL"} if heap or guarded or (export.get("schema_version"),export.get("memory_model")) in ((7,"ordered-calls-buffers-v1"),(8,"records-state-buffers-v1")) else set()
+        if guarded:calls.add('CALLIND')
         extra={"INDIRECT"} if export.get("schema_version")==8 else set()
+        if guarded:extra|={'BOOL_AND','BOOL_OR','BOOL_XOR'}
         if code not in SCALAR|CONTROL|{"LOAD","STORE","PTRADD","PTRSUB","MULTIEQUAL"}|calls|extra:
             raise Unsupported("unsupported memory CFG instruction: "+code)
         if not isinstance(op["inputs"],list):raise Unsupported("invalid CFG instruction inputs")

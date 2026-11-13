@@ -21,10 +21,14 @@ def harness(function,parameters,corpus="byte"):
     from call_observation_cases import signature as call_signature, ENVIRONMENT, INITIAL_STATE
     from control_observation_cases import signature as control_signature
     from heap_observation_cases import signature as heap_signature
-    byte_type,declaration=(heap_signature if corpus=='heap' else control_signature if corpus=='control' else call_signature if corpus=="call" else signature)(function,parameters)
-    environment=("#define CSRD_RECORD_CALLS 0\n"+ENVIRONMENT.read_text()+"\n") if corpus=="call" else ""
-    reset=f" reset(memory,{INITIAL_STATE}u);\n" if corpus=="call" else ""
+    from dispatch_observation_cases import signature as dispatch_signature,invocation,RECURSIVE
+    if corpus=='dispatch':
+        from dispatch_observation_cases import ENVIRONMENT,INITIAL_STATE
+    byte_type,declaration=(dispatch_signature if corpus=='dispatch' else heap_signature if corpus=='heap' else control_signature if corpus=='control' else call_signature if corpus=="call" else signature)(function,parameters)
+    environment=("#define CSRD_RECORD_CALLS 0\n"+ENVIRONMENT.read_text()+"\n") if corpus in ("call","dispatch") else ""
+    reset=f" reset(memory,{INITIAL_STATE}u);\n" if corpus in ("call","dispatch") else ""
     offset="4*(i&3u)" if byte_type=="uint32_t" else "(i&3u)"
+    invoke=invocation(function,'memory+4+(i&3u)','memory+4','x%10u' if function in RECURSIVE else 'x',selector='i') if corpus=='dispatch' else f'{function}(({byte_type}*)((unsigned char*)memory+16+{offset}),'+('' if corpus=='heap' else 'memory+4,')+'x)'
     return r'''#define _POSIX_C_SOURCE 200809L
 #include <stdint.h>
 #include <inttypes.h>
@@ -44,10 +48,10 @@ int main(int argc,char**argv){
  if(clock_gettime(CLOCK_MONOTONIC,&a)||clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&c))return 3;
  for(unsigned long i=0;i<n;++i){
   uint32_t x=next(&state);memory[4]=x;memory[5]=next(&state);
-'''+f"  checksum+={function}(({byte_type}*)((unsigned char*)memory+16+{offset}),"+('' if corpus=='heap' else 'memory+4,')+r'''x);
+'''+f"  checksum+={invoke};"+r'''
  }
  if(clock_gettime(CLOCK_MONOTONIC,&b)||clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&d))return 3;
-'''+(" checksum+=external_state;\n" if corpus=="call" else "")+r'''
+'''+(" checksum+=external_state;\n" if corpus in ("call","dispatch") else "")+r'''
  for(unsigned i=0;i<64;++i)checksum=(checksum*33u)^memory[i];
  struct rusage usage;if(getrusage(RUSAGE_SELF,&usage))return 3;
  printf("%.9f %.9f %lu %" PRIu64 "\n",elapsed(a,b),elapsed(c,d),(unsigned long)usage.ru_maxrss*1024ul,checksum);
@@ -76,6 +80,10 @@ def run(args,root):
         for p in ("tools/record_observation_cases.py","tests/fixtures/records.h"):
             report["dependencies"][p]=file_hash(source_root/p)
         report["scope"]+="; typed record storage and accumulating persistent state"
+    if args.corpus=="dispatch":
+        report["dependencies"]["tools/dispatch_observation_cases.py"]=file_hash(source_root/"tools/dispatch_observation_cases.py")
+        report["dependencies"]["tests/fixtures/dispatch_environment.h"]=file_hash(source_root/"tests/fixtures/dispatch_environment.h")
+        report["scope"]+="; recursion ranks 0..9; all four callback bindings; stateful callbacks with logging disabled"
     if args.corpus=="call":
         from call_observation_cases import ENVIRONMENT
         report["environment_source_sha256"]=file_hash(ENVIRONMENT)
@@ -132,7 +140,7 @@ def run(args,root):
 if __name__=="__main__":
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("--reconstruction-report",required=True);p.add_argument("--output-dir",required=True)
     p.add_argument('--replay-report',help='finished revised observer replay for the same frozen binaries')
-    p.add_argument("--corpus",choices=("byte","call","record","control","heap"),default="byte")
+    p.add_argument("--corpus",choices=("byte","call","record","control","heap","dispatch"),default="byte")
     p.add_argument("--iterations",type=int,default=1000000);p.add_argument("--repetitions",type=int,default=7);args=p.parse_args()
     if args.iterations<1 or args.repetitions<3:p.error("positive iterations and at least three repetitions required")
     root=Path(args.output_dir).resolve();root.mkdir(parents=True,exist_ok=False)

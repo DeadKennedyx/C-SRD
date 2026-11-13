@@ -22,6 +22,7 @@ void usage() {
     "       [--call-contracts contracts.json] (transform/analyze/verify, functions scope)\n"
     "       csrd verify original.c candidate.c [--function NAME] [--report report.json] [--timeout-ms UINT]\n"
     "         [--heap-observation events|successful-private] (verify only; default events checks allocation failures)\n"
+    "         [--recursion-observation events|bounded-body] (verify only; bounded-body expands ranked self-calls)\n"
     "       csrd analyze input.c [--function NAME] [--report report.json] [--scope functions|private-regions]\n"
     "Transformations are checked against reparsed emitted C before output is written.\n";
 }
@@ -197,7 +198,7 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
       const auto &region = *d.region;
       const bool records = std::any_of(region.buffers.begin(), region.buffers.end(),
         [](const auto &entry) { return entry.second.persistent || entry.second.recordBytes; });
-      f["semantic_model"] = region.ownedHeap ? "owned-heap-c11-v1" : region.memoryControl ? "guarded-memory-c11-v1" : records ? "records-state-byte-c11-v1" : region.orderedCalls ? "ordered-calls-byte-c11-v1" : region.buffers.empty() ? "pure-u32-c11-v2" :
+      f["semantic_model"] = region.ownedHeap ? "owned-heap-c11-v1" : region.guardedCalls ? "guarded-calls-c11-v2" : region.memoryControl ? "guarded-memory-c11-v1" : records ? "records-state-byte-c11-v1" : region.orderedCalls ? "ordered-calls-byte-c11-v1" : region.buffers.empty() ? "pure-u32-c11-v2" :
         region.extendedMemory ? "buffers-byte-c11-v2" : "buffers-u32-c11-v1";
       if (!region.buffers.empty()) f["byte_order"] = region.littleEndian ? "little" : "big";
       llvm::json::Array parameters;
@@ -217,12 +218,19 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
       };
       for (const auto &name : region.parameters) {
         const auto buffer = region.buffers.find(name);
-        if (buffer == region.buffers.end()) parameters.push_back(llvm::json::Object{{"name", name}, {"kind", "uint32"}});
+        const auto target=region.functionPointers.find(name);
+        if (target!=region.functionPointers.end()) {
+          const auto &contract=region.calls.at(target->second);llvm::json::Array args;
+          for (const auto &p:contract.parameters) args.push_back(llvm::json::Object{
+            {"kind",p.kind},{"read_only",p.readOnly},{"minimum_elements",p.minimumElements}});
+          parameters.push_back(llvm::json::Object{{"name",name},{"kind","function-pointer"},
+            {"returns",contract.returnsVoid ? "void" : "uint32"},{"parameters",std::move(args)}});
+        } else if (buffer == region.buffers.end()) parameters.push_back(llvm::json::Object{{"name", name}, {"kind", "uint32"}});
         else parameters.push_back(descriptor(name, buffer->second));
       }
       f["parameters"] = std::move(parameters);
       if (region.memoryControl) {
-        f["control_assumptions"] = "call-free structured branches and early returns; for loops start at zero with ++ and immutable scalar limits bounded by 32; live initialized prefixes for all admitted accesses; every loop exit and function return checked after finite expansion";
+        f["control_assumptions"] = "structured branches and early returns; calls require guarded-v2 contracts; for loops start at zero with ++ and immutable scalar limits bounded by 32; live initialized prefixes for all admitted accesses; every loop exit and function return checked after finite expansion";
         f["observations_checked"] = "return, entire final shared memory, conditional effects and termination within admitted loop bounds";
       }
       if (records) {
@@ -235,7 +243,9 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
       }
       if (region.orderedCalls) {
         llvm::json::Array calls;
-        for (const auto &s : region.statements) if (s.kind == csrd::Statement::Kind::Call) {
+        auto collectCalls=[&](auto &self,const auto &body)->void { for (const auto &s:body) {
+          self(self,s.thenBranch);self(self,s.elseBranch);
+          if (s.kind != csrd::Statement::Kind::Call) continue;
           const auto &spec = region.calls.at(s.callee);
           llvm::json::Array args;
           for (const auto &p : spec.parameters) {
@@ -243,13 +253,30 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
             if (p.kind != "uint32") { arg["read_only"] = p.readOnly; arg["minimum_elements"] = p.minimumElements; }
             args.push_back(std::move(arg));
           }
-          calls.push_back(llvm::json::Object{{"callee", s.callee}, {"returns", spec.returnsVoid ? "void" : "uint32"},
-            {"parameters", std::move(args)}, {"result_used", !s.name.empty()}});
-        }
+          calls.push_back(llvm::json::Object{{"callee", s.indirectTarget.empty() ? s.callee : s.indirectTarget},
+            {"contract_key",s.callee},{"indirect",!s.indirectTarget.empty()},{"recursive",s.recursiveCall},
+            {"returns", spec.returnsVoid ? "void" : "uint32"},{"parameters", std::move(args)}, {"result_used", !s.name.empty()}});
+        }};
+        collectCalls(collectCalls,region.statements);
         f["ordered_calls"] = std::move(calls);
-        f["call_contract_model"] = "opaque-sequenced-v1";
+        f["call_contract_model"] = region.guardedCalls ? "opaque-guarded-v2" : "opaque-sequenced-v1";
         f["call_assumptions"] = "synchronous; no callbacks/reentry, nonlocal jumps, retained pointers, frame introspection, async effects or invalidation of caller buffers; matching environment choices";
         f["observations_checked"] = "callee, argument values, entire pre-call memory at each event; return and entire final memory";
+        if (region.guardedCalls) {
+          f["control_assumptions"]="structured branches and for loops bounded by 32; at most 64 expanded call sites and 4096 expanded statements per activation";
+          f["call_assumptions"]="valid nonnull contracted function pointers; synchronous external callees with no callbacks/reentry, retained pointers, nonlocal jumps, frame inspection, async effects or invalidation of caller storage; only explicitly ranked self-recursion is admitted";
+          f["observations_checked"]="executed call order, direct callee or indirect code identity, arguments and entire pre-call memory; return and entire final memory; recursion descent on every executed self-call";
+        }
+        if (!region.recursiveContract.empty()) {
+          const auto &spec=region.calls.at(region.recursiveContract);
+          f["recursion"] = llvm::json::Object{{"rank_parameter",spec.rankParameter},{"maximum_rank",spec.maximumRank},
+            {"maximum_activation_depth",spec.maximumRank+1},{"proof_rule","induction on unsigned entry rank; child rank strictly smaller; caller rank bounded at every self-call; buffer contract closed under calls; self calls bind to this definition; sufficient C stack storage assumed"}};
+          f["recursion_observation"]=result.options.recursionObservation;
+          if (result.options.recursionObservation=="bounded-body") {
+            f["semantic_model"]="bounded-recursion-body-c11-v1";
+            f["observations_checked"]="return, entire final memory and external call trace; self-call events excluded from the required observations; proved by stronger ranked induction or complete checked body expansion";
+          }
+        }
       }
       if (region.ownedHeap) {
         llvm::json::Array handles;
@@ -314,6 +341,7 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
   root["strategy"] = result.options.strategy;
   root["scope"] = result.options.scope;
   if (action=="verify") root["verification_heap_observation"] = result.options.heapObservation;
+  if (action=="verify") root["verification_recursion_observation"] = result.options.recursionObservation;
   root["control_flow"] = result.options.controlFlow;
   root["objective"] = result.options.objective;
   root["coverage_percent"] = result.options.coverage;
@@ -336,7 +364,7 @@ int main(int argc, char **argv) {
     std::string output, reportPath, function, contractsPath;
     uint64_t seed = 0;
     unsigned timeout = 10000;
-    bool seedSet = false, timeoutSet = false, heapObservationSet = false;
+    bool seedSet = false, timeoutSet = false, heapObservationSet = false, recursionObservationSet = false;
     csrd::PlanOptions options;
     bool strategySet = false, coverageSet = false, objectiveSet = false, algorithmSet = false, controlFlowSet = false, scopeSet = false;
     if (action == "verify") output = argv[3];
@@ -351,6 +379,10 @@ int main(int argc, char **argv) {
       else if (key == "--heap-observation" && action == "verify" && !heapObservationSet) {
         if (value != "events" && value != "successful-private") throw std::runtime_error("unknown heap observation contract");
         options.heapObservation=value;heapObservationSet=true;
+      }
+      else if (key == "--recursion-observation" && action == "verify" && !recursionObservationSet) {
+        if (value!="events" && value!="bounded-body") throw std::runtime_error("unknown recursion observation contract");
+        options.recursionObservation=value;recursionObservationSet=true;
       }
       else if (key == "--seed" && action == "transform" && !seedSet) { seed = number(value); seedSet = true; }
       else if (key == "--scope" && action != "verify" && !scopeSet) {
@@ -429,8 +461,9 @@ int main(int argc, char **argv) {
         if (!d.region || found == candidate.decisions.end() || !found->region) {
           d.verification.status = "unsupported";
           d.verification.reason = !d.reason.empty() ? d.reason : "candidate function missing or unsupported";
-        } else if (options.heapObservation=="successful-private" && (d.region->ownedHeap || found->region->ownedHeap))
-          d.verification = csrd::verifyMemory(*d.region,*found->region,timeout,true);
+        } else if ((options.heapObservation=="successful-private" && (d.region->ownedHeap || found->region->ownedHeap)) ||
+                   (options.recursionObservation=="bounded-body" && (!d.region->recursiveContract.empty() || !found->region->recursiveContract.empty())))
+          d.verification = csrd::verifyMemory(*d.region,*found->region,timeout,options.heapObservation=="successful-private",options.recursionObservation=="bounded-body");
         else d.verification = csrd::verify(*d.region, *found->region, timeout);
         std::cerr << "csrd: " << d.function << ": " << d.verification.status
                   << (options.heapObservation=="successful-private" ? " (successful private allocations only)" : "") << '\n';

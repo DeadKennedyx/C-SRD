@@ -340,13 +340,82 @@ class MemoryReconstruction(unittest.TestCase):
             (p / "a.c").write_text(reference + "\n")
             (p / "b.c").write_text(candidate)
             process = subprocess.run([TOOL, "verify", p / "a.c", p / "b.c", "--report", p / "report.json",
-                                      *(["--call-contracts",ROOT/"tests/fixtures/calls.json"] if calls else [])],
+                                      *(["--call-contracts",ROOT/"tests/fixtures"/("guarded_calls.json" if calls=='guarded' else 'calls.json')] if calls else [])],
                                      capture_output=True, text=True)
             report = json.loads((p / "report.json").read_text())
             f, = report["functions"]
             self.assertEqual(f["verification"], expected, process.stderr + str(f))
             self.assertEqual(process.returncode, 0 if expected == "proved-under-model" else 3)
             return f
+
+    def test_indirect_code_identity_copies_and_negative_controls(self):
+        e=Export();e.data.update(schema_version=9,memory_model='guarded-calls-buffers-v2',
+                                 function='dispatch_choice',arity=5,call_signatures={},persistent_objects=[])
+        params=copy.deepcopy(e.data['parameters'])
+        for name in ('first','second'):
+            e.data['parameters'].append({'kind':'function-pointer','read_only':False,'name':name,
+                                         'returns':'uint32','parameters':copy.deepcopy(params)})
+        first=e.node(8,input=True,parameter=3);e.node(8,input=True,parameter=4)
+        copied=e.op('COPY',[first],size=8)
+        value=e.op('CALLIND',[copied,e.p,e.q,e.x]);e.store(e.p,value);data=e.finish(e.load(e.q))
+        source='unsigned int dispatch_choice(unsigned int*p,unsigned int*q,unsigned int x,unsigned int(*first)(unsigned int*,unsigned int*,unsigned int),unsigned int(*second)(unsigned int*,unsigned int*,unsigned int)){(void)second;unsigned int r=first(p,q,x);*p=r;return *q;}'
+        recovered=reconstruct(data);self.grade(source,recovered,calls='guarded')
+        for mutation in ({'call_argument_offset':1},{'final_store_offset':1},{'result_offset':1}):
+            self.grade(source,reconstruct(data,**mutation),'counterexample',calls='guarded')
+        for mutation in ('data_target','code_load','code_math','legacy'):
+            bad=copy.deepcopy(data)
+            if mutation=='data_target':bad['operations'][1]['inputs'][0]=e.p
+            elif mutation=='code_load':bad['operations'][2]['inputs'][1]=first
+            elif mutation=='code_math':bad['operations'][0].update(opcode='INT_ADD',inputs=[first,e.destination])
+            else:bad.update(schema_version=8,memory_model='records-state-buffers-v1')
+            with self.subTest(mutation=mutation),self.assertRaises(Unsupported):reconstruct(bad)
+
+    def test_guarded_call_effects_are_not_speculated(self):
+        data=guarded_graph();data.update(schema_version=9,memory_model='guarded-calls-buffers-v2',function='guarded_direct')
+        spec={'returns':'uint32','parameters':copy.deepcopy(data['parameters'])}
+        data['call_signatures']={'dispatch_add':spec,'dispatch_xor':spec}
+        for block,callee in zip(data['blocks'][1:],('dispatch_xor','dispatch_add')):
+            oi=block['operations'][0];op=data['operations'][oi]
+            op.update(opcode='CALL',inputs=[4,0,1,2],callee=callee)
+        source='unsigned dispatch_add(unsigned*,unsigned*,unsigned);unsigned dispatch_xor(unsigned*,unsigned*,unsigned);unsigned guarded_direct(unsigned*p,unsigned*q,unsigned x){if(x){unsigned a=dispatch_add(p,q,x);*p=a;return *q;}unsigned b=dispatch_xor(p,q,x);*q=b;return *p;}'
+        metrics={};self.grade(source,reconstruct(data,metrics=metrics),calls='guarded')
+        self.assertEqual(metrics['calls'],2)
+        self.grade(source,reconstruct(data,final_store_offset=1),'counterexample',calls='guarded')
+
+    def test_odd_scaled_loop_bounds_use_exact_modular_inverse(self):
+        for scale in (3,0x1beeb35,0xfffffffd):
+            e=Export();e.data.update(schema_version=9,memory_model='guarded-calls-buffers-v2',function='guarded_direct',
+                persistent_objects=[],call_signatures={'dispatch_add':{'returns':'uint32','parameters':copy.deepcopy(e.data['parameters'])}})
+            limit=e.op('INT_AND',[e.x,e.constant(3)]);scaled=e.op('INT_MULT',[limit,e.constant(scale)])
+            e.op('BRANCH',[e.destination],size=None);header=len(e.data['operations'])
+            counter=e.op('MULTIEQUAL',[e.constant(0),e.constant(0)]);phi=e.data['operations'][-1]
+            condition=e.op('INT_NOTEQUAL',[counter,scaled],size=1)
+            e.op('CBRANCH',[e.destination,condition],size=None);body=len(e.data['operations'])
+            reply=e.op('CALL',[e.destination,e.p,e.q,e.x]);e.data['operations'][-1]['callee']='dispatch_add'
+            value=e.op('INT_ADD',[reply,counter]);e.store(e.p,value)
+            increment=e.op('INT_ADD',[counter,e.constant(scale)]);phi['inputs'][1]=increment
+            e.op('BRANCH',[e.destination],size=None);end=len(e.data['operations'])
+            data=e.finish(e.load(e.p));ranges=[(0,header),(header,body),(body,end),(end,len(data['operations']))]
+            incoming=[[],[0,2],[1],[1]];outgoing=[[1],[3,2],[1],[]];data['blocks']=[]
+            for i,(begin,finish) in enumerate(ranges):
+                for op in data['operations'][begin:finish]:op['block']=i
+                data['blocks'].append({'id':i,'operations':list(range(begin,finish)),'incoming':incoming[i],'outgoing':outgoing[i]})
+            source='unsigned dispatch_add(unsigned*,unsigned*,unsigned);unsigned guarded_direct(unsigned*p,unsigned*q,unsigned x){unsigned n=x&3u;for(unsigned i=0u;i<n;++i){unsigned r=dispatch_add(p,q,x);*p=r+'+str(scale)+'u*i;}return *p;}'
+            metrics={};answer=reconstruct(data,metrics=metrics)
+            self.grade(source,answer,calls='guarded');self.assertGreater(metrics['invertible_comparison_normalizations'],0)
+            self.grade(source,reconstruct(data,call_argument_offset=1),'counterexample',calls='guarded')
+            bad=copy.deepcopy(data);bad['operations'][0].update(opcode='COPY',inputs=[e.x])
+            with self.assertRaises(Unsupported):reconstruct(bad)
+
+    def test_boolean_combinations_require_canonical_inputs(self):
+        for code,op in (('BOOL_AND','&'),('BOOL_OR','|'),('BOOL_XOR','^')):
+            e=Export();e.data.update(schema_version=9,memory_model='guarded-calls-buffers-v2',call_signatures={},persistent_objects=[])
+            a=e.op('INT_EQUAL',[e.x,e.constant(3)],size=1)
+            b=e.op('INT_LESS',[e.load(e.p),e.load(e.q)],size=1)
+            combined=e.op(code,[a,b],size=1);value=e.op('INT_ZEXT',[combined]);data=e.finish(value)
+            self.grade('unsigned f(unsigned*p,unsigned*q,unsigned x){return ((x==3u)'+op+'(*p<*q));}',reconstruct(data))
+            bad=copy.deepcopy(data);bad['operations'][-3]['inputs'][0]=e.x
+            with self.assertRaises(Unsupported):reconstruct(bad)
 
     def test_ordered_call_dynamic_word_pointer_and_effect_control(self):
         e=Export()

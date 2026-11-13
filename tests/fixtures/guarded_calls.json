@@ -1,0 +1,209 @@
+{
+  "model": "opaque-guarded-v2",
+  "functions": [
+    {
+      "name": "dispatch_add",
+      "returns": "uint32",
+      "parameters": [
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 2
+        },
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 2
+        },
+        {
+          "kind": "uint32"
+        }
+      ]
+    },
+    {
+      "name": "dispatch_xor",
+      "returns": "uint32",
+      "parameters": [
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 2
+        },
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 2
+        },
+        {
+          "kind": "uint32"
+        }
+      ]
+    },
+    {
+      "name": "dispatch_choice",
+      "indirect_parameter": "first",
+      "returns": "uint32",
+      "parameters": [
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 2
+        },
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 2
+        },
+        {
+          "kind": "uint32"
+        }
+      ]
+    },
+    {
+      "name": "dispatch_choice",
+      "indirect_parameter": "second",
+      "returns": "uint32",
+      "parameters": [
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 2
+        },
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 2
+        },
+        {
+          "kind": "uint32"
+        }
+      ]
+    },
+    {
+      "name": "dispatch_sequence",
+      "indirect_parameter": "first",
+      "returns": "uint32",
+      "parameters": [
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 2
+        },
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 2
+        },
+        {
+          "kind": "uint32"
+        }
+      ]
+    },
+    {
+      "name": "dispatch_sequence",
+      "indirect_parameter": "second",
+      "returns": "uint32",
+      "parameters": [
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 2
+        },
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 2
+        },
+        {
+          "kind": "uint32"
+        }
+      ]
+    },
+    {
+      "name": "dispatch_loop",
+      "indirect_parameter": "first",
+      "returns": "uint32",
+      "parameters": [
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 2
+        },
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 2
+        },
+        {
+          "kind": "uint32"
+        }
+      ]
+    },
+    {
+      "name": "dispatch_loop",
+      "indirect_parameter": "second",
+      "returns": "uint32",
+      "parameters": [
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 2
+        },
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 2
+        },
+        {
+          "kind": "uint32"
+        }
+      ]
+    },
+    {
+      "name": "recursive_fold",
+      "returns": "uint32",
+      "parameters": [
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 1
+        },
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 1
+        },
+        {
+          "kind": "uint32"
+        }
+      ],
+      "recursion": {
+        "rank_parameter": 2,
+        "maximum_rank": 8
+      }
+    },
+    {
+      "name": "recursive_branch",
+      "returns": "uint32",
+      "parameters": [
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 1
+        },
+        {
+          "kind": "uint32-buffer",
+          "read_only": false,
+          "minimum_elements": 1
+        },
+        {
+          "kind": "uint32"
+        }
+      ],
+      "recursion": {
+        "rank_parameter": 2,
+        "maximum_rank": 8
+      }
+    }
+  ]
+}

@@ -27,7 +27,8 @@ def batch_driver(function, parameters, corpus="byte"):
     from record_observation_cases import driver as record_driver
     from control_observation_cases import driver as control_driver
     from heap_observation_cases import driver as heap_driver
-    return "#define main csrd_one_case\n" + (heap_driver if corpus=='heap' else control_driver if corpus=='control' else record_driver if corpus=="record" else call_driver if corpus=="call" else driver)(function, parameters) + r'''
+    from dispatch_observation_cases import driver as dispatch_driver
+    return "#define main csrd_one_case\n" + (dispatch_driver if corpus=='dispatch' else heap_driver if corpus=='heap' else control_driver if corpus=='control' else record_driver if corpus=="record" else call_driver if corpus=="call" else driver)(function, parameters) + r'''
 #undef main
 #include <ctype.h>
 int main(void) {
@@ -55,14 +56,19 @@ def run(args, root):
     from record_observation_cases import expected as record_expected, LAYOUTS as record_layouts
     from control_observation_cases import cases as control_cases,expected as control_expected,LAYOUTS as control_layouts
     from heap_observation_cases import cases as heap_cases,expected as heap_expected,LAYOUTS as heap_layouts
-    layouts=heap_layouts if args.corpus=='heap' else control_layouts if args.corpus=='control' else record_layouts if args.corpus=="record" else call_layouts if args.corpus=="call" else LAYOUTS
-    vectors = (heap_cases() if args.corpus=='heap' else control_cases() if args.corpus=='control' else cases()) + [{"x": rng.getrandbits(32), "memory": [rng.getrandbits(32) for _ in range(64)]}
+    from dispatch_observation_cases import cases as dispatch_cases,expected as dispatch_expected,LAYOUTS as dispatch_layouts
+    layouts=dispatch_layouts if args.corpus=='dispatch' else heap_layouts if args.corpus=='heap' else control_layouts if args.corpus=='control' else record_layouts if args.corpus=="record" else call_layouts if args.corpus=="call" else LAYOUTS
+    vectors = (dispatch_cases() if args.corpus=='dispatch' else heap_cases() if args.corpus=='heap' else control_cases() if args.corpus=='control' else cases()) + [{"x": rng.getrandbits(32), "memory": [rng.getrandbits(32) for _ in range(64)]}
                          for _ in range(args.random_cases)]
+    if args.corpus=='dispatch':
+        for i,v in enumerate(vectors[24:]):
+            if i%2:v['x']=i%10  # Exercise recursive bodies as well as full uint32 inputs.
     report = {"schema_version": 1, "status": "running", "commands": [], "records": [],
               "reference_checks": [], "skipped_observations":[], "source_model_outcomes":{}, "environment": environment(), "seed": args.seed, "corpus":args.corpus,
               "replay_report": str(path), "replay_sha256": file_hash(path),
               "matrix_sha256": file_hash(matrix_path),
               "heap_observation":replay.get('heap_observation','events'),
+              "recursion_observation":replay.get('recursion_observation','events'),
               "implementation_hashes": {name: file_hash(ROOT/name) for name in
                   ("tools/grade_byte_reconstruction.py", "tools/byte_observation_cases.py",
                    "tools/call_observation_cases.py", "tests/fixtures/call_environment.h",
@@ -71,6 +77,9 @@ def run(args, root):
                    "tools/pcode_values.py","tools/pcode_wide.py","tools/pcode_cfg.py")},
               "cases_per_answer": len(vectors)*len(layouts), "observer_target_queries": 0,
               "scope": "finite return and whole shared-memory execution grading; not a proof of lifting or C compilers"}
+    if args.corpus=='dispatch':
+        for p in ('tools/dispatch_observation_cases.py','tests/fixtures/dispatch_environment.h'):
+            report['implementation_hashes'][p]=file_hash(ROOT/p)
     command = Runner(report)
     artifacts = {path: report["replay_sha256"], matrix_path: report["matrix_sha256"]}
     for name, digest in report["implementation_hashes"].items(): artifacts[ROOT/name] = digest
@@ -81,12 +90,17 @@ def run(args, root):
     def execute(binary, inputs, wanted, negative=False):
         result = subprocess.run([binary], input=inputs, text=True, capture_output=True, timeout=30)
         values = list(map(int, result.stdout.split()))
-        if result.returncode or len(values)!=len(wanted):raise ValueError(f"compiled grading process failed: {binary}; {result.returncode}; {result.stderr[:300]}")
+        if result.returncode:raise ValueError(f"compiled grading process failed: {binary}; {result.returncode}; {result.stderr[:300]}")
         if negative:
             if values==wanted:raise ValueError(f"negative control was not rejected by execution: {binary}")
-            mismatch=next(i for i,(a,b) in enumerate(zip(values,wanted)) if a!=b)
-            return {'status':'counterexample-by-execution','first_difference':mismatch,'expected':wanted[mismatch],
-                    'actual':values[mismatch],'output_sha256':hashlib.sha256(result.stdout.encode()).hexdigest()}
+            # A guarded callback mutation can change the number of executed
+            # events, hence the output length. That is a valid trace mismatch.
+            mismatch=next((i for i,(a,b) in enumerate(zip(values,wanted)) if a!=b),min(len(values),len(wanted)))
+            return {'status':'counterexample-by-execution','first_difference':mismatch,
+                    'expected':wanted[mismatch] if mismatch<len(wanted) else None,
+                    'actual':values[mismatch] if mismatch<len(values) else None,
+                    'expected_values':len(wanted),'actual_values':len(values),
+                    'output_sha256':hashlib.sha256(result.stdout.encode()).hexdigest()}
         if values != wanted:
             mismatch = next((i for i, (a, b) in enumerate(zip(values, wanted)) if a != b), min(len(values), len(wanted)))
             raise ValueError(f"compiled answer mismatch: {binary}; status={result.returncode}; value={mismatch}; {result.stderr[:300]}")
@@ -99,7 +113,7 @@ def run(args, root):
             if row['status'] in ('false-reconstruction','control-failure'):raise ValueError('known reconstruction/control failure')
             if not row.get('recovered_path'):
                 report['skipped_observations'].append({k:row[k] for k in ('function','profile','variant','status')});continue
-            if row['status'] not in ('recovered-under-source-model','recovered-under-successful-allocations','inconclusive-grading','control-inconclusive'):
+            if row['status'] not in ('recovered-under-source-model','recovered-under-successful-allocations','recovered-under-bounded-recursion','inconclusive-grading','control-inconclusive'):
                 raise ValueError('ungraded replay answer')
             group = matrix["groups"][row["group"]]
             key = (group["reference_sha256"], row["recovered_sha256"], row["function"])
@@ -121,11 +135,11 @@ def run(args, root):
                 inputs, wanted = [], []
                 for p, q in layouts:
                     for vector in vectors:
-                        answer = (heap_expected if args.corpus=='heap' else control_expected if args.corpus=='control' else record_expected if args.corpus=="record" else call_expected if args.corpus=="call" else expected)(row["function"], vector["memory"], p, q, vector["x"],
+                        answer = (dispatch_expected if args.corpus=='dispatch' else heap_expected if args.corpus=='heap' else control_expected if args.corpus=='control' else record_expected if args.corpus=="record" else call_expected if args.corpus=="call" else expected)(row["function"], vector["memory"], p, q, vector["x"],
                                           plain_char_signed=group["parameters"][0].get("element_signed",False))
                         inputs.append(" ".join(map(str, [p, q, vector["x"], *vector["memory"]])))
                         wanted.extend([answer["return_value"], *answer["final_memory"]])
-                        if args.corpus=="call":
+                        if args.corpus in ("call","dispatch"):
                             wanted.extend([answer["external_state"],len(answer["events"])])
                             wanted.extend(v for event in answer["events"] for v in event)
                         if args.corpus=="record":wanted.extend(answer["persistent_state"])
@@ -188,7 +202,7 @@ def run(args, root):
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--replay-report", required=True); p.add_argument("--output-dir", required=True)
-    p.add_argument("--corpus",choices=("byte","call","record","control","heap"),default="byte")
+    p.add_argument("--corpus",choices=("byte","call","record","control","heap","dispatch"),default="byte")
     p.add_argument("--random-cases", type=int, default=256); p.add_argument("--seed", type=int, default=20261113)
     args = p.parse_args()
     if args.random_cases < 1: p.error("positive random case count required")

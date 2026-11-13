@@ -14,7 +14,14 @@ struct CallParameter {
 struct CallContract {
   bool returnsVoid = false;
   std::vector<CallParameter> parameters;
+  bool guarded = false;
+  std::string indirectParameter;
+  bool recursive = false;
+  unsigned rankParameter = 0, maximumRank = 0;
 };
 using CallContracts = std::map<std::string, CallContract>;
+inline std::string indirectContractKey(const std::string &function, const std::string &parameter) {
+  return function + "::" + parameter;
+}
 CallContracts parseCallContracts(const std::string &json);
 } // namespace csrd

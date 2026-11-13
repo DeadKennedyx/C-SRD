@@ -38,13 +38,19 @@ def run(config):
               "scope": "known-intermediate affine fitting with finite heldout validation; no universal recovery proof"}
     for target, values in config["targets"].items():
         if len(values) != len(traces): raise ValueError("target/trace lengths differ")
-        train_targets = [values[i] for i in training]
-        train = [traces[i] for i in training]; test = [traces[i] for i in heldout]
+        if any(v is not None and (type(v) is not int or not 0<=v<=0xffffffff) for v in values):
+            raise ValueError('target must be uint32 or absent on an unexecuted path')
+        target_training=[i for i in training if values[i] is not None]
+        target_heldout=[i for i in heldout if values[i] is not None]
+        if len(target_training)<3 or not target_heldout:
+            raise ValueError('insufficient executed paths for target fitting')
+        train_targets = [values[i] for i in target_training]
+        train = [traces[i] for i in target_training]; test = [traces[i] for i in target_heldout]
         models, searched = fit_affine(train, train_targets,identity_fallback=complete)
         negative_labels=train_targets[1:] + train_targets[:1]
         negative, _ = fit_affine(train, negative_labels,identity_fallback=complete)
-        score = score_models(models, test, [values[i] for i in heldout])
-        controls = score_models(negative, test, [values[i] for i in heldout])
+        score = score_models(models, test, [values[i] for i in target_heldout])
+        controls = score_models(negative, test, [values[i] for i in target_heldout])
         scopes=("register", "stack", "caller-memory")+(("public-return",) if complete else ())
         if any(":global:" in key for trace in traces for key in locations(trace)):scopes+=("persistent-memory",)
         if any(":heap:" in key for trace in traces for key in locations(trace)):scopes+=("heap-memory",)
@@ -55,11 +61,15 @@ def run(config):
             by_scope[location_scope(model["location"])][label] += 1
         presence = []
         for trace, value in zip(traces, values):
+            if value is None:
+                presence.append(None);continue
             count = {key: 0 for key in by_scope}
             for location, observed in locations(trace).items():
                 if observed == value: count[location_scope(location)] += 1
             presence.append(count)
         result["targets"][target] = {"recovery": score, "negative_control": controls,
+                                     "training_cases":target_training,"heldout_cases":target_heldout,
+                                     "unexecuted_cases":[i for i,v in enumerate(values) if v is None],
                                      "negative_control_informative":negative_labels!=train_targets,
                                      "training_has_odd_difference":len({v&1 for v in train_targets})==2,
                                      "locations_searched": searched, "by_scope": by_scope,
