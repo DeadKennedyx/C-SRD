@@ -121,6 +121,33 @@ public:
       const bool hazard = std::any_of(pp.hazards.begin(), pp.hazards.end(), [=](unsigned pos) { return pos >= first && pos <= last; });
       if (pp.keywordMacro || hazard || f->getBeginLoc().isMacroID() || f->getEndLoc().isMacroID()) {
         decision.reason = pp.keywordMacro ? "macro definitions for generated C type keywords are unsupported" : "function contains macro expansions or preprocessor directives";
+      } else if (result.options.scope == "control-regions") {
+        decision.controlReferences = csrd::privateReferences(ctx, *f);
+        if (validationSource) {
+          const auto original = std::find_if(validationSource->decisions.begin(), validationSource->decisions.end(),
+            [&](const Decision &d) { return d.function == decision.function; });
+          if (original != validationSource->decisions.end()) {
+            decision.controlFrames = original->controlFrames;
+            std::vector<const ControlFrame *> edits;
+            for (const auto &d : validationSource->decisions) for (const auto &frame : d.controlFrames) edits.push_back(&frame);
+            decision.controlContextVerified = controlContextMatches(original->controlReferences, decision.controlReferences, edits, decision.reason);
+            for (auto &frame : decision.controlFrames) frame.verification = validateControlFrame(ctx, *f, frame);
+            decision.status = "checked-control-regions";
+          }
+        } else {
+          auto discovery = discoverControlRegions(ctx, *f);
+          decision.controlFrames = std::move(discovery.frames);
+          decision.privateBoundaries = std::move(discovery.boundaries);
+          decision.reason = discovery.reason;
+          decision.status = decision.controlFrames.empty() ? "unchanged" : rewrite ? "control-transformed" : "supported-control-regions";
+          for (auto &frame : decision.controlFrames) {
+            if (!rewrite) continue;
+            emitControlFrame(frame, seed, decision.function, reserved);
+            const auto start = sm.getLocForStartOfFile(file);
+            if (rewriter.ReplaceText(clang::CharSourceRange::getCharRange(start.getLocWithOffset(frame.begin),
+                  start.getLocWithOffset(frame.end)), frame.emitted)) throw std::runtime_error("control source range could not be replaced");
+          }
+        }
       } else if (result.options.scope == "private-regions") {
         decision.privateReferences = csrd::privateReferences(ctx, *f);
         if (validationSource) {
@@ -234,6 +261,11 @@ public:
       std::vector<PrivateFrame *> frames;
       for (auto &d : result.decisions) for (auto &frame : d.privateFrames) frames.push_back(&frame);
       preparePrivateFrames(std::move(frames));
+    }
+    if (rewrite && result.options.scope == "control-regions") {
+      std::vector<ControlFrame *> frames;
+      for (auto &d : result.decisions) for (auto &frame : d.controlFrames) frames.push_back(&frame);
+      prepareControlFrames(std::move(frames));
     }
     llvm::raw_string_ostream output(result.source);
     rewriter.getEditBuffer(file).write(output);
@@ -396,11 +428,51 @@ bool validatePrivateCandidate(const std::string &path, TransformResult &result, 
   }
   return true;
 }
+bool validateControlCandidate(const std::string &path, TransformResult &result, const std::string &candidate) {
+  std::vector<const ControlFrame *> frames;
+  for (const auto &d : result.decisions) for (const auto &frame : d.controlFrames) frames.push_back(&frame);
+  std::sort(frames.begin(), frames.end(), [](const auto *a, const auto *b) { return a->candidateBegin < b->candidateBegin; });
+  std::string restored = candidate;
+  for (auto it = frames.rbegin(); it != frames.rend(); ++it) {
+    const auto &frame = **it;
+    if (frame.candidateBegin > frame.candidateEnd || frame.candidateEnd > restored.size()) return false;
+    restored.replace(frame.candidateBegin, frame.candidateEnd-frame.candidateBegin, frame.originalText);
+  }
+  if (sha256(restored) != result.inputHash) {
+    llvm::errs() << "csrd: control validation rejected a change outside selected regions\n"; return false;
+  }
+  TransformResult generated; generated.options = result.options; generated.frontend = result.frontend;
+  if (!parse(path, 0, generated, false, &candidate, &result)) return false;
+  result.candidateDependencies = generated.dependencies;
+  result.candidateCompilerArguments = generated.compilerArguments;
+  if (result.target != generated.target || result.dependencies != generated.dependencies || result.compilerArguments != generated.compilerArguments ||
+      (result.compilation && result.compilation->databaseHash != generated.compilation->databaseHash)) return false;
+  for (auto &decision : result.decisions) {
+    if (decision.controlFrames.empty()) continue;
+    const auto match = std::find_if(generated.decisions.begin(), generated.decisions.end(), [&](const auto &d) { return d.function == decision.function; });
+    if (match == generated.decisions.end() || match->controlFrames.size() != decision.controlFrames.size()) return false;
+    decision.controlContextVerified = match->controlContextVerified;
+    if (!decision.controlContextVerified) { llvm::errs() << "csrd: " << match->reason << "\n"; return false; }
+    decision.verification.status = "proved-under-model";
+    decision.verification.strategy = "control-graph-isomorphism";
+    decision.verification.reason = "identical opaque C payloads, declaration bindings and source control graph; stuttering private dispatch steps; not a proof of compiler, binary or full C11 semantics";
+    for (unsigned i = 0; i < decision.controlFrames.size(); ++i) {
+      auto &frame = decision.controlFrames[i]; frame.verification = match->controlFrames[i].verification;
+      if (frame.verification.status != "proved-under-model") {
+        decision.verification = frame.verification;
+        llvm::errs() << "csrd: control validation failed for " << decision.function << ": " << frame.verification.reason << "\n";
+        return false;
+      }
+    }
+  }
+  return true;
+}
 bool transform(const std::string &path, uint64_t seed, TransformResult &result, const PlanOptions &options, const FrontendOptions &frontend) {
   result.options = options;
   result.frontend = frontend;
   if (!parse(path, seed, result, true, nullptr)) return false;
   if (options.scope == "private-regions") return validatePrivateCandidate(path, result, result.source);
+  if (options.scope == "control-regions") return validateControlCandidate(path, result, result.source);
   TransformResult generated;
   generated.options = options;
   generated.frontend = frontend;

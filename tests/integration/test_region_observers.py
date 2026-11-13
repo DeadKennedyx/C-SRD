@@ -228,4 +228,35 @@ class RegionReconstruction(unittest.TestCase):
                     self.assertEqual(memory[2],0x12345678)
 
 
+class ReportCoverage(unittest.TestCase):
+    def test_timeouts_and_collector_budgets_are_not_successful_measurements(self):
+        from summarize_region_observers import summarize
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary)
+            build={"status":"validated","artifacts":[]}
+            reconstruction={"status":"completed","records":[]}
+            runtime={"status":"completed","groups":[]}
+            costs={"status":"completed","iterations":1,"repetitions":3,"records":[]}
+            for variant in ("original","control-42"):
+                artifact="fixture/clang-O2/"+variant
+                directory=root/variant;directory.mkdir()
+                stage=directory/"compile-library";stage.mkdir()
+                # This file is collector configuration, not a measured duration.
+                (stage/"command.json").write_text(json.dumps({"argv":["cc"],"wall_seconds":120}))
+                build["artifacts"].append({"id":artifact,"library":str(directory/"library.so")})
+                reconstruction["records"].append({"artifact":artifact,"function":"f","repetition":0,
+                    "status":"timeout","directory":str(directory)})
+                runtime["groups"].append({"artifact":artifact,"function":"f","loop_count":None,
+                    "status":"incomplete-observation","traces":[],"targets":{}})
+                costs["records"].append({"artifact":artifact,"samples":[]})
+            result=summarize(build,reconstruction,runtime,costs)
+            self.assertEqual(result["static"]["outcomes"],{"timeout":2})
+            self.assertEqual(result["static"]["matched_groups"][0]["recovered_operations"]["n"],0)
+            self.assertEqual(result["runtime"]["control-42"]["observer_cpu_ratios"]["n"],0)
+            self.assertIsNone(result["build_timings"][0]["compile-library_wall_seconds"])
+            build["artifacts"][0].update(construction_measurements=[{"directory":str(stage),"wall_seconds":.025,"cpu_seconds":.02}],preprocessing_measurements=[])
+            result=summarize(build,reconstruction,runtime,costs)
+            self.assertEqual(result["build_timings"][0]["stages"][0]["wall_seconds"],.025)
+
+
 if __name__ == "__main__": unittest.main()

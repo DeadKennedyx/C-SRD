@@ -20,6 +20,13 @@ from region_observation_cases import FIXTURES, FUNCTIONS, driver, vectors, oracl
 
 ROOT = Path(__file__).resolve().parents[1]
 VARIANTS = ("original", "identity", "affine-42", "original-copy")
+RECIPES = {
+    "identity": [("private-regions", "identity")],
+    "affine-42": [("private-regions", "affine")],
+    "control-42": [("control-regions", "identity")],
+    "affine-control-42": [("private-regions", "affine"), ("control-regions", "identity")],
+    "control-affine-42": [("control-regions", "identity"), ("private-regions", "affine")],
+}
 
 
 def command(argv, directory, timeout=120, stdin=None):
@@ -37,10 +44,14 @@ def command(argv, directory, timeout=120, stdin=None):
 
 def prepare(args):
     root = Path(args.output).resolve(); root.mkdir(parents=True, exist_ok=False)
-    tool = Path(args.csrd).resolve()
+    source_tool = Path(args.csrd).resolve()
+    tool = root/"csrd"
+    shutil.copy2(source_tool, tool)
     report = {"schema_version": 1, "status": "building", "protocol": "private-region-observation-v1",
               "environment": environment(), "csrd": {"path": str(tool), "sha256": file_hash(tool)}, "artifacts": [],
-              "script_hashes": {p.name: file_hash(p) for p in [Path(__file__), ROOT/"tools/region_observation_cases.py"]}}
+              "script_hashes": {p.name: file_hash(p) for p in [Path(__file__), ROOT/"tools/region_observation_cases.py", ROOT/"tools/effort_resources.py"]}}
+    variants = ("original", *dict.fromkeys(args.variant or ("identity", "affine-42")), "original-copy")
+    report["recipes"] = {v: RECIPES.get(v, []) for v in variants}
     try:
         for fixture in args.fixture or list(FIXTURES):
             source_name=FIXTURES[fixture]
@@ -51,39 +62,62 @@ def prepare(args):
                 family = "clang" if "clang" in compiler_name else "gcc"
                 for profile in args.profile:
                     flags = ["-std=c11", "-pedantic-errors", "-Wall", "-Wextra", "-Werror", "-" + profile.split("-")[0]]
+                    # Preserve this diagnostic in compile stderr. GCC does not
+                    # follow every validated dispatcher state invariant.
+                    if family == "gcc" and any("control" in v for v in variants): flags.append("-Wno-error=maybe-uninitialized")
                     if profile.endswith("-lto"): flags += ["-flto"] + (["-fuse-ld=lld"] if family == "clang" else [])
                     group = root/fixture/(family+"-"+profile); group.mkdir(parents=True)
                     version = command([compiler, "--version"], group/"compiler-version").splitlines()[0]
                     original = group/"original.c"
+                    measurements = []
+                    def measured(argv, directory):
+                        resource = measure(argv, directory, wall_seconds=120)
+                        resource.pop("samples", None)
+                        measurements.append({"directory": str(directory), **resource})
+                        if resource["status"] != "completed": raise RuntimeError("build command failed: " + str(directory))
+                        return (directory/"stdout.txt").read_text()
                     # Linker choice is irrelevant to preprocessing and Clang warns about it.
                     preflags = [f for f in flags if not f.startswith("-fuse-ld")]
-                    command([compiler, *preflags, "-E", "-P", source, "-o", original], group/"preprocess")
+                    measured([compiler, *preflags, "-E", "-P", source, "-o", original], group/"preprocess")
+                    preprocessing = measurements[:]
                     by_variant = {}
-                    for variant in VARIANTS:
+                    for variant in variants:
+                        measurements = []
                         directory = group/variant; directory.mkdir()
                         current = directory/"source.c"
-                        proof = None
+                        proof = None; passes = []
                         if variant in ("original", "original-copy"): shutil.copyfile(original, current)
                         else:
-                            proof_path = directory/"transform.json"
-                            command([tool, "transform", original, "-o", current, "--scope", "private-regions",
-                                     "--strategy", "identity" if variant == "identity" else "affine", "--seed", "42", "--report", proof_path], directory/"transform")
-                            proof = json.loads(proof_path.read_text())
-                            if proof["candidate_sha256"] != file_hash(current): raise ValueError("candidate hash mismatch")
-                            if any(f["status"] != "regions-transformed" or f["verification"] != "proved-under-model" or not f["context_bindings_verified"] for f in proof["functions"]):
-                                raise ValueError("source frame/binding validation failed")
+                            previous = original
+                            for index, (scope, strategy) in enumerate(RECIPES[variant]):
+                                current = directory/("source.c" if index == len(RECIPES[variant])-1 else f"pass-{index}.c")
+                                proof_path = directory/f"pass-{index}.json"
+                                options = ["--strategy", strategy] if scope != "control-regions" else []
+                                measured([tool, "transform", previous, "-o", current, "--scope", scope, *options,
+                                         "--seed", "42", "--report", proof_path], directory/f"transform-{index}")
+                                proof = json.loads(proof_path.read_text())
+                                if not proof["output_written"] or proof["source_sha256"] != file_hash(previous) or proof["candidate_sha256"] != file_hash(current):
+                                    raise ValueError("pass input/output hash mismatch")
+                                status = "control-transformed" if scope == "control-regions" else "regions-transformed"
+                                if any(f["status"] != status or f["verification"] != "proved-under-model" or not f["context_bindings_verified"] for f in proof["functions"]):
+                                    raise ValueError("source frame/binding validation failed: " + str(proof_path))
+                                passes.append({"scope": scope, "strategy": strategy, "path": str(proof_path), "sha256": file_hash(proof_path)})
+                                previous = current
                         library = directory/"libregions.so"
                         if variant == "original-copy": shutil.copyfile(by_variant["original"]["library"], library)
-                        else: command([compiler, *flags, "-fPIC", "-shared", current, "-o", library], directory/"compile-library")
+                        else: measured([compiler, *flags, "-fPIC", "-shared", current, "-o", library], directory/"compile-library")
                         record = {"id": f"{fixture}/{family}-{profile}/{variant}", "fixture": fixture, "compiler": compiler,
                                   "compiler_version": version, "compiler_sha256": file_hash(compiler), "profile": profile, "flags": flags,
                                   "variant": variant, "library": str(library), "library_sha256": file_hash(library), "library_bytes": library.stat().st_size,
-                                  "source": str(current), "source_sha256": file_hash(current), "original_source_sha256": file_hash(original), "drivers": {},
+                                  "source": str(current), "source_sha256": file_hash(current), "original_source": str(original), "original_source_sha256": file_hash(original), "drivers": {},
                                   "frame_validation": None if proof is None else {"path": str(proof_path), "sha256": file_hash(proof_path)}}
+                        record["passes"] = passes
+                        record["preprocessing_measurements"] = preprocessing
+                        record["construction_measurements"] = measurements
                         for function in FUNCTIONS:
                             harness = directory/(function+"-driver.c"); harness.write_text(driver(function))
                             binary = directory/function
-                            command([compiler, "-std=c11", "-Wall", "-Wextra", "-Werror", "-O2", "-g", "-rdynamic", "-Wl,-z,now",
+                            measured([compiler, "-std=c11", "-Wall", "-Wextra", "-Werror", "-O2", "-g", "-rdynamic", "-Wl,-z,now",
                                      harness, library, "-o", binary], directory/(function+"-link"))
                             cases = vectors(function, args.grade_cases)
                             out = command([binary], directory/(function+"-check"), stdin="".join(input_text(v) for v in cases))
@@ -104,9 +138,21 @@ def checked_artifacts(build):
     if build["status"] != "validated": raise ValueError("requires validated build manifest")
     for record in build["artifacts"]:
         if file_hash(record["library"]) != record["library_sha256"]: raise ValueError("library changed")
+        if file_hash(record["source"]) != record["source_sha256"]: raise ValueError("source changed")
+        if "original_source" in record and file_hash(record["original_source"]) != record["original_source_sha256"]: raise ValueError("original source changed")
+        for item in record.get("passes", []):
+            if file_hash(item["path"]) != item["sha256"]: raise ValueError("pass certificate changed")
         for binary in record["drivers"].values():
             if file_hash(binary["path"]) != binary["sha256"]: raise ValueError("driver changed")
     return build["artifacts"]
+
+
+def selected_artifacts(build, args):
+    records = checked_artifacts(build)
+    selected = [r for r in records if (not args.fixture or r["fixture"] in args.fixture) and
+                (not args.profile or r["profile"] in args.profile)]
+    if not selected: raise ValueError("artifact selection is empty")
+    return selected
 
 
 def grade(record, function, source, directory, cases_count, reference=None,seed=0x43535244):
@@ -142,13 +188,14 @@ def grade(record, function, source, directory, cases_count, reference=None,seed=
 
 def reconstruct_all(args):
     manifest = Path(args.build).resolve(); build = json.loads(manifest.read_text())
-    records = checked_artifacts(build)
+    records = selected_artifacts(build, args)
     root = Path(args.output).resolve(); root.mkdir(parents=True, exist_ok=False)
     report = {"schema_version": 1, "status": "observing", "build_sha256": file_hash(manifest), "build": str(manifest),
               "environment": environment(), "records": [], "claims": {"whole_function_proof": False, "human_effort": "unmeasured"},
               "observer_hashes": {p.name: file_hash(p) for p in [ROOT/"tools/ghidra/ExportCSRDRegions.java", ROOT/"tools/pcode_regions.py", ROOT/"tools/pcode_cfg.py", ROOT/"tools/pcode_values.py"]},
               "grader_hashes":{p.name:file_hash(p) for p in [Path(__file__), ROOT/"tools/region_observation_cases.py"]}}
     report["grading_protocol"]={"cases":args.grade_cases,"seed":args.grade_seed}
+    report["selection"] = {"fixture": args.fixture, "profile": args.profile, "artifacts": [r["id"] for r in records]}
     headless=Path(args.ghidra).resolve()
     if not headless.is_file(): raise ValueError("Ghidra headless executable unavailable: "+str(headless))
     distribution=headless.parent.parent
@@ -222,9 +269,12 @@ def main():
     a = sub.add_parser("prepare"); a.add_argument("--csrd", required=True); a.add_argument("--compiler", action="append", required=True)
     a.add_argument("--profile", choices=("O0", "O2", "O3", "Os", "O2-lto"), action="append", required=True)
     a.add_argument("--fixture",choices=tuple(FIXTURES),action="append")
+    a.add_argument("--variant", choices=tuple(RECIPES), action="append", help="ordered pass recipe; original and identical-binary controls always included")
     b = sub.add_parser("reconstruct"); b.add_argument("--build", required=True); b.add_argument("--ghidra", required=True)
     b.add_argument("--repetitions", type=int, default=1)
     b.add_argument("--grade-seed",type=int,default=0x43535244)
+    b.add_argument("--fixture", choices=tuple(FIXTURES), action="append")
+    b.add_argument("--profile", action="append")
     for parser in (a,b):
         parser.add_argument("--output", required=True); parser.add_argument("--grade-cases", type=int, default=256)
     args = p.parse_args()

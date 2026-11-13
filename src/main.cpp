@@ -18,12 +18,12 @@ void usage() {
     "       [--strategy affine|xor|identity|independent|planned|limbs16|limbs8|limbs4] [--coverage 0..100] [--objective balanced|runtime|size]\n"
     "       [--algorithm popcount8-serial|popcount8-swar]\n"
     "       [--control-flow none|split-scale] (experimental)\n"
-    "       [--scope functions|private-regions] (private-regions: affine/identity integer declarations and assignments)\n"
+    "       [--scope functions|private-regions|control-regions] (control-regions: seeded dispatcher, no value encoding)\n"
     "       [--call-contracts contracts.json] (transform/analyze/verify, functions scope)\n"
     "       csrd verify original.c candidate.c [--function NAME] [--report report.json] [--timeout-ms UINT]\n"
     "         [--heap-observation events|successful-private] (verify only; default events checks allocation failures)\n"
     "         [--recursion-observation events|bounded-body] (verify only; bounded-body expands ranked self-calls)\n"
-    "       csrd analyze input.c [--function NAME] [--report report.json] [--scope functions|private-regions]\n"
+    "       csrd analyze input.c [--function NAME] [--report report.json] [--scope functions|private-regions|control-regions]\n"
     "       csrd preprocess input.c -o input.i [--report report.json]\n"
     "       csrd compile-command input.c --compilation-database FILE_OR_DIRECTORY [--compile-command INDEX] [--report report.json]\n"
     "Source commands accept: [--target TRIPLE] [--sysroot DIRECTORY]\n"
@@ -169,6 +169,30 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
     llvm::json::Object operators;
     for (const auto &entry : d.metrics.operators) operators[entry.first] = entry.second;
     f["parameter_count"] = d.parameterCount;
+    if (result.options.scope == "control-regions") {
+      f["semantic_model"] = "opaque-effects-control-graph-c11-v1";
+      f["model_assumptions"] = "defined sequential C execution; calls obey ordinary return/unwind-free control and coupled logical-object behavior; no frame, raw-address, timing, resource-limit, signal or concurrent observations; compiler correctness assumed";
+      f["context_bindings_verified"] = d.controlContextVerified;
+      llvm::json::Array frames, boundaries;
+      for (const auto &frame : d.controlFrames) {
+        llvm::json::Array nodes;
+        for (unsigned id = 0; id < frame.nodes.size(); ++id) {
+          const auto &node = frame.nodes[id];
+          nodes.push_back(llvm::json::Object{{"id", id}, {"kind", csrd::controlKindName(node.kind)},
+            {"state", node.state}, {"yes", node.yes}, {"no", node.no}, {"payload_sha256", csrd::sha256(node.text)}});
+        }
+        frames.push_back(llvm::json::Object{{"line", frame.line}, {"column", frame.column},
+          {"source_begin", frame.begin}, {"source_end", frame.end}, {"candidate_begin", frame.candidateBegin},
+          {"candidate_end", frame.candidateEnd}, {"state_name", frame.stateName}, {"entry", frame.entry},
+          {"branches_lowered", frame.branches}, {"loops_lowered", frame.loops}, {"outer_break", frame.outerBreak},
+          {"outer_continue", frame.outerContinue}, {"nodes", std::move(nodes)},
+          {"original_fragment_sha256", csrd::sha256(frame.originalText)}, {"emitted_fragment_sha256", csrd::sha256(frame.emitted)},
+          {"proof", proof(frame.verification)}});
+      }
+      for (const auto &boundary : d.privateBoundaries) boundaries.push_back(llvm::json::Object{{"line", boundary.line},
+        {"column", boundary.column}, {"statement", boundary.statement}, {"reason", boundary.reason}});
+      f["control_regions"] = std::move(frames); f["unchanged_boundaries"] = std::move(boundaries);
+    }
     if (!d.privateFrames.empty() || result.options.scope == "private-regions") {
       f["semantic_model"] = "private-integer-frame-c11-v3";
       f["context_bindings_verified"] = d.privateContextVerified;
@@ -441,7 +465,7 @@ int main(int argc, char **argv) {
       }
       else if (key == "--seed" && action == "transform" && !seedSet) { seed = number(value); seedSet = true; }
       else if (key == "--scope" && (action == "transform" || action == "analyze") && !scopeSet) {
-        if (value != "functions" && value != "private-regions") throw std::runtime_error("unknown transformation scope");
+        if (value != "functions" && value != "private-regions" && value != "control-regions") throw std::runtime_error("unknown transformation scope");
         options.scope = value; scopeSet = true;
       }
       else if (key == "--control-flow" && action == "transform" && !controlFlowSet) {
@@ -476,6 +500,12 @@ int main(int argc, char **argv) {
         !frontend.includeDirectories.empty() || !frontend.definitions.empty()))
       throw std::runtime_error("compilation database is authoritative; do not mix it with target/sysroot/include/define overrides");
     if ((coverageSet || objectiveSet) && options.strategy != "planned") throw std::runtime_error("coverage/objective require --strategy planned");
+    if (options.scope == "control-regions") {
+      if ((strategySet && options.strategy != "identity") || algorithmSet || controlFlowSet || coverageSet || objectiveSet)
+        throw std::runtime_error("control regions use a dispatcher with unchanged value expressions; compose value/algorithm passes separately");
+      options.strategy = "identity";
+      options.controlFlow = "dispatcher";
+    }
     if (csrd::limbBits(options.strategy) && options.controlFlow != "none") throw std::runtime_error(options.strategy + " requires --control-flow none");
     if (options.scope == "private-regions" && ((options.strategy != "affine" && options.strategy != "identity") ||
         options.algorithm != "none" || options.controlFlow != "none"))

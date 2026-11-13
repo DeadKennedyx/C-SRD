@@ -9,6 +9,7 @@
 #include "csrd/metrics.hpp"
 #include "csrd/private_regions.hpp"
 #include "csrd/compilation.hpp"
+#include "csrd/control_regions.hpp"
 namespace csrd {
 struct Decision {
   std::string function, status, reason;
@@ -26,6 +27,9 @@ struct Decision {
   std::vector<PrivateBoundary> privateBoundaries;
   std::vector<PrivateReference> privateReferences;
   bool privateContextVerified = false;
+  std::vector<ControlFrame> controlFrames;
+  std::vector<PrivateReference> controlReferences;
+  bool controlContextVerified = false;
 };
 struct TransformResult {
   std::string source;
@@ -48,5 +52,6 @@ bool inspect(const std::string &path, TransformResult &result, const std::string
 bool preprocess(const std::string &path, TransformResult &result);
 // Reparse actual C, enforce unchanged surrounding bytes, then check every frame.
 bool validatePrivateCandidate(const std::string &path, TransformResult &result, const std::string &candidate);
+bool validateControlCandidate(const std::string &path, TransformResult &result, const std::string &candidate);
 std::string sha256(const std::string &data);
 }

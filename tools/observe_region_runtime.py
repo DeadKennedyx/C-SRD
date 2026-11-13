@@ -10,7 +10,7 @@ import shutil
 import sys
 
 from audit_protection import file_hash, write_json
-from audit_region_observers import checked_artifacts
+from audit_region_observers import checked_artifacts, selected_artifacts
 from effort_resources import measure, environment, measurement_lock
 from region_observation_cases import oracle, effects, input_text
 
@@ -31,13 +31,14 @@ def trace_vectors(function, loop_count):
 
 def run(args):
     manifest=Path(args.build).resolve(); build=json.loads(manifest.read_text())
-    records=checked_artifacts(build)
+    records=selected_artifacts(build,args)
     root=Path(args.output).resolve(); root.mkdir(parents=True,exist_ok=False)
     report={"schema_version":1,"status":"running","build":str(manifest),"build_sha256":file_hash(manifest),
             "environment":environment(),"groups":[],"protocol":{"training":6,"heldout":6,"pipeline_loop_counts":[0,2],"mode":0,
             "step_limit":args.step_limit,"observer":"affine-congruence-v2","no_simd_coverage":True,"known_intermediates":True},
             "hashes":{p.name:file_hash(p) for p in [Path(__file__),ROOT/"tools/gdb_region_trace.py",ROOT/"tools/fit_region_traces.py",ROOT/"tools/fit_region_values.py",ROOT/"tools/region_observation_cases.py"]}}
     gdb=shutil.which(args.gdb)
+    report["selection"]={"fixture":args.fixture,"profile":args.profile,"artifacts":[r["id"] for r in records]}
     if not gdb: raise ValueError("GDB unavailable")
     report["gdb"]={"path":gdb,"sha256":file_hash(gdb)}
     if any(r["fixture"]=="integers" for r in records):
@@ -107,6 +108,7 @@ if __name__=="__main__":
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("--build",required=True);p.add_argument("--output",required=True);p.add_argument("--gdb",default="gdb")
     p.add_argument("--step-limit",type=int,default=6000)
+    p.add_argument("--fixture",action="append");p.add_argument("--profile",action="append")
     args=p.parse_args()
     if not 1<=args.step_limit<=20000:p.error("step limit must be 1..20000")
     with measurement_lock() as lock:

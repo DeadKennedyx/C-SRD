@@ -36,6 +36,7 @@ optimization and sanitizer configurations; optional external tools report skips.
 ```sh
 build/csrd transform input.c -o output.c --seed 42
 build/csrd transform input.c -o output.c --scope private-regions --seed 42
+build/csrd transform input.c -o output.c --scope control-regions --seed 42
 build/csrd analyze input.c --scope private-regions --report build/analysis.json
 build/csrd --help
 ```
@@ -139,6 +140,14 @@ a separate ordered byte/`uint32_t` buffer and contracted-call path. `--scope pri
 private integer declarations/assignments inside richer functions. Calls, loops
 and memory boundaries outside those frames remain unchanged and are reported.
 Unsupported syntax is diagnosed; failed translation validation prevents output.
+
+Version 0.16.0 adds `--scope control-regions`: seeded switch dispatchers for
+eligible structured statement regions. Conditions, calls, assignments and return
+expressions are copied without changing their value representation. This broadens
+control-flow diversification around pointer, allocation, I/O, signed, floating
+and recursive operations under the sequential contract below; it does not add
+encoded arithmetic rules for those operations. Combine passes by transforming
+the previous pass's output, or by listing ordered project `passes`.
 
 The private integer model covers `_Bool` and standard signed/unsigned types
 through 64 bits, with C promotions and selected casts/operators. It requires
@@ -519,3 +528,239 @@ python3 tools/audit_project_pipeline.py --csrd build-linux-integers/csrd \
 This is one project, with repeated configurations and controls. Broader program
 coverage, complete GCC-header interoperability and measurements of recovery
 effort remain open. The four development areas are not complete.
+
+## Structured control regions (0.16.0)
+
+**Problem and hypothesis.** Private integer encoding leaves surrounding control
+flow untouched and can disappear during optimization. A reusable control-flow
+pass may retain more compiled structure across broader functions. Whether that
+increases reconstruction or runtime-value recovery effort is an experimental
+question, separate from correctness and code-size growth.
+
+The prototype implements the classic switch-dispatch form described in
+[Tigress's published flattening design](https://tigress.wtf/flatten.html).
+It does not import Tigress code or claim a new obfuscation technique. C-SRD's
+engineering contribution here is a conservative Clang region selector, checking
+the actual emitted dispatch graph, and measuring individual and composed passes.
+No protection advantage follows merely from implementing this known design.
+
+```mermaid
+flowchart LR
+    A[C11 source and build settings] --> B[Clang scope and effect boundaries]
+    B --> C[Source control graph]
+    C --> D[Seeded switch dispatcher]
+    D --> E[Reparse emitted C]
+    C --> F[Check payloads, edges, bindings and unchanged context]
+    E --> F
+    F --> G[Validated candidate and coverage report]
+    G --> H[Compile, compare effects, measure recovery and cost]
+```
+
+The implementation in `src/analysis/control_regions.cpp` lowers eligible
+expression statements, `if`, `while`, `do`, expression-initialized `for`, returns,
+breaks and continues into a graph. It does not impose a runtime iteration bound.
+Declarations stay in their original blocks; declaration-containing scopes,
+switches and compound literals form boundaries. Nested eligible blocks can still
+be transformed. In particular, a `for` declaration is not hoisted to a different
+scope, and a compound literal is not relocated into a short-lived case block.
+
+`src/codegen/control_emitter.cpp` assigns unique nonreserved state numbers and
+shuffles cases deterministically from the seed, function name and source offset.
+Each state evaluates its original expression once, then transfers to the state
+specified by the source graph. The pass preserves external break/continue
+targets, early returns and physical line counts, and avoids generated identifier
+collisions. A constant `while (1)` dispatcher preserves the intended infinite-loop
+model; replacing it with a variable condition can introduce C's termination
+assumption ([WG14 discussion of C11 6.8.5](https://open-std.org/JTC1/SC22/WG14/issues/c11c17/issue0436.html)).
+Inputs must still satisfy the original program's C11 progress requirements;
+nonterminating executions of loops subject to that assumption are not a new
+guarantee supplied by this pass.
+
+`src/verification/control.cpp` checks the **reparsed candidate AST**, including
+its initial state, case uniqueness, every edge and branch direction, exact
+payload text/locations, private controller object, exit handling and declaration
+bindings. Restoring the original fragments must reproduce the entire original
+source hash. Header hashes, target and frontend arguments must also match.
+The checker rejects altered effects/returns/conditions/edges and accepts harmless
+syntax variation such as `while(01)`; it is not just a comparison with an emitter
+template. Source-CFG construction and the Clang frontend remain trusted.
+
+The reported status is **`proved-under-model`**, with model
+`opaque-effects-control-graph-c11-v1`. This is graph/trace correspondence under
+explicit assumptions, not a whole-C11, compiler, machine-code or protection
+proof. Original expressions are opaque effects whose internal safety is assumed.
+The argument pairs source graph steps with finite dispatcher bookkeeping and
+preserves paths, effect order and graph divergence. Differential execution tests
+provide additional finite evidence for the tested compiler configurations.
+
+The model requires defined sequential execution and ordinary call/return behavior.
+External calls must behave consistently for corresponding logical objects and
+inputs. Numeric addresses, stack/frame inspection, timing, resource exhaustion,
+signals, nonlocal jumps and concurrent observations are outside that contract.
+Explicit pointer-to-integer casts, thread-local references, volatile/atomic access,
+goto/labels, assembly, statement expressions, function/local attributes and
+recognized nonlocal-jump/compiler builtins reject the whole function. Raw macro
+expansions remain excluded; use a recorded frozen configuration when appropriate.
+Opaque callees and callbacks are assumptions, not exhaustively inspected for
+hidden stack inspection or nonlocal control. Floating expressions are preserved;
+their representation is not encoded or newly proved. Debuggers used by evaluation
+remain able to inspect execution; this pass supplies no anti-debug mechanism.
+
+**Prototype findings.** The first emitter caused missing-return and switch
+fallthrough warnings because its structure obscured mandatory exits. Reachable
+exit analysis now emits unconditional outer exits where justified and omits
+unreachable normal-exit guards. It does not invent a return value. GCC still
+reports some `maybe-uninitialized` diagnostics for validated dispatcher paths.
+The differential/audit harness keeps those warnings visible but makes that one
+warning nonfatal; the transformer itself never changes a user's warning policy
+or initializes their locals to silence it. Builds using stricter warning policies
+can therefore fail even when the tested executions agree.
+
+Tests cover 12,000 integer/memory/callback/allocation comparisons, 40 floating-bit
+comparisons and 83 stream cases per main driver execution, including failures,
+plus line preservation. An additional 18 nested loop/switch shapes exercise
+break/continue destinations with 512 inputs each. Identity, affine, control,
+affine-then-control and control-then-affine are compared with original and
+identical-binary controls in the observer harness. Every actual transformation
+pass has its own validation report; successful composition does not establish
+that other pass combinations are correct.
+
+**Validation checkpoint.** The full Linux run passed 61 of 62 CTest groups in
+361.01 seconds. Its sole failure was a unit fixture lacking a final newline,
+which Clang 18 rejects under `-pedantic-errors`. After fixing that fixture, the
+four affected control/observer/project groups passed in 7.39 seconds. Six selected
+native groups also passed, including GCC 16, Apple Clang 17 and LLVM Clang 23
+execution cells where applicable. The final observer-report regression was run
+on both platforms. Optional external-tool checks remain subject to their reported
+skips; this is not a claim that every optional verifier ran.
+
+The Linux ARM64 experiment uses three small arithmetic/callback source fixtures,
+two functions each, GCC 13/Clang 18 and five build profiles: `-O0`, `-O2`, `-O3`,
+`-Os`, and `-O2 -flto`. Seven variants, including controls, produce **210 built
+artifacts** and **107,520 checked effect observations** (256 deterministic vectors
+per function/artifact). Repeated configurations and controls are not independent
+programs. All observations match the independent return, complete buffer and
+ordered callback oracle. All three control recipes differ from original library
+text in these 30 compiler/profile/fixture cells; text difference alone does not
+establish a protection benefit.
+
+Static recovery is a separate `-O2` pilot: one fresh Ghidra 12.2 process per
+function/artifact, known symbols and ABI, followed by the existing source-blind
+P-code adapter. **79/84 candidates pass 80,896 heldout effect comparisons** under
+both compilers. Five candidates remain unsupported because the adapter rejects
+unresolved non-parameter inputs in Ghidra's export. Those are coverage gaps, not
+wrong recovered functions or protection successes. Of 27 corruption controls,
+25 produce mismatches and two flipped-branch controls exceed the harness's event
+capacity (exit 70). No whole-function or binary-lifting proof is claimed.
+
+Runtime recovery is measured on the assignments fixture at `-O2`: **504 traces**,
+all effect-checked, with six training and six heldout queries per function/loop
+case. Both compilers, zero/two loop iterations and all seven variants are included.
+The observer knows the requested intermediate values during training; this is
+supervised affine recovery, not blind discovery. Every variant recovers **26/26
+target cases**, including from locations inside the target function. No false
+heldout models or validated shuffled-label controls were observed. Query counts
+are fixed by this protocol; the minimum queries needed for recovery is unmeasured.
+
+Ratios below are against matched original binaries. Static CPU medians cover
+12 function/compiler/fixture tasks; dynamic CPU/step medians cover six observed
+function/compiler/loop cases. Application CPU ranges cover six `-O2` fixture/compiler
+cells, each using five randomized matched repetitions of one million iterations.
+
+| Recipe | Static candidates graded successfully | Ghidra process CPU | Debugger + fit CPU | Traced steps | Application CPU range | Library text range |
+| --- | --- | --- | --- | --- | --- | --- |
+| Control | 10/12 | 0.985× | 1.208× | 3.404× | 1.089–2.189× | 1.215–2.829× |
+| Affine → control | 11/12 | 1.015× | 1.104× | 1.788× | 1.019–2.093× | 1.764–2.655× |
+| Control → affine | 10/12 | 1.016× | 1.298× | 4.424× | 1.188–2.278× | 2.267–3.226× |
+| Identical binary copy | 12/12 | 0.991× | 0.997× | 1.000× | 0.937–1.021× | 1.000× |
+
+Ghidra CPU includes JVM startup, analysis and export. The separate decompiler
+request wall time is retained but noisy (copy-control ratios span 0.33–1.60).
+One control→affine task has 1.30× process CPU, but the median is near the copy
+control; this single-run pilot establishes no general static-recovery cost increase.
+Runtime observation does cost more for these dispatcher variants, largely through
+more traced instructions. All named values remain recoverable, and application
+cost also rises. These are costs for the specified automated observers, not human
+reverse-engineering time or a confidentiality guarantee. No general useful
+protection advantage is established.
+
+The application cost run completes **1,050 timed executions** with matching
+checksums. An initial memory reading was dominated by the launcher's process
+high-water mark. The revised harness retains `getrusage` and also records Linux
+[`VmHWM`](https://docs.kernel.org/filesystems/proc.html) after the timed region.
+A separate launcher touches 64 MiB and then executes the same benchmark: the
+reported `getrusage` peak rises to 72 MiB while `VmHWM` stays at 1,302,528 bytes
+and the checksum stays equal. This validates the distinction between the counters.
+The revised `-O2` executable peaks are about 1.23–1.25 MiB, including the loader
+and harness. Kernel RSS accounting is approximate and page-granular; these numbers
+do not isolate the pass's incremental stack or heap use. Dynamic-observer peak
+process RSS median ratios are 1.010×, 1.003× and 1.011× for the three recipes;
+individual control→affine cases reach 1.715×.
+
+The separate three-file project matrix covers both Linux compilers at `-O0`,
+`-O2`, `-O3`, `-Os`, LTO and ASan/UBSan. Files 0/1 are transformed and the I/O
+entry point remains explicitly excluded, as in 0.15.0. Across its nine variants
+and 12 cells, **3,456 functional checks, 108 open-failure checks and 540 timed
+executions pass**. At `-O2`:
+
+| Compiler / recipe | Text identical to original? | Linked text | Application CPU |
+| --- | --- | --- | --- |
+| Clang / control | No | 1.045× | 1.981× |
+| Clang / affine → control | No | 1.050× | 2.078× |
+| Clang / control → affine | No | 1.045× | 1.940× |
+| GCC / control | **Yes** | 1.000× | 1.002× |
+| GCC / affine → control | No | 1.188× | 3.103× |
+| GCC / control → affine | No | 1.318× | 5.784× |
+
+The GCC result is a direct counterexample to assuming this pass always survives
+optimization. Other differences do not establish recovery resistance. Recovery
+effort on this complete project, allocator/I/O/floating fixtures, other target
+architectures and human analysts remains unmeasured. This checkpoint expands
+reusable control transformations and validates two compositions; it does not
+close every coverage or protection gap in the four-part development path.
+
+Artifacts are retained under `build-control-regions/`: `checkpoint-1/` contains
+the frozen builds and per-pass certificates; `reconstruction-1/` and `runtime-1/`
+contain observer results; `costs-1/` preserves the initial memory-counter prototype
+and its script snapshot; `costs-2/` contains revised application measurements;
+`project-1/` contains the project matrix; `summary-1.json` binds the matched reports.
+The summarizer distinguishes built profiles from observed profiles, missing
+measurements from zero cost, and collector time budgets from actual durations.
+
+Reproduce inside the Linux validation/observer environment with Ghidra mounted
+at `/opt/ghidra` and debugger permissions enabled. Use new output directories:
+
+```sh
+python3 tools/audit_region_observers.py prepare --csrd build-linux-integers/csrd \
+  --compiler clang-18 --compiler gcc --profile O0 --profile O2 --profile O3 \
+  --profile Os --profile O2-lto --variant identity --variant affine-42 \
+  --variant control-42 --variant affine-control-42 --variant control-affine-42 \
+  --grade-cases 256 --output build-control-reproduction/builds
+python3 tools/audit_region_observers.py reconstruct \
+  --build build-control-reproduction/builds/build.json --profile O2 \
+  --ghidra /opt/ghidra/support/analyzeHeadless --repetitions 1 --grade-cases 512 \
+  --output build-control-reproduction/reconstruction
+python3 tools/observe_region_runtime.py \
+  --build build-control-reproduction/builds/build.json --profile O2 \
+  --fixture assignments --step-limit 6000 --output build-control-reproduction/runtime
+python3 tools/measure_region_costs.py \
+  --build build-control-reproduction/builds/build.json --iterations 1000000 \
+  --repetitions 5 --output build-control-reproduction/costs
+python3 tools/summarize_region_observers.py \
+  --build build-control-reproduction/builds/build.json \
+  --reconstruction build-control-reproduction/reconstruction/reconstruction.json \
+  --runtime build-control-reproduction/runtime/runtime.json \
+  --costs build-control-reproduction/costs/costs.json \
+  --output build-control-reproduction/summary.json
+python3 tools/audit_project_pipeline.py --csrd build-linux-integers/csrd \
+  --compiler clang=clang-18 --compiler gcc=gcc --control-regions \
+  --profile O0 --profile O2 --profile O3 --profile Os --profile lto --profile sanitize \
+  --transform-command 0 --transform-command 1 --objdump /usr/bin/objdump \
+  --repetitions 5 --iterations 500000 --cases 24 \
+  --output-dir build-control-reproduction/project
+```
+
+The next increment should resolve the five observer coverage gaps, extend recovery
+tasks beyond this small callback corpus, and measure repeated/persistent analysis
+before claiming a static cost increase. Further pass families and broader build
+support remain active work; each requires its own contracts and combination tests.

@@ -21,12 +21,22 @@ class ProjectBuild(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             spec = project_fixture.create(tmp / "project", compiler, ["-O2"])
+            configured = json.loads(spec.read_text())
+            affine = {"scope": "private-regions", "strategy": "affine", "seed": 42}
+            control = {"scope": "control-regions", "seed": 42}
+            configured["variants"] += [{"name": "control", "passes": [control]},
+                                       {"name": "affine_control", "passes": [affine, control]},
+                                       {"name": "control_affine", "passes": [control, affine]}]
+            spec.write_text(json.dumps(configured))
             result = transform_project.build_project(TOOL, spec, tmp / "artifacts")
             self.assertEqual(result["status"], "built; application behavior not yet tested")
             self.assertEqual(len(result["units"]), 3)
             self.assertGreater(sum(unit["passes"]["affine"][0]["operations_transformed"] for unit in result["units"]), 0)
             self.assertTrue(all(len(unit["passes"]["affine_identity"]) == 2 for unit in result["units"]))
             self.assertGreater(sum(unit["passes"]["affine_identity"][1]["operations_transformed"] for unit in result["units"]), 0)
+            self.assertGreater(sum(unit["passes"]["control"][0]["control_nodes"] for unit in result["units"]), 0)
+            self.assertTrue(all(len(unit["passes"]["control_affine"]) == 2 for unit in result["units"]))
+            self.assertTrue(all(len(unit["passes"]["affine_control"]) == 2 for unit in result["units"]))
             for variant, build in result["builds"].items():
                 with self.subTest(variant=variant):
                     for seed, count, repeats in [(0, 0, 0), (0xffffffff, 1, 1), (0xffffffff, 64, 3), (17, 7, 5)]:

@@ -39,7 +39,7 @@ def run(args):
                            str(Path(__file__).with_name("evaluate.py").resolve()): digest(Path(__file__).with_name("evaluate.py"))},
               "scope": "one multi-file buffer pipeline; observed stdout, exit status, stderr and complete output file including buffer guard",
               "timing_scope": "whole process including startup, allocation and file I/O; repeat work inside process; no timing claim from sanitizer cells",
-              "reconstruction_effort": "not measured; project-build integration introduces no new obfuscation technique",
+              "reconstruction_effort": "not measured on this project; code differences and application costs do not establish increased recovery effort",
               "runtime_value_recovery": "not measured on this project", "whole_program_proof": "not established"}
     target = root / "matrix.json"
     if args.objdump:
@@ -63,9 +63,15 @@ def run(args):
             save(target, report)
             try:
                 spec = project_fixture.create(directory / "source", compiler, PROFILES[profile])
-                if args.transform_command is not None:
+                if args.transform_command is not None or args.control_regions:
                     configured = json.loads(spec.read_text())
-                    configured["transform_commands"] = args.transform_command
+                    if args.transform_command is not None: configured["transform_commands"] = args.transform_command
+                    if args.control_regions:
+                        affine = {"scope": "private-regions", "strategy": "affine", "seed": 42}
+                        control = {"scope": "control-regions", "seed": 42}
+                        configured["variants"] += [{"name": "control", "passes": [control]},
+                                                   {"name": "affine_control", "passes": [affine, control]},
+                                                   {"name": "control_affine", "passes": [control, affine]}]
                     save(spec, configured)
                 cell["transform_commands"] = args.transform_command if args.transform_command is not None else [0, 1, 2]
                 build = build_project(tool, spec, directory / "artifacts")
@@ -167,6 +173,7 @@ def main():
     p.add_argument("--profile", action="append", choices=PROFILES)
     p.add_argument("--objdump", type=Path)
     p.add_argument("--transform-command", action="append", type=int, help="select a fixture translation unit (0=map, 1=reduce, 2=main); repeatable")
+    p.add_argument("--control-regions", action="store_true", help="also measure the control pass and both orders with affine")
     p.add_argument("--repetitions", type=int, default=5)
     p.add_argument("--iterations", type=int, default=100000)
     p.add_argument("--cases", type=int, default=24)
