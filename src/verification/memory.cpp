@@ -294,8 +294,9 @@ public:
         const auto environment=ctx.constant("call_memories",ctx.array_sort(ctx.int_sort(),memory.get_sort()));
         memory=normalize(z3::ite(active,z3::select(environment,ordinal),memory));
       }
-      // The stdio contract keeps ALL stream-owned storage (including setvbuf
-      // buffers) disjoint from admitted user storage, and excludes callbacks.
+      // The stdio contract keeps ALL library-managed storage (including errno,
+      // FILE internals and setvbuf buffers) disjoint from admitted user storage.
+      // It also excludes callbacks.
       // Only its opaque external state changes, coupled by the call sequence.
       if (!s.name.empty()) {
         if (contract.returnsVoid) throw std::invalid_argument("void call used as a value");

@@ -91,10 +91,11 @@ proved nonnegative and representable as `int`. Handles and call interfaces stay
 ordinary. Verification compares executed call order, stream identities (including
 aliases), character arguments, pre-call user memory, return and final user memory.
 Identical traces preserve external effects under coupled standard-library behavior.
-Streams must be valid for each operation; all stream-owned storage, including
-`setvbuf` buffers, must be disjoint from admitted user memory. No interposition,
-reentry, concurrency, opening/closing, formatted/block I/O or local handle aliases
-are admitted. EOF and error outcomes are included in transformation validation.
+Streams must be valid for each operation; all library-managed storage, including
+`errno`, FILE internals and `setvbuf` buffers, must be disjoint from admitted user
+memory. No interposition, reentry, concurrency, opening/closing, formatted/block
+I/O or local handle aliases are admitted. EOF and error outcomes are included in
+transformation validation.
 
 The record/state path admits named, padding-free structs/unions with 1..16
 `uint32_t` fields, bounded record-pointer views, and mutable file-scope scalar or

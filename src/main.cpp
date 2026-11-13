@@ -282,7 +282,7 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
         }
         if (!region.streams.empty()) {
           f["call_contract_model"]="opaque-stdio-v3";
-          f["stream_assumptions"]="standard C11 fgetc/fputc/fflush/feof/ferror/clearerr; valid nonnull caller-owned FILE objects with appropriate mode/orientation for each executed call; all stream-owned storage including setvbuf buffers disjoint from admitted user storage; equal incoming external state and coupled outcomes including EOF/errors; no interposition, callbacks/reentry, concurrency or asynchronous state changes";
+          f["stream_assumptions"]="standard C11 fgetc/fputc/fflush/feof/ferror/clearerr; valid nonnull caller-owned FILE objects with appropriate mode/orientation for each executed call; all library-managed storage including errno, FILE internals and setvbuf buffers disjoint from admitted user storage; equal incoming external state and coupled outcomes including EOF/errors; no interposition, callbacks/reentry, concurrency or asynchronous state changes";
           f["call_assumptions"]="stdio int results explicitly converted modulo 2^32; signed character arguments proved nonnegative and representable as int; handles and call order stay ordinary; stream opening/closing, null handles, stream aliases in locals and formatted I/O excluded";
           f["observations_checked"]="exact executed library calls, stream identities (including aliases), character arguments and pre-call user memory; return and entire final user memory; external stream effects preserved by identical call traces under coupled library behavior";
         }
