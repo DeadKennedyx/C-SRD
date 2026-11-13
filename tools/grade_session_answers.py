@@ -35,6 +35,7 @@ def main():
                 "environment": environment(), "bindings": bindings, "groups": groups}
     save(output/"protocol.json", protocol)
     rows = []
+    save(output/"summary.json",rows)
     for i, group in enumerate(groups):
         directory = output/f"answer-{i:04d}"; directory.mkdir()
         reference = checked(group["reference"], group["reference_sha256"])

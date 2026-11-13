@@ -845,3 +845,213 @@ python3 tools/summarize_region_observers.py \
   --costs build-control-reproduction/costs/costs.json \
   --output build-control-reproduction/guarded-summary.json
 ```
+
+## Region passes across algorithm families
+
+**Problem and experimental design.** Repeating the three callback fixtures across
+many configurations does not establish generalization across algorithms. This
+increment connects the region passes to the existing four development families in
+`benchmarks/rich.json`: CRC-32 byte updates, Jenkins word hashing, Morton bit
+interleaving and integer RGB weighting. The four reserved families remain unused
+for reconstruction tuning. These are small kernels with neutral scalar interfaces,
+not complete applications or an expansion of the transformer's C language coverage.
+
+`tools/run_matrix.py --region-recipes ...` now applies private affine encoding,
+control regions, and both ordered compositions to each compiler-preprocessed
+profile. `tools/matrix_regions.py` checks each actual pass report against its input,
+output, target, public interface, model and context-binding certificate. The
+original's build input is admitted under the existing scalar model first; the
+composed candidate is covered by the recorded per-pass contracts. A dispatcher is
+not falsely reported as having passed the scalar whole-function SMT checker.
+Unchanged passes require byte-identical source and remain visible as coverage
+outcomes. The driver retains all candidates with `--no-select`; it does not rank
+them using an assumed protection benefit or a runtime/size cutoff.
+
+The matrix adds `--binary-copy-control`, which repeats an exact original executable.
+The older identity-emission control can alter layout or unroll bounded source
+loops, so it is not a substitute for this binary control. Every linked variant is
+checked against the independent contract oracle, as well as the matched original.
+A regression deliberately supplies two matching but incorrect programs and checks
+that the independent oracle rejects them.
+
+Region-matrix harnesses record timed-loop wall and process CPU, `getrusage` peak
+RSS, and Linux executable `VmHWM`. Memory readings include the loader and harness;
+the Linux counter is approximate, and the executable counter is explicitly
+unavailable on macOS. It is never substituted with zero. The native prototype
+initially failed because strict POSIX headers hide macOS's extended RSS field;
+the resource harness now explicitly requests the Darwin header interface. This
+changes the measurement harness, not generated user code. A 64 MiB launcher/exec
+control checks the distinction between process high-water and executable memory.
+Outer build/transform commands also retain CPU/wall/RSS observations. Baseline
+validation's internal command log retains durations; it is not an isolated solver
+CPU measurement.
+
+**Build checkpoint.** On Linux ARM64, GCC 13 and Clang 18 cover `-O0`, `-O2`,
+`-O3`, `-Os`, full LTO and ASan/UBSan profiles. All **336 cells, 205,884 oracle
+comparisons and 1,680 timed executions pass**. The 288 region-pass applications
+contain **264 validated transformations and 24 byte-identical unchanged outputs**;
+unchanged outputs are not counted as diversified or newly proved transformations.
+The seven variants and twelve profiles are repeated configurations of four families,
+not 336 independent programs.
+
+`tools/measure_code_size.py` now hashes the extracted linked text bytes in addition
+to measuring section size. Across all 48 family/compiler/profile cells, control
+alone has identical text in 14, including 12 unchanged-source cases and two cases
+where an actual source transformation leaves identical text. Private affine alone
+has six identical-text cases; control→private-affine has one; private-affine→control
+has none. Text inequality is a structural observation, not evidence of protection.
+Linked text includes harness/runtime code and padding, including sanitizer support.
+
+**Reconstruction protocol.** The frozen `-O2` binaries supply 56 tasks. The first
+fresh-process Ghidra run recovers 52 candidates whose source-model equivalence
+checks pass. Two Jenkins/Clang control variants exceed the adapter's complete-CFG
+expansion budget. Two CRC/GCC affine variants produce candidates whose equivalence
+checks are inconclusive at the declared solver budget. These are analysis limits,
+not wrong-function findings or protection successes; binary lifting remains trusted.
+
+Persistent sessions use three fresh JVM/native sessions per task, eight initial
+requests and five batches of sixteen requests, flushing the decompiler cache each
+time. The JVM, native decompiler and Python adapter have separate process counters;
+an empty batch measures protocol overhead. Requests and batches within a session
+are correlated. `--retain-unsupported` records adapter refusals per request and
+continues collecting; each refusal retains its export hash and reason without
+inventing a recovered candidate. Summaries distinguish costs of all attempts from
+costs paired only when reconstruction has passed source-model grading. Inconclusive
+grades remain inconclusive when no optional circuit follow-up is supplied.
+
+The initial one-million-iteration application samples are only a few milliseconds
+for some originals. `tools/measure_matrix_costs.py` can repeat longer, interleaved
+samples on those same frozen binaries without rebuilding or selecting candidates.
+The session summarizer accepts these independently bound application measurements.
+**Completed observations (2026-11-13).** All **168 persistent sessions** completed
+with valid counters: 840 measured batches per stage and 13,440 measured requests.
+Including initial requests, there are 14,784 attempts. These repeated requests
+produce only **25 distinct reference/candidate source pairs**: 24 pass the source
+equivalence checker and one remains inconclusive. The inconclusive answer is shared
+by the two CRC/GCC affine variants. All 25 deliberately incorrect result-plus-one
+controls produce counterexamples. No additional circuit-solver follow-up was run;
+the original solver-budget outcome is retained.
+
+Of the measured requests, **12,480 have source-model-proved answers, 480 have an
+inconclusive grade and 480 are adapter refusals**. The two Jenkins/Clang control
+variants consistently reach the adapter's complete-CFG expansion limit. The
+summary includes their attempt costs but excludes them from successful recovery
+ratios. All 56 cells remain in the report, including the four unresolved cells.
+The native decompiler, JVM graph export and Python adapter are measured separately;
+the combined CPU below is their sum, excluding session startup and later grading.
+
+The longer application collection completed **392 timed executions**: seven
+interleaved samples of ten million iterations for each of the 56 frozen `-O2`
+binaries. Every paired checksum agrees. The following ranges are over cell medians,
+not confidence intervals. Reconstruction ratios use the seven successfully graded
+cells per transformed variant; application and size ratios retain all eight cells.
+Each cell is one family/compiler pair; session pairing uses the same repetition.
+
+| Variant | Source-graded cells | Observer CPU ratio range | Application CPU ratio range | Linked text size ratio range |
+| --- | ---: | ---: | ---: | ---: |
+| Exact original copy | 8/8 | 0.890–1.176 | 0.990–1.008 | 1.000 |
+| Private affine | 7/8 | 0.854–2.995 | 0.984–11.434 | 1.000–1.266 |
+| Control regions | 7/8 | 0.230–2.444 | 0.991–2.817 | 0.986–1.581 |
+| Private affine → control | 7/8 | 0.914–3.036 | 1.035–11.404 | 1.056–1.552 |
+| Control → private affine | 7/8 | 0.212–6.914 | 1.020–15.053 | 0.986–1.803 |
+
+For example, GCC's Morton kernel with control→private-affine has a 6.914× paired
+observer CPU ratio, with a median of 13.981 milliseconds of combined CPU per
+request, while application CPU rises 7.947×. Jenkins/Clang with private-affine→control
+has a 2.600× observer ratio and 1.438× application ratio. These are observations
+worth following up, not declarations of a winning strategy: the observer still
+recovers source-model-equivalent functions, the absolute costs are milliseconds,
+and other cells become cheaper to reconstruct. The exact binary copy shows
+substantial JVM/combined-CPU variability, so small differences need caution.
+
+Executable `VmHWM` medians span **1,269,760–1,286,144 bytes** across the longer run;
+they do not establish a material application-memory effect. In contrast,
+`getrusage` records about **645 MB**, dominated by the collector's inherited
+matrix-loading high-water before exec. The launcher/exec control distinguishes
+this from the executable counter; it does not isolate a 64 MiB increase when the
+inherited high-water already exceeds that allocation. Neither counter is private
+kernel memory. Per-stage observer RSS, CPU, wall time and emitted-statement counts
+remain available in the raw tables. The fixed number of repeated requests measures
+cost, not a minimum number of queries required for recovery.
+
+**Analysis and deviations.** This increment demonstrates that existing region
+passes and their two orders can be evaluated on several algorithm families while
+retaining correctness evidence, refusals, unchanged outputs and application cost.
+It does not add a new protection technique. End-to-end summary export exposed a
+schema mismatch between the older application summary and raw matrix costs; the
+corrected join is regression-tested, and a completion summary is now written only
+after all CSV exports succeed. The failed export remains in `summary-1/`; use the
+completed `summary-2/` for these results. The earlier failed macOS header prototype
+also remains recorded, rather than being counted as a successful run.
+
+The affected suites pass **39 tests on Linux**. On macOS, **33 pass and six are
+explicitly skipped** (Linux counters/protocols, live Ghidra and GDB availability):
+18 matrix tests, ten session tests, eight effort tests and three rich-benchmark
+tests in total. The final session suite includes the corrected summary join and
+both successful-recovery and refusal CSV fields. Compiler implementation and
+semantic observer rules are unchanged; the full compiler CTest suite was not
+rerun for this measurement increment. CTest now runs the matrix suite serially.
+
+Raw artifacts are under `build-control-algorithms/`: `checkpoint-1/matrix/`,
+`sizes-1/`, `cold-1/`, `sessions-1/`, `session-grades-1/`, `costs-2/` and `summary-2/`.
+`summary-2/summary.json` binds the source reports and tools;
+`session-medians.json`, `batches.csv`, `calibration.csv` and `cells.csv` retain
+absolute metrics and paired ratios. Refusals have attempt ratios and empty
+successful-recovery ratios. Missing function-symbol size remains unknown; linked
+text sizes come from the separate size report.
+
+To reproduce, first use the Linux/Ghidra build environment described above, with
+the repository at `/work`, Ghidra at `/opt/ghidra`, and the tools already built.
+Run these commands serially with a fresh output directory:
+
+```sh
+CSRD_OUT=build-control-algorithms-reproduction
+python3 tools/run_matrix.py --matrix benchmarks/rich.json \
+  --csrd build-linux-integers/csrd --compiler clang=clang-18 --compiler gcc=gcc \
+  --objdump llvm-objdump-18 --tier extended \
+  --profile clang-O0 --profile gcc-O0 --profile clang-O2 --profile gcc-O2 \
+  --profile clang-O3 --profile gcc-O3 --profile clang-Os --profile gcc-Os \
+  --profile clang-O2-lto --profile gcc-O2-lto \
+  --profile clang-O1-sanitizers --profile gcc-O1-sanitizers \
+  --strategies identity --seeds 42 --no-select --binary-copy-control \
+  --region-recipes private-affine control private-affine-control control-private-affine \
+  --inputs 256 --iterations 1000000 --repetitions 5 --require-selected-profiles \
+  --output-dir "$CSRD_OUT/matrix"
+python3 tools/measure_code_size.py --matrix-report "$CSRD_OUT/matrix/matrix.json" \
+  --output-dir "$CSRD_OUT/sizes"
+python3 tools/measure_effort.py --matrix-report "$CSRD_OUT/matrix/matrix.json" \
+  --csrd build-linux-integers/csrd --observer ghidra \
+  --case crc32_byte --case jenkins_word --case morton16 --case rgb_luma8 \
+  --profile clang-O2 --profile gcc-O2 \
+  --variant original --variant identity \
+  --variant private-affine-42 --variant control-42 \
+  --variant private-affine-control-42 --variant control-private-affine-42 --variant original-copy \
+  --repetitions 1 --warmups 0 --wall-budgets 90 --timeout-ms 10000 \
+  --headless /opt/ghidra/support/analyzeHeadless --output-dir "$CSRD_OUT/cold"
+python3 tools/measure_sessions.py --prior-cold "$CSRD_OUT/cold/effort.json" \
+  --headless /opt/ghidra/support/analyzeHeadless --repetitions 3 \
+  --batches 5 --calls 16 --warmup-calls 8 --retain-unsupported \
+  --output-dir "$CSRD_OUT/sessions"
+python3 tools/grade_session_answers.py --sessions "$CSRD_OUT/sessions/sessions.json" \
+  --output-dir "$CSRD_OUT/grades"
+python3 tools/measure_matrix_costs.py --matrix-report "$CSRD_OUT/matrix/matrix.json" \
+  --profile clang-O2 --profile gcc-O2 --iterations 10000000 --repetitions 7 \
+  --output-dir "$CSRD_OUT/costs"
+python3 tools/summarize_sessions.py --sessions "$CSRD_OUT/sessions/sessions.json" \
+  --grades "$CSRD_OUT/grades" --matrix-report "$CSRD_OUT/matrix/matrix.json" \
+  --application-costs "$CSRD_OUT/costs/costs.json" --output-dir "$CSRD_OUT/summary"
+python3 tests/integration/test_matrix.py build-linux-integers/csrd
+CSRD_GHIDRA_HEADLESS=/opt/ghidra/support/analyzeHeadless \
+  python3 tests/integration/test_sessions.py build-linux-integers/csrd
+python3 tests/integration/test_effort.py build-linux-integers/csrd
+python3 tests/integration/test_rich_benchmarks.py build-linux-integers/csrd
+```
+
+**Next experiment.** Freeze this implementation and compare the measured candidates
+with an independent recovery method before using the reserved families to test
+generalization. Runtime-value recovery for these four kernels, human effort,
+other architectures and compiler versions, multiple transformation seeds and
+whole-application recovery remain unmeasured. The two adapter refusals and the
+inconclusive source grade remain open. Broader reusable pass families and realistic
+project coverage are still required by the four-part development path; this
+checkpoint closes a measurement gap, not the whole roadmap.

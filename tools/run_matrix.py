@@ -5,6 +5,8 @@ Profiles are read from versioned JSON. Unsupported capabilities are explicit.
 Only admitted pure functions are transformed; linked harnesses are trusted C11.
 """
 import argparse
+import copy
+import fcntl
 import json
 import math
 import os
@@ -18,6 +20,8 @@ from types import SimpleNamespace
 import audit_protection as audit
 from experiment_support import (assembly_metrics, digest, driver_source, input_vectors,
                                 ir_structure, outputs, paired_costs, reconstruct, select_candidates)
+from matrix_regions import RECIPES, ResourceRunner, apply_pipeline, variants as region_variants
+from effort_resources import measurement_lock
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -111,6 +115,12 @@ def prepare_variants(args, case, directory, command):
                     variant.update(preparation="failed", error=str(error))
                 if report.is_file():
                     variant.update(manifest=str(report), manifest_sha256=audit.file_hash(report))
+    variants.extend(region_variants(args.region_recipes, args.seeds, source))
+    if args.binary_copy_control:
+        variants.append({"id": "original-copy", "path": str(source), "sha256": audit.file_hash(source),
+                         "control": "original", "binary_copy_of": "original"})
+    if len({v["id"] for v in variants}) != len(variants):
+        raise ValueError("duplicate variant identifiers")
     return function, variants, analysis["target"]
 
 
@@ -146,8 +156,22 @@ def compile_link(command, compiler, flags, frozen, driver, directory):
 
 def build_record(args, command, compiler, family, profile, function, variant, original, directory):
     extra = flags_for(profile, family)
+    if family == "gcc" and "control" in variant.get("region_recipe", ""):
+        # Retain diagnostics; GCC may not follow a validated dispatch invariant.
+        extra.append("-Wno-error=maybe-uninitialized")
     driver = directory / "driver.c"
-    driver.write_text(driver_source(function["function"], function["parameter_count"]))
+    driver.write_text(driver_source(function["function"], function["parameter_count"], resources=bool(args.region_recipes)))
+    pipeline = []
+    def validated_input(extra_flags, label):
+        candidate = original if "region_recipe" in variant else variant["path"]
+        frozen, flags, validation = validate_inputs(args, compiler, profile, extra_flags,
+                                                    original, candidate, directory/label)
+        if "region_recipe" in variant:
+            frozen, steps = apply_pipeline(command, args.csrd, frozen, variant, directory/(label+"-passes"),
+                                           function, validation["analysis_target"], args.timeout_ms)
+            pipeline.append({"phase": label, "baseline_validation": str(directory/label/"audit.json"),
+                             "baseline_validation_sha256": audit.file_hash(directory/label/"audit.json"), "passes": steps})
+        return frozen, flags, validation
     # GNU profiling uses stable object names in both phases; Clang uses a merged indexed profile.
     profile_data = directory / "profile"
     profile_data.mkdir()
@@ -156,8 +180,7 @@ def build_record(args, command, compiler, family, profile, function, variant, or
     if pgo:
         generate = (["-fprofile-instr-generate=" + str(profile_data / "train.profraw")]
                     if family == "clang" else ["-fprofile-generate=" + str(profile_data)])
-        frozen, flags, _ = validate_inputs(args, compiler, profile, extra + generate,
-                                           original, variant["path"], directory / "training-validation")
+        frozen, flags, _ = validated_input(extra + generate, "training-validation")
         binary = compile_link(command, compiler, flags, frozen, driver, directory)
         training_inputs = input_vectors(function["parameter_count"], 701, args.inputs)
         training = {"seed": 701, "vectors_sha256": digest(training_inputs), "count": len(training_inputs)}
@@ -169,8 +192,7 @@ def build_record(args, command, compiler, family, profile, function, variant, or
             extra += ["-fprofile-instr-use=" + str(profile_data / "train.profdata")]
         else:
             extra += ["-fprofile-use=" + str(profile_data), "-fprofile-correction"]
-    frozen, flags, validation = validate_inputs(args, compiler, profile, extra, original,
-                                                variant["path"], directory / "validation")
+    frozen, flags, validation = validated_input(extra, "validation")
     frozen_hash = audit.file_hash(frozen)
     binary = compile_link(command, compiler, flags, frozen, driver, directory)
     if audit.file_hash(frozen) != frozen_hash or audit.file_hash(variant["path"]) != variant["sha256"]:
@@ -184,6 +206,9 @@ def build_record(args, command, compiler, family, profile, function, variant, or
               "validation": str(directory / "validation/audit.json"),
               "source_verification": validation["claims"]["source_equivalence"],
               "pgo_training": training, "llvm_ir": {"status": "not-available-for-this-compiler"}}
+    if pipeline:
+        record.update(region_pipeline=pipeline, source_verification="per-pass-proved-under-model-or-byte-identical",
+                      source_verification_scope="baseline pure scalar model plus each recorded private-frame/control-graph contract; not one whole-function SMT proof")
     record["profile_artifacts"] = [{"path": str(p), "sha256": audit.file_hash(p)}
                                    for p in sorted(profile_data.rglob("*")) if p.is_file()]
     if family == "clang" and not pgo:
@@ -191,6 +216,11 @@ def build_record(args, command, compiler, family, profile, function, variant, or
         command([compiler, *flags, "-S", "-emit-llvm", frozen, "-o", ir])
         record["llvm_ir"] = {"status": "measured", "path": str(ir),
                              "sha256": audit.file_hash(ir), **ir_structure(ir.read_text(), function["function"])}
+    for phase in pipeline:
+        audit.assert_snapshot({phase["baseline_validation"]:phase["baseline_validation_sha256"]})
+        for step in phase["passes"]:
+            audit.assert_snapshot({step["source"]:step["source_sha256"], step["candidate"]:step["candidate_sha256"],
+                                   step["report"]:step["sha256"]})
     return record
 
 
@@ -217,19 +247,20 @@ def run(args, root):
     report = {"schema_version": 1, "status": "running", "commands": [], "records": [],
               "implementation": {str(p.relative_to(ROOT)): audit.file_hash(p) for p in
                                  [ROOT / "tools" / name for name in
-                                  ("run_matrix.py", "audit_protection.py", "experiment_support.py", "evaluate.py")]},
+                                  ("run_matrix.py", "matrix_regions.py", "audit_protection.py", "experiment_support.py", "evaluate.py", "benchmark_oracles.py")]},
               "profiles": [], "cases": [], "platform": platform.platform(),
               "machine": platform.machine(), "processor": platform.processor(), "cpu_count": os.cpu_count(),
               "timing_scope": "shared host, interleaved paired samples; no isolation or statistical significance claim",
               "manifest": {"path": str(manifest_path), "sha256": audit.file_hash(manifest_path), "content": manifest},
               "claims": {"machine_code_equivalence": "not-proved", "human_reconstruction_effort": "not-assessed",
                          "memory_exposure": "requires-separate-runtime-observer", "confidentiality": "not-established"}}
-    command = audit.Runner(report)
+    command = ResourceRunner(report, root/"resources") if args.region_recipes else audit.Runner(report)
     try:
         args.csrd, args.objdump = find_tool(args.csrd), find_tool(args.objdump)
         report["tools"] = {k: tool_identity(command, getattr(args, k)) for k in ["csrd", "objdump"]}
         report["settings"] = {"tier": args.tier, "seeds": args.seeds, "strategies": args.strategies,
                               "control_flows": args.control_flows,
+                              "region_recipes": args.region_recipes, "binary_copy_control": args.binary_copy_control,
                               "selection_policy": "report-only" if args.no_select else "screen",
                               "case_filter": args.case, "profile_filter": args.profile,
                               "inputs": args.inputs, "iterations": args.iterations, "repetitions": args.repetitions}
@@ -243,6 +274,9 @@ def run(args, root):
             if (frozen["settings"]["seeds"] != args.seeds or frozen["settings"]["strategies"] != args.strategies
                     or frozen["settings"].get("control_flows", ["none"]) != args.control_flows):
                 raise ValueError("holdout must use the frozen development seeds, strategies and control-flow candidates")
+            if (frozen["settings"].get("region_recipes", []) != args.region_recipes or
+                    frozen["settings"].get("binary_copy_control", False) != args.binary_copy_control):
+                raise ValueError("holdout must preserve region recipes and binary controls")
             if frozen["settings"].get("selection_policy", "screen") != report["settings"]["selection_policy"]:
                 raise ValueError("holdout must preserve the development selection policy")
             report["development_sha256"] = audit.file_hash(args.selection)
@@ -302,6 +336,7 @@ def run(args, root):
                 if function["parameter_count"] == 2:
                     heldout.append((0x43535244, 0))
                 expected = None
+                built = {}
                 for variant in variants:
                     cell = {"case": case["id"], "family": case["family"], "split": case["split"],
                             "variant": variant["id"], "control": variant["control"],
@@ -309,6 +344,7 @@ def run(args, root):
                             "control_flow": variant.get("control_flow", "none"),
                             "control_flow_control": variant.get("control_flow_control", "original"),
                             "split_scales": variant.get("split_scales", 0),
+                            "region_recipe": variant.get("region_recipe"),
                             "profile": profile["id"], "status": "failed"}
                     report["records"].append(cell)
                     build_dir = directory / ("build-" + profile["id"] + "-" + variant["id"])
@@ -320,8 +356,22 @@ def run(args, root):
                         if (audit.target_architecture(profile["target_triple"]) != audit.target_architecture(target)
                                 or audit.target_system(profile["target_triple"]) != audit.target_system(target)):
                             raise ValueError("compiler/frontend target mismatch")
-                        cell.update(build_record(args, command, profile["tool"]["path"], profile["compiler"],
-                                                 profile, function, variant, variants[0]["path"], build_dir))
+                        if "binary_copy_of" in variant:
+                            if variant["binary_copy_of"] not in built:
+                                raise ValueError("original unavailable for binary copy control")
+                            baseline = built[variant["binary_copy_of"]]
+                            build = copy.deepcopy(baseline)
+                            binary = build_dir/"program"
+                            shutil.copyfile(baseline["binary"], binary); shutil.copymode(baseline["binary"], binary)
+                            shutil.copyfile(Path(baseline["binary"]).parent/"function.i", build_dir/"function.i")
+                            build.update(binary=str(binary), copied_from=baseline["binary"])
+                            if audit.file_hash(binary) != baseline["binary_sha256"]:
+                                raise ValueError("binary copy control differs")
+                        else:
+                            build = build_record(args, command, profile["tool"]["path"], profile["compiler"],
+                                                 profile, function, variant, variants[0]["path"], build_dir)
+                        built[variant["id"]] = build
+                        cell.update(build)
                         discovery_values = outputs(command, cell["binary"], vectors)
                         heldout_values = outputs(command, cell["binary"], heldout)
                         if expected is None:
@@ -330,10 +380,18 @@ def run(args, root):
                             expected = (discovery_values, heldout_values)
                         elif expected != (discovery_values, heldout_values):
                             raise ValueError("linked executable differential mismatch")
+                        if "oracle" in case:
+                            from benchmark_oracles import ORACLES
+                            oracle = ORACLES[case["oracle"]]
+                            for probes, observed in ((vectors, discovery_values), (heldout, heldout_values)):
+                                if observed != [oracle(*v) for v in probes]:
+                                    raise ValueError("linked executable disagrees with independent contract oracle")
                         cell["execution"] = {"status": "tested", "comparisons": len(vectors) + len(heldout),
                                              "inputs_sha256": digest([vectors, heldout]),
                                              "discovery_fingerprint": digest(discovery_values),
                                              "heldout_fingerprint": digest(heldout_values)}
+                        if "oracle" in case:
+                            cell["execution"]["independent_oracle"] = case["oracle"]
                         cell["reconstruction"] = reconstruct(command, cell["binary"], function["parameter_count"],
                                                                heldout, heldout_values)
                         cell["status"] = "completed"
@@ -402,6 +460,8 @@ def run(args, root):
         missing = sum(p["status"] == "unavailable" for p in report["profiles"])
         report["summary"] = {"completed": len(report["records"]) - failed, "failed": failed,
                               "unavailable_profiles": missing}
+        audit.assert_snapshot({str(ROOT/path):sha for path,sha in report["implementation"].items()})
+        audit.assert_snapshot({tool["path"]:tool["sha256"] for tool in report["tools"].values()})
         report["status"] = "failed" if failed or not report["records"] else "completed-with-gaps" if missing else "completed"
     except (audit.AuditError, OSError, ValueError, KeyError) as error:
         report.update(status="failed", error=str(error))
@@ -423,6 +483,9 @@ def main():
     p.add_argument("--strategies", nargs="+", choices=["identity", "affine", "xor", "planned", "limbs16", "limbs8", "limbs4"], default=["identity", "affine", "planned"])
     p.add_argument("--seeds", nargs="+", type=int, default=[42])
     p.add_argument("--control-flows", nargs="+", choices=["none", "split-scale"], default=["none"])
+    p.add_argument("--region-recipes", nargs="+", choices=list(RECIPES), default=[],
+                   help="additional passes applied to each compiler-preprocessed profile; requires --no-select")
+    p.add_argument("--binary-copy-control", action="store_true", help="repeat observations on a byte-identical original executable")
     p.add_argument("--inputs", type=int, default=128)
     p.add_argument("--iterations", type=int, default=200000)
     p.add_argument("--repetitions", type=int, default=5)
@@ -443,6 +506,8 @@ def main():
         p.error("unique strategies including identity are required for controls")
     if "none" not in args.control_flows or len(set(args.control_flows)) != len(args.control_flows):
         p.error("unique control-flow modes including none are required for paired controls")
+    if len(set(args.region_recipes)) != len(args.region_recipes) or (args.region_recipes and not args.no_select):
+        p.error("region recipes must be unique and use --no-select; selection on region-pipeline results is not implemented")
     if not all(math.isfinite(v) and v >= 1 for v in (args.max_runtime_ratio, args.max_size_ratio)):
         p.error("cost ratios must be >= 1")
     root = Path(args.output_dir).resolve()
@@ -450,7 +515,9 @@ def main():
         root.mkdir(parents=True, exist_ok=False)
     except OSError as error:
         p.error(f"new output directory required: {error}")
-    result = run(args, root)
+    with measurement_lock() as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        result = run(args, root)
     print(f"{result['status']}: {root / 'matrix.json'}")
     return int(result["status"] == "failed" or
                (args.require_selected_profiles and result["status"] == "completed-with-gaps"))

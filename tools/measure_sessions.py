@@ -35,6 +35,8 @@ def main():
     parser.add_argument("--session-seconds",type=float,default=120)
     parser.add_argument("--analysis-seconds",type=int,default=30)
     parser.add_argument("--decompile-seconds",type=int,default=15)
+    parser.add_argument("--retain-unsupported",action="store_true",
+                        help="record adapter refusals per request and continue measuring; never grade them as recovered")
     args=parser.parse_args()
     if not sys.platform.startswith("linux"):
         parser.error("Linux process clocks and /proc are required")
@@ -100,7 +102,7 @@ def main():
             case=next(c for c in matrix["cases"] if c["id"]==r["case"])
             directory=output/f"session-{i:04d}";directory.mkdir()
             config={"binary":r["binary"],"function":case["function"],"arity":case["arity"],"headless":str(headless),
-                    **{k:getattr(args,k) for k in ("warmup_calls","calls","batches","analysis_seconds","decompile_seconds","session_seconds")}}
+                    **{k:getattr(args,k) for k in ("warmup_calls","calls","batches","analysis_seconds","decompile_seconds","session_seconds","retain_unsupported")}}
             save(directory/"config.json",config)
             print(i+1,len(schedule),cell,flush=True)
             row={**cell,"id":i,"directory":str(directory),"binary_sha256":r["binary_sha256"],

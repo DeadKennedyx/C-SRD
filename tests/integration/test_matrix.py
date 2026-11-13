@@ -45,8 +45,10 @@ class Matrix(unittest.TestCase):
                                  "--strategies", "identity", "affine", "--inputs", "8",
                                  "--iterations", "10000", "--repetitions", "3",
                                  "--output-dir", str(out), *extra], text=True, capture_output=True, timeout=150)
-        self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
-        return json.loads((out / "matrix.json").read_text())
+        report=json.loads((out/"matrix.json").read_text())
+        errors=[r.get("error") for r in report["records"] if r.get("error")]
+        self.assertEqual(result.returncode, expected, result.stdout + result.stderr + str(errors[:3]))
+        return report
 
     def test_linked_execution_and_identity_controls(self):
         report = self.execute_matrix()
@@ -83,6 +85,72 @@ class Matrix(unittest.TestCase):
         self.assertNotIn("decisions", report["selection"])
         self.assertEqual({r["variant"] for r in report["records"]}, {"original", "identity", "affine-42"})
         self.assertTrue(all("timing" in r and "binary_bytes" in r for r in report["records"]))
+
+    def test_region_compositions_and_exact_binary_control(self):
+        from matrix_regions import check_pass
+        self.manifest["cases"][0].update(id="crc32_byte", source="benchmarks/rich/development/crc32_byte.c",
+                                          family="crc32", oracle="crc32_byte")
+        report = self.execute_matrix(extra=("--strategies", "identity", "--no-select", "--binary-copy-control",
+            "--region-recipes", "private-affine", "control", "private-affine-control", "control-private-affine"))
+        records = {r["variant"]:r for r in report["records"]}
+        self.assertEqual(len(records),7)
+        self.assertEqual(records["original"]["binary_sha256"],records["original-copy"]["binary_sha256"])
+        self.assertNotEqual(records["original"]["binary"],records["original-copy"]["binary"])
+        if sys.platform.startswith("linux"):
+            binary=records["original"]["binary"]
+            launcher="import os,sys; p=bytearray(64<<20); p[::4096]=b'x'*(len(p)//4096); os.execv(sys.argv[1],sys.argv[1:])"
+            observed=subprocess.run([sys.executable,"-c",launcher,binary,"1","42"],capture_output=True,text=True,timeout=10)
+            self.assertEqual(observed.returncode,0,observed.stderr)
+            counters=observed.stdout.split()
+            self.assertGreaterEqual(int(counters[3]),64<<20)
+            self.assertLess(int(counters[4]),32<<20)
+        for name in ("private-affine", "control", "private-affine-control", "control-private-affine"):
+            record = records[name+"-42"]
+            self.assertEqual(len(record["timing"]["cpu_samples_seconds"]),3)
+            self.assertGreater(record["timing"]["cpu_median_paired_ratio"],0)
+            self.assertGreater(record["timing"]["peak_rss_median_bytes"],0)
+            if sys.platform.startswith("linux"):
+                self.assertGreater(record["timing"]["executable_peak_rss_median_bytes"],0)
+            else:
+                self.assertIsNone(record["timing"]["executable_peak_rss_median_bytes"])
+            self.assertEqual(record["execution"]["independent_oracle"], "crc32_byte")
+            phase = record["region_pipeline"][0]
+            self.assertEqual(len(phase["passes"]),2 if name.count("control") and "affine" in name else 1)
+            self.assertTrue(all(p["coverage"]["context_bindings_verified"] for p in phase["passes"]))
+            step = phase["passes"][0]
+            data = json.loads(Path(step["report"]).read_text())
+            data["functions"][0]["context_bindings_verified"] = False
+            with self.assertRaisesRegex(ValueError,"lacks frame/graph/binding"):
+                check_pass(data,step["source"],step["candidate"],step["scope"],42,
+                           {"function":"kernel","parameter_count":2},data["target"])
+        commands = [c for c in report["commands"] if "resources" in c]
+        self.assertTrue(commands)
+        self.assertTrue(all(c["resources"]["cpu_seconds"] >= 0 for c in commands))
+        result=subprocess.run([sys.executable,ROOT/"tools/measure_code_size.py","--matrix-report",self.root/"run/matrix.json",
+                               "--output-dir",self.root/"region-sizes"],capture_output=True,text=True,timeout=30)
+        self.assertEqual(result.returncode,0,result.stderr)
+        sizes=json.loads((self.root/"region-sizes/sizes.json").read_text())
+        rows={r["variant"]:r for r in sizes["records"]}
+        self.assertEqual(rows["original"]["text_sha256"],rows["original-copy"]["text_sha256"])
+        self.assertTrue(rows["original-copy"]["text_identical_to_original"])
+        result=subprocess.run([sys.executable,ROOT/"tools/measure_matrix_costs.py","--matrix-report",self.root/"run/matrix.json",
+                               "--profile","clang-O2","--iterations","10000","--repetitions","3",
+                               "--output-dir",self.root/"repeated-costs"],capture_output=True,text=True,timeout=30)
+        self.assertEqual(result.returncode,0,result.stderr)
+        costs=json.loads((self.root/"repeated-costs/costs.json").read_text())
+        self.assertEqual(costs["status"],"completed")
+        self.assertEqual({r["variant"] for r in costs["records"]},set(records))
+        self.assertTrue(all(len(r["timing"]["cpu_samples_seconds"])==3 for r in costs["records"]))
+        if sys.platform.startswith("linux"):
+            self.assertEqual(costs["memory_counter_control"]["status"],"passed")
+
+    def test_independent_oracle_rejects_matching_but_wrong_programs(self):
+        source = self.root/"wrong.c"
+        source.write_text("#include <stdint.h>\nuint32_t kernel(uint32_t x){return x;}\n")
+        self.manifest["cases"][0].update(id="wrong-gray",source=str(source),oracle="gray_decode32")
+        report = self.execute_matrix(expected=1,extra=("--strategies","identity","--no-select"))
+        self.assertTrue(all(r["status"] == "failed" for r in report["records"]))
+        self.assertIn("independent contract oracle", report["records"][0]["error"])
 
     def test_failed_candidate_does_not_discard_other_measurements(self):
         self.manifest["cases"][0]["algorithms"] = ["popcount8-serial"]

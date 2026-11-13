@@ -16,13 +16,53 @@ sys.path.insert(0,str(ROOT/"tools"))
 from process_counters import Phase, difference
 from effort_resources import measure, save
 from pcode_reconstruct import reconstruct
-from session_worker import events
-from summarize_sessions import paired
+from session_worker import events, serve, digest
+from session_evidence import answer_candidate, Evidence
+from summarize_sessions import paired, batch_metrics, matrix_application, application_timing, flat_cells, write_csv
 
 TOOL=str(Path(sys.argv.pop(1)).resolve())
 
 
 class Sessions(unittest.TestCase):
+    def test_matrix_costs_reach_csv_and_missing_metrics_remain_unknown(self):
+        original = {"status":"completed", "case":"case", "profile":"clang-O2", "variant":"original",
+                    "binary_sha256":"a"*64, "binary_bytes":1000, "binary_size_ratio":1,
+                    "timing":{"median_paired_ratio":1}}
+        candidate = {**original, "variant":"candidate", "binary_sha256":"b"*64,
+                     "binary_bytes":2000, "binary_size_ratio":2}
+        app = matrix_application([original, candidate])
+        key = ("case", "clang-O2", "candidate")
+        app[key].update(application_timing({"median_paired_ratio":3, "cpu_median_paired_ratio":2.5,
+            "cpu_median_seconds":0.25, "executable_peak_rss_median_bytes":4096, "peak_rss_median_bytes":65536}))
+        sessions = [{"case":"case", "profile":"clang-O2", "variant":variant, "repetition":0,
+                     "grades":{status:16}, "native_cpu_ns_per_request":cpu}
+                    for variant,status,cpu in (("original","proved-under-model",10),("candidate","unsupported",20))]
+        rows = flat_cells(paired(sessions,app))
+        row = next(r for r in rows if r["variant"]=="candidate")
+        self.assertEqual(row["application_runtime_ratio"],3)
+        self.assertEqual(row["application_cpu_ratio"],2.5)
+        self.assertEqual(row["application_executable_peak_rss_bytes"],4096)
+        self.assertEqual(row["application_rusage_peak_rss_bytes"],65536)
+        self.assertFalse(row["application_binary_bytes_identical_to_original"])
+        self.assertIsNone(row["application_function_symbol_ratio"])
+        self.assertIsNone(row["native_cpu_ns_per_request_paired_ratio_median"])
+        self.assertEqual(row["native_cpu_ns_per_request_attempt_paired_ratio_median"],2)
+        with tempfile.TemporaryDirectory() as temporary:
+            path=Path(temporary)/"cells.csv";write_csv(path,rows)
+            import csv
+            with path.open() as handle: saved=list(csv.DictReader(handle))
+            self.assertEqual(len(saved),2)
+            self.assertTrue(all(r["application_function_symbol_ratio"]=="" for r in saved))
+
+    def test_external_tool_bindings_preserve_absolute_identity(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path=Path(temporary).resolve()/"tool";path.write_bytes(b"external component")
+            evidence=Evidence();evidence.bind(path)
+            self.assertEqual(evidence.bindings,{str(path):digest(path.read_bytes())})
+            path.write_bytes(b"changed")
+            with self.assertRaisesRegex(ValueError,"bound evidence changed"):
+                evidence.bind(path,next(iter(evidence.bindings.values())))
+
     def test_export_semantics_frozen(self):
         def block(path):
             text=path.read_text()
@@ -56,6 +96,57 @@ class Sessions(unittest.TestCase):
         self.assertFalse(candidate["all_measured_requests_proved_under_model"])
         self.assertEqual(candidate["metrics"]["native_cpu_ns_per_request"]["absolute"]["n"],3)
         self.assertEqual(candidate["metrics"]["native_cpu_ns_per_request"]["paired_ratios"]["n"],2)
+        self.assertEqual(candidate["metrics"]["native_cpu_ns_per_request"]["attempt_paired_ratios"]["n"],3)
+        rows[-1]["grades"]={"unsupported":160}
+        rows[-1]["native_cpu_ns_per_request"]=None
+        candidate=next(r for r in paired(rows,app) if r["variant"]=="candidate")
+        self.assertFalse(candidate["all_measured_requests_proved_under_model"])
+        self.assertEqual(candidate["metrics"]["native_cpu_ns_per_request"]["absolute"]["n"],2)
+
+    def test_unsupported_answers_are_explicit_and_not_candidates(self):
+        answer={"candidate_sha256":None,"status":"unsupported","reason":"unsupported input"}
+        self.assertIsNone(answer_candidate(answer,True))
+        for value in ({**answer,"candidate_sha256":"a"*64},{**answer,"reason":""},
+                      {**answer,"status":"reconstructed"},{"candidate_sha256":"bad"}):
+            with self.assertRaises(ValueError):answer_candidate(value,True)
+        with self.assertRaises(ValueError):answer_candidate(answer,False)
+        self.assertEqual(answer_candidate({"candidate_sha256":"a"*64},False),"a"*64)
+        native={"resources":{"cpu_ns":{"native":20,"jvm":10},"wall_ns":40},
+                "result":{"requests":1,"decompile_ns":[12],"flush_ns":[2]}}
+        adapter={"resources":{"cpu_ns":{"adapter":5},"wall_ns":10},
+                 "result":{"requests":1,"reconstruct_ns":[5],"answers":[answer],"metrics":[{}]}}
+        for phase,roles in ((native,("native","jvm")),(adapter,("adapter",))):
+            for key in ("before_rss_bytes","after_rss_bytes","peak_sampled_rss_bytes"):
+                phase["resources"][key]={role:1024 for role in roles}
+        measured=batch_metrics(native,adapter)
+        self.assertEqual(measured["combined_cpu_ns_per_request"],35)
+        self.assertIsNone(measured["emitted_statements"])
+
+    @unittest.skipUnless(sys.platform.startswith("linux"),"Linux persistent-adapter protocol")
+    def test_adapter_continues_after_unsupported_request(self):
+        export={"schema_version":1,"function":"kernel","arity":1,
+                "nodes":[{"size":4,"parameter":0,"input":True},{"size":4,"constant":"0"}],
+                "operations":[{"opcode":"RETURN","inputs":[1,0]}]}
+        reconstruct(export)  # Validate the positive control before the protocol.
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);(root/"exports").mkdir()
+            ids=[]
+            for value in (export,{**export,"schema_version":999}):
+                encoded=json.dumps(value).encode();sha=digest(encoded);ids.append(sha)
+                (root/"exports"/(sha+".json")).write_bytes(encoded)
+            save(root/"jvm-phases.json",{"phases":[
+                {"phase":"first","result":{"exports":[ids[0]]}},
+                {"phase":"empty","result":{"exports":[]}},
+                {"phase":"batch-0","result":{"exports":[ids[1],ids[0]]}}]})
+            result=serve({"session_seconds":15,"retain_unsupported":True},root,"adapter",
+                lambda p:[sys.executable,ROOT/"tools/session_worker.py","--adapter",p],
+                [("first",True,1),("empty",True,0),("batch-0",True,2)])
+            self.assertEqual(result["status"],"completed")
+            answers=result["phases"][-1]["result"]["answers"]
+            self.assertEqual([a["status"] for a in answers],["unsupported","reconstructed"])
+            self.assertIsNone(answers[0]["candidate_sha256"])
+            self.assertEqual(answers[1]["candidate_sha256"],result["phases"][0]["result"]["answers"][0]["candidate_sha256"])
+            self.assertEqual(len(list((root/"answers").glob("*.c"))),1)
 
     @unittest.skipUnless(sys.platform.startswith("linux"),"Linux process CPU clock/RSS controls")
     def test_cpu_sleep_memory_and_disappearance(self):

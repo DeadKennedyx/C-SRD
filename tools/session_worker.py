@@ -11,7 +11,7 @@ import time
 
 from effort_resources import save
 from process_counters import Phase, family, process
-from pcode_reconstruct import reconstruct
+from pcode_reconstruct import reconstruct, Unsupported
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -158,12 +158,18 @@ def adapter(config):
             answers,metrics,wall=[],[],[]
             for sha in phase["result"]["exports"]:
                 row={};start=time.perf_counter_ns()
-                source=reconstruct(exports[sha],metrics=row).encode()
+                try:
+                    source=reconstruct(exports[sha],metrics=row).encode()
+                    answer={"export_sha256":sha,"candidate_sha256":digest(source),"status":"reconstructed"}
+                except Unsupported as error:
+                    if not config.get("retain_unsupported",False):raise
+                    source=None
+                    answer={"export_sha256":sha,"candidate_sha256":None,"status":"unsupported","reason":str(error)}
                 wall.append(time.perf_counter_ns()-start)
-                value=digest(source)
-                if value not in saved:
+                value=answer["candidate_sha256"]
+                if source is not None and value not in saved:
                     (root/"answers"/(value+".c")).write_bytes(source);saved.add(value)
-                answers.append({"export_sha256":sha,"candidate_sha256":value});metrics.append(row)
+                answers.append(answer);metrics.append(row)
             event("end",name,{"requests":len(answers),"answers":answers,"metrics":metrics,"reconstruct_ns":wall})
         event("done","done",{})
 

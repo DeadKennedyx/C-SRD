@@ -35,7 +35,8 @@ class Evidence:
         actual = file_hash(path)
         if expected is not None and actual != expected:
             raise ValueError("bound evidence changed: " + str(path))
-        self.bindings[str(path.relative_to(ROOT))] = actual
+        key=str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path)
+        self.bindings[key] = actual
         return path
 
     def read(self, path, expected=None):
@@ -43,8 +44,22 @@ class Evidence:
 
 
 def distribution(values):
+    values=[v for v in values if v is not None]
     return {"n": len(values), "median": statistics.median(values) if values else None,
             "min": min(values) if values else None, "max": max(values) if values else None}
+
+
+def answer_candidate(answer, retain_unsupported):
+    """An unsupported request cannot carry an executable or be silently omitted."""
+    status=answer.get("status","reconstructed")
+    if status=="unsupported":
+        if not retain_unsupported or answer.get("candidate_sha256") is not None or not isinstance(answer.get("reason"),str) or not answer["reason"]:
+            raise ValueError("invalid or undeclared unsupported adapter outcome")
+        return None
+    value=answer.get("candidate_sha256")
+    if status!="reconstructed" or not isinstance(value,str) or len(value)!=64 or any(c not in "0123456789abcdef" for c in value):
+        raise ValueError("invalid reconstructed answer hash/status")
+    return value
 
 
 def read_sessions(path):
@@ -83,6 +98,8 @@ def read_sessions(path):
         for name in ("warmup_calls", "calls", "batches", "analysis_seconds", "decompile_seconds", "session_seconds"):
             if config[name] != protocol[name]:
                 raise ValueError("session configuration differs from protocol")
+        if config.get("retain_unsupported",False)!=protocol.get("retain_unsupported",False):
+            raise ValueError("unsupported-answer policy differs from protocol")
         resources = json.loads(checked(directory/"measurement/resources.json", row["resources_sha256"]).read_text())
         session = json.loads(checked(directory/"session.json", row["session_sha256"]).read_text())
         if resources["status"] != "completed" or session["status"] != "completed":
@@ -108,7 +125,14 @@ def read_sessions(path):
                 raise ValueError("missing per-request evidence")
             if nr["exports"] != [a["export_sha256"] for a in ar["answers"]]:
                 raise ValueError("adapter replay differs from native request sequence")
-            memberships = Counter((a["candidate_sha256"], a["export_sha256"]) for a in ar["answers"])
+            memberships = Counter()
+            for answer in ar["answers"]:
+                candidate_hash=answer_candidate(answer,protocol.get("retain_unsupported",False))
+                export_hash=answer["export_sha256"]
+                if not isinstance(export_hash,str) or len(export_hash)!=64 or any(c not in "0123456789abcdef" for c in export_hash):
+                    raise ValueError("invalid export content hash")
+                checked(directory/"exports"/(export_hash+".json"),export_hash)
+                if candidate_hash is not None:memberships[(candidate_hash,export_hash)]+=1
             for (candidate_hash, export_hash), count in memberships.items():
                 for sha in (candidate_hash, export_hash):
                     if len(sha) != 64 or any(c not in "0123456789abcdef" for c in sha):

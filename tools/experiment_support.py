@@ -28,7 +28,7 @@ def input_vectors(arity, seed, count):
     return edges + [tuple(rng.getrandbits(32) for _ in range(arity)) for _ in range(count)]
 
 
-def driver_source(function, arity):
+def driver_source(function, arity, *, resources=False):
     # Name/arity originate exclusively in Clang's admitted function report.
     if not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*", function) or not 1 <= arity <= 4:
         raise ValueError("invalid harness interface")
@@ -39,12 +39,39 @@ def driver_source(function, arity):
     helper = "csrd_matrix_next_value"
     while helper == function:
         helper += "_1"
+    extra = {"resource_preamble":"", "resource_headers":"", "cpu_declarations":"", "cpu_start":"", "cpu_end":"",
+             "timing_output":'printf("%.9f %" PRIu64 "\\n", elapsed, sum);'}
+    if resources:
+        extra.update(resource_preamble="#if defined(__APPLE__)\n#define _DARWIN_C_SOURCE 1\n#endif",
+            resource_headers="#include <sys/resource.h>\n#include <string.h>",
+            cpu_declarations="struct timespec cpu_begin, cpu_end;",
+            cpu_start="if(clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&cpu_begin))return 2;",
+            cpu_end="if(clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&cpu_end))return 2;",
+            timing_output=r'''double cpu=(double)(cpu_end.tv_sec-cpu_begin.tv_sec)+(double)(cpu_end.tv_nsec-cpu_begin.tv_nsec)*1e-9;
+    struct rusage usage;if(getrusage(RUSAGE_SELF,&usage))return 3;
+    unsigned long peak=(unsigned long)usage.ru_maxrss;
+#if defined(__linux__)
+    peak*=1024ul;
+    FILE *status=fopen("/proc/self/status","r");if(!status)return 4;
+    char line[256];unsigned long executable_peak=0;
+    while(fgets(line,sizeof(line),status))if(strncmp(line,"VmHWM:",6)==0){
+        if(sscanf(line+6,"%lu",&executable_peak)!=1)return 4;
+    }
+    if(fclose(status)||!executable_peak)return 4;
+    printf("%.9f %" PRIu64 " %.9f %lu %lu\n",elapsed,sum,cpu,peak,executable_peak*1024ul);
+#elif defined(__APPLE__)
+    printf("%.9f %" PRIu64 " %.9f %lu unavailable\n",elapsed,sum,cpu,peak);
+#else
+#error "Resource harness currently supports Linux and macOS counter units"
+#endif''')
     return Template(r'''#define _POSIX_C_SOURCE 200809L
+$resource_preamble
 #include <stdint.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+$resource_headers
 uint32_t $function($prototype);
 static uint32_t $helper(uint32_t *s) {
     *s ^= *s << 13; *s ^= *s >> 17; *s ^= *s << 5; return *s;
@@ -61,19 +88,22 @@ int main(int argc, char **argv) {
     uint32_t state = (uint32_t)strtoul(argv[2], 0, 10);
     uint64_t sum = 0;
     struct timespec begin, end;
+    $cpu_declarations
     if (clock_gettime(CLOCK_MONOTONIC, &begin)) return 2;
+    $cpu_start
     for (unsigned long i = 0; i < n; ++i) {
         for (unsigned j = 0; j < $arity; ++j) x[j] = $helper(&state);
         sum += $function($arguments);
     }
     if (clock_gettime(CLOCK_MONOTONIC, &end)) return 2;
+    $cpu_end
     double elapsed = (double)(end.tv_sec - begin.tv_sec) +
                      (double)(end.tv_nsec - begin.tv_nsec) * 1e-9;
-    printf("%.9f %" PRIu64 "\n", elapsed, sum);
+    $timing_output
     return 0;
 }
 ''').substitute(function=function, prototype=prototype, helper=helper, arity=arity,
-                scan=scan, addresses=addresses, arguments=arguments)
+                scan=scan, addresses=addresses, arguments=arguments, **extra)
 
 
 def outputs(command, binary, vectors):
@@ -165,12 +195,20 @@ def paired_costs(command, records, iterations, repetitions, seed):
         order = records[:]
         rng.shuffle(order)
         for r in order:
-            elapsed, checksum = command([r["binary"], iterations, seed + repetition]).split()
+            parts = command([r["binary"], iterations, seed + repetition]).split()
+            if len(parts) not in (2,5):raise ValueError("invalid benchmark counter output")
+            elapsed, checksum = parts[:2]
             elapsed = float(elapsed)
-            if elapsed <= 0:
+            if not math.isfinite(elapsed) or elapsed <= 0:
                 raise ValueError("timing resolution insufficient")
             r["timing"]["samples_seconds"].append(elapsed)
             r["timing"]["checksums"].append(int(checksum))
+            if len(parts)==5:
+                cpu=float(parts[2]);rss=int(parts[3]);executable_rss=None if parts[4]=="unavailable" else int(parts[4])
+                if not math.isfinite(cpu) or cpu<=0 or rss<=0 or (executable_rss is not None and executable_rss<=0):
+                    raise ValueError("invalid CPU/memory counters")
+                for key,value in (("cpu_samples_seconds",cpu),("peak_rss_samples_bytes",rss),("executable_peak_rss_samples_bytes",executable_rss)):
+                    r["timing"].setdefault(key,[]).append(value)
     base = next(r for r in records if r["variant"] == "original")
     for r in records:
         if r["timing"]["checksums"] != base["timing"]["checksums"]:
@@ -180,6 +218,15 @@ def paired_costs(command, records, iterations, repetitions, seed):
         t.update(median_seconds=statistics.median(t["samples_seconds"]),
                  paired_ratios=ratios, median_paired_ratio=statistics.median(ratios),
                  min_paired_ratio=min(ratios), max_paired_ratio=max(ratios))
+        if "cpu_samples_seconds" in t:
+            if len(t["cpu_samples_seconds"])!=repetitions or len(b.get("cpu_samples_seconds",[]))!=repetitions:
+                raise ValueError("incomplete paired CPU measurements")
+            ratios=[a/c for a,c in zip(t["cpu_samples_seconds"],b["cpu_samples_seconds"])]
+            t.update(cpu_median_seconds=statistics.median(t["cpu_samples_seconds"]),cpu_paired_ratios=ratios,
+                     cpu_median_paired_ratio=statistics.median(ratios),
+                     peak_rss_median_bytes=statistics.median(t["peak_rss_samples_bytes"]),
+                     executable_peak_rss_median_bytes=None if any(v is None for v in t["executable_peak_rss_samples_bytes"]) else statistics.median(t["executable_peak_rss_samples_bytes"]),
+                     rss_scope="whole process including harness/loader; getrusage may include pre-exec launcher; executable_peak is Linux VmHWM only (approximate kernel accounting), unavailable on macOS")
         r["binary_size_ratio"] = r["binary_bytes"] / base["binary_bytes"]
 
 

@@ -50,6 +50,8 @@ def grades(source, followup, expected_groups, evidence):
             evidence.bind(directory/section/"measurement/resources.json")
         initial[key] = statuses[key] = row["status"]; by_id[row["id"]] = row
     if set(statuses) != set(expected): raise ValueError("ungraded answer")
+    if followup is None:
+        return initial,statuses,[]
     replay_protocol = evidence.read(followup/"protocol.json")
     replay_rows = evidence.read(followup/"summary.json")
     replay_complete = evidence.read(followup/"completion.json")
@@ -113,7 +115,8 @@ def batch_metrics(native, adapter):
     for role, record in (("native", nr), ("jvm", nr), ("adapter", ar)):
         for key in ("before_rss_bytes", "after_rss_bytes", "peak_sampled_rss_bytes"):
             result[role+"_"+key] = record[key][role]
-    result["emitted_statements"] = statistics.median(m["emitted_statements"] for m in adapter["result"]["metrics"])
+    emitted=[m["emitted_statements"] for a,m in zip(adapter["result"]["answers"],adapter["result"]["metrics"]) if a.get("status","reconstructed")=="reconstructed"]
+    result["emitted_statements"] = statistics.median(emitted) if emitted else None
     return result
 
 
@@ -131,15 +134,19 @@ def summarize_costs(payloads, statuses):
         for native, adapter in zip(session["jvm"]["phases"][1:], session["adapter"]["phases"]):
             if native["phase"].startswith("batch-"):
                 own_batches.append({**identity, "phase": native["phase"], **batch_metrics(native, adapter)})
+                memberships[row["id"]]["unsupported"]+=sum(a.get("status")=="unsupported" for a in adapter["result"]["answers"])
             else:
                 calibration.append({**identity, "phase": native["phase"], "requests": native["result"]["requests"],
                     "jvm_cpu_ns": native["resources"]["cpu_ns"]["jvm"],
                     "native_cpu_ns": native["resources"]["cpu_ns"]["native"],
                     "adapter_cpu_ns": adapter["resources"]["cpu_ns"]["adapter"]})
         numeric = [k for k in own_batches[0] if k not in (*identity, "phase")]
-        medians = {key: statistics.median(b[key] for b in own_batches) for key in numeric}
+        medians = {key: None if any(b[key] is None for b in own_batches) else statistics.median(b[key] for b in own_batches) for key in numeric}
+        if sum(memberships[row["id"]].values())!=sum(p["result"]["requests"] for p in session["adapter"]["phases"] if p["phase"].startswith("batch-")):
+            raise ValueError("missing request grading outcomes")
+        own_grades={k:v for k,v in memberships[row["id"]].items() if v}
         phase_cpu = sum(sum(p["resources"]["cpu_ns"].values()) for role in ("jvm", "adapter") for p in session[role]["phases"])/1e9
-        sessions.append({**identity, **medians, "batches": len(own_batches), "grades": dict(memberships[row["id"]]),
+        sessions.append({**identity, **medians, "batches": len(own_batches), "grades": own_grades,
                          "session_cpu_seconds": resources["cpu_seconds"], "session_wall_seconds": resources["wall_seconds"],
                          "cpu_outside_phases_seconds": resources["cpu_seconds"]-phase_cpu,
                          "session_peak_sampled_tree_rss_bytes": resources["peak_sampled_tree_rss_bytes"]})
@@ -161,10 +168,14 @@ def paired(sessions, application):
                "application": application[(case, profile, variant)], "metrics": {}}
         metrics = [key for key in group[0] if key.endswith(("_per_request", "_rss_bytes")) or key == "emitted_statements"]
         for key in metrics:
+            attempts=[{"repetition":s["repetition"],"candidate":s[key],"original":b[key],"ratio":s[key]/b[key]}
+                      for s,b in zip(group,original) if s[key] is not None and b[key] is not None and b[key]>0]
             ratios = [{"repetition": s["repetition"], "candidate": s[key], "original": b[key], "ratio": s[key]/b[key]}
-                      for s, b in zip(group, original) if success(s) and success(b) and b[key] > 0]
+                      for s, b in zip(group, original) if success(s) and success(b) and s[key] is not None and b[key] is not None and b[key] > 0]
             row["metrics"][key] = {"absolute": distribution([s[key] for s in group]),
-                                  "paired_ratios": distribution([r["ratio"] for r in ratios]), "pairs": ratios}
+                                  "paired_ratios": distribution([r["ratio"] for r in ratios]), "pairs": ratios,
+                                  "attempt_paired_ratios":distribution([r["ratio"] for r in attempts]),
+                                  "attempt_scope":"resource cost regardless of reconstruction success; refusals are not recovery"}
         rows.append(row)
     return rows
 
@@ -174,29 +185,93 @@ def write_csv(path, rows):
         writer = csv.DictWriter(handle, fieldnames=list(rows[0])); writer.writeheader(); writer.writerows(rows)
 
 
+def application_timing(timing):
+    """Expose the same cost columns for initial and longer frozen-binary runs."""
+    return {"timing": timing, "runtime_ratio": timing.get("median_paired_ratio"),
+            "cpu_ratio": timing.get("cpu_median_paired_ratio"),
+            "cpu_median_seconds": timing.get("cpu_median_seconds"),
+            "executable_peak_rss_bytes": timing.get("executable_peak_rss_median_bytes"),
+            "rusage_peak_rss_bytes": timing.get("peak_rss_median_bytes")}
+
+
+def matrix_application(records):
+    completed = [r for r in records if r["status"] == "completed"]
+    baselines = {(r["case"], r["profile"]): r for r in completed if r["variant"] == "original"}
+    rows = {}
+    for record in completed:
+        key = (record["case"], record["profile"], record["variant"])
+        if key in rows:
+            raise ValueError("duplicate application matrix cell")
+        baseline = baselines[key[:2]]
+        rows[key] = {**application_timing(record["timing"]),
+                     "binary_bytes": record["binary_bytes"], "binary_size_ratio": record["binary_size_ratio"],
+                     "binary_bytes_identical_to_original": record["binary_sha256"] == baseline["binary_sha256"],
+                     "comparison": record.get("comparison"), "function_symbol_ratio": None,
+                     "function_symbol_scope": "not measured by this matrix; linked text measured separately"}
+    return rows
+
+
+def flat_cells(cells):
+    rows = []
+    for cell in cells:
+        row = {k: cell[k] for k in ("case", "profile", "variant", "sessions", "all_measured_requests_proved_under_model")}
+        for key in ("runtime_ratio", "cpu_ratio", "cpu_median_seconds", "executable_peak_rss_bytes", "rusage_peak_rss_bytes",
+                    "function_symbol_ratio", "binary_size_ratio", "binary_bytes_identical_to_original"):
+            row["application_"+key] = cell["application"].get(key)
+        for key, value in cell["metrics"].items():
+            row[key+"_median"] = value["absolute"]["median"]
+            for kind in ("paired_ratios", "attempt_paired_ratios"):
+                for statistic in ("n", "median", "min", "max"):
+                    row[key+"_"+kind.removesuffix("s")+"_"+statistic] = value[kind][statistic]
+        rows.append(row)
+    return rows
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--sessions", type=Path, required=True)
     parser.add_argument("--grades", type=Path, required=True)
-    parser.add_argument("--followup", type=Path, required=True)
-    parser.add_argument("--application-summary", type=Path, required=True)
+    parser.add_argument("--followup", type=Path, help="optional circuit replay; otherwise preserve inconclusive source grades")
+    application_group=parser.add_mutually_exclusive_group(required=True)
+    application_group.add_argument("--application-summary",type=Path)
+    application_group.add_argument("--matrix-report",type=Path,help="read application costs directly from the exact bound matrix")
+    parser.add_argument("--application-costs",type=Path,help="optional longer cost repetitions from measure_matrix_costs.py; requires --matrix-report")
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args(); evidence = Evidence()
+    if args.application_costs and not args.matrix_report:parser.error("--application-costs requires --matrix-report")
     report, _, payloads, groups = read_sessions(args.sessions)
     evidence.bind(args.sessions)
     for path, sha in report["bindings"].items(): evidence.bind(path, sha)
     initial, final, replay = grades(args.grades, args.followup, groups, evidence)
-    application = evidence.read(args.application_summary)
     matrix_path = next(p for p in report["bindings"] if p.endswith("/matrix/matrix.json"))
     matrix_key = str(local(matrix_path).relative_to(ROOT))
-    if application["source_bindings"][matrix_key] != report["bindings"][matrix_path]:
-        raise ValueError("application costs are from a different matrix")
-    app_rows = {(r["case"], r["profile"], r["variant"]): r for r in application["matrix"]["rows"]}
+    if args.matrix_report:
+        matrix=evidence.read(args.matrix_report,report["bindings"][matrix_path])
+        app_rows=matrix_application(matrix["records"])
+        if args.application_costs:
+            costs=evidence.read(args.application_costs)
+            if costs["status"]!="completed" or costs["matrix_sha256"]!=report["bindings"][matrix_path]:
+                raise ValueError("repeated application costs use a different or incomplete matrix")
+            for path,sha in costs["bindings"].items():evidence.bind(path,sha)
+            originals={(r["case"],r["profile"],r["variant"]):r for r in matrix["records"]}
+            seen=set()
+            for row in costs["records"]:
+                key=(row["case"],row["profile"],row["variant"])
+                if key in seen or originals[key]["binary_sha256"]!=row["binary_sha256"]:
+                    raise ValueError("repeated cost binary mismatch or duplicate cell")
+                seen.add(key);app_rows[key].update(application_timing(row["timing"]))
+                app_rows[key]["cost_source"]=str(args.application_costs)
+            observed={(r["case"],r["profile"],r["variant"]) for r in report["sessions"]}
+            if not observed<=seen:raise ValueError("repeated costs omit observed session cells")
+    else:
+        application=evidence.read(args.application_summary)
+        if application["source_bindings"][matrix_key] != report["bindings"][matrix_path]:
+            raise ValueError("application costs are from a different matrix")
+        app_rows = {(r["case"], r["profile"], r["variant"]): r for r in application["matrix"]["rows"]}
     sessions, batches, calibration = summarize_costs(payloads, [(g, final[(g["reference_sha256"], g["candidate_sha256"])]) for g in groups])
     cells = paired(sessions, app_rows)
     output = args.output_dir.resolve(); output.mkdir(parents=True, exist_ok=False)
     evidence.bind(Path(__file__).resolve()); evidence.bind(ROOT/"tools/session_evidence.py")
-    evidence.bind(ROOT/"tools/session_evidence.py")
     measured = Counter(); initial_measured = Counter(); all_requests = Counter()
     for group in groups:
         key = (group["reference_sha256"], group["candidate_sha256"])
@@ -204,27 +279,25 @@ def main():
             all_requests[final[key]] += member["requests"]
             if member["phase"].startswith("batch-"):
                 measured[final[key]] += member["requests"]; initial_measured[initial[key]] += member["requests"]
+    for payload in payloads:
+        for phase in payload["session"]["adapter"]["phases"]:
+            count=sum(a.get("status")=="unsupported" for a in phase["result"]["answers"])
+            if count:
+                all_requests["unsupported"]+=count
+                if phase["phase"].startswith("batch-"):
+                    measured["unsupported"]+=count;initial_measured["unsupported"]+=count
     summary = {"status": "completed", "source_bindings": evidence.bindings, "protocol": report["protocol"],
-               "scope": "development corpus; three independent sessions/cell, correlated batches; no human or runtime-secrecy inference",
+               "scope": "development corpus; independent sessions/cell, correlated batches; no human or runtime-secrecy inference",
                "initial_distinct_grades": dict(Counter(initial.values())), "final_distinct_grades": dict(Counter(final.values())),
                "initial_measured_request_grades": dict(initial_measured), "measured_request_grades": dict(measured),
                "all_request_grades": dict(all_requests), "session_count": len(sessions), "batch_count_per_stage": len(batches),
                "cells": cells, "circuit_replay": replay,
                "calibration": {phase: {role: distribution([r[role+"_cpu_ns"] for r in calibration if r["phase"] == phase])
                                        for role in ("native", "jvm", "adapter")} for phase in ("first", "warmup", "empty")}}
-    save(output/"summary.json", summary); save(output/"session-medians.json", sessions)
+    save(output/"session-medians.json", sessions)
     write_csv(output/"batches.csv", batches); write_csv(output/"calibration.csv", calibration)
-    flat = []
-    for cell in cells:
-        row = {k: cell[k] for k in ("case", "profile", "variant", "sessions", "all_measured_requests_proved_under_model")}
-        for key in ("runtime_ratio", "function_symbol_ratio", "binary_size_ratio", "binary_bytes_identical_to_original"):
-            row["application_"+key] = cell["application"][key]
-        for key, value in cell["metrics"].items():
-            row[key+"_median"] = value["absolute"]["median"]
-            for statistic in ("median", "min", "max"):
-                row[key+"_paired_ratio_"+statistic] = value["paired_ratios"][statistic]
-        flat.append(row)
-    write_csv(output/"cells.csv", flat)
+    write_csv(output/"cells.csv", flat_cells(cells))
+    save(output/"summary.json", summary)
     print(json.dumps({k: summary[k] for k in ("session_count", "batch_count_per_stage", "final_distinct_grades", "measured_request_grades")}))
 
 

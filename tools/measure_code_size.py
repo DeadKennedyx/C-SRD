@@ -5,6 +5,7 @@ Executable file size can hide code growth through alignment/padding. This audit
 records .text/__text separately. It does not execute or recompile the binaries.
 """
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -48,14 +49,25 @@ def run(matrix_path, output):
         text = [(k, v) for k, v in sections.items() if k in (".text", "__text")]
         if len(text) != 1 or text[0][1] <= 0:
             raise ValueError("one nonempty linked text section required")
+        contents=command([objdump["path"],"--full-contents","--section="+text[0][0],path])
+        # Keep a digest, not a multi-megabyte dump in the JSON for sanitizer
+        # binaries. The exact input binary is already bound above.
+        report["commands"][-1]["stdout_sha256"]=hashlib.sha256(contents.encode()).hexdigest()
+        report["commands"][-1].pop("stdout")
+        raw=bytearray()
+        for line in contents.splitlines():
+            match=re.match(r"\s*[0-9a-fA-F]+\s+((?:[0-9a-fA-F]{2,8}(?:\s|$)){1,4})",line)
+            if match:raw.extend(bytes.fromhex(match[1]))
+        if len(raw)!=text[0][1]:raise ValueError("linked text extraction length differs from section header")
         record.update(status="measured", binary_sha256=cell["binary_sha256"], binary_bytes=Path(path).stat().st_size,
-                      text_section=text[0][0], text_bytes=text[0][1], section_bytes=sections)
+                      text_section=text[0][0], text_bytes=text[0][1], text_sha256=hashlib.sha256(raw).hexdigest(),section_bytes=sections)
     baselines = {(r["case"], r["profile"]): r for r in report["records"] if r["variant"] == "original" and r["status"] == "measured"}
     for r in report["records"]:
         if r["status"] == "measured":
             baseline = baselines[(r["case"], r["profile"])]
             r["text_ratio_to_original"] = r["text_bytes"] / baseline["text_bytes"]
             r["text_delta_bytes"] = r["text_bytes"] - baseline["text_bytes"]
+            r["text_identical_to_original"]=r["text_sha256"]==baseline["text_sha256"]
     if any(file_hash(p) != h for p, h in report["bindings"].items()):
         raise ValueError("bound artifact changed during size measurement")
     report["status"] = "completed"
