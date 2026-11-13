@@ -254,3 +254,61 @@ Ghidra ARM64 signed-byte lifting requires the checked overlay produced by
 `tools/patch_ghidra_signed_byte.py`. The next increment is scoped networking,
 including partial transfers, EOF/failures and matched correctness/recovery/cost
 measurements before further expansion.
+
+## Benign AES recognition checkpoint
+
+`tools/audit_crypto_recognition.py` compares pinned tiny-AES-C AES-256 builds
+with current C-SRD output and a no-crypto input/output control. It uses the seven
+Windows x64 profiles and rule revisions from the
+[published hidden-tiny-aes methodology](https://deadkennedyx.github.io/ST_M1CH43L/posts/hide-encryption-signatures-from-analysis-part-2.html),
+with a separate runtime-input harness: GCC 16.2 `-O0/-O2/-Os/-O2 -flto` and
+Apple Clang 17 `-O0/-O2/-Os`, linked with MinGW. Sources, rules, capa signatures,
+tool versions, commands, hashes and raw findings are recorded. This is a fixed
+recognition experiment; scanner feedback does not select transformations.
+
+The completed run used YARA 4.5.8 and capa 9.4.0/Vivisect. Each cell counts builds
+with an AES-specific match; these are crypto classifications, not malware verdicts.
+
+| Implementation | Yara-Rules | findcrypt-yara | crypto-detection | capa/Vivisect |
+| --- | --- | --- | --- | --- |
+| Stock tiny-AES-C | 7/7 | 7/7 | 7/7 | 7/7 |
+| C-SRD raw-source output, unchanged | 7/7 | 7/7 | 7/7 | 7/7 |
+| No-crypto control | 0/7 | 0/7 | 0/7 | 0/7 |
+
+All 84 scanner invocations completed. Both transformation scopes leave all 20
+original functions unchanged; paired Windows binaries are byte-identical.
+Native preprocessing permits two `KeyExpansion` regions, totaling five encoded
+index-arithmetic operations, with contextual proofs under the integer model.
+The AES tables and rounds remain unchanged. That partial transformation is not
+included in the Windows table: the frontend has no cross-target configuration,
+and its native LP64 output must not be treated as Windows LLP64 output.
+
+Native original/pass-through/partially transformed cases passed 4,690 executions
+against OpenSSL 3.6.4, comparing complete key-schedule/IV state between variants,
+plus 84 upstream known-answer checks, including Clang ASan/UBSan builds. Only
+the six proper upstream tests are called; its verbose demonstration uses a
+16-byte key even under AES-256. These tests cover fixed 64-byte buffers and do
+not prove arbitrary AES executions. Windows binaries were scanned, not executed.
+No protection advantage is demonstrated, and the historical Part 1/2 variants
+were not rerun. The seven compiler profiles are not independent program samples.
+
+Reproduce on the macOS toolchain above (MinGW, GCC 16, LLVM Clang, OpenSSL and
+YARA installed); `--fetch` downloads only pinned public sources/rules/signatures:
+
+```sh
+python3.12 -m venv build-aes-recognition/venv
+build-aes-recognition/venv/bin/python -m pip install 'flare-capa==9.4.0'
+python3 tools/audit_crypto_recognition.py --fetch \
+  --output build-aes-recognition/reproduction --deps build-aes-recognition \
+  --capa build-aes-recognition/venv/bin/capa \
+  --mingw-sysroot "$(x86_64-w64-mingw32-gcc -print-sysroot)"
+python3 tests/integration/test_crypto_recognition.py
+```
+
+The local completed artifacts are in `build-aes-recognition/run-2/`; the initial
+run is retained in `run-1/`. The latter exposed missing capa library signatures
+and GNU strip reinserting PE timestamps. The runner now supplies pinned signatures
+and `SOURCE_DATE_EPOCH=0`, checks the PE layout, and records errors separately
+from negative matches. Five automated measurement-control tests pass. Scanner
+results and native transformation coverage must remain separate when extending
+this experiment; target-aware frontend support is required for transformed PE tests.
