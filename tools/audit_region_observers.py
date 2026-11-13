@@ -29,6 +29,12 @@ RECIPES = {
 }
 
 
+class CommandFailure(RuntimeError):
+    def __init__(self, returncode, directory):
+        super().__init__(f"command failed ({returncode}): {directory}")
+        self.returncode = returncode
+
+
 def command(argv, directory, timeout=120, stdin=None):
     start = time.perf_counter()
     result = subprocess.run(list(map(str, argv)), input=stdin, capture_output=True, text=True, timeout=timeout)
@@ -38,7 +44,7 @@ def command(argv, directory, timeout=120, stdin=None):
     if stdin is not None: (directory/"input.txt").write_text(stdin)
     write_json(directory/"command.json", {"argv": list(map(str, argv)), "returncode": result.returncode,
                                           "wall_seconds": time.perf_counter()-start})
-    if result.returncode: raise RuntimeError(f"command failed ({result.returncode}): {directory}")
+    if result.returncode: raise CommandFailure(result.returncode, directory)
     return result.stdout
 
 
@@ -155,7 +161,7 @@ def selected_artifacts(build, args):
     return selected
 
 
-def grade(record, function, source, directory, cases_count, reference=None,seed=0x43535244):
+def grade(record, function, source, directory, cases_count, reference=None,seed=0x43535244,sanitize=False):
     harness = directory/"driver.c"; harness.write_text(driver(function))
     binary = directory/"graded"
     # Grade reconstructed C independently under both compilers. Sanitizers are
@@ -168,17 +174,19 @@ def grade(record, function, source, directory, cases_count, reference=None,seed=
         if [parse_output(line) for line in out.splitlines()] != expected:
             raise ValueError("independent oracle disagrees with original compiled function on grading inputs")
         result["original_effects_validated"] = len(cases)
-    for compiler in ("clang-18", "gcc"):
+    configurations=[("clang-18", "clang-18", ["-O2"]), ("gcc", "gcc", ["-O2"])]
+    if sanitize: configurations.append(("clang-18-sanitized", "clang-18", ["-O1", "-fsanitize=address,undefined", "-fno-omit-frame-pointer"]))
+    for label,compiler,flags in configurations:
         try:
-            command([compiler, "-std=c11", "-Wall", "-Wextra", "-Werror", "-O2", source, harness, "-o", binary], directory/(compiler+"-compile"))
-            out = command([binary], directory/(compiler+"-execute"), stdin="".join(input_text(v) for v in cases))
+            command([compiler, "-std=c11", "-Wall", "-Wextra", "-Werror", *flags, source, harness, "-o", binary], directory/(label+"-compile"))
+            out = command([binary], directory/(label+"-execute"), stdin="".join(input_text(v) for v in cases))
             actual = [parse_output(line) for line in out.splitlines()]
         except (RuntimeError, subprocess.TimeoutExpired) as error:
-            result.update(status="execution-or-compilation-failed", error=str(error)); return result
+            result.update(status="unresolved-input-used" if getattr(error,"returncode",None)==73 else "execution-or-compilation-failed", error=str(error)); return result
         if len(actual) != len(expected): result.update(status="incomplete-results"); return result
         mismatches = [i for i, (a, b) in enumerate(zip(actual, expected)) if a != b]
         result["comparisons"] += len(actual)
-        result["compilers"].append({"compiler": compiler, "mismatches": len(mismatches)})
+        result["compilers"].append({"compiler": compiler, "flags": flags, "mismatches": len(mismatches)})
         if mismatches:
             i = mismatches[0]
             result["counterexample"] = {"input": cases[i], "expected": expected[i], "actual": actual[i]}

@@ -37,6 +37,7 @@ class RegionGraph(Graph):
             raise Unsupported("requires byte-addressed 32/64-bit pointer ABI")
         self.pointer_bits, self.space = space["pointer_bytes"]*8, space["id"]
         self.initial, self.definitions, self.constants, self.pointers, self.opaque = {}, {}, {}, {}, set()
+        self.unknown = set()
         for i, node in enumerate(self.nodes):
             size = node["size"]
             if type(size) is not int or size not in (1, 2, 4, 8): raise Unsupported("unsupported varnode width")
@@ -64,6 +65,13 @@ class RegionGraph(Graph):
                     raise Unsupported("parameter storage disagrees with ABI")
                 self.initial[i] = f"((uint64_t)(uint32_t)p{slot})" if slot else None
                 if slot == 0: self.pointers[i] = 0
+            elif node.get("input") is True:
+                if not isinstance(node.get("storage"),str) or not re.fullmatch(r"register:[0-9a-fA-F]+",node["storage"]):
+                    raise Unsupported("unresolved input is not a declared entry register")
+                # A placeholder is never an assumed register value. Definedness
+                # follows the data; every observable use is guarded below.
+                self.initial[i] = "UINT64_C(0)"
+                self.unknown.add(i)
         for oi, op in enumerate(self.ops):
             code, inputs = op["opcode"], op["inputs"]
             if not isinstance(inputs, list): raise Unsupported("invalid inputs")
@@ -73,8 +81,8 @@ class RegionGraph(Graph):
             if code in CONTROL | {"CALL"}:
                 if not inputs: raise Unsupported("missing code address")
                 v = inputs[0]
+                if self.nodes[v].get("input"): raise Unsupported("unresolved indirect control target")
                 if v not in self.initial:
-                    if self.nodes[v].get("input"): raise Unsupported("unresolved indirect control target")
                     self.initial[v] = None
                     self.opaque.add(v)
             out = op.get("output")
@@ -121,6 +129,17 @@ class RegionGraph(Graph):
             if any(i in self.opaque for i in data): raise Unsupported("code address used as data")
         self.cfg(export)  # Reciprocal edges, complete ownership, SSA dominance.
         self.infer_pointers()
+        # Conservative taint closure. Pure operations may carry unavailable
+        # values; a selected phi edge can later make its output available.
+        self.partial = set(self.unknown)
+        changed = True
+        while changed:
+            changed = False
+            for op in self.ops:
+                if op["opcode"] not in SCALAR | EXTRA | {"MULTIEQUAL"}: continue
+                out = op["output"]
+                if out not in self.partial and any(v in self.partial for v in op["inputs"]):
+                    self.partial.add(out); changed = True
 
     def infer_pointers(self):
         changed = True
@@ -160,6 +179,10 @@ class RegionGraph(Graph):
     def atom(self, v):
         if v in self.pointers or v in self.opaque: raise Unsupported("non-scalar data expression")
         return self.initial[v] if v in self.initial else f"v{v}"
+
+    def defined(self, v):
+        if v in self.unknown: return "0"
+        return f"d{v}" if v in self.partial else "1"
 
     def scalar(self, op):
         code, ins = op["opcode"], op["inputs"]
@@ -211,8 +234,17 @@ def _reconstruct(export, metrics, mutation):
              ("int32_t" if graph.parameters[2]["kind"] == "int32" else "uint32_t") + " p2){",
              "    unsigned steps=0, incoming=0;", "    (void)p0;(void)p1;(void)p2;(void)incoming;"]
     lines += [f"    uint64_t v{v}=0; (void)v{v};" for v in scalars]
+    lines += [f"    unsigned char d{v}=0; (void)d{v};" for v in scalars if v in graph.partial]
     lines += [f"    uint64_t phi{op['output']}=0;" for op in phi]
+    lines += [f"    unsigned char phi_defined{op['output']}=0;" for op in phi if op['output'] in graph.partial]
     lines.append(f"    goto b{graph.entry};")
+    guards = 0
+    def guard(values):
+        nonlocal guards
+        checks = list(dict.fromkeys(graph.defined(v) for v in values if v in graph.partial))
+        if checks:
+            guards += 1
+            lines.append("    if(!("+" && ".join(checks)+"))exit(73);")
     mutated = False
     for bid, block in graph.blocks.items():
         lines += [f"b{bid}:", "    if(++steps>10000u)exit(71);"]
@@ -220,23 +252,31 @@ def _reconstruct(export, metrics, mutation):
         for op in operations:
             if op["opcode"] != "MULTIEQUAL" or op["output"] in graph.pointers: continue
             lines.append("    switch(incoming){")
-            lines += [f"    case {slot}:phi{op['output']}={graph.atom(v)};break;" for slot, v in enumerate(op["inputs"])]
+            for slot, v in enumerate(op["inputs"]):
+                flag = f"phi_defined{op['output']}={graph.defined(v)};" if op['output'] in graph.partial else ""
+                lines.append(f"    case {slot}:phi{op['output']}={graph.atom(v)};{flag}break;")
             lines.append("    default:exit(72);}")
-        lines += [f"    v{op['output']}=phi{op['output']};" for op in operations if op["opcode"] == "MULTIEQUAL" and op["output"] not in graph.pointers]
+        for op in operations:
+            if op["opcode"] != "MULTIEQUAL" or op["output"] in graph.pointers: continue
+            lines.append(f"    v{op['output']}=phi{op['output']};")
+            if op['output'] in graph.partial: lines.append(f"    d{op['output']}=phi_defined{op['output']};")
         for op in operations:
             code, ins, out = op["opcode"], op["inputs"], op.get("output")
             if code in {"MULTIEQUAL", "BRANCH", "CBRANCH"} or out in graph.pointers: continue
             if code == "RETURN":
+                guard(ins[1:])
                 expr = graph.atom(ins[1]) + (" + UINT64_C(1)" if mutation == "return" else "")
                 if signed:
                     lines += [f"    {{uint32_t r=(uint32_t)({expr});", "    return r<=INT32_MAX?(int32_t)r:INT32_MIN+(int32_t)(r-UINT32_C(2147483648));}"]
                 else: lines.append(f"    return (uint32_t)({expr});")
                 continue
             if code == "STORE":
+                guard(ins[1:])
                 expr = graph.atom(ins[2]) + (" + UINT64_C(1)" if mutation == "store" else "")
                 lines.append(f"    p0[{graph.pointers[ins[1]]//4}]=(uint32_t)({expr});")
                 continue
             if code == "CALL":
+                guard(ins[1:])
                 expr = graph.atom(ins[1])
                 if mutation == "call-argument" and not mutated: expr += " + UINT64_C(1)"; mutated = True
                 if mutation == "drop-call" and op["callee"] == "record_event" and not mutated:
@@ -246,11 +286,16 @@ def _reconstruct(export, metrics, mutation):
                 if out is None: lines.append("    " + expr + ";"); continue
             elif code == "LOAD": expr = f"p0[{graph.pointers[ins[1]]//4}]"
             else: expr = graph.scalar(op)
-            lines.append(f"    v{out}=({expr}) & UINT64_C({(1 << graph.width(out))-1});")
+            value=f"({expr}) & UINT64_C({(1 << graph.width(out))-1})"
+            if out in graph.partial:
+                lines.append(f"    d{out}="+" && ".join(graph.defined(v) for v in ins)+";")
+                value=f"d{out} ? ({value}) : UINT64_C(0)"
+            lines.append(f"    v{out}={value};")
         if block["outgoing"]:
             def jump(edge): return f"incoming={edge['reverse_index']};goto b{edge['block']};"
             if len(block["outgoing"]) == 1: lines.append("    " + jump(block["outgoing"][0]))
             else:
+                guard(operations[-1]["inputs"][1:])
                 condition = graph.atom(operations[-1]["inputs"][1])
                 if mutation == "branch" and not mutated: condition = "!("+condition+")"; mutated = True
                 # Ghidra basic-block successor slot 0 is false; slot 1 is true.
@@ -264,6 +309,9 @@ def _reconstruct(export, metrics, mutation):
                    block_entry_budget=10000, mutation=mutation)
     if export.get("schema_version")==6:
         metrics.update(observer="ordered-u32-regions-typed-booleans-v2",normalized_boolean_constants=graph.normalized_booleans)
+    metrics.update(observer="ordered-u32-regions-guarded-inputs-v3",unknown_entry_registers=len(graph.unknown),
+                   partial_value_nodes=len(graph.partial),observable_use_guards=guards,
+                   unresolved_use_exit_code=73,unknown_input_contract="partial reconstruction; stops before any unresolved data controls a branch, call, store or return; not a proof that guards are unreachable")
     return source
 
 

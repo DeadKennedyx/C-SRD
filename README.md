@@ -364,8 +364,9 @@ Ghidra ARM64 signed-byte lifting requires the checked overlay produced by
 including partial transfers, EOF/failures and matched correctness/recovery/cost
 measurements. The four-part development path is real-project build support,
 broader reusable transformation passes, safe pass composition, and evaluation on
-varied programs. Build integration is in progress; broader control-flow/data/
-function-structure passes remain work to do. Correctness, pass combinations and
+varied programs. Scoped build integration and the structured-control prototype
+below are implemented; wider build coverage and additional data/function-structure
+passes remain work to do. Correctness, pass combinations and
 application/reconstruction costs are evaluated at each meaningful increment,
 not deferred until all four areas are finished.
 
@@ -644,7 +645,7 @@ ordered callback oracle. All three control recipes differ from original library
 text in these 30 compiler/profile/fixture cells; text difference alone does not
 establish a protection benefit.
 
-Static recovery is a separate `-O2` pilot: one fresh Ghidra 12.2 process per
+The initial static recovery run is a separate `-O2` pilot: one fresh Ghidra 12.2 process per
 function/artifact, known symbols and ABI, followed by the existing source-blind
 P-code adapter. **79/84 candidates pass 80,896 heldout effect comparisons** under
 both compilers. Five candidates remain unsupported because the adapter rejects
@@ -760,7 +761,87 @@ python3 tools/audit_project_pipeline.py --csrd build-linux-integers/csrd \
   --output-dir build-control-reproduction/project
 ```
 
-The next increment should resolve the five observer coverage gaps, extend recovery
-tasks beyond this small callback corpus, and measure repeated/persistent analysis
-before claiming a static cost increase. Further pass families and broader build
-support remain active work; each requires its own contracts and combination tests.
+The guarded replay below addresses the five observer coverage gaps on additional
+finite inputs. Extending recovery tasks beyond this small callback corpus and
+measuring repeated/persistent decompilation remain next steps before claiming a
+static cost increase. Further pass families and broader build support remain
+active work; each requires its own contracts and combination tests.
+
+## Guarded reconstruction checkpoint
+
+**Observation and hypothesis.** All five unsupported exports in the first control
+experiment contain a non-parameter entry register. Such a register can be carried
+through a merge and overwritten before it affects observable behavior. Rejecting
+the entire export can therefore hide a limitation in our observer. The testable
+hypothesis is that explicit availability tracking can reconstruct the tested
+executions without assuming any initial register value.
+
+`tools/pcode_regions.py` now pairs affected scalar values with availability flags.
+A missing register has an unavailable flag; the generated zero is only a storage
+placeholder. Pure operations propagate availability. A merge selects both value
+and flag from the incoming edge, following Ghidra's
+[MULTIEQUAL semantics](https://ghidra.re/ghidra_docs/languages/html/additionalpcode.html).
+All merge inputs are captured before any merge output is assigned, including on
+self-loops. Before an unavailable value can choose a branch, become a call argument,
+be stored or be returned, the candidate stops with exit 73. Unknown memory
+addresses and indirect targets remain unsupported. This is **partial reconstruction**:
+neither the flags nor successful grading prove that the failure guards are
+unreachable for every input. A guarded exit is reported as `unresolved-input-used`,
+never as equivalence or a protection success.
+
+**Experimental design.** `tools/replay_region_reconstruction.py` reuses the exact
+84 frozen exports, with build, binary, export, observer and grader hashes. It runs
+three randomized, serial adapter repetitions per task, then grades each result
+on 2,048 deterministic inputs using separate seeds per repetition. The original
+binary is checked against the independent effects oracle before candidate grading.
+Candidates are compiled with GCC 13/Clang 18 at `-O2`, plus Clang at `-O1` with
+AddressSanitizer and UndefinedBehaviorSanitizer. Grading is outside the timed
+adapter phase and checks return values, all three buffer words and ordered events.
+No Ghidra process is rerun; copied export timings are excluded from the new summary.
+
+**Results.** The initial five-case prototype passed 20,480 comparisons under the
+two compilers. The full replay subsequently produced **252/252 tested-equivalent
+observations and 1,548,288 passing candidate comparisons**, including sanitizer
+executions. All five formerly unsupported cases pass in each repetition. These
+are 84 tasks repeated three times, not 252 independent programs or exhaustive
+input coverage. Of 27 rerun corruption controls, 25 mismatch and two flipped
+branches exceed the event-capacity limit with exit 70. Unknown-value regressions
+separately require exit 73 at observable uses, test simultaneous availability swaps,
+and reject missing definitions, non-register inputs and indirect targets.
+
+Median adapter CPU ratios are **1.001×** for control, **1.006×** for affine→control,
+and **1.033×** for control→affine; the identical-binary control is **1.011×**.
+Each ratio aggregates the three matched repetitions per task, then the 12 tasks
+per variant. Median absolute adapter CPU is about 21 ms, including Python startup.
+Peak process RSS median ratios are 1.000×, 1.004× and 1.009×; the copy control is
+1.000×. This small, startup-inclusive replay establishes no useful general
+reconstruction cost increase. It improves the observer and removes the five
+earlier unsupported outcomes as apparent evidence of resistance on these inputs.
+The earlier Ghidra, runtime-recovery and application-cost observations remain
+separate historical measurements; they were not repeated or improved by this change.
+
+The final observer regression suite passes **14 tests on each platform**: native
+macOS in 5.126 seconds and Linux in 0.530 seconds. These checks also confirm that
+replayed exports retain hash validation while contributing no new decompilation
+samples. The compiler implementation is unchanged; its full CTest suite was not
+rerun for this observer-only increment. Human effort, other observers, general
+input equivalence and broader program coverage remain unmeasured here.
+
+Raw artifacts are in `build-control-regions/guarded-prototype/`,
+`guarded-replay-1/` and `guarded-summary-1.json`. The frozen regression export is
+`tests/fixtures/pcode_region_guarded_input.json`. Reproduce after the earlier
+build/reconstruction collection, inside the Linux environment, using fresh paths:
+
+```sh
+python3 tests/integration/test_region_observers.py
+python3 tools/replay_region_reconstruction.py \
+  --reconstruction build-control-reproduction/reconstruction/reconstruction.json \
+  --repetitions 3 --grade-cases 2048 --sanitizers \
+  --output build-control-reproduction/guarded-replay
+python3 tools/summarize_region_observers.py \
+  --build build-control-reproduction/builds/build.json \
+  --reconstruction build-control-reproduction/guarded-replay/reconstruction.json \
+  --runtime build-control-reproduction/runtime/runtime.json \
+  --costs build-control-reproduction/costs/costs.json \
+  --output build-control-reproduction/guarded-summary.json
+```

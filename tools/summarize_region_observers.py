@@ -43,6 +43,7 @@ def summarize(build,reconstruction,runtime,costs):
             base_path=Path(original["directory"])/"export/export.json"
             if "export_sha256" not in row or "export_sha256" not in original:continue
             if file_hash(path)!=row["export_sha256"] or file_hash(base_path)!=original["export_sha256"]:raise ValueError("export changed")
+            if row.get("replayed_export") or original.get("replayed_export"):continue
             current=json.loads(path.read_text())["decompile_seconds"];base=json.loads(base_path.read_text())["decompile_seconds"]
             request_times.append(current)
             if base>0:request_ratios.append(current/base)
@@ -52,18 +53,23 @@ def summarize(build,reconstruction,runtime,costs):
         item["recovered_blocks"]=stats(r.get("reconstruction",{}).get("blocks") for r in rows)
         for phase in ("decompilation","adapter"):
             measurements={}
+            # Reusing an export does not repeat any part of decompilation,
+            # even if a collector retains its old resource record as context.
+            measured_rows=[r for r in rows if phase!="decompilation" or not r.get("replayed_export")]
             for metric in METRICS:
                 ratios=[]
-                for row in rows:
+                for row in measured_rows:
                     original=baseline[(artifact.rsplit("/",1)[0],function,row["repetition"])]
+                    if phase=="decompilation" and original.get("replayed_export"):continue
                     a,b=row.get(phase,{}).get(metric),original.get(phase,{}).get(metric)
                     if a is not None and b is not None and b>0:ratios.append(a/b)
-                measurements[metric]={"absolute":stats(r.get(phase,{}).get(metric) for r in rows),"paired_ratios":stats(ratios)}
+                measurements[metric]={"absolute":stats(r.get(phase,{}).get(metric) for r in measured_rows),"paired_ratios":stats(ratios)}
             item["phases"][phase]=measurements
         paired.append(item)
     result["static"]["matched_groups"]=paired
     result["static"]["repetitions_per_task"]=sorted({len(rows) for rows in groups.values()})
-    result["static"]["timing_scope"]="fresh-process Ghidra includes startup/analysis/export; adapter includes Python startup; pilot measurements, no inferential interval"
+    result["static"]["timing_scope"]="Ghidra timings count fresh processes only and include startup/analysis/export; adapter includes Python startup; pilot measurements, no inferential interval"
+    result["static"]["decompilation_scope"]=reconstruction.get("decompilation_scope","fresh Ghidra process per observation")
     by_variant=defaultdict(list)
     for g in runtime["groups"]:by_variant[g["artifact"].rsplit("/",1)[1]].append(g)
     base_groups={(g["artifact"].rsplit("/",1)[0],g["function"],g["loop_count"]):g for g in runtime["groups"] if g["artifact"].endswith("/original")}

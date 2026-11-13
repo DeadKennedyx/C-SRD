@@ -178,10 +178,59 @@ class RegionReconstruction(unittest.TestCase):
             self.assertEqual(r.returncode,0,r.stderr)
             self.assertEqual(subprocess.run([str(binary)],timeout=5).returncode,0)
 
+            # Definedness must swap simultaneously too: after two entries the
+            # result is the known second input; after three it is unresolved.
+            d["nodes"][0]={"size":4,"input":True,"storage":"register:00004100"}
+            for entries,exit_code in ((2,0),(3,73)):
+                d["nodes"][2]["constant"]=str(entries)
+                source.write_text(reconstruct(d)+"\nint main(void){uint32_t p[3]={0};return swap_loop(p,123,456)!=456;}\n")
+                r=subprocess.run([compiler,"-std=c11","-Wall","-Wextra","-Werror","-O2",str(source),"-o",str(binary)],capture_output=True,text=True)
+                self.assertEqual(r.returncode,0,r.stderr)
+                self.assertEqual(subprocess.run([str(binary)],timeout=5).returncode,exit_code)
+
     def test_rare_return_path_is_in_grading_inputs(self):
         cases=vectors("region_outputs",32)
         returns=[oracle("assignments","region_outputs",v)["return_value"] for v in cases]
         self.assertIn(0,returns);self.assertIn(1,returns)
+
+    def test_guarded_register_inputs_and_observable_uses(self):
+        exported=json.loads((ROOT/"tests/fixtures/pcode_region_guarded_input.json").read_text())
+        metrics={};source=reconstruct(exported,metrics)
+        self.assertEqual(metrics["unknown_entry_registers"],1)
+        self.assertGreater(metrics["observable_use_guards"],0)
+        compiler=shutil.which("cc")
+        if not compiler:self.skipTest("C compiler unavailable")
+        cases=vectors("region_outputs",128)
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);path=root/"candidate.c";harness=root/"driver.c";binary=root/"run"
+            path.write_text(source);harness.write_text(driver("region_outputs"))
+            def compile_and_run(text,inputs):
+                path.write_text(text)
+                p=subprocess.run([compiler,"-std=c11","-Wall","-Wextra","-Werror","-O2",path,harness,"-o",binary],capture_output=True,text=True)
+                self.assertEqual(p.returncode,0,p.stderr)
+                return subprocess.run([binary],input=inputs,capture_output=True,text=True,timeout=10)
+            result=compile_and_run(source,"".join(input_text(v) for v in cases))
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertEqual([parse_output(line) for line in result.stdout.splitlines()],
+                             [effects(oracle("assignments","region_outputs",v)) for v in cases])
+            # Unknown data may be copied, but cannot choose control flow or
+            # escape through an effect. Exit 73 is failure, never equivalence.
+            for opcode,slot,width in [("RETURN",1,4),("CALL",1,4),("STORE",2,4),("CBRANCH",1,1)]:
+                d=copy.deepcopy(exported);unknown=len(d["nodes"])
+                d["nodes"].append({"size":width,"input":True,"storage":"register:00004100"})
+                next(op for op in d["operations"] if op["opcode"]==opcode)["inputs"][slot]=unknown
+                with self.subTest(opcode=opcode):
+                    result=compile_and_run(reconstruct(d),input_text(cases[0]))
+                    self.assertEqual(result.returncode,73,result.stderr)
+            for malformed in ("indirect-target","missing-definition","non-register"):
+                d=copy.deepcopy(exported);unknown=len(d["nodes"])
+                node={"size":4,"input":True,"storage":"register:00004100"}
+                if malformed=="missing-definition":node.pop("input")
+                if malformed=="non-register":node["storage"]="stack:00000020"
+                d["nodes"].append(node)
+                op=next(op for op in d["operations"] if op["opcode"]==("CALL" if malformed=="indirect-target" else "RETURN"))
+                op["inputs"][0 if malformed=="indirect-target" else 1]=unknown
+                with self.subTest(malformed=malformed),self.assertRaises(Unsupported):reconstruct(d)
 
     def test_wide_signed_shift_against_integer_oracle(self):
         compiler=shutil.which("cc")
@@ -229,6 +278,36 @@ class RegionReconstruction(unittest.TestCase):
 
 
 class ReportCoverage(unittest.TestCase):
+    def test_replayed_exports_are_checked_but_not_new_decompilation_samples(self):
+        from audit_protection import file_hash
+        from summarize_region_observers import summarize
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary)
+            build={"status":"validated","artifacts":[]}
+            reconstruction={"status":"completed","records":[],"decompilation_scope":"not repeated"}
+            runtime={"status":"completed","groups":[]}
+            costs={"status":"completed","iterations":1,"repetitions":1,"records":[]}
+            for variant in ("original","control-42"):
+                artifact="fixture/clang-O2/"+variant
+                directory=root/variant;export=directory/"export/export.json"
+                export.parent.mkdir(parents=True)
+                export.write_text(json.dumps({"decompile_seconds":4}))
+                build["artifacts"].append({"id":artifact,"library":str(directory/"library.so")})
+                reconstruction["records"].append({"artifact":artifact,"function":"f","repetition":0,
+                    "status":"tested-equivalent","directory":str(directory),"replayed_export":True,
+                    "export_sha256":file_hash(export),"decompilation":{"wall_seconds":8,"cpu_seconds":7},
+                    "adapter":{"wall_seconds":.02,"cpu_seconds":.01}})
+            result=summarize(build,reconstruction,runtime,costs)
+            self.assertEqual(result["static"]["decompilation_scope"],"not repeated")
+            for row in result["static"]["matched_groups"]:
+                self.assertEqual(row["decompiler_request_wall_seconds"]["absolute"]["n"],0)
+                self.assertEqual(row["phases"]["decompilation"]["cpu_seconds"]["absolute"]["n"],0)
+                self.assertEqual(row["phases"]["decompilation"]["wall_seconds"]["paired_ratios"]["n"],0)
+                self.assertEqual(row["phases"]["adapter"]["cpu_seconds"]["absolute"]["n"],1)
+            export.write_text("changed")
+            with self.assertRaisesRegex(ValueError,"export changed"):
+                summarize(build,reconstruction,runtime,costs)
+
     def test_timeouts_and_collector_budgets_are_not_successful_measurements(self):
         from summarize_region_observers import summarize
         with tempfile.TemporaryDirectory() as temporary:
