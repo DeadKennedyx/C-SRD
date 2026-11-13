@@ -27,8 +27,9 @@ def batch_driver(function, parameters, corpus="byte"):
     from record_observation_cases import driver as record_driver
     from control_observation_cases import driver as control_driver
     from heap_observation_cases import driver as heap_driver
+    from stdio_observation_cases import driver as stdio_driver
     from dispatch_observation_cases import driver as dispatch_driver
-    return "#define main csrd_one_case\n" + (dispatch_driver if corpus=='dispatch' else heap_driver if corpus=='heap' else control_driver if corpus=='control' else record_driver if corpus=="record" else call_driver if corpus=="call" else driver)(function, parameters) + r'''
+    return "#define main csrd_one_case\n" + (stdio_driver if corpus=='stdio' else dispatch_driver if corpus=='dispatch' else heap_driver if corpus=='heap' else control_driver if corpus=='control' else record_driver if corpus=="record" else call_driver if corpus=="call" else driver)(function, parameters) + r'''
 #undef main
 #include <ctype.h>
 int main(void) {
@@ -57,8 +58,9 @@ def run(args, root):
     from control_observation_cases import cases as control_cases,expected as control_expected,LAYOUTS as control_layouts
     from heap_observation_cases import cases as heap_cases,expected as heap_expected,LAYOUTS as heap_layouts
     from dispatch_observation_cases import cases as dispatch_cases,expected as dispatch_expected,LAYOUTS as dispatch_layouts
-    layouts=dispatch_layouts if args.corpus=='dispatch' else heap_layouts if args.corpus=='heap' else control_layouts if args.corpus=='control' else record_layouts if args.corpus=="record" else call_layouts if args.corpus=="call" else LAYOUTS
-    vectors = (dispatch_cases() if args.corpus=='dispatch' else heap_cases() if args.corpus=='heap' else control_cases() if args.corpus=='control' else cases()) + [{"x": rng.getrandbits(32), "memory": [rng.getrandbits(32) for _ in range(64)]}
+    from stdio_observation_cases import cases as stdio_cases,expected as stdio_expected,LAYOUTS as stdio_layouts
+    layouts=stdio_layouts if args.corpus=='stdio' else dispatch_layouts if args.corpus=='dispatch' else heap_layouts if args.corpus=='heap' else control_layouts if args.corpus=='control' else record_layouts if args.corpus=="record" else call_layouts if args.corpus=="call" else LAYOUTS
+    vectors = (stdio_cases() if args.corpus=='stdio' else dispatch_cases() if args.corpus=='dispatch' else heap_cases() if args.corpus=='heap' else control_cases() if args.corpus=='control' else cases()) + [{"x": rng.getrandbits(32), "memory": [rng.getrandbits(32) for _ in range(64)]}
                          for _ in range(args.random_cases)]
     if args.corpus=='dispatch':
         for i,v in enumerate(vectors[24:]):
@@ -80,6 +82,7 @@ def run(args, root):
     if args.corpus=='dispatch':
         for p in ('tools/dispatch_observation_cases.py','tests/fixtures/dispatch_environment.h'):
             report['implementation_hashes'][p]=file_hash(ROOT/p)
+    if args.corpus=='stdio':report['implementation_hashes']['tools/stdio_observation_cases.py']=file_hash(ROOT/'tools/stdio_observation_cases.py')
     command = Runner(report)
     artifacts = {path: report["replay_sha256"], matrix_path: report["matrix_sha256"]}
     for name, digest in report["implementation_hashes"].items(): artifacts[ROOT/name] = digest
@@ -135,7 +138,7 @@ def run(args, root):
                 inputs, wanted = [], []
                 for p, q in layouts:
                     for vector in vectors:
-                        answer = (dispatch_expected if args.corpus=='dispatch' else heap_expected if args.corpus=='heap' else control_expected if args.corpus=='control' else record_expected if args.corpus=="record" else call_expected if args.corpus=="call" else expected)(row["function"], vector["memory"], p, q, vector["x"],
+                        answer = (stdio_expected if args.corpus=='stdio' else dispatch_expected if args.corpus=='dispatch' else heap_expected if args.corpus=='heap' else control_expected if args.corpus=='control' else record_expected if args.corpus=="record" else call_expected if args.corpus=="call" else expected)(row["function"], vector["memory"], p, q, vector["x"],
                                           plain_char_signed=group["parameters"][0].get("element_signed",False))
                         inputs.append(" ".join(map(str, [p, q, vector["x"], *vector["memory"]])))
                         wanted.extend([answer["return_value"], *answer["final_memory"]])
@@ -143,6 +146,7 @@ def run(args, root):
                             wanted.extend([answer["external_state"],len(answer["events"])])
                             wanted.extend(v for event in answer["events"] for v in event)
                         if args.corpus=="record":wanted.extend(answer["persistent_state"])
+                        if args.corpus=="stdio":wanted.extend(answer["stdio_state"])
                 inputs = "\n".join(inputs)+"\n"
                 corpus[row["group"]] = inputs, wanted
                 reference = next(v for v in group["variants"] if v["variant"] == "original")
@@ -202,7 +206,7 @@ def run(args, root):
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--replay-report", required=True); p.add_argument("--output-dir", required=True)
-    p.add_argument("--corpus",choices=("byte","call","record","control","heap","dispatch"),default="byte")
+    p.add_argument("--corpus",choices=("byte","call","record","control","heap","dispatch","stdio"),default="byte")
     p.add_argument("--random-cases", type=int, default=256); p.add_argument("--seed", type=int, default=20261113)
     args = p.parse_args()
     if args.random_cases < 1: p.error("positive random case count required")

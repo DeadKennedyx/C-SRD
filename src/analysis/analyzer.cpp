@@ -30,6 +30,7 @@ class Analyzer {
   std::unordered_set<const clang::ValueDecl *> persistent;
   std::unordered_set<const clang::ValueDecl *> heapPointers;
   std::unordered_set<const clang::ValueDecl *> functionPointers;
+  std::unordered_set<const clang::ValueDecl *> streams;
   // Local pointers capture an offset into one original parameter. Their
   // offsets are scalar IR declarations, frozen when the pointer is initialized.
   std::unordered_map<const clang::ValueDecl *, std::string> pointerOrigins;
@@ -41,6 +42,14 @@ class Analyzer {
   }
   bool u32(clang::QualType t) const {
     return !t.hasQualifiers() && ctx.hasSameType(t, ctx.UnsignedIntTy) && ctx.getTypeSize(t) == 32;
+  }
+  bool int32(clang::QualType t) const {
+    return !t.hasQualifiers() && ctx.hasSameType(t,ctx.IntTy) && ctx.getTypeSize(t)==32;
+  }
+  bool filePointer(clang::QualType t) const {
+    const auto file=ctx.getFILEType();
+    return !file.isNull() && !t.hasQualifiers() && t->isPointerType() &&
+      !t->getPointeeType().hasQualifiers() && ctx.hasSameType(t->getPointeeType(),file);
   }
   bool byte(clang::QualType t) const {
     return !t.hasQualifiers() && t->isAnyCharacterType() && ctx.getTypeSize(t) == 8 &&
@@ -616,18 +625,33 @@ class Analyzer {
     return false;
   }
   const clang::CallExpr *directCall(const clang::Expr *e) const {
-    return llvm::dyn_cast<clang::CallExpr>(e->IgnoreParens());
+    e=e->IgnoreParens();
+    if (const auto *cast=llvm::dyn_cast<clang::CStyleCastExpr>(e)) {
+      const auto *call=llvm::dyn_cast<clang::CallExpr>(cast->getSubExpr()->IgnoreParens());
+      const auto *callee=call ? call->getDirectCallee() : nullptr;
+      if (callee && u32(cast->getType()) && cast->getCastKind()==clang::CK_IntegralCast && int32(call->getType())) {
+        const auto spec=contracts.find(callee->getNameAsString());
+        if (spec!=contracts.end() && spec->second.standardStream && spec->second.returnsSigned) return call;
+      }
+      return nullptr;
+    }
+    return llvm::dyn_cast<clang::CallExpr>(e);
   }
   bool callSignature(const clang::FunctionProtoType *type, const CallContract &spec, clang::SourceLocation loc) {
     if (!type || type->isVariadic() || type->getNumParams()!=spec.parameters.size() ||
         type->getExtInfo()!=clang::FunctionType::ExtInfo() || type->hasExtParameterInfos() ||
-        (spec.returnsVoid ? !type->getReturnType()->isVoidType() : !u32(type->getReturnType())))
+        (spec.returnsVoid ? !type->getReturnType()->isVoidType() :
+         spec.returnsSigned ? !int32(type->getReturnType()) : !u32(type->getReturnType())))
       return fail(loc,"callee signature or calling convention does not match its contract");
     for (unsigned i=0;i<spec.parameters.size();++i) {
       const auto parameter=type->getParamType(i); const auto &expected=spec.parameters[i];
       if (parameter.hasQualifiers()) return fail(loc,"qualified call parameter types are unsupported");
       if (expected.kind=="uint32") {
         if (!u32(parameter)) return fail(loc,"call scalar parameter must be uint32_t");
+      } else if (expected.kind=="int32-nonnegative") {
+        if (!int32(parameter)) return fail(loc,"stream character parameter must be a 32-bit int");
+      } else if (expected.kind=="file-stream") {
+        if (!filePointer(parameter)) return fail(loc,"stream parameter must have the standard FILE * type");
       } else {
         if (!parameter->isPointerType()) return fail(loc,"call contract requires a buffer pointer");
         const auto element=parameter->getPointeeType(), plain=element.getUnqualifiedType();
@@ -647,7 +671,7 @@ class Analyzer {
     const auto *reference = llvm::dyn_cast<clang::DeclRefExpr>(e->getCallee()->IgnoreParenImpCasts());
     const bool indirect=!callee && reference && functionPointers.count(reference->getDecl());
     const bool recursive=callee && callee->getCanonicalDecl()==currentFunction->getCanonicalDecl();
-    if (!reference || (!indirect && (!callee || reference->getDecl()!=callee || callee->getBuiltinID())))
+    if (!reference || (!indirect && (!callee || reference->getDecl()!=callee)))
       return fail(e->getExprLoc(),"calls require a declared function or a contracted function-pointer parameter");
     if (e->getBeginLoc().isMacroID() || e->getEndLoc().isMacroID())
       return fail(e->getExprLoc(), "macro calls are unsupported");
@@ -656,6 +680,8 @@ class Analyzer {
     auto contract = contracts.find(name);
     if (contract == contracts.end()) return fail(e->getExprLoc(), "direct call requires an explicit --call-contracts entry: " + name);
     const auto &spec = contract->second;
+    if (callee && callee->getBuiltinID() && !spec.standardStream)
+      return fail(e->getExprLoc(),"builtins require an explicit supported standard-stream contract");
     if (recursive && (!spec.recursive || !spec.guarded))
       return fail(e->getExprLoc(),"self-recursion requires its own explicit guarded decreasing-rank contract");
     if (indirect && (!spec.guarded || spec.indirectParameter!=indirectName))
@@ -665,20 +691,44 @@ class Analyzer {
     const auto *prototype=type->getAs<clang::FunctionProtoType>();
     if (!callSignature(prototype,spec,e->getExprLoc()) || e->getNumArgs()!=spec.parameters.size() || (spec.returnsVoid && !target.empty()))
       return fail(e->getExprLoc(), "callee signature does not match its call contract");
-    if (callee) for (const auto *decl : callee->redecls()) if (decl->hasAttrs())
-      return fail(e->getExprLoc(), "callee attributes are unsupported by the synchronous call contract");
+    bool systemDeclaration=false;
+    if (callee) for (const auto *decl : callee->redecls()) {
+      const bool system=ctx.getSourceManager().isInSystemHeader(decl->getLocation());
+      systemDeclaration=systemDeclaration || system;
+      if (spec.standardStream && decl->doesThisDeclarationHaveABody())
+        return fail(e->getExprLoc(),"stream functions must resolve to the standard C library, without user definitions");
+      if (decl->hasAttrs() && !(spec.standardStream && system))
+        return fail(e->getExprLoc(), "callee attributes are unsupported by the synchronous call contract");
+    }
+    if (spec.standardStream && !systemDeclaration)
+      return fail(e->getExprLoc(),"stream calls require declarations from the standard stdio header");
     Statement out(Statement::Kind::Call, target, nullptr);
     out.callee = name; out.declaresCallResult = declare; out.indirectTarget=indirectName; out.recursiveCall=recursive;
     for (unsigned i = 0; i < e->getNumArgs(); ++i) {
       const auto &expected = spec.parameters[i];
       const auto *parameter = callee ? callee->getParamDecl(i) : nullptr;
       const auto type = prototype->getParamType(i);
-      if (parameter && (parameter->hasAttrs() || parameter->getOriginalType()->isArrayType() || type.hasQualifiers()))
+      if (parameter && ((parameter->hasAttrs() && !spec.standardStream) || parameter->getOriginalType()->isArrayType() || type.hasQualifiers()))
         return fail(e->getArg(i)->getExprLoc(), "call parameter attributes, qualifiers and array declarators are unsupported");
       Statement::Argument arg;
       if (expected.kind == "uint32") {
         if (!u32(type)) return fail(e->getExprLoc(), "call scalar parameter must be uint32_t");
         arg.value = expression(e->getArg(i));
+      } else if (expected.kind=="file-stream") {
+        const auto *ref=llvm::dyn_cast<clang::DeclRefExpr>(e->getArg(i)->IgnoreParenImpCasts());
+        if (!ref || !streams.count(ref->getDecl()) || !filePointer(e->getArg(i)->getType()))
+          return fail(e->getArg(i)->getExprLoc(),"stream arguments must be original FILE * parameters; no nulls, aliases or address operations");
+        arg.stream=ref->getDecl()->getNameAsString();arg.value=constant(0);
+      } else if (expected.kind=="int32-nonnegative") {
+        const auto *input=e->getArg(i)->IgnoreParens();
+        const auto *cast=llvm::dyn_cast<clang::CStyleCastExpr>(input);
+        const auto *literal=llvm::dyn_cast<clang::IntegerLiteral>(input);
+        if (cast && int32(cast->getType()) && cast->getCastKind()==clang::CK_IntegralCast && u32(cast->getSubExpr()->getType()))
+          arg.value=expression(cast->getSubExpr());
+        else if (literal && int32(literal->getType()) && literal->getValue().getLimitedValue()<=INT32_MAX)
+          arg.value=constant(uint32_t(literal->getValue().getLimitedValue()));
+        else return fail(input->getExprLoc(),"stream character arguments require an explicit (int) cast of uint32_t or a nonnegative int literal");
+        arg.nonnegativeInt=true;
       } else {
         if (!type->isPointerType()) return fail(e->getExprLoc(), "call contract requires a buffer pointer");
         const auto element = type->getPointeeType(), unqualified = element.getUnqualifiedType();
@@ -721,7 +771,7 @@ class Analyzer {
       if (ref && heapPointers.count(ref->getDecl()))
         return fail(s->getBeginLoc(), "discarded owned pointer reads require an explicit lifetime-checked use");
       if (discard->getCastKind() == clang::CK_ToVoid && ref &&
-          (pointers.count(ref->getDecl()) || pointerOrigins.count(ref->getDecl()) || functionPointers.count(ref->getDecl()))) return true;
+          (pointers.count(ref->getDecl()) || pointerOrigins.count(ref->getDecl()) || functionPointers.count(ref->getDecl()) || streams.count(ref->getDecl()))) return true;
       if (discard->getCastKind() == clang::CK_ToVoid &&
           llvm::isa<clang::DeclRefExpr>(discard->getSubExpr()->IgnoreParenImpCasts()) &&
           expression(discard->getSubExpr())) return true;
@@ -926,6 +976,15 @@ public:
       if (decl->hasAttrs()) { fail(f.getLocation(), "function attributes are unsupported"); return std::move(result); }
     }
     for (const auto *p : f.parameters()) {
+      if (filePointer(p->getType())) {
+        if (region.ownedHeap || p->hasAttrs() || p->getName().empty() || p->getStorageClass()!=clang::SC_None ||
+            !std::any_of(contracts.begin(),contracts.end(),[](const auto &s){return s.second.standardStream;})) {
+          fail(p->getLocation(),"FILE * parameters require stdio-v3 contracts and cannot be mixed with owned heaps");return std::move(result);
+        }
+        const auto name=p->getNameAsString();streams.insert(p);names.insert(name);region.parameters.push_back(name);
+        region.streams.insert(name);region.orderedCalls=region.guardedCalls=region.memoryControl=region.extendedMemory=true;
+        continue;
+      }
       if (p->getType()->isFunctionPointerType()) {
         if (region.ownedHeap) { fail(p->getLocation(),"owned heaps cannot be combined with function-pointer parameters");return std::move(result); }
         const auto name=p->getNameAsString(), key=indirectContractKey(region.name,name);

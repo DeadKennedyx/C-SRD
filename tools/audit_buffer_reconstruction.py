@@ -115,12 +115,21 @@ def prepare(args, root, report, command):
         analysis = json.loads(analysis_path.read_text())
         functions = [f for f in analysis["functions"] if not args.function or f["function"] in args.function]
         if not functions: continue
-        if any(f["status"] != "supported" or f.get("semantic_model") not in ("buffers-u32-c11-v1","buffers-byte-c11-v2","ordered-calls-byte-c11-v1","records-state-byte-c11-v1","guarded-memory-c11-v1","owned-heap-c11-v1","guarded-calls-c11-v2") for f in functions):
+        if any(f["status"] != "supported" or f.get("semantic_model") not in ("buffers-u32-c11-v1","buffers-byte-c11-v2","ordered-calls-byte-c11-v1","records-state-byte-c11-v1","guarded-memory-c11-v1","owned-heap-c11-v1","guarded-calls-c11-v2","ordered-stdio-c11-v1") for f in functions):
             raise ValueError("selected source functions must use the admitted buffer contract")
         if seen_functions & {f["function"] for f in functions}: raise ValueError("duplicate selected function symbol")
         seen_functions.update(f["function"] for f in functions)
         report["sources"].append({"path": str(source), "sha256": file_hash(source),
                                   "dependencies": analysis["dependencies"], "functions": functions})
+        standard_streams=any(f['semantic_model']=='ordered-stdio-c11-v1' for f in functions)
+        if standard_streams:
+            if 'clang' not in compilers:raise ValueError('stdio audit requires a Clang preprocessor for source-model grading')
+            # Native preprocessed glibc headers are not interchangeable: Clang
+            # rejects GCC's deallocator attributes; GCC rejects Clang's float
+            # typedef fallbacks. Preserve native input for each actual binary,
+            # and bind a separate Clang input for source-model grading. This is
+            # explicitly not a proof of cross-preprocessor or binary equivalence.
+            report['sources'][-1]['preprocessing_policy']='native compiler input for binaries; Clang input for source-model grading; cross-preprocessor equivalence not proved'
         sources = {"original": source}
         for strategy in ("identity", "affine"):
             candidate = directory / f"{strategy}.c"
@@ -138,17 +147,30 @@ def prepare(args, root, report, command):
             flags = ["-std=c11", "-pedantic-errors", "-Wall", "-Wextra", "-Werror", "-" + profile["optimization"],
                      *flags_for(profile, profile["compiler"]), "-fPIC", "-I", str(source.parent)]
             variants = []
+            model_reference=None
             for variant, source_path in sources.items():
                 frozen, binary = folder / f"{variant}.i", folder / f"{variant}.so"
-                command([compiler, *flags, "-E", "-P", source_path, "-o", frozen])
+                # The stdio contract checks system-header declarations. Keep
+                # preprocessing line markers so frozen input retains provenance.
+                markers=standard_streams
+                command([compiler, *flags,
+                         "-E", *([] if markers else ["-P"]), source_path, "-o", frozen])
+                model_source=frozen
+                if standard_streams and profile['compiler']!='clang':
+                    model_source=folder/f'{variant}-source-model.i'
+                    command([compilers['clang'],*flags,'-E',source_path,'-o',model_source])
+                if variant=='original':model_reference=model_source
                 for function in functions:
-                    proof = grade(command, csrd, folder / "original.i", frozen, function["function"],
+                    proof = grade(command, csrd, model_reference, model_source, function["function"],
                                   folder / f"{variant}-{function['function']}-source-proof.json", args.timeout_ms, contract_path)
                     if proof["verification"] != "proved-under-model":
-                        raise ValueError("compiler-specific input did not pass validation")
-                command([compiler, *flags, "-shared", "-x", "c", frozen, "-o", binary])
+                        raise ValueError("source-model input did not pass validation")
+                command([compiler, *flags[:-2], *(["-Wno-gnu-line-marker"] if markers and profile['compiler']=='clang' else []),
+                         "-shared", "-x", "cpp-output", frozen, "-o", binary])
                 variants.append({"variant": variant, "binary": str(binary), "binary_sha256": file_hash(binary),
                                  "binary_bytes": binary.stat().st_size, "source": str(frozen), "source_sha256": file_hash(frozen),
+                                 'model_source':str(model_source),'model_source_sha256':file_hash(model_source),
+                                 'cross_preprocessor_equivalence':'not-verified' if model_source!=frozen else 'identical-input',
                                  "compile_link_wall_seconds": report["commands"][-1]["elapsed_seconds"]})
             baseline = variants[0]
             copied = folder / "original-copy.so"; shutil.copyfile(baseline["binary"], copied)
@@ -162,9 +184,9 @@ def prepare(args, root, report, command):
                         public.update(name=parameter['name'],returns=parameter['returns'],
                             parameters=[{'kind':p['kind'],'read_only':p.get('read_only',False)} for p in parameter['parameters']])
                 group = {"function": function["function"], "profile": profile["id"], "parameters": params,
-                         "reference": str(folder / "original.i"), "reference_sha256": file_hash(folder / "original.i"),
+                         "reference": str(model_reference), "reference_sha256": file_hash(model_reference),
                          "variants": variants}
-                if function["semantic_model"] in ("records-state-byte-c11-v1","guarded-memory-c11-v1","guarded-calls-c11-v2"):
+                if function["semantic_model"] in ("records-state-byte-c11-v1","guarded-memory-c11-v1","guarded-calls-c11-v2","ordered-stdio-c11-v1"):
                     globals_=[{k:g[k] for k in ("name","kind","record") if k in g} for g in function.get("persistent_objects",[])]
                     interface=folder/f"{function['function']}-public-abi.json"
                     write_json(interface,{"parameters":params,"persistent_objects":globals_})
@@ -239,16 +261,11 @@ def observe(args, root, report, command, csrd, headless):
         finally:
             write_json(root / "reconstruction.json", report)
     # Verification is deliberately outside every observer's CPU/time/RSS scope.
+    graded={}
     for item in report["observations"]:
         if item["status"] != "candidate": continue
         group = report["groups"][item["group"]]
         directory = root / f"attempt-{item['attempt']}"
-        proof = grade(command, csrd, group["reference"], item["recovered_path"], group["function"],
-                      directory / "verification.json", args.timeout_ms, report.get("call_contracts",{}).get("path"))
-        item["verification"] = proof["verification"]
-        item["verification_wall_seconds"] = report["commands"][-1]["elapsed_seconds"]
-        item["status"] = {"proved-under-model": "recovered-under-source-model", "counterexample": "false-reconstruction"}.get(
-            proof["verification"], "inconclusive-grading")
         export = json.loads(Path(item["export_path"]).read_text())
         item["controls"] = {}
         controls = {"return-plus-one": {"result_offset": 1}}
@@ -259,6 +276,23 @@ def observe(args, root, report, command, csrd, headless):
             else: item["control_skips"]={"call-argument-plus-one":"no scalar call argument to mutate"}
         for label, mutation in controls.items():
             wrong = directory / f"{label}.c"; wrong.write_text(reconstruct(export, **mutation))
+        key=(group['reference_sha256'],item['recovered_sha256'],group['function'],
+             tuple((label,file_hash(directory/f'{label}.c')) for label in controls))
+        if key in graded:
+            prior=graded[key];old=root/f"attempt-{prior['attempt']}"
+            for label in ('verification',*controls):shutil.copyfile(old/f'{label}.json',directory/f'{label}.json')
+            for field in ('verification','status','controls','reason'):
+                if field in prior:item[field]=prior[field].copy() if isinstance(prior[field],dict) else prior[field]
+            item['verification_wall_seconds']=None;item['verification_reused_from']=prior['attempt']
+            write_json(root/'reconstruction.json',report);continue
+        proof = grade(command, csrd, group["reference"], item["recovered_path"], group["function"],
+                      directory / "verification.json", args.timeout_ms, report.get("call_contracts",{}).get("path"))
+        item["verification"] = proof["verification"]
+        item["verification_wall_seconds"] = report["commands"][-1]["elapsed_seconds"]
+        item["status"] = {"proved-under-model": "recovered-under-source-model", "counterexample": "false-reconstruction"}.get(
+            proof["verification"], "inconclusive-grading")
+        for label in controls:
+            wrong=directory/f'{label}.c'
             control = grade(command, csrd, group["reference"], wrong, group["function"],
                             directory / f"{label}.json", args.timeout_ms, report.get("call_contracts",{}).get("path"))
             item["controls"][label] = control["verification"]
@@ -266,6 +300,7 @@ def observe(args, root, report, command, csrd, headless):
                 item.update(status="control-failure", reason=f"{label} was accepted as equivalent")
             elif control["verification"] != "counterexample" and item["status"] not in ("control-failure","false-reconstruction"):
                 item.update(status="control-inconclusive", reason=f"{label} grading was inconclusive")
+        graded[key]=item
         write_json(root / "reconstruction.json", report)
 
 
@@ -310,6 +345,7 @@ def run(args, root):
             for v in group["variants"]:
                 if file_hash(v["binary"]) != v["binary_sha256"] or file_hash(v["source"]) != v["source_sha256"]:
                     raise ValueError("compiled artifact changed")
+                if file_hash(v["model_source"])!=v["model_source_sha256"]:raise ValueError("source-model input changed")
         for source in report["sources"]:
             for item in [source, *source["dependencies"]]:
                 if file_hash(item["path"]) != item["sha256"]: raise ValueError("input/header changed")

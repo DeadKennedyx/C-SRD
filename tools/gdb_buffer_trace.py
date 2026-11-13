@@ -84,6 +84,42 @@ class HeapTracker:
         for breakpoint in self.breakpoints:breakpoint.delete()
 
 
+class StreamTracker(HeapTracker):
+    """Observe real stdio ABI events at calls made by the selected activation."""
+    def __init__(self,entry,extent,aarch64,memory_address):
+        self.entry,self.extent,self.aarch64=entry,extent,aarch64
+        self.memory_address=memory_address;self.events=[];self.errors=[];self.pending=False
+        self.handles=[int(gdb.parse_and_eval('*(unsigned long*)&'+n)) for n in ('csrd_input','csrd_output')]
+        tracker=self
+        class Returned(gdb.FinishBreakpoint):
+            def __init__(self,event):
+                super().__init__(gdb.newest_frame(),internal=True);self.event=event;self.silent=True
+            def stop(self):
+                try:
+                    self.event[3]=0 if self.event[0]==6 else tracker.result()&0xffffffff
+                    tracker.events.append(self.event)
+                except Exception as error:tracker.errors.append(str(error))
+                finally:tracker.pending=False
+                return False
+            def out_of_scope(self):tracker.pending=False;tracker.errors.append('stdio call did not return normally')
+        class Entered(gdb.Breakpoint):
+            def __init__(self,name,kind):
+                super().__init__(name,internal=True);self.kind=kind;self.silent=True
+            def stop(self):
+                try:
+                    ret=tracker.return_address()
+                    if not tracker.entry<=ret<tracker.entry+tracker.extent or tracker.pending:return False
+                    args=tracker.arguments();handle=args[1] if self.kind==2 else args[0]
+                    stream=tracker.handles.index(handle)
+                    raw=gdb.selected_inferior().read_memory(tracker.memory_address,64*4).tobytes()
+                    event=[self.kind,stream,args[0]&0xffffffff if self.kind==2 else 0,0,
+                           *[int.from_bytes(raw[i:i+4],'little') for i in range(0,len(raw),4)]]
+                    tracker.pending=True;Returned(event)
+                except Exception as error:tracker.pending=False;tracker.errors.append(str(error))
+                return False
+        self.breakpoints=[Entered(name,i+1) for i,name in enumerate(('fgetc','fputc','fflush','feof','ferror','clearerr'))]
+
+
 def collect(config):
     gdb.execute("set pagination off")
     gdb.execute("set confirm off")
@@ -124,6 +160,7 @@ def collect(config):
     function_bytes = config.get("function_bytes",0)
     if call_scope and (type(function_bytes) is not int or function_bytes<1):raise ValueError("missing function extent")
     heap=HeapTracker(entry,function_bytes,'aarch64' in architecture) if config.get('observe_heap') else None
+    streams=StreamTracker(entry,function_bytes,'aarch64' in architecture,memory_address) if config.get('observe_stdio') else None
     tail_transfers=0
     visits, samples, failures = collections.Counter(), [], 0
     for _ in range(config["step_limit"]):
@@ -163,6 +200,11 @@ def collect(config):
         result.update(heap_events=heap.events,heap_observer_errors=heap.errors,heap_live_objects_at_return=len(heap.objects))
         result['scope']+='; all words of live owned allocations at caller instruction boundaries, including uninitialized bytes; allocator ABI breakpoints supply addresses/extents only'
         heap.close()
+    if streams:
+        if streams.pending or tail_transfers:streams.errors.append('unobserved stdio return or tail transfer')
+        result.update(stdio_events=streams.events,stdio_observer_errors=streams.errors)
+        result['scope']+='; ordered real stdio ABI calls from root, including pre-call user memory and results; library interiors unmeasured'
+        streams.close()
     if complete:
         memory = gdb.selected_inferior().read_memory(memory_address, 64*4).tobytes()
         result["final_memory"] = [int.from_bytes(memory[4*i:4*i+4], "little") for i in range(64)]
@@ -180,6 +222,12 @@ def collect(config):
             raw=gdb.selected_inferior().read_memory(at,count*69*4).tobytes() if count else b""
             result["external_state"]=word_symbol("external_state")
             result["events"]=[[int.from_bytes(raw[(i*69+j)*4:(i*69+j+1)*4],"little") for j in range(69)] for i in range(count)]
+        if streams:
+            gdb.Breakpoint('*csrd_snapshot_marker',temporary=True)
+            gdb.execute('continue',to_string=True)
+            at=int(gdb.parse_and_eval('(unsigned long)&csrd_stream_observation'))
+            raw=gdb.selected_inferior().read_memory(at,139*4).tobytes()
+            result['stdio_state']=[int.from_bytes(raw[i:i+4],'little') for i in range(0,len(raw),4)]
         gdb.execute("continue", to_string=True)
     return result
 

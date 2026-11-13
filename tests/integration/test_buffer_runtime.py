@@ -101,6 +101,17 @@ class BufferRuntime(unittest.TestCase):
             self.assertEqual(result['recovery']['validated_models'],1)
             config['targets']['child'][2]=None
             with self.assertRaisesRegex(ValueError,'insufficient executed'):fit(config)
+            # A layout that never reaches the calculation is neither a recovery
+            # failure nor evidence of protection. Other targets are still scored.
+            config['targets']['child']=[None]*7
+            config['targets']['ordinary']=[3,8,29,101,105,107,109]
+            result=fit(config)
+            self.assertEqual(result['status'],'completed')
+            self.assertNotIn('child',result['targets'])
+            self.assertIn('ordinary',result['targets'])
+            self.assertEqual(result['excluded_targets']['child'],{
+                'reason':'not-executed-in-selected-layout',
+                'unexecuted_cases':list(range(7))})
 
     def test_literal_and_return_recovery_without_an_odd_training_difference(self):
         targets=[2,6,10,14,3,99]

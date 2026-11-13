@@ -198,7 +198,7 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
       const auto &region = *d.region;
       const bool records = std::any_of(region.buffers.begin(), region.buffers.end(),
         [](const auto &entry) { return entry.second.persistent || entry.second.recordBytes; });
-      f["semantic_model"] = region.ownedHeap ? "owned-heap-c11-v1" : region.guardedCalls ? "guarded-calls-c11-v2" : region.memoryControl ? "guarded-memory-c11-v1" : records ? "records-state-byte-c11-v1" : region.orderedCalls ? "ordered-calls-byte-c11-v1" : region.buffers.empty() ? "pure-u32-c11-v2" :
+      f["semantic_model"] = !region.streams.empty() ? "ordered-stdio-c11-v1" : region.ownedHeap ? "owned-heap-c11-v1" : region.guardedCalls ? "guarded-calls-c11-v2" : region.memoryControl ? "guarded-memory-c11-v1" : records ? "records-state-byte-c11-v1" : region.orderedCalls ? "ordered-calls-byte-c11-v1" : region.buffers.empty() ? "pure-u32-c11-v2" :
         region.extendedMemory ? "buffers-byte-c11-v2" : "buffers-u32-c11-v1";
       if (!region.buffers.empty()) f["byte_order"] = region.littleEndian ? "little" : "big";
       llvm::json::Array parameters;
@@ -219,12 +219,13 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
       for (const auto &name : region.parameters) {
         const auto buffer = region.buffers.find(name);
         const auto target=region.functionPointers.find(name);
-        if (target!=region.functionPointers.end()) {
+        if (region.streams.count(name)) parameters.push_back(llvm::json::Object{{"name",name},{"kind","file-stream"}});
+        else if (target!=region.functionPointers.end()) {
           const auto &contract=region.calls.at(target->second);llvm::json::Array args;
           for (const auto &p:contract.parameters) args.push_back(llvm::json::Object{
             {"kind",p.kind},{"read_only",p.readOnly},{"minimum_elements",p.minimumElements}});
           parameters.push_back(llvm::json::Object{{"name",name},{"kind","function-pointer"},
-            {"returns",contract.returnsVoid ? "void" : "uint32"},{"parameters",std::move(args)}});
+            {"returns",contract.returnKind()},{"parameters",std::move(args)}});
         } else if (buffer == region.buffers.end()) parameters.push_back(llvm::json::Object{{"name", name}, {"kind", "uint32"}});
         else parameters.push_back(descriptor(name, buffer->second));
       }
@@ -250,12 +251,14 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
           llvm::json::Array args;
           for (const auto &p : spec.parameters) {
             llvm::json::Object arg{{"kind", p.kind}};
-            if (p.kind != "uint32") { arg["read_only"] = p.readOnly; arg["minimum_elements"] = p.minimumElements; }
+            if (p.kind != "uint32" && p.kind!="file-stream" && p.kind!="int32-nonnegative") {
+              arg["read_only"] = p.readOnly; arg["minimum_elements"] = p.minimumElements;
+            }
             args.push_back(std::move(arg));
           }
           calls.push_back(llvm::json::Object{{"callee", s.indirectTarget.empty() ? s.callee : s.indirectTarget},
             {"contract_key",s.callee},{"indirect",!s.indirectTarget.empty()},{"recursive",s.recursiveCall},
-            {"returns", spec.returnsVoid ? "void" : "uint32"},{"parameters", std::move(args)}, {"result_used", !s.name.empty()}});
+            {"returns", spec.returnKind()},{"parameters", std::move(args)}, {"result_used", !s.name.empty()}});
         }};
         collectCalls(collectCalls,region.statements);
         f["ordered_calls"] = std::move(calls);
@@ -276,6 +279,12 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
             f["semantic_model"]="bounded-recursion-body-c11-v1";
             f["observations_checked"]="return, entire final memory and external call trace; self-call events excluded from the required observations; proved by stronger ranked induction or complete checked body expansion";
           }
+        }
+        if (!region.streams.empty()) {
+          f["call_contract_model"]="opaque-stdio-v3";
+          f["stream_assumptions"]="standard C11 fgetc/fputc/fflush/feof/ferror/clearerr; valid nonnull caller-owned FILE objects with appropriate mode/orientation for each executed call; all stream-owned storage including setvbuf buffers disjoint from admitted user storage; equal incoming external state and coupled outcomes including EOF/errors; no interposition, callbacks/reentry, concurrency or asynchronous state changes";
+          f["call_assumptions"]="stdio int results explicitly converted modulo 2^32; signed character arguments proved nonnegative and representable as int; handles and call order stay ordinary; stream opening/closing, null handles, stream aliases in locals and formatted I/O excluded";
+          f["observations_checked"]="exact executed library calls, stream identities (including aliases), character arguments and pre-call user memory; return and entire final user memory; external stream effects preserved by identical call traces under coupled library behavior";
         }
       }
       if (region.ownedHeap) {

@@ -42,6 +42,11 @@ def run(config):
             raise ValueError('target must be uint32 or absent on an unexecuted path')
         target_training=[i for i in training if values[i] is not None]
         target_heldout=[i for i in heldout if values[i] is not None]
+        if not target_training and not target_heldout:
+            result.setdefault('excluded_targets', {})[target] = {
+                'reason': 'not-executed-in-selected-layout',
+                'unexecuted_cases': list(range(len(values)))}
+            continue
         if len(target_training)<3 or not target_heldout:
             raise ValueError('insufficient executed paths for target fitting')
         train_targets = [values[i] for i in target_training]

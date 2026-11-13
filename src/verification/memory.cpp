@@ -31,7 +31,8 @@ struct CallEvent {
   std::vector<z3::expr> arguments;
 };
 bool sameCallSignature(const CallContract &a,const CallContract &b) {
-  if (a.returnsVoid!=b.returnsVoid || a.parameters.size()!=b.parameters.size()) return false;
+  if (a.returnsVoid!=b.returnsVoid || a.returnsSigned!=b.returnsSigned || a.standardStream!=b.standardStream ||
+      a.parameters.size()!=b.parameters.size()) return false;
   for (unsigned i=0;i<a.parameters.size();++i) {
     const auto &x=a.parameters[i], &y=b.parameters[i];
     if (x.kind!=y.kind || x.readOnly!=y.readOnly || x.minimumElements!=y.minimumElements) return false;
@@ -54,16 +55,45 @@ class MemoryModel {
   bool bytes, littleEndian, enumerate, control, expandRecursion, outsideRecursionRange;
   mutable z3::expr ranges;
   mutable ExpandedReads reads;
+  bool proveRangeSelects;
+  mutable unsigned selectProofAttempts=0;
+  mutable std::map<unsigned,z3::expr> provedSelects;
+  mutable std::vector<Verification> selectProofs;
   z3::params normalization;
   z3::expr normalize(const z3::expr &value) const { return value.simplify(normalization); }
 public:
-  MemoryModel(z3::context &c, bool b, bool little, bool finite, bool guarded, bool recurse, bool outside) : ctx(c), bytes(b), littleEndian(little), enumerate(finite), control(guarded), expandRecursion(recurse), outsideRecursionRange(outside), ranges(c.bool_val(true)), normalization(c) {
+  MemoryModel(z3::context &c, bool b, bool little, bool finite, bool guarded, bool recurse, bool outside, bool rangeSelects) : ctx(c), bytes(b), littleEndian(little), enumerate(finite), control(guarded), expandRecursion(recurse), outsideRecursionRange(outside), ranges(c.bool_val(true)), proveRangeSelects(rangeSelects), normalization(c) {
     if (control) {
       normalization.set("som",true); normalization.set("push_ite_bv",true);
       normalization.set("blast_select_store",true);
       normalization.set("bv_sort_ac",true);
       normalization.set("bv_extract_prop",true);
     }
+  }
+  const std::vector<Verification> &rangeSelectProofs() const { return selectProofs; }
+  bool provedTrue(const z3::expr &condition) const {
+    if (condition.is_true()) return true;
+    if (!proveRangeSelects || condition.is_false()) return false;
+    if (provedSelects.count(condition.id())) return true;
+    if (selectProofAttempts>=32) return false;
+    // Only cheap closed scalar facts: no stream results, memory or path
+    // assumptions enter this auxiliary proof. Unknown leaves the select intact.
+    std::set<unsigned> seen;std::vector<z3::expr> pending{condition};
+    while (!pending.empty()) {
+      const auto item=pending.back();pending.pop_back();
+      if (!seen.insert(item.id()).second) continue;
+      if (!item.is_app() || item.decl().decl_kind()==Z3_OP_SELECT) return false;
+      for (unsigned i=0;i<item.num_args();++i) pending.push_back(item.arg(i));
+    }
+    ++selectProofAttempts;
+    // A 5 ms budget was below ordinary solver-startup/scheduling jitter on
+    // Linux and caused harmless range facts to disappear under CI contention.
+    // The cap remains bounded; an unknown result still changes no semantics.
+    z3::solver solver(ctx);solver.set("timeout",50u);solver.add(!condition);
+    if (solver.check()!=z3::unsat) return false;
+    Verification proof;proof.status="proved-under-model";proof.strategy="unconditional-scalar-select-guard";
+    proof.obligation=solver.to_smt2();selectProofs.push_back(std::move(proof));
+    provedSelects.emplace(condition.id(),condition);return true;
   }
   z3::expr address(const z3::expr &base, const z3::expr &index, unsigned bits) const {
     return base + z3::bv2int(index, false) * ctx.int_val(bytes ? bits / 8 : 1);
@@ -137,7 +167,8 @@ public:
   case Expr::Kind::Greater: return boolean(z3::ugt(eval(*e.left), eval(*e.right)));
   case Expr::Kind::GreaterEqual: return boolean(z3::uge(eval(*e.left), eval(*e.right)));
   case Expr::Kind::Select: {
-    const auto condition = eval(*e.left) != ctx.bv_val(0,32);
+    const auto condition = normalize(eval(*e.left) != ctx.bv_val(0,32));
+    if (provedTrue(condition)) return eval(*e.right);
     const auto yes = value(r, *e.right, scalars, bases, memory, active && condition, heap);
     const auto no = value(r, *e.third, scalars, bases, memory, active && !condition, heap);
     return z3::ite(condition, yes, no);
@@ -216,7 +247,9 @@ public:
       CallEvent event{s.callee,!s.indirectTarget.empty(),active,ordinal,
         s.indirectTarget.empty() ? ctx.int_val(0) : bases.at(s.indirectTarget),memory,{}};
       for (const auto &arg : s.arguments) {
+        if (!arg.stream.empty()) { event.arguments.push_back(bases.at(arg.stream));continue; }
         const auto v = eval(*arg.value);
+        if (arg.nonnegativeInt) ranges=ranges && z3::implies(active,z3::ule(v,ctx.bv_val(INT32_MAX,32)));
         if (!arg.buffer.empty()) ranges=ranges && z3::implies(active,z3::ule(v,ctx.bv_val(arg.bound,32)));
         event.arguments.push_back(arg.buffer.empty() ? v :
           address(bases.at(arg.buffer), v, r.buffers.at(arg.buffer).elementBits));
@@ -257,8 +290,13 @@ public:
       state.callOrdinal=normalize(ordinal+z3::ite(active,ctx.int_val(1),ctx.int_val(0)));
       // Couple only executed event ordinals. Inactive branch sites consume no
       // environment choice and cannot change memory or an existing local.
-      const auto environment=ctx.constant("call_memories",ctx.array_sort(ctx.int_sort(),memory.get_sort()));
-      memory=normalize(z3::ite(active,z3::select(environment,ordinal),memory));
+      if (!contract.standardStream) {
+        const auto environment=ctx.constant("call_memories",ctx.array_sort(ctx.int_sort(),memory.get_sort()));
+        memory=normalize(z3::ite(active,z3::select(environment,ordinal),memory));
+      }
+      // The stdio contract keeps ALL stream-owned storage (including setvbuf
+      // buffers) disjoint from admitted user storage, and excludes callbacks.
+      // Only its opaque external state changes, coupled by the call sequence.
       if (!s.name.empty()) {
         if (contract.returnsVoid) throw std::invalid_argument("void call used as a value");
         const auto value=callResult(ctx,ordinal);
@@ -311,7 +349,8 @@ public:
 }
 static Verification verifyMemoryCase(const Region &original, const Region &candidate, unsigned timeoutMs,
                           bool successfulPrivateAllocations, bool expandRecursion,
-                          int rankParameter=-1,int fixedRank=-1,unsigned maximumRank=0) {
+                          int rankParameter=-1,int fixedRank=-1,unsigned maximumRank=0,
+                          bool alignedCallSites=false) {
   Verification proof;
   const auto hasRecords = [](const Region &r) {
     return std::any_of(r.buffers.begin(), r.buffers.end(), [](const auto &entry) {
@@ -334,7 +373,7 @@ static Verification verifyMemoryCase(const Region &original, const Region &candi
                      (expandRecursion ? "/bounded-self-recursion/checked-body-expansion/exclude-self-call-events" : "/bounded-self-recursion/induction-on-entry-rank") : "") +
                    (original.ownedHeap || candidate.ownedHeap ? "/owned-heap-lifetime-initialization/coupled-allocation-outcomes" : "") +
                    (original.memoryControl || candidate.memoryControl ? "/guarded-effects/checked-loop-exits/expanded-memory-reads/bv-extract-prop/ctx-simplify" : "") +
-                   "/simplify/blast-term-ite/simplify/smt";
+                   (alignedCallSites ? "/lazy-smt" : "/simplify/blast-term-ite/simplify/smt");
   if (successfulPrivateAllocations) proof.strategy += "/assume-successful-private-allocations/exclude-allocator-events";
   proof.memoryAddressUnit = bytes ? "byte" : "word32";
   try {
@@ -344,6 +383,7 @@ static Verification verifyMemoryCase(const Region &original, const Region &candi
     Environment leftScalars, rightScalars, leftBases, rightBases;
     std::vector<z3::expr> inputs;
     std::vector<std::pair<std::string,z3::expr>> functionTargets;
+    std::vector<std::pair<std::string,z3::expr>> streamTargets;
     auto compatible = [](const Region::Buffer &a, const Region::Buffer &b) {
       if (a.persistent != b.persistent || a.recordTag != b.recordTag || a.isUnion != b.isUnion ||
           a.recordBytes != b.recordBytes || a.recordAlignment != b.recordAlignment || a.fields != b.fields)
@@ -356,6 +396,12 @@ static Verification verifyMemoryCase(const Region &original, const Region &candi
     };
     for (unsigned i = 0; i < original.parameters.size(); ++i) {
       const auto &left = original.parameters[i], &right = candidate.parameters[i];
+      if (original.streams.count(left)!=candidate.streams.count(right))
+        throw std::invalid_argument("stream parameter kind mismatch");
+      if (original.streams.count(left)) {
+        const auto target=ctx.int_const(("stream_target_"+std::to_string(i)).c_str());
+        leftBases.emplace(left,target);rightBases.emplace(right,target);streamTargets.emplace_back(left,target);continue;
+      }
       const auto af=original.functionPointers.find(left), bf=candidate.functionPointers.find(right);
       if ((af==original.functionPointers.end())!=(bf==candidate.functionPointers.end()))
         throw std::invalid_argument("function-pointer parameter kind mismatch");
@@ -391,15 +437,24 @@ static Verification verifyMemoryCase(const Region &original, const Region &candi
     for (const auto &[name, buffer] : candidate.buffers) if (buffer.persistent && !leftBases.count(name))
       throw std::invalid_argument("candidate introduces a persistent object");
     const auto memory = ctx.constant("initial_memory", ctx.array_sort(ctx.int_sort(), ctx.bv_sort(bytes ? 8 : 32)));
-    const MemoryModel model(ctx, bytes, original.littleEndian, wordProjection, original.memoryControl || candidate.memoryControl, expandRecursion,rankParameter>=0 && fixedRank<0);
+    const MemoryModel model(ctx, bytes, original.littleEndian, wordProjection, original.memoryControl || candidate.memoryControl, expandRecursion,rankParameter>=0 && fixedRank<0,
+      !original.streams.empty() && !candidate.streams.empty());
     const auto left = model.execute(original, leftScalars, leftBases, memory);
     const auto right = model.execute(candidate, rightScalars, rightBases, memory);
+    proof.steps.insert(proof.steps.end(),model.rangeSelectProofs().begin(),model.rangeSelectProofs().end());
+    if (alignedCallSites && left.events.size()!=right.events.size()) {
+      proof.status="unsupported";proof.reason="static call-site counts differ";return proof;
+    }
+    if (alignedCallSites) proof.strategy+="/sufficient-static-call-site-correspondence";
     z3::params params(ctx); params.set("som", true); params.set("push_ite_bv", true);
     if (wordProjection) { params.set("blast_select_store", true); params.set("bv_sort_ac", true); }
     if (original.memoryControl || candidate.memoryControl) params.set("bv_extract_prop",true);
     const auto simplify = z3::with(z3::tactic(ctx, "simplify"), params);
     auto middle = z3::tactic(ctx, original.memoryControl || candidate.memoryControl ? "ctx-simplify" : "skip");
-    auto solver = (simplify & z3::tactic(ctx, "blast-term-ite") & middle & simplify & z3::tactic(ctx, "smt")).mk_solver();
+    // Keep ordinal-indexed stream results lazy in the sufficient site proof.
+    // Eager ite blasting can multiply equivalent guarded array selections.
+    auto solver = alignedCallSites ? z3::solver(ctx) :
+      (simplify & z3::tactic(ctx, "blast-term-ite") & middle & simplify & z3::tactic(ctx, "smt")).mk_solver();
     solver.set("timeout", timeoutMs);
     if (rankParameter>=0) {
       const auto rank=ctx.bv_const(("input_"+std::to_string(rankParameter)).c_str(),32);
@@ -409,6 +464,8 @@ static Verification verifyMemoryCase(const Region &original, const Region &candi
     // equality pattern among N valid function pointers, including aliases.
     for (const auto &[name,target]:functionTargets)
       solver.add(target>=ctx.int_val(1) && target<=ctx.int_val(unsigned(functionTargets.size())));
+    for (const auto &[name,target]:streamTargets)
+      solver.add(target>=ctx.int_val(1) && target<=ctx.int_val(unsigned(streamTargets.size())));
     if (successfulPrivateAllocations) for (unsigned i=0;i<std::max(left.heapEvents.size(),right.heapEvents.size());++i)
       solver.add(verification_detail::HeapState::outcome(ctx,ctx.int_val(i)));
     if (bytes) for (const auto &[name, buffer] : original.buffers)
@@ -439,7 +496,10 @@ static Verification verifyMemoryCase(const Region &original, const Region &candi
       }
     }
     auto memoryMismatch = left.second != right.second;
-    if ((original.memoryControl || candidate.memoryControl) && left.events.empty() && right.events.empty()) {
+    const auto storesOnly=[](const Region &r) {
+      return std::all_of(r.calls.begin(),r.calls.end(),[](const auto &entry){return entry.second.standardStream;});
+    };
+    if ((original.memoryControl || candidate.memoryControl) && storesOnly(original) && storesOnly(candidate)) {
       // Both executions start with the same array and only guarded stores can
       // change it. Checking the union of all store addresses is therefore exact
       // whole-memory equality, not a sample of the caller's memory.
@@ -467,9 +527,12 @@ static Verification verifyMemoryCase(const Region &original, const Region &candi
           a.count!=b.count || a.object!=b.object || a.offset!=b.offset || a.publicMemory!=b.publicMemory));
       }
     }
-    mismatch=mismatch || count(left.events)!=count(right.events);
-    for (const auto &a:left.events) for (const auto &b:right.events) {
-      const auto aligned=(a.active && b.active && a.ordinal==b.ordinal).simplify(params);
+    if (!alignedCallSites) mismatch=mismatch || count(left.events)!=count(right.events);
+    for (unsigned i=0;i<left.events.size();++i) for (unsigned j=0;j<right.events.size();++j) {
+      if (alignedCallSites && i!=j) continue;
+      const auto &a=left.events[i], &b=right.events[j];
+      if (alignedCallSites) mismatch=mismatch || a.active!=b.active || (a.active && a.ordinal!=b.ordinal);
+      const auto aligned=(alignedCallSites ? a.active : a.active && b.active && a.ordinal==b.ordinal).simplify(params);
       if (aligned.is_false()) continue;
       const auto &ac = original.calls.at(a.callee), &bc = candidate.calls.at(b.callee);
       if (a.indirect!=b.indirect || (!a.indirect && a.callee!=b.callee) ||
@@ -481,7 +544,7 @@ static Verification verifyMemoryCase(const Region &original, const Region &candi
       mismatch=mismatch || (aligned && different);
     }
     const auto domain = solver.assertions();
-    solver.add(mismatch);
+    solver.add(alignedCallSites ? mismatch.simplify(params) : mismatch);
     proof.obligation = solver.to_smt2();
     auto answer = z3::unknown;
     std::vector<z3::expr> predicates;
@@ -493,7 +556,7 @@ static Verification verifyMemoryCase(const Region &original, const Region &candi
           std::none_of(predicates.begin(),predicates.end(),[&](const auto &p) { return z3::eq(p,atom); }))
         predicates.push_back(atom);
     }
-    if (predicates.empty()) answer = solver.check();
+    if (predicates.empty() || alignedCallSites) answer = solver.check();
     else {
       // Exhaustive Boolean partitioning does not assume a branch outcome. Each
       // leaf retains its original path constraints, and substitution of that
@@ -558,6 +621,8 @@ static Verification verifyMemoryCase(const Region &original, const Region &candi
       for (const auto &input : inputs) proof.inputs.push_back(word(input));
       for (const auto &[name,target]:functionTargets)
         proof.localValues.emplace_back("function_target:"+name,uint32_t(model.eval(target,true).get_numeral_uint64()));
+      for (const auto &[name,target]:streamTargets)
+        proof.localValues.emplace_back("stream_target:"+name,uint32_t(model.eval(target,true).get_numeral_uint64()));
       proof.originalOutput = word(left.first); proof.candidateOutput = word(right.first);
       if (original.ownedHeap || candidate.ownedHeap) {
         proof.reason = "heap safety/initialization/cleanup, return, public memory or allocator trace obligation failed";
@@ -592,6 +657,24 @@ static Verification verifyMemoryCase(const Region &original, const Region &candi
 }
 Verification verifyMemory(const Region &original,const Region &candidate,unsigned timeoutMs,
                           bool successfulPrivateAllocations,bool expandRecursion) {
+  if (!original.streams.empty() && !candidate.streams.empty() && timeoutMs>=4) {
+    // Source transformations usually keep each static call site. Proving equal
+    // guards and equal active calls at each index is sufficient for equal
+    // executed traces, and avoids a quadratic ordinal-matching formula. It is
+    // stronger than the contract: failure must fall back, never become a false
+    // counterexample to the weaker executed-event comparison.
+    const auto begin=std::chrono::steady_clock::now();
+    auto fast=verifyMemoryCase(original,candidate,std::min(2000u,timeoutMs/3),successfulPrivateAllocations,false,-1,-1,0,true);
+    fast.label="sufficient static-call-site correspondence";
+    if (fast.status=="proved-under-model") return fast;
+    const auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-begin).count();
+    if (elapsed>=timeoutMs) {
+      Verification result;result.status="inconclusive";result.reason="stream verification budget exhausted";
+      result.priorAttempts.push_back(std::move(fast));return result;
+    }
+    auto complete=verifyMemoryCase(original,candidate,timeoutMs-unsigned(elapsed),successfulPrivateAllocations,false);
+    complete.priorAttempts.push_back(std::move(fast));return complete;
+  }
   if (!expandRecursion || (original.recursiveContract.empty() && candidate.recursiveContract.empty()))
     return verifyMemoryCase(original,candidate,timeoutMs,successfulPrivateAllocations,expandRecursion);
   const auto &r=original.recursiveContract.empty() ? candidate : original;

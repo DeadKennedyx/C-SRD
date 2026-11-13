@@ -76,12 +76,22 @@ public:
     result.target = ctx.getTargetInfo().getTriple().str();
     // Raw Clang lexing sees directives even in skipped preprocessor branches.
     clang::Lexer lexer(sm.getLocForStartOfFile(file), ctx.getLangOpts(), buffer.begin(), buffer.begin(), buffer.end());
+    const bool preprocessed=!ci.getFrontendOpts().Inputs.empty() && ci.getFrontendOpts().Inputs.front().getKind().isPreprocessed();
     clang::Token token;
     std::set<std::string> reserved;
     for (const auto &entry : ci.getPreprocessor().getIdentifierTable()) reserved.insert(entry.getKey().str());
     do {
       lexer.LexFromRawLexer(token);
-      if (token.is(clang::tok::hash)) pp.hazards.push_back(sm.getFileOffset(token.getLocation()));
+      if (token.is(clang::tok::hash)) {
+        const auto offset=sm.getFileOffset(token.getLocation());
+        if (preprocessed) {
+          // Already parsed compiler line markers are location metadata, even
+          // when the preprocessor compresses blank lines inside a function.
+          // Other directives stay hazards. No text-based C parsing is used.
+          lexer.LexFromRawLexer(token);
+          if (!token.is(clang::tok::numeric_constant)) pp.hazards.push_back(offset);
+        } else pp.hazards.push_back(offset);
+      }
       if (token.is(clang::tok::raw_identifier)) reserved.insert(token.getRawIdentifier().str());
     } while (!token.is(clang::tok::eof));
     clang::Rewriter rewriter(sm, ctx.getLangOpts());
@@ -242,7 +252,12 @@ public:
 };
 bool parse(const std::string &path, uint64_t seed, TransformResult &result, bool rewrite, const std::string *contents,
            const TransformResult *validationSource = nullptr) {
-  std::vector<std::string> flags = {"-x", "c", "-std=c11", "-pedantic-errors", "-Wno-keyword-macro", "-fsyntax-only", "-resource-dir=" CSRD_RESOURCE_DIR};
+  // Compiler-frozen .i files retain line markers and system-header provenance.
+  // Let Clang consume its actual preprocessed-C input format instead of treating
+  // those markers as GNU extensions in a fresh C source translation unit.
+  const auto language=std::filesystem::path(path).extension()==".i" ? "cpp-output" : "c";
+  std::vector<std::string> flags = {"-x", language, "-std=c11", "-pedantic-errors", "-Wno-keyword-macro", "-fsyntax-only", "-resource-dir=" CSRD_RESOURCE_DIR};
+  if (std::filesystem::path(path).extension()==".i") flags.push_back("-Wno-gnu-line-marker");
   if (std::string(CSRD_SYSROOT).size()) { flags.push_back("-isysroot"); flags.push_back(CSRD_SYSROOT); }
   clang::tooling::FixedCompilationDatabase db(std::filesystem::current_path().string(), flags);
   const auto absolute = std::filesystem::absolute(path).lexically_normal().string();

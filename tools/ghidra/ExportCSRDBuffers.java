@@ -40,6 +40,8 @@ public class ExportCSRDBuffers extends HeadlessScript {
     }
     private DataType callType(JsonObject argument) {
         String kind=argument.get("kind").getAsString();
+        if (kind.equals("int32")) return IntegerDataType.dataType;
+        if (kind.equals("file-stream")) return new PointerDataType(VoidDataType.dataType,currentProgram.getDefaultPointerSize());
         DataType type=UnsignedIntegerDataType.dataType;
         if (kind.equals("unsigned-char-buffer")) type=UnsignedCharDataType.dataType;
         else if (kind.equals("signed-char-buffer")) type=SignedCharDataType.dataType;
@@ -60,16 +62,11 @@ public class ExportCSRDBuffers extends HeadlessScript {
         if (!contracts.has(function.getName())) return;
         JsonObject contract = contracts.getAsJsonObject(function.getName());
         function.setReturnType(contract.get("returns").getAsString().equals("void") ?
-            VoidDataType.dataType : UnsignedIntegerDataType.dataType, SourceType.USER_DEFINED);
+            VoidDataType.dataType : contract.get("returns").getAsString().equals("int32") ? IntegerDataType.dataType :
+            UnsignedIntegerDataType.dataType, SourceType.USER_DEFINED);
         List<Variable> parameters = new ArrayList<>();
         for (JsonElement value : contract.getAsJsonArray("parameters")) {
-            String kind = value.getAsJsonObject().get("kind").getAsString();
-            DataType type = UnsignedIntegerDataType.dataType;
-            if (kind.equals("unsigned-char-buffer")) type = UnsignedCharDataType.dataType;
-            else if (kind.equals("signed-char-buffer")) type = SignedCharDataType.dataType;
-            else if (kind.equals("char-buffer")) type = CharDataType.dataType;
-            else if (!kind.equals("uint32") && !kind.equals("uint32-buffer")) throw new IllegalArgumentException("unknown call ABI");
-            if (!kind.equals("uint32")) type = new PointerDataType(type, currentProgram.getDefaultPointerSize());
+            DataType type = callType(value.getAsJsonObject());
             parameters.add(new ParameterImpl("arg" + parameters.size(), type, currentProgram));
         }
         function.replaceParameters(parameters, Function.FunctionUpdateType.DYNAMIC_STORAGE_ALL_PARAMS, true, SourceType.USER_DEFINED);
@@ -87,11 +84,12 @@ public class ExportCSRDBuffers extends HeadlessScript {
         report.addProperty("compiler_spec", currentProgram.getCompilerSpec().getCompilerSpecID().toString());
         report.addProperty("function", args[0]);
         JsonObject contracts = new JsonObject();
-        boolean guarded=false;
+        boolean guarded=false, stdio=false;
         if (args.length == 5) {
             JsonObject input = JsonParser.parseString(Files.readString(Paths.get(args[4]))).getAsJsonObject();
             guarded=input.get("model").getAsString().equals("opaque-guarded-v2");
-            if (!guarded && !input.get("model").getAsString().equals("opaque-sequenced-v1")) throw new IllegalArgumentException("unknown call model");
+            stdio=input.get("model").getAsString().equals("opaque-stdio-v3");
+            if (!guarded && !stdio && !input.get("model").getAsString().equals("opaque-sequenced-v1")) throw new IllegalArgumentException("unknown call model");
             for (JsonElement value : input.getAsJsonArray("functions")) {
                 JsonObject contract = value.getAsJsonObject(), publicContract = new JsonObject();
                 if(contract.has("indirect_parameter"))continue; // Typed via the public parameter ABI below.
@@ -99,7 +97,8 @@ public class ExportCSRDBuffers extends HeadlessScript {
                 JsonArray parameters = new JsonArray();
                 for (JsonElement p : contract.getAsJsonArray("parameters")) {
                     JsonObject arg = p.getAsJsonObject(), item = new JsonObject();
-                    item.add("kind", arg.get("kind"));
+                    // Range constraints belong to grading, never the public ABI.
+                    item.addProperty("kind", arg.get("kind").getAsString().equals("int32-nonnegative") ? "int32" : arg.get("kind").getAsString());
                     item.addProperty("read_only", arg.has("read_only") && arg.get("read_only").getAsBoolean());
                     parameters.add(item);
                 }
@@ -121,6 +120,10 @@ public class ExportCSRDBuffers extends HeadlessScript {
         if(guarded) {
             report.addProperty("schema_version",9);
             report.addProperty("memory_model","guarded-calls-buffers-v2");
+        }
+        if(stdio) {
+            report.addProperty("schema_version",10);
+            report.addProperty("memory_model","ordered-stdio-buffers-v1");
         }
         if (abi.length < 1 || abi.length > 8) throw new IllegalArgumentException("one to eight parameters required");
         report.addProperty("arity", abi.length);
@@ -155,6 +158,7 @@ public class ExportCSRDBuffers extends HeadlessScript {
                     JsonObject item = publicAbi.getAsJsonArray("parameters").get(i).getAsJsonObject();
                     String kind = item.get("kind").getAsString();
                     DataType type = kind.equals("function-pointer") ? callbackType(item) :
+                        kind.equals("file-stream") ? VoidDataType.dataType :
                         kind.equals("record-buffer") ? recordType(item.getAsJsonObject("record")) :
                         kind.equals("unsigned-char-buffer") ? UnsignedCharDataType.dataType :
                         kind.equals("signed-char-buffer") ? SignedCharDataType.dataType :

@@ -38,7 +38,7 @@ def validated_graph(export, *, heap=False):
     graph.definitions={}
     for oi,op in enumerate(ops):
         code=op["opcode"]
-        guarded=(export.get('schema_version'),export.get('memory_model'))==(9,'guarded-calls-buffers-v2')
+        guarded=(export.get('schema_version'),export.get('memory_model')) in ((9,'guarded-calls-buffers-v2'),(10,'ordered-stdio-buffers-v1'))
         calls={"CALL"} if heap or guarded or (export.get("schema_version"),export.get("memory_model")) in ((7,"ordered-calls-buffers-v1"),(8,"records-state-buffers-v1")) else set()
         if guarded:calls.add('CALLIND')
         extra={"INDIRECT"} if export.get("schema_version")==8 else set()

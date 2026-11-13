@@ -15,6 +15,9 @@ from inspect_region_binaries import elf_functions
 
 
 def harness(function,parameters,corpus="byte"):
+    if corpus=='stdio':
+        from stdio_observation_cases import cost_driver
+        return cost_driver(function,parameters)
     if corpus=="record":
         from record_observation_cases import cost_driver
         return cost_driver(function,parameters)
@@ -84,6 +87,9 @@ def run(args,root):
         report["dependencies"]["tools/dispatch_observation_cases.py"]=file_hash(source_root/"tools/dispatch_observation_cases.py")
         report["dependencies"]["tests/fixtures/dispatch_environment.h"]=file_hash(source_root/"tests/fixtures/dispatch_environment.h")
         report["scope"]+="; recursion ranks 0..9; all four callback bindings; stateful callbacks with logging disabled"
+    if args.corpus=='stdio':
+        report['dependencies']['tools/stdio_observation_cases.py']=file_hash(source_root/'tools/stdio_observation_cases.py')
+        report['scope']+='; real tmpfile I/O, successful paths only; stream preparation/closing outside clock; target fflush included; contents/positions included in untimed checksum'
     if args.corpus=="call":
         from call_observation_cases import ENVIRONMENT
         report["environment_source_sha256"]=file_hash(ENVIRONMENT)
@@ -140,7 +146,7 @@ def run(args,root):
 if __name__=="__main__":
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("--reconstruction-report",required=True);p.add_argument("--output-dir",required=True)
     p.add_argument('--replay-report',help='finished revised observer replay for the same frozen binaries')
-    p.add_argument("--corpus",choices=("byte","call","record","control","heap","dispatch"),default="byte")
+    p.add_argument("--corpus",choices=("byte","call","record","control","heap","dispatch","stdio"),default="byte")
     p.add_argument("--iterations",type=int,default=1000000);p.add_argument("--repetitions",type=int,default=7);args=p.parse_args()
     if args.iterations<1 or args.repetitions<3:p.error("positive iterations and at least three repetitions required")
     root=Path(args.output_dir).resolve();root.mkdir(parents=True,exist_ok=False)

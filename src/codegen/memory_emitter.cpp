@@ -110,7 +110,9 @@ class MemoryEmitter {
     for (unsigned i = 0; i < s.arguments.size(); ++i) {
       if (i) invocation += ", ";
       const auto &arg = s.arguments[i];
-      if (arg.buffer.empty()) invocation += decode(expression(*arg.value));
+      if (!arg.stream.empty()) invocation += arg.stream;
+      else if (arg.nonnegativeInt) invocation += "((int)("+decode(expression(*arg.value))+"))";
+      else if (arg.buffer.empty()) invocation += decode(expression(*arg.value));
       else if (arg.value->kind == Expr::Kind::Constant && arg.value->value == 0) invocation += arg.buffer;
       else invocation += "(" + arg.buffer + " + " + index(arg.value.get(), arg.bound) + ")";
     }
@@ -119,7 +121,7 @@ class MemoryEmitter {
     else {
       // The call itself is a full expression and executes once. Its ordinary
       // result crosses the ABI boundary before subsequent encoded arithmetic.
-      const auto ordinary = temporary(invocation);
+      const auto ordinary = temporary(region->calls.at(s.callee).returnsSigned ? "((unsigned int)("+invocation+"))" : invocation);
       const auto value = encode(ordinary);
       if (s.declaresCallResult) declare(s.name, value);
       else result.body += " " + values.at(s.name) + " = " + value + ";";
@@ -203,7 +205,7 @@ public:
     if (!region->ordered()) throw std::invalid_argument("ordered emission requires memory or calls");
     result.body = "{";
     for (const auto &name : region->parameters) {
-      if (region->buffers.count(name) || region->functionPointers.count(name)) result.body += " (void)" + name + ";";
+      if (region->buffers.count(name) || region->functionPointers.count(name) || region->streams.count(name)) result.body += " (void)" + name + ";";
       else declare(name, encode(name));
     }
     statements(region->statements);

@@ -1,0 +1,11 @@
+{
+  "model": "opaque-stdio-v3",
+  "functions": [
+    {"name": "fgetc", "returns": "int32", "parameters": [{"kind": "file-stream"}]},
+    {"name": "fputc", "returns": "int32", "parameters": [{"kind": "int32-nonnegative"}, {"kind": "file-stream"}]},
+    {"name": "fflush", "returns": "int32", "parameters": [{"kind": "file-stream"}]},
+    {"name": "feof", "returns": "int32", "parameters": [{"kind": "file-stream"}]},
+    {"name": "ferror", "returns": "int32", "parameters": [{"kind": "file-stream"}]},
+    {"name": "clearerr", "returns": "void", "parameters": [{"kind": "file-stream"}]}
+  ]
+}

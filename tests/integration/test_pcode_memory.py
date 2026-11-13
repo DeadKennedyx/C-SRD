@@ -183,6 +183,71 @@ def heap_graph(callee='malloc',dynamic=False,private_tail=False):
 
 
 class MemoryReconstruction(unittest.TestCase):
+    def test_stdio_handle_identity_and_signed_call_boundaries(self):
+        from pcode_memory import STDIO_ABI
+        e=Export();e.data.update(schema_version=10,memory_model='ordered-stdio-buffers-v1',
+                                call_signatures=copy.deepcopy(STDIO_ABI),persistent_objects=[])
+        e.data['parameters'][0]['kind']='file-stream'
+        stream=e.op('COPY',[e.p],8)
+        byte=e.op('INT_AND',[e.x,e.constant(255)])
+        reply=e.op('CALL',[e.destination,byte,stream]);e.data['operations'][-1]['callee']='fputc'
+        e.store(e.q,reply);data=e.finish(reply)
+        source='#include <stdio.h>\nunsigned f(FILE*p,unsigned*q,unsigned x){unsigned r=(unsigned)fputc((int)(x&255u),p);*q=r;return r;}\n'
+        answer=reconstruct(data)
+        self.assertIn('#include <stdio.h>',answer)
+        self.assertIn('(unsigned int)(fputc(',answer)
+        self.grade(source,answer,calls='stdio')
+        self.grade(source,reconstruct(data,call_argument_offset=1),'counterexample',calls='stdio')
+        for fault in ('load','arithmetic','abi','unbounded-int'):
+            bad=copy.deepcopy(data)
+            if fault=='load':bad['operations'][0].update(opcode='LOAD',inputs=[e.space,e.p])
+            elif fault=='arithmetic':bad['operations'][0].update(opcode='INT_ADD',inputs=[e.p,e.destination])
+            elif fault=='abi':bad['call_signatures']['fputc']['parameters'][0]['kind']='uint32'
+            else:
+                bad['operations'][2]['inputs'][1]=e.x
+                # Even an identity comparison must reject a character cast
+                # whose range exceeds this contract's signed-int boundary.
+                unsafe=reconstruct(bad)
+                row=self.grade(unsafe,unsafe,'counterexample',calls='stdio')
+                self.assertGreaterEqual(row['proof']['inputs'][0],1<<31);continue
+            with self.assertRaises(Unsupported):reconstruct(bad)
+
+    def test_stdio_stream_choice_keeps_opaque_identities_on_each_path(self):
+        from pcode_memory import STDIO_ABI
+        e=Export();e.data.update(schema_version=10,memory_model='ordered-stdio-buffers-v1',
+                                call_signatures=copy.deepcopy(STDIO_ABI),persistent_objects=[])
+        for p in e.data['parameters'][:2]:p['kind']='file-stream'
+        bit=e.op('INT_AND',[e.x,e.constant(1)])
+        condition=e.op('INT_NOTEQUAL',[bit,e.constant(0)],size=1)
+        e.op('CBRANCH',[e.destination,condition],size=None);first=len(e.data['operations'])
+        no=e.op('COPY',[e.p],size=8);e.op('BRANCH',[e.destination],size=None);second=len(e.data['operations'])
+        yes=e.op('COPY',[e.q],size=8);e.op('BRANCH',[e.destination],size=None);join=len(e.data['operations'])
+        stream=e.op('MULTIEQUAL',[no,yes],size=8)
+        byte=e.op('INT_AND',[e.x,e.constant(255)])
+        reply=e.op('CALL',[e.destination,byte,stream]);e.data['operations'][-1]['callee']='fputc'
+        data=e.finish(e.op('INT_ADD',[reply,e.op('INT_MULT',[e.x,e.constant(7)])]))
+        ranges=[(0,first),(first,second),(second,join),(join,len(data['operations']))]
+        incoming=[[],[0],[0],[1,2]];outgoing=[[1,2],[3],[3],[]];data['blocks']=[]
+        for i,(begin,end) in enumerate(ranges):
+            for op in data['operations'][begin:end]:op['block']=i
+            data['blocks'].append({'id':i,'operations':list(range(begin,end)),
+                                   'incoming':incoming[i],'outgoing':outgoing[i]})
+        source=('#include <stdio.h>\nunsigned f(FILE*p,FILE*q,unsigned x){unsigned r=0u;'
+                'if(x&1u)r=(unsigned)fputc((int)(x&255u),q);'
+                'else r=(unsigned)fputc((int)(x&255u),p);return r+7u*x;}\n')
+        metrics={};answer=reconstruct(data,metrics=metrics)
+        self.assertEqual(metrics['terminal_paths'],2)
+        self.grade(source,answer,calls='stdio')
+        wrong=copy.deepcopy(data)
+        wrong['operations'][first]['inputs']=[e.q]
+        wrong['operations'][second]['inputs']=[e.p]
+        self.grade(source,reconstruct(wrong),'counterexample',calls='stdio')
+        wrong=copy.deepcopy(data);wrong['operations'][join]['inputs'].reverse()
+        with self.assertRaises(Unsupported):reconstruct(wrong)
+        wrong=copy.deepcopy(data)
+        wrong['operations'][join+1].update(opcode='LOAD',inputs=[e.space,stream])
+        with self.assertRaises(Unsupported):reconstruct(wrong)
+
     def test_heap_calls_null_branches_and_public_effects(self):
         for callee,arguments in [('malloc','4u'),('calloc','1u,4u'),('realloc','0,4u')]:
             data=heap_graph(callee);metrics={}
@@ -340,7 +405,7 @@ class MemoryReconstruction(unittest.TestCase):
             (p / "a.c").write_text(reference + "\n")
             (p / "b.c").write_text(candidate)
             process = subprocess.run([TOOL, "verify", p / "a.c", p / "b.c", "--report", p / "report.json",
-                                      *(["--call-contracts",ROOT/"tests/fixtures"/("guarded_calls.json" if calls=='guarded' else 'calls.json')] if calls else [])],
+                                      *(["--call-contracts",ROOT/"tests/fixtures"/("stdio_calls.json" if calls=='stdio' else "guarded_calls.json" if calls=='guarded' else 'calls.json')] if calls else [])],
                                      capture_output=True, text=True)
             report = json.loads((p / "report.json").read_text())
             f, = report["functions"]
@@ -383,16 +448,19 @@ class MemoryReconstruction(unittest.TestCase):
         self.grade(source,reconstruct(data,final_store_offset=1),'counterexample',calls='guarded')
 
     def test_odd_scaled_loop_bounds_use_exact_modular_inverse(self):
-        for scale in (3,0x1beeb35,0xfffffffd):
+        for scale,translated in ((s,t) for s in (3,0x1beeb35,0xfffffffd) for t in (False,True)):
             e=Export();e.data.update(schema_version=9,memory_model='guarded-calls-buffers-v2',function='guarded_direct',
                 persistent_objects=[],call_signatures={'dispatch_add':{'returns':'uint32','parameters':copy.deepcopy(e.data['parameters'])}})
             limit=e.op('INT_AND',[e.x,e.constant(3)]);scaled=e.op('INT_MULT',[limit,e.constant(scale)])
+            common=e.op('INT_MULT',[e.x,e.constant(0xfffffffd)]) if translated else e.constant(0)
+            endpoint=e.op('INT_ADD',[common,scaled]) if translated else scaled
             e.op('BRANCH',[e.destination],size=None);header=len(e.data['operations'])
-            counter=e.op('MULTIEQUAL',[e.constant(0),e.constant(0)]);phi=e.data['operations'][-1]
-            condition=e.op('INT_NOTEQUAL',[counter,scaled],size=1)
+            counter=e.op('MULTIEQUAL',[common,e.constant(0)]);phi=e.data['operations'][-1]
+            condition=e.op('INT_NOTEQUAL',[counter,endpoint],size=1)
             e.op('CBRANCH',[e.destination,condition],size=None);body=len(e.data['operations'])
             reply=e.op('CALL',[e.destination,e.p,e.q,e.x]);e.data['operations'][-1]['callee']='dispatch_add'
-            value=e.op('INT_ADD',[reply,counter]);e.store(e.p,value)
+            offset=e.op('INT_SUB',[counter,common]) if translated else counter
+            value=e.op('INT_ADD',[reply,offset]);e.store(e.p,value)
             increment=e.op('INT_ADD',[counter,e.constant(scale)]);phi['inputs'][1]=increment
             e.op('BRANCH',[e.destination],size=None);end=len(e.data['operations'])
             data=e.finish(e.load(e.p));ranges=[(0,header),(header,body),(body,end),(end,len(data['operations']))]

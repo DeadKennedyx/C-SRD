@@ -13,11 +13,14 @@ struct CallParameter {
 };
 struct CallContract {
   bool returnsVoid = false;
+  bool returnsSigned = false;
+  bool standardStream = false;
   std::vector<CallParameter> parameters;
   bool guarded = false;
   std::string indirectParameter;
   bool recursive = false;
   unsigned rankParameter = 0, maximumRank = 0;
+  const char *returnKind() const { return returnsVoid ? "void" : returnsSigned ? "int32" : "uint32"; }
 };
 using CallContracts = std::map<std::string, CallContract>;
 inline std::string indirectContractKey(const std::string &function, const std::string &parameter) {

@@ -47,6 +47,7 @@ jobs:
             build/expanded-differential.json
             build/buffer-differential.json
             build/guarded-call-differential.json
+            build/stdio-call-differential.json
             build/protection-audit/
       - name: Core linked validation matrix
         if: matrix.build_type == 'Release'

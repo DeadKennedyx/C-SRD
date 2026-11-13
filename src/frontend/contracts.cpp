@@ -23,7 +23,8 @@ CallContracts parseCallContracts(const std::string &text) {
   if (!root) throw std::invalid_argument("call contracts must be an object");
   keys(*root, {"model", "functions"});
   const auto model=string(*root,"model");
-  const bool guarded=model=="opaque-guarded-v2";
+  const bool streams=model=="opaque-stdio-v3";
+  const bool guarded=model=="opaque-guarded-v2" || streams;
   if (model != "opaque-sequenced-v1" && !guarded) throw std::invalid_argument("unsupported call-contract model");
   const auto *functions = root->getArray("functions");
   if (!functions || functions->empty() || functions->size() > 64) throw std::invalid_argument("require 1..64 call contracts");
@@ -31,18 +32,20 @@ CallContracts parseCallContracts(const std::string &text) {
   for (const auto &value : *functions) {
     const auto *function = value.getAsObject();
     if (!function) throw std::invalid_argument("call contract must be an object");
-    if (guarded) keys(*function, {"name", "returns", "parameters", "indirect_parameter", "recursion"});
+    if (guarded && !streams) keys(*function, {"name", "returns", "parameters", "indirect_parameter", "recursion"});
     else keys(*function, {"name", "returns", "parameters"});
     const auto name = string(*function, "name"), returns = string(*function, "returns");
-    if (name.empty() || (returns != "uint32" && returns != "void")) throw std::invalid_argument("invalid call name or return kind");
+    if (name.empty() || (returns != "uint32" && returns != "void" && !(streams && returns=="int32")))
+      throw std::invalid_argument("invalid call name or return kind");
     const auto *parameters = function->getArray("parameters");
     if (!parameters || parameters->size() > 8) throw std::invalid_argument("require 0..8 call parameters");
     CallContract contract; contract.returnsVoid = returns == "void"; contract.guarded=guarded;
+    contract.returnsSigned=returns=="int32";contract.standardStream=streams;
     for (const auto &p : *parameters) {
       const auto *parameter = p.getAsObject();
       if (!parameter) throw std::invalid_argument("call parameter must be an object");
       CallParameter arg; arg.kind = string(*parameter, "kind");
-      if (arg.kind == "uint32") keys(*parameter, {"kind"});
+      if (arg.kind == "uint32" || (streams && (arg.kind=="file-stream" || arg.kind=="int32-nonnegative"))) keys(*parameter, {"kind"});
       else {
         keys(*parameter, {"kind", "read_only", "minimum_elements"});
         if (arg.kind != "uint32-buffer" && arg.kind != "unsigned-char-buffer" &&
@@ -53,6 +56,15 @@ CallContracts parseCallContracts(const std::string &text) {
         arg.readOnly = *readOnly; arg.minimumElements = unsigned(*count);
       }
       contract.parameters.push_back(std::move(arg));
+    }
+    if (streams) {
+      const std::map<std::string,std::vector<std::string>> allowed{
+        {"fgetc",{"file-stream"}}, {"fputc",{"int32-nonnegative","file-stream"}},
+        {"fflush",{"file-stream"}}, {"feof",{"file-stream"}}, {"ferror",{"file-stream"}}, {"clearerr",{"file-stream"}}};
+      const auto found=allowed.find(name);std::vector<std::string> kinds;
+      for (const auto &p:contract.parameters) kinds.push_back(p.kind);
+      if (found==allowed.end() || found->second!=kinds || returns!=(name=="clearerr" ? "void" : "int32"))
+        throw std::invalid_argument("stdio contracts require the exact supported C11 stream interface");
     }
     std::string key=name;
     if (function->get("indirect_parameter")) {

@@ -1,5 +1,6 @@
 """Reject broken identity, grading, repetition and observation-model links."""
 import json
+import shutil
 from pathlib import Path
 import sys
 import tempfile
@@ -10,6 +11,7 @@ sys.path.insert(0, str(ROOT/'tools'))
 from audit_protection import file_hash
 from check_buffer_evidence import check_replay
 from pcode_memory import reconstruct
+from replay_buffer_observers import reuse_collection_grade
 
 
 class ReplayEvidence(unittest.TestCase):
@@ -73,6 +75,24 @@ class ReplayEvidence(unittest.TestCase):
         self.assertEqual(result['original_status_retained'], 'failed')
         self.assertEqual(result['recovered_observations'], 1)
         self.assertEqual(result['rejected_controls'], 1)
+
+    def test_collection_grades_reused_only_for_exact_answers_and_controls(self):
+        source=self.root/'attempt-0';shutil.copytree(self.root/'0',source)
+        folder=self.root/'new';folder.mkdir()
+        wrong='return-plus-one';shutil.copyfile(source/(wrong+'.c'),folder/(wrong+'.c'))
+        args=(self.root,self.matrix['observations'][0],self.row,self.matrix['groups'][0],folder,{wrong:{'result_offset':1}})
+        proof,controls=reuse_collection_grade(*args)
+        self.assertEqual(proof['verification'],'proved-under-model')
+        self.assertEqual(controls,{wrong:'counterexample'})
+        # Inconclusive judgments remain inconclusive when reused.
+        self.matrix['observations'][0]['verification']='inconclusive'
+        self.proof['functions'][0]['verification']='inconclusive'
+        self.write(source/'verification.json',self.proof)
+        self.assertEqual(reuse_collection_grade(*args)[0]['verification'],'inconclusive')
+        self.proof['candidate_sha256']='different-answer';self.write(source/'verification.json',self.proof)
+        with self.assertRaisesRegex(ValueError,'grading identity'):reuse_collection_grade(*args)
+        (folder/(wrong+'.c')).write_text('changed corruption control')
+        self.assertIsNone(reuse_collection_grade(*args))
 
     def test_duplicate_repetition_rejected(self):
         self.replay['records'].append(dict(self.row)); self.save()

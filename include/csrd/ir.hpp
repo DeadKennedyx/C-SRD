@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <memory>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 #include "csrd/calls.hpp"
@@ -34,6 +35,8 @@ struct Statement {
   std::unique_ptr<Expr> dynamicIndex; // If present, index is its proven upper bound.
   struct Argument {
     std::string buffer; // Empty for uint32; otherwise an original buffer parameter.
+    std::string stream; // Opaque caller-owned FILE identity; never a data address.
+    bool nonnegativeInt = false;
     std::unique_ptr<Expr> value; // Scalar value or captured pointer offset.
     uint32_t bound = 0;
   };
@@ -70,10 +73,11 @@ struct Region {
   bool orderedCalls = false;
   bool guardedCalls = false;
   std::map<std::string, std::string> functionPointers; // Parameter -> contract key.
+  std::set<std::string> streams; // Caller-owned ordinary FILE * parameters.
   std::string recursiveContract;
   bool memoryControl = false;
   bool ownedHeap = false;
   CallContracts calls;
-  bool ordered() const { return !buffers.empty() || orderedCalls || ownedHeap || !functionPointers.empty(); }
+  bool ordered() const { return !buffers.empty() || orderedCalls || ownedHeap || !functionPointers.empty() || !streams.empty(); }
 };
 } // namespace csrd

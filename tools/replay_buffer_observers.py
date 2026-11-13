@@ -10,6 +10,7 @@ import fcntl
 import json
 from pathlib import Path
 import random
+import shutil
 import sys
 
 from audit_protection import Runner, file_hash, write_json, executable
@@ -21,6 +22,35 @@ ROOT=Path(__file__).resolve().parents[1]
 FILES=("tools/replay_buffer_observers.py","tools/pcode_memory.py","tools/pcode_memory_cfg.py",
        "tools/pcode_values.py","tools/pcode_wide.py","tools/pcode_cfg.py","tools/effort_resources.py",
        "tools/audit_buffer_reconstruction.py","tools/audit_protection.py")
+
+
+def reuse_collection_grade(root, old, row, group, folder, controls):
+    """Reuse exact saved C judgments, including explicit inconclusive results.
+
+    The caller first matches the verifier, contracts, budget and observation
+    model. Adapter/resource measurements are always executed independently.
+    """
+    if old.get('recovered_sha256')!=row['recovered_sha256'] or set(old.get('controls',{}))!=set(controls):
+        return None
+    source=Path(root)/f"attempt-{old['attempt']}"
+    if file_hash(old['recovered_path'])!=old['recovered_sha256']:raise ValueError('collection answer changed')
+    for name in controls:
+        if (source/(name+'.c')).read_bytes()!=(folder/(name+'.c')).read_bytes():return None
+    judged={}
+    for name in ('verification',*controls):
+        proof=json.loads((source/(name+'.json')).read_text())
+        digest=row['recovered_sha256'] if name=='verification' else file_hash(folder/(name+'.c'))
+        expected=old['verification'] if name=='verification' else old['controls'][name]
+        functions=proof.get('functions',[])
+        if (proof.get('source_sha256')!=group['reference_sha256'] or proof.get('candidate_sha256')!=digest or
+                len(functions)!=1 or functions[0].get('function')!=row['function'] or
+                functions[0].get('verification')!=expected or
+                proof.get('verification_heap_observation','events')!='events' or
+                proof.get('verification_recursion_observation','events')!='events'):
+            raise ValueError('collection grading identity, status or observation model changed')
+        judged[name]=functions[0]
+    for name in judged:shutil.copyfile(source/(name+'.json'),folder/(name+'.json'))
+    return judged['verification'],{name:judged[name]['verification'] for name in controls}
 
 
 def run(args,root):
@@ -42,6 +72,10 @@ def run(args,root):
         "adapter_hashes":{f:file_hash(ROOT/f) for f in FILES},"repetitions":args.repetitions,
         "scope":"same saved binary-only exports; new adapter costs; prior Ghidra costs are not rerun; mutations graded against original source; no proof of binary lifting"}
     command=Runner(report)
+    reuse=(previous.get('control_reference')=='original-source' and
+           previous.get('tools',{}).get('csrd',{}).get('sha256')==report['csrd_sha256'] and
+           previous.get('protocol',{}).get('timeout_ms')==args.timeout_ms and
+           heap_observation==recursion_observation=='events')
     try:
         eligible=[r for r in previous["observations"] if r.get("export_path") and
                   json.loads(Path(r["export_path"]).read_text()).get("status")=="decompiled"]
@@ -76,8 +110,6 @@ def run(args,root):
             group=previous["groups"][row["group"]];folder=root/str(row["attempt"])
             key=(group["reference_sha256"],row["recovered_sha256"],row["function"])
             if key not in cache:
-                proof=grade(command,tool,group["reference"],row["recovered_path"],row["function"],folder/"verification.json",args.timeout_ms,contract_path,heap_observation,recursion_observation)
-                control_status={}
                 export=json.loads(Path(row["export_path"]).read_text())
                 controls={"return-plus-one":{"result_offset":1}}
                 if row["adapter"]["metrics"].get("public_stores",row["adapter"]["metrics"]["stores"]):controls["last-store-plus-one"]={"final_store_offset":1}
@@ -85,10 +117,17 @@ def run(args,root):
                     controls["call-argument-plus-one"]={"call_argument_offset":1}
                 for name,mutation in controls.items():
                     wrong=folder/(name+".c");wrong.write_text(reconstruct(export,**mutation))
-                    checked=grade(command,tool,group["reference"],wrong,row["function"],folder/(name+".json"),args.timeout_ms,contract_path,heap_observation,recursion_observation)
-                    control_status[name]=checked["verification"]
+                saved=reuse_collection_grade(path.parent,previous['observations'][row['prior_attempt']],row,group,folder,controls) if reuse else None
+                if saved:proof,control_status=saved
+                else:
+                    proof=grade(command,tool,group["reference"],row["recovered_path"],row["function"],folder/"verification.json",args.timeout_ms,contract_path,heap_observation,recursion_observation)
+                    control_status={}
+                    for name in controls:
+                        checked=grade(command,tool,group["reference"],folder/(name+'.c'),row["function"],folder/(name+".json"),args.timeout_ms,contract_path,heap_observation,recursion_observation)
+                        control_status[name]=checked["verification"]
                 cache[key]={"verification":proof["verification"],"semantic_model":proof.get('semantic_model'),"proof_path":str(folder/"verification.json"),
                             "proof_sha256":file_hash(folder/"verification.json"),"controls":control_status}
+                if saved:cache[key]['grading_reused_from_collection_attempt']=row['prior_attempt']
                 if row["adapter"]["metrics"].get("calls") and "call-argument-plus-one" not in controls:
                     cache[key]["control_skips"]={"call-argument-plus-one":"no scalar call argument to mutate"}
             row.update(cache[key])
@@ -100,6 +139,7 @@ def run(args,root):
             if any(status=="proved-under-model" for status in row["controls"].values()):row["status"]="control-failure"
             elif any(status!="counterexample" for status in row["controls"].values()) and row["status"]!='false-reconstruction':row["status"]="control-inconclusive"
         report["distinct_graded_answers"]=len(cache)
+        report['distinct_collection_grades_reused']=sum('grading_reused_from_collection_attempt' in value for value in cache.values())
         report["outcomes"]=dict(Counter(r["status"] for r in report["records"]))
         for name,expected in report["adapter_hashes"].items():
             if file_hash(ROOT/name)!=expected:raise ValueError("adapter changed during measurement")

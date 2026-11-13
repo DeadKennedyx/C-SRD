@@ -140,6 +140,7 @@ def check_reconstruction(path, replay_path=None):
         require([v["variant"] for v in group["variants"]] == ["original", "identity", "affine", "original-copy"], "variant set changed")
         for variant in group["variants"]:
             checked(variant["binary"], variant["binary_sha256"]); checked(variant["source"], variant["source_sha256"])
+            if 'model_source' in variant:checked(variant['model_source'],variant['model_source_sha256'])
         require(group["variants"][0]["binary_sha256"] == group["variants"][3]["binary_sha256"], "copy control is not identical")
     schedule = report["schedule"]
     expected_schedule = {(r, g, v) for r in range(report["protocol"]["repetitions"])
@@ -217,13 +218,15 @@ def check_runtime(path):
         _, evidence = load_matrix(report['matrix']['path'], replay['path'])
         require(evidence == replay, 'runtime observer binding changed')
     selected_cases,selected_expected,layouts=cases,expected,LAYOUTS
-    if report["protocol"].get("corpus")=="dispatch":
+    if report["protocol"].get("corpus")=="stdio":
+        from stdio_observation_cases import cases as selected_cases,expected as selected_expected,LAYOUTS as layouts
+    elif report["protocol"].get("corpus")=="dispatch":
         from dispatch_observation_cases import cases as selected_cases,expected as selected_expected,LAYOUTS as layouts
     elif report["protocol"].get("corpus")=="control":
         from control_observation_cases import cases as selected_cases,expected as selected_expected,LAYOUTS as layouts
     elif report["protocol"].get("corpus")=="heap":
         from heap_observation_cases import cases as selected_cases,expected as selected_expected,LAYOUTS as layouts
-    elif report["protocol"].get("corpus","word")!="word":raise ValueError("evidence checker supports word/control/heap/dispatch runtime corpora")
+    elif report["protocol"].get("corpus","word")!="word":raise ValueError("evidence checker supports word/control/heap/dispatch/stdio runtime corpora")
     require(report["cases"] == selected_cases(report["protocol"].get("input_protocol", "seeded-v1")) and
             report["layouts"] == list(map(list, layouts)), "runtime input protocol changed")
     groups = [g for g in matrix["groups"] if (not report["protocol"]["function"] or g["function"] in report["protocol"]["function"])
@@ -253,6 +256,9 @@ def check_runtime(path):
                     configuration=load(trace_path.parent/f'{ci}.json')
                     require(configuration.get('observe_heap') is True and configuration.get('call_scope') is True,
                             'heap tracking was not enabled')
+                if report['protocol'].get('corpus')=='stdio':
+                    configuration=load(trace_path.parent/f'{ci}.json')
+                    require(configuration.get('observe_stdio') is True and configuration.get('call_scope') is True,'stdio tracing was not enabled')
                 if report['protocol'].get('corpus')=='dispatch':
                     configuration=load(trace_path.parent/f'{ci}.json')
                     require(configuration.get('observe_call_events') is True and configuration.get('call_scope') is True,
@@ -270,6 +276,8 @@ def check_runtime(path):
                     trace["return_value"] == oracle["return_value"] and trace["final_memory"] == oracle["final_memory"], "trace outcome/oracle mismatch")
             if report['protocol'].get('corpus')=='dispatch':
                 require(all(trace.get(k)==oracle[k] for k in ('external_state','events')),'call events/state mismatch')
+            if report['protocol'].get('corpus')=='stdio':
+                require(all(trace.get(k)==oracle[k] for k in ('stdio_state','stdio_events')) and trace.get('stdio_observer_errors')==[],'stdio events/state mismatch')
             if report['protocol'].get('corpus')=='heap':
                 require(trace.get('heap_observer_errors')==[] and trace.get('heap_live_objects_at_return')==0 and
                         isinstance(trace.get('heap_events'),list),'incomplete owned-heap observation')
@@ -288,7 +296,7 @@ def check_runtime(path):
         fits += 1
     return {"report_sha256": file_hash(path), "observations": len(seen), "checked_executions": executions, "replayed_fits": fits,
             "harness_input_hashes_present": report["schema_version"] >= 2,
-            "replay_input_model_sha256": file_hash(ROOT / ("tools/dispatch_observation_cases.py" if report["protocol"].get("corpus")=="dispatch" else "tools/heap_observation_cases.py" if report["protocol"].get("corpus")=="heap" else "tools/control_observation_cases.py" if report["protocol"].get("corpus")=="control" else "tools/buffer_observation_cases.py"))}
+            "replay_input_model_sha256": file_hash(ROOT / ("tools/stdio_observation_cases.py" if report["protocol"].get("corpus")=="stdio" else "tools/dispatch_observation_cases.py" if report["protocol"].get("corpus")=="dispatch" else "tools/heap_observation_cases.py" if report["protocol"].get("corpus")=="heap" else "tools/control_observation_cases.py" if report["protocol"].get("corpus")=="control" else "tools/buffer_observation_cases.py"))}
 
 
 def main():

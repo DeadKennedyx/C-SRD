@@ -25,15 +25,26 @@ class CodePointer:
     slot: int  # Opaque code identity, never a data address or scalar.
 
 
+@dataclass(frozen=True)
+class StreamPointer:
+    bits: int
+    slot: int  # Opaque FILE identity; no FILE layout or buffer access.
+
+
 TYPES = {"uint32": "unsigned int", "uint32-buffer": "unsigned int",
          "unsigned-char-buffer": "unsigned char", "signed-char-buffer": "signed char", "char-buffer": "char"}
 ALLOCATORS = {"malloc", "calloc", "realloc", "free"}
+STDIO_ABI = {name: {'returns': 'void' if name=='clearerr' else 'int32',
+                   'parameters': [{'kind':kind,'read_only':False} for kind in kinds]}
+             for name,kinds in {'fgetc':['file-stream'],'fputc':['int32','file-stream'],
+                               'fflush':['file-stream'],'feof':['file-stream'],
+                               'ferror':['file-stream'],'clearerr':['file-stream']}.items()}
 
 
 def has_scalar_call_argument(export):
     # Mutating a recursive rank can introduce nontermination/stack exhaustion;
     # use return/memory controls for self-calls, not an unsafe execution control.
-    direct=any(p['kind']=='uint32' for op in export['operations'] if op['opcode']=='CALL' and op.get('callee')!=export['function']
+    direct=any(p['kind'] in ('uint32','int32') for op in export['operations'] if op['opcode']=='CALL' and op.get('callee')!=export['function']
                for p in export.get('call_signatures',{}).get(op.get('callee'),{}).get('parameters',[]))
     indirect=any(op['opcode']=='CALLIND' for op in export['operations']) and any(
         p['kind']=='uint32' for target in export['parameters'] if target['kind']=='function-pointer'
@@ -51,7 +62,8 @@ def reconstruct(export, *, metrics=None, result_offset=0, store_offset=0, final_
 
 
 def _reconstruct(export, metrics, result_offset, store_offset, final_store_offset, call_argument_offset):
-    guarded=(export.get('schema_version'),export.get('memory_model'))==(9,'guarded-calls-buffers-v2')
+    stdio=(export.get('schema_version'),export.get('memory_model'))==(10,'ordered-stdio-buffers-v1')
+    guarded=stdio or (export.get('schema_version'),export.get('memory_model'))==(9,'guarded-calls-buffers-v2')
     records = guarded or (export.get("schema_version") == 8 and export.get("memory_model") == "records-state-buffers-v1")
     calls = records or (export.get("schema_version") == 7 and export.get("memory_model") == "ordered-calls-buffers-v1")
     extended = calls or (export.get("schema_version") == 5 and export.get("memory_model") == "ordered-byte-buffers-v2")
@@ -65,24 +77,28 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
     if type(arity) is not int or not 1 <= arity <= 8 or len(parameters) != arity:
         raise Unsupported("invalid public buffer interface")
     for p in parameters:
-        allowed=set(TYPES)|({'record-buffer'} if records else set())|({'function-pointer'} if guarded else set())
+        allowed=set(TYPES)|({'record-buffer'} if records else set())|({'function-pointer'} if guarded and not stdio else set())|({'file-stream'} if stdio else set())
         if p["kind"] not in (allowed if extended else ("uint32", "uint32-buffer")) or type(p["read_only"]) is not bool:
             raise Unsupported("invalid parameter kind or constness")
-        if p["kind"] == "uint32" and p["read_only"]:
+        if p["kind"] in ("uint32","file-stream") and p["read_only"]:
             raise Unsupported("const scalar parameters are outside the contract")
     if not calls and not any(p["kind"] != "uint32" for p in parameters):
         raise Unsupported("buffer observer requires at least one pointer")
     signatures = export.get("call_signatures", {}) if calls else {}
     if not isinstance(signatures,dict) or len(signatures)>64:raise Unsupported("invalid call signatures")
-    declarations=['#include <stdlib.h>'] if heap else []
+    if stdio and (heap or any(STDIO_ABI.get(k)!=v for k,v in signatures.items())):
+        raise Unsupported('stdio observation requires exact standard library ABIs')
+    declarations=['#include <stdio.h>'] if stdio else ['#include <stdlib.h>'] if heap else []
     record_types={}
     def symbol(name):
         return isinstance(name,str) and re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*",name) and not re.fullmatch(r"[pv][0-9]+",name)
     def call_types(spec):
-        if spec['returns'] not in ('void','uint32') or not isinstance(spec['parameters'],list) or len(spec['parameters'])>8:
+        if spec['returns'] not in (('void','uint32','int32') if stdio else ('void','uint32')) or not isinstance(spec['parameters'],list) or len(spec['parameters'])>8:
             raise Unsupported('invalid call ABI')
         result=[]
         for p in spec['parameters']:
+            if stdio and p['kind'] in ('int32','file-stream') and p['read_only'] is False:
+                result.append('int' if p['kind']=='int32' else 'FILE*');continue
             if p['kind'] not in TYPES or type(p['read_only']) is not bool or (p['kind']=='uint32' and p['read_only']):
                 raise Unsupported('invalid call parameter type')
             result.append(('const ' if p['read_only'] else '')+TYPES[p['kind']]+('*' if p['kind']!='uint32' else ''))
@@ -109,7 +125,7 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             declarations.append(("union " if r["union"] else "struct ")+r["tag"]+" {"+"".join("unsigned int "+f["name"]+";" for f in fields)+"};")
             record_types[r["tag"]]=r
         return ("union " if r["union"] else "struct ")+r["tag"]
-    def ctype(p):return record_type(p) if p["kind"]=="record-buffer" else TYPES[p["kind"]]
+    def ctype(p):return 'FILE' if p['kind']=='file-stream' else record_type(p) if p["kind"]=="record-buffer" else TYPES[p["kind"]]
     for p in parameters:
         if p["kind"]=="record-buffer":record_type(p)
     objects=list(parameters)
@@ -131,7 +147,7 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             re.fullmatch(r"[pv][0-9]+",callee) or callee in code_names or (callee==name and not guarded)):
             raise Unsupported("invalid or conflicting external call symbol")
         types=call_types(spec)
-        declarations.append(("void" if spec["returns"]=="void" else "unsigned int")+" "+callee+"("+types+");")
+        if not stdio:declarations.append(("void" if spec["returns"]=="void" else "unsigned int")+" "+callee+"("+types+");")
     space = export["address_space"]
     if type(space["pointer_bytes"]) is not int or space["pointer_bytes"] not in (4, 8) or space["addressable_unit_bytes"] != 1:
         raise Unsupported("requires byte-addressed 32/64-bit pointers")
@@ -154,7 +170,14 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             if any(o['opcode']=='CALL' and o.get('callee') not in ALLOCATORS for o in ops):
                 raise Unsupported('heap observation excludes opaque or unknown calls')
         else:
-            try:ops,diamonds=linearize(export)
+            try:
+                linear,diamonds=linearize(export)
+                if stdio and diamonds:
+                    # Optimizers can merge FILE parameters after a branch.
+                    # Keep each incoming identity on its own CFG path rather
+                    # than passing opaque handles to the scalar select builder.
+                    graph=validated_graph(export);diamonds=0
+                else:ops=linear
             except Unsupported:
                 if not records:raise
                 graph=validated_graph(export)
@@ -172,8 +195,9 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
                    emitted_statements=0, loads=0, stores=0, public_stores=0, pointer_operations=0,
                    calls=0,
                    scalar_diamonds=diamonds,
-                   footprint_elements={str(i): 0 for i, p in enumerate(objects) if p["kind"] not in ('uint32','function-pointer')})
+                   footprint_elements={str(i): 0 for i, p in enumerate(objects) if p["kind"] not in ('uint32','function-pointer','file-stream')})
     if guarded:metrics['observer']='guarded-calls-buffers-v2'
+    if stdio:metrics['observer']='ordered-stdio-buffers-v1'
     class ScopedBuilder(Builder):
         def emit(self,bits,expression):
             value=super().emit(bits,expression)
@@ -232,20 +256,24 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
 
     def comparison_operands(code,args):
         if code not in ('INT_EQUAL','INT_NOTEQUAL') or len(args)!=2 or any(a.bits!=32 for a in args):return args
-        for i in (0,1):
-            value,fixed=args[i],args[1-i]
-            if value.known is not None or fixed.known is None or value not in linear_forms:continue
-            constant,terms=linear_forms[value]
-            if len(terms)!=1:continue
+        # Cancel common affine terms on both sides, modulo 2^32. A compiler
+        # may count from 3*x to 3*x+(x&3); the shared offset does not change
+        # equality, even when either side wraps. No range/seed hints are used.
+        constant=0;terms={}
+        for a,weight in zip(args,(1,-1)):
+            c,t=(a.known,{}) if a.known is not None else linear_forms.get(a,(0,{a:1}))
+            constant=(constant+weight*c)&0xffffffff
+            for term,coefficient in t.items():terms[term]=(terms.get(term,0)+weight*coefficient)&0xffffffff
+        terms={term:coefficient for term,coefficient in terms.items() if coefficient}
+        if not terms:return [literal(32,constant),literal(32,0)]
+        if len(terms)==1:
             term,coefficient=next(iter(terms.items()))
-            if not coefficient&1:continue
-            # Multiplication by an odd number is a permutation of BV32.
-            # Normalize only the analysis predicate, leaving emitted operations
-            # intact. This includes wraparound and does not use encoder metadata.
-            inverse=pow(coefficient,-1,1<<32)
-            normalized=literal(32,((fixed.known-constant)*inverse)&0xffffffff)
-            metrics['invertible_comparison_normalizations']=metrics.get('invertible_comparison_normalizations',0)+1
-            return [term,normalized] if i==0 else [normalized,term]
+            if coefficient&1:
+                # Only odd coefficients are invertible over all BV32 values.
+                inverse=pow(coefficient,-1,1<<32)
+                normalized=literal(32,(-constant*inverse)&0xffffffff)
+                metrics['invertible_comparison_normalizations']=metrics.get('invertible_comparison_normalizations',0)+1
+                return [term,normalized]
         return args
 
     def operation(code, bits, args):
@@ -407,7 +435,7 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             pointer = parameters[slot]["kind"] != "uint32"
             if node.get("input") is not True or size != (space["pointer_bytes"] if pointer else 4):
                 raise Unsupported("parameter storage disagrees with public ABI")
-            values[i] = CodePointer(pointer_bits,slot) if parameters[slot]['kind']=='function-pointer' else Pointer(pointer_bits, slot) if pointer else Value(32, f"p{slot}")
+            values[i] = StreamPointer(pointer_bits,slot) if parameters[slot]['kind']=='file-stream' else CodePointer(pointer_bits,slot) if parameters[slot]['kind']=='function-pointer' else Pointer(pointer_bits, slot) if pointer else Value(32, f"p{slot}")
         elif records and node.get("input") and "linkage_pointer" in node:
             if size*8!=pointer_bits or node["linkage_pointer"] not in global_slots:
                 raise Unsupported("invalid linkage pointer input")
@@ -601,17 +629,21 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
                 raise Unsupported("call return storage disagrees with public ABI")
             arguments=[]
             for value,p in zip(args,spec["parameters"]):
-                if p["kind"]=="uint32":
+                if p["kind"] in ("uint32","int32"):
                     if not isinstance(value,Value) or value.bits!=32:raise Unsupported("call scalar argument is not uint32")
                     atom=value.atom
                     if call_argument_offset and callee!=name:
                         atom=f"({atom}+{call_argument_offset & 0xffffffff}u)";call_argument_offset=0
-                    arguments.append(atom)
+                    arguments.append('(int)('+atom+')' if p['kind']=='int32' else atom)
+                elif p['kind']=='file-stream':
+                    if not isinstance(value,StreamPointer):raise Unsupported('stdio argument is not an opaque stream parameter')
+                    arguments.append(parameter_name(value.slot))
                 else:
                     if not isinstance(value,Pointer) or parameters[value.slot]["kind"]!=p["kind"] or (parameters[value.slot]["read_only"] and not p["read_only"]):
                         raise Unsupported("call pointer argument type/constness mismatch")
                     arguments.append(address(value,32 if p["kind"]=="uint32-buffer" else 8,argument=True))
             invocation=callee+"("+", ".join(arguments)+")"
+            if spec['returns']=='int32':invocation='(unsigned int)('+invocation+')'
             if out is not None:values[out]=builder.emit(32,invocation)
             else:builder.lines.append("    "+invocation+";")
             metrics["calls"]+=1
@@ -650,9 +682,9 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             if bits!=8 or len(args)!=2 or any(not isinstance(a,Value) or a.bits!=8 or bound(a)>1 for a in args):
                 raise Unsupported('Boolean operations require proved canonical byte inputs')
             values[out]=operation({'BOOL_AND':'INT_AND','BOOL_OR':'INT_OR','BOOL_XOR':'INT_XOR'}[code],bits,args)
-        elif any(isinstance(a,CodePointer) for a in args):
+        elif any(isinstance(a,(CodePointer,StreamPointer)) for a in args):
             if code not in ('COPY','CAST') or len(args)!=1 or bits!=pointer_bits:
-                raise Unsupported('code pointers admit only identity copies and indirect calls')
+                raise Unsupported('opaque handles admit only identity copies and contracted calls')
             values[out]=args[0]
         elif any(isinstance(a, Pointer) for a in args):
             metrics["pointer_operations"] += 1
@@ -756,7 +788,7 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
     if graph is None:
         for oi,op in enumerate(ops):process(oi,op)
     else:
-        metrics.update(observer='bounded-owned-heap-v1' if heap else 'guarded-calls-buffers-v2' if guarded else 'bounded-guarded-memory-v1',block_expansions=0,terminal_paths=0,constant_branches=0,symbolic_branches=0,max_path_block_entries=0)
+        metrics.update(observer='bounded-owned-heap-v1' if heap else 'ordered-stdio-buffers-v1' if stdio else 'guarded-calls-buffers-v2' if guarded else 'bounded-guarded-memory-v1',block_expansions=0,terminal_paths=0,constant_branches=0,symbolic_branches=0,max_path_block_entries=0)
         def walk(bid,incoming,environment,limits,depth,last_store=None):
             nonlocal values,bounds,lower,excluded,path_public_store
             metrics['block_expansions']+=1;metrics['max_path_block_entries']=max(metrics['max_path_block_entries'],depth)
