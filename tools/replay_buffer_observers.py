@@ -31,8 +31,10 @@ def run(args,root):
     contracts=previous.get("call_contracts")
     if contracts and file_hash(contracts["path"])!=contracts["sha256"]:raise ValueError("call contracts changed")
     contract_path=contracts["path"] if contracts else None
+    heap_observation=getattr(args,'heap_observation','events')
     report={"schema_version":1,"status":"running","environment":environment(),"commands":[],"records":[],
         "control_reference":"original-source",
+        "heap_observation":heap_observation,
         "input_report":str(path),"input_sha256":file_hash(path),"csrd":tool,"csrd_sha256":file_hash(tool),
         "prior_status":previous["status"],"prior_outcomes":previous["outcomes"],
         "adapter_hashes":{f:file_hash(ROOT/f) for f in FILES},"repetitions":args.repetitions,
@@ -72,18 +74,18 @@ def run(args,root):
             group=previous["groups"][row["group"]];folder=root/str(row["attempt"])
             key=(group["reference_sha256"],row["recovered_sha256"],row["function"])
             if key not in cache:
-                proof=grade(command,tool,group["reference"],row["recovered_path"],row["function"],folder/"verification.json",args.timeout_ms,contract_path)
+                proof=grade(command,tool,group["reference"],row["recovered_path"],row["function"],folder/"verification.json",args.timeout_ms,contract_path,heap_observation)
                 control_status={}
                 export=json.loads(Path(row["export_path"]).read_text())
                 controls={"return-plus-one":{"result_offset":1}}
-                if row["adapter"]["metrics"]["stores"]:controls["last-store-plus-one"]={"final_store_offset":1}
+                if row["adapter"]["metrics"].get("public_stores",row["adapter"]["metrics"]["stores"]):controls["last-store-plus-one"]={"final_store_offset":1}
                 if row["adapter"]["metrics"].get("calls") and any(
                     p["kind"]=="uint32" for op in export["operations"] if op["opcode"]=="CALL"
-                    for p in export["call_signatures"][op["callee"]]["parameters"]):
+                    for p in export.get("call_signatures",{}).get(op.get("callee"),{}).get("parameters",[])):
                     controls["call-argument-plus-one"]={"call_argument_offset":1}
                 for name,mutation in controls.items():
                     wrong=folder/(name+".c");wrong.write_text(reconstruct(export,**mutation))
-                    checked=grade(command,tool,group["reference"],wrong,row["function"],folder/(name+".json"),args.timeout_ms,contract_path)
+                    checked=grade(command,tool,group["reference"],wrong,row["function"],folder/(name+".json"),args.timeout_ms,contract_path,heap_observation)
                     control_status[name]=checked["verification"]
                 cache[key]={"verification":proof["verification"],"proof_path":str(folder/"verification.json"),
                             "proof_sha256":file_hash(folder/"verification.json"),"controls":control_status}
@@ -91,6 +93,8 @@ def run(args,root):
                     cache[key]["control_skips"]={"call-argument-plus-one":"no scalar call argument to mutate"}
             row.update(cache[key])
             row["status"]={"proved-under-model":"recovered-under-source-model","counterexample":"false-reconstruction"}.get(row["verification"],"inconclusive-grading")
+            if heap_observation=='successful-private' and row['status']=='recovered-under-source-model':
+                row['status']='recovered-under-successful-allocations'
             if any(status=="proved-under-model" for status in row["controls"].values()):row["status"]="control-failure"
             elif any(status!="counterexample" for status in row["controls"].values()) and row["status"]!='false-reconstruction':row["status"]="control-inconclusive"
         report["distinct_graded_answers"]=len(cache)
@@ -119,6 +123,7 @@ def run(args,root):
 if __name__=="__main__":
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("--reconstruction-report",required=True);p.add_argument("--csrd",required=True)
     p.add_argument("--output-dir",required=True);p.add_argument("--repetitions",type=int,default=3);p.add_argument("--timeout-ms",type=int,default=10000)
+    p.add_argument('--heap-observation',choices=('events','successful-private'),default='events',help='explicit supplemental grading assumption; never changes prior results')
     args=p.parse_args()
     if not 1<=args.repetitions<=20 or not 1<=args.timeout_ms<=120000:p.error("invalid repetition or verification budget")
     root=Path(args.output_dir).resolve();root.mkdir(parents=True,exist_ok=False)

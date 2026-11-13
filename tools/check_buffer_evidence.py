@@ -120,7 +120,9 @@ def check_runtime(path):
     selected_cases,selected_expected,layouts=cases,expected,LAYOUTS
     if report["protocol"].get("corpus")=="control":
         from control_observation_cases import cases as selected_cases,expected as selected_expected,LAYOUTS as layouts
-    elif report["protocol"].get("corpus","word")!="word":raise ValueError("evidence checker supports word/control runtime corpora")
+    elif report["protocol"].get("corpus")=="heap":
+        from heap_observation_cases import cases as selected_cases,expected as selected_expected,LAYOUTS as layouts
+    elif report["protocol"].get("corpus","word")!="word":raise ValueError("evidence checker supports word/control/heap runtime corpora")
     require(report["cases"] == selected_cases(report["protocol"].get("input_protocol", "seeded-v1")) and
             report["layouts"] == list(map(list, layouts)), "runtime input protocol changed")
     groups = [g for g in matrix["groups"] if (not report["protocol"]["function"] or g["function"] in report["protocol"]["function"])
@@ -146,6 +148,10 @@ def check_runtime(path):
             if report["schema_version"] >= 2:
                 checked(trace_path.parent / f"{ci}.input", record["input_sha256"])
                 checked(trace_path.parent / f"{ci}.json", record["configuration_sha256"])
+                if report['protocol'].get('corpus')=='heap':
+                    configuration=load(trace_path.parent/f'{ci}.json')
+                    require(configuration.get('observe_heap') is True and configuration.get('call_scope') is True,
+                            'heap tracking was not enabled')
                 checked(trace_path.parent / f"{ci}.gdb", record["gdb_script_sha256"])
                 argv = record["resources"]["argv"]
                 require(argv[argv.index("--args")+1] == row["executable"], "trace invoked a different executable")
@@ -157,6 +163,9 @@ def check_runtime(path):
             oracle = selected_expected(row["function"], case["memory"], *row["layout"], case["x"])
             require(trace["status"] == "completed" and trace["steps"] == len(trace["samples"]) and
                     trace["return_value"] == oracle["return_value"] and trace["final_memory"] == oracle["final_memory"], "trace outcome/oracle mismatch")
+            if report['protocol'].get('corpus')=='heap':
+                require(trace.get('heap_observer_errors')==[] and trace.get('heap_live_objects_at_return')==0 and
+                        isinstance(trace.get('heap_events'),list),'incomplete owned-heap observation')
             for target, value in oracle["targets"].items(): labels.setdefault(target, []).append(value)
             executions += 1
         if row["status"] != "completed": continue
@@ -172,7 +181,7 @@ def check_runtime(path):
         fits += 1
     return {"report_sha256": file_hash(path), "observations": len(seen), "checked_executions": executions, "replayed_fits": fits,
             "harness_input_hashes_present": report["schema_version"] >= 2,
-            "replay_input_model_sha256": file_hash(ROOT / ("tools/control_observation_cases.py" if report["protocol"].get("corpus")=="control" else "tools/buffer_observation_cases.py"))}
+            "replay_input_model_sha256": file_hash(ROOT / ("tools/heap_observation_cases.py" if report["protocol"].get("corpus")=="heap" else "tools/control_observation_cases.py" if report["protocol"].get("corpus")=="control" else "tools/buffer_observation_cases.py"))}
 
 
 def main():

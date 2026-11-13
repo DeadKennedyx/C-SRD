@@ -1,10 +1,12 @@
 #include "csrd/analyzer.hpp"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/Attr.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/Basic/TargetInfo.h"
+#include "clang/Basic/SourceManager.h"
 #include <unordered_set>
 #include <unordered_map>
 #include <algorithm>
@@ -26,6 +28,7 @@ class Analyzer {
   std::unordered_map<std::string, uint32_t> loopBounds;
   std::unordered_set<const clang::ValueDecl *> pointers;
   std::unordered_set<const clang::ValueDecl *> persistent;
+  std::unordered_set<const clang::ValueDecl *> heapPointers;
   // Local pointers capture an offset into one original parameter. Their
   // offsets are scalar IR declarations, frozen when the pointer is initialized.
   std::unordered_map<const clang::ValueDecl *, std::string> pointerOrigins;
@@ -93,6 +96,151 @@ class Analyzer {
   static std::unique_ptr<Expr> constant(uint32_t value) {
     auto e = std::make_unique<Expr>(Expr::Kind::Constant); e->value = value; return e;
   }
+  static bool allocatorName(const std::string &name) {
+    return name == "malloc" || name == "calloc" || name == "realloc" || name == "free";
+  }
+  static const clang::CallExpr *allocatorCall(const clang::Expr *e) {
+    e = e->IgnoreParens();
+    if (const auto *cast = llvm::dyn_cast<clang::ImplicitCastExpr>(e)) {
+      if (cast->getCastKind() == clang::CK_BitCast || cast->getCastKind() == clang::CK_NoOp)
+        e = cast->getSubExpr()->IgnoreParens();
+    }
+    const auto *call = llvm::dyn_cast<clang::CallExpr>(e);
+    return call && call->getDirectCallee() && allocatorName(call->getDirectCallee()->getNameAsString()) ? call : nullptr;
+  }
+  bool heapExpression(const clang::Expr *e) const {
+    e = e->IgnoreParenImpCasts();
+    if (const auto *ref = llvm::dyn_cast<clang::DeclRefExpr>(e)) return heapPointers.count(ref->getDecl());
+    if (const auto *lit = llvm::dyn_cast<clang::IntegerLiteral>(e)) return lit->getValue() == 0;
+    if (const auto *add = llvm::dyn_cast<clang::BinaryOperator>(e))
+      return add->getOpcode() == clang::BO_Add && add->getType()->isPointerType() &&
+        heapExpression(add->getLHS()->getType()->isPointerType() ? add->getLHS() : add->getRHS());
+    return allocatorCall(e);
+  }
+  std::unique_ptr<Expr> heapPointer(const clang::Expr *e, std::string &name, bool &arithmetic) {
+    if (e->getBeginLoc().isMacroID() || e->getEndLoc().isMacroID()) {
+      fail(e->getExprLoc(), "macro expansions are not transformed"); return nullptr;
+    }
+    e = e->IgnoreParens();
+    if (const auto *cast = llvm::dyn_cast<clang::ImplicitCastExpr>(e)) {
+      if (cast->getCastKind() == clang::CK_LValueToRValue || cast->getCastKind() == clang::CK_NoOp ||
+          cast->getCastKind() == clang::CK_NullToPointer ||
+          (cast->getCastKind() == clang::CK_BitCast && cast->getType()->isVoidPointerType()))
+        return heapPointer(cast->getSubExpr(), name, arithmetic);
+    }
+    if (const auto *lit = llvm::dyn_cast<clang::IntegerLiteral>(e)) {
+      if (lit->getValue() == 0) { name.clear(); return constant(0); }
+    }
+    if (const auto *ref = llvm::dyn_cast<clang::DeclRefExpr>(e)) if (heapPointers.count(ref->getDecl())) {
+      name = ref->getDecl()->getNameAsString(); return constant(0);
+    }
+    if (const auto *add = llvm::dyn_cast<clang::BinaryOperator>(e)) {
+      if (add->getOpcode() == clang::BO_Add && add->getType()->isPointerType()) {
+        const auto *base = add->getLHS()->getType()->isPointerType() ? add->getLHS() : add->getRHS();
+        auto out = std::make_unique<Expr>(Expr::Kind::Add);
+        out->left = heapPointer(base, name, arithmetic);
+        out->right = expression(base == add->getLHS() ? add->getRHS() : add->getLHS());
+        arithmetic = true;
+        if (out->left && out->right && upperBound(*out) <= 32) return out;
+      }
+    }
+    fail(e->getExprLoc(), "owned pointer must be null, a live owned handle, or a bounded view of it"); return nullptr;
+  }
+  bool integerConstant(const clang::Expr *e, uint64_t &value) const {
+    if (e->getBeginLoc().isMacroID() || e->getEndLoc().isMacroID() || e->HasSideEffects(ctx)) return false;
+    clang::Expr::EvalResult evaluated;
+    if (!e->EvaluateAsInt(evaluated, ctx) || evaluated.HasUndefinedBehavior) return false;
+    const auto &n = evaluated.Val.getInt();
+    if ((n.isSigned() && n.isNegative()) || n.getActiveBits() > 32) return false;
+    value = n.getZExtValue(); return true;
+  }
+  std::unique_ptr<Expr> allocationCount(const clang::Expr *e, bool bytes) {
+    uint64_t fixed;
+    if (integerConstant(e, fixed)) {
+      if ((!bytes || fixed % 4 == 0) && fixed / (bytes ? 4 : 1) <= 32)
+        return constant(uint32_t(fixed / (bytes ? 4 : 1)));
+    } else {
+      e = e->IgnoreParens();
+      if (const auto *cast = llvm::dyn_cast<clang::ImplicitCastExpr>(e))
+        if (cast->getCastKind() == clang::CK_IntegralCast &&
+            ctx.hasSameType(cast->getType(), ctx.getSizeType()) && u32(cast->getSubExpr()->getType()))
+          e = cast->getSubExpr()->IgnoreParens();
+      if (bytes) {
+        if (const auto *mul = llvm::dyn_cast<clang::BinaryOperator>(e)) if (mul->getOpcode() == clang::BO_Mul) {
+          const clang::Expr *count = nullptr;
+          if (integerConstant(mul->getRHS(), fixed) && fixed == 4) count = mul->getLHS();
+          else if (integerConstant(mul->getLHS(), fixed) && fixed == 4) count = mul->getRHS();
+          if (count) return allocationCount(count, false);
+        }
+      } else {
+        auto out = expression(e);
+        if (out && upperBound(*out) <= 32) return out;
+      }
+    }
+    fail(e->getExprLoc(), "allocation requires 0..32 uint32_t elements and an exact multiple of sizeof(uint32_t)"); return nullptr;
+  }
+  bool allocate(const clang::CallExpr *e, const std::string &target, bool declare,
+                std::vector<Statement> &output) {
+    const auto *f = e->getDirectCallee();
+    const auto name = f->getNameAsString();
+    const bool release = name == "free", resize = name == "realloc", zero = name == "calloc";
+    const unsigned arity = resize || zero ? 2 : 1;
+    const auto *reference = llvm::dyn_cast<clang::DeclRefExpr>(e->getCallee()->IgnoreParenImpCasts());
+    if (e->getBeginLoc().isMacroID() || e->getEndLoc().isMacroID() || !reference || reference->getDecl() != f ||
+        f->hasBody() || f->getStorageClass() == clang::SC_Static || f->isVariadic() || !f->hasPrototype() ||
+        f->getNumParams() != arity || e->getNumArgs() != arity ||
+        !(release ? f->getReturnType()->isVoidType() : ctx.hasSameType(f->getReturnType(), ctx.VoidPtrTy)))
+      return fail(e->getExprLoc(), "allocation requires direct standard-library declarations, with no local definition or macro expansion");
+    for (unsigned i = 0; i < arity; ++i) {
+      const auto expected = i == 0 && (release || resize) ? ctx.VoidPtrTy : ctx.getSizeType();
+      if (!ctx.hasSameType(f->getParamDecl(i)->getType(), expected))
+        return fail(e->getExprLoc(), "allocator prototype does not match the C11 library signature");
+    }
+    // Preprocessed inputs no longer retain system-header source locations.
+    // Admit only metadata consistent with these standard allocator contracts.
+    for (const auto *decl : f->redecls()) for (const auto *attr : decl->attrs()) {
+      if (llvm::isa<clang::BuiltinAttr,clang::NoThrowAttr,clang::LeafAttr,clang::WarnUnusedResultAttr>(attr)) continue;
+      if (llvm::isa<clang::RestrictAttr>(attr) && !release && !resize) continue;
+      if (const auto *size=llvm::dyn_cast<clang::AllocSizeAttr>(attr)) {
+        const auto first=size->getElemSizeParam(), second=size->getNumElemsParam();
+        if (!release && first.getASTIndex()==(resize ? 1u : 0u) &&
+            (zero ? second.isValid() && second.getASTIndex()==1u : !second.isValid())) continue;
+      }
+      return fail(e->getExprLoc(), "allocator attribute is outside the standard allocation contract");
+    }
+    if ((release && !target.empty()) || (!release && target.empty()))
+      return fail(e->getExprLoc(), "allocation results require an owned uint32_t pointer binding");
+    Statement out(release ? Statement::Kind::Release : Statement::Kind::Allocate, target, nullptr);
+    out.callee = name; out.declaresCallResult = declare;
+    if (release || resize) {
+      bool arithmetic = false;
+      auto offset = heapPointer(e->getArg(0), out.pointer, arithmetic);
+      if (!offset || arithmetic) return fail(e->getExprLoc(), "free/realloc require an owned base handle or null");
+    }
+    if (!release) {
+      if (zero) {
+        uint64_t width;
+        const bool ordinary = integerConstant(e->getArg(1), width) && width == 4;
+        const bool swapped = !ordinary && integerConstant(e->getArg(0), width) && width == 4;
+        if (!ordinary && !swapped) return fail(e->getExprLoc(), "calloc requires a uint32_t element size");
+        out.callocSwapped = swapped;
+        out.expression = allocationCount(e->getArg(swapped ? 1 : 0), false);
+      } else out.expression = allocationCount(e->getArg(resize ? 1 : 0), true);
+      if (!out.expression) return false;
+      out.index = upperBound(*out.expression);
+    }
+    output.push_back(std::move(out)); return true;
+  }
+  bool bindHeap(const clang::Expr *e, const std::string &target, bool declare,
+                std::vector<Statement> &output) {
+    if (const auto *invoke = allocatorCall(e)) return allocate(invoke, target, declare, output);
+    Statement out(Statement::Kind::PointerBind, target, nullptr);
+    out.declaresCallResult = declare;
+    out.expression = heapPointer(e, out.pointer, out.pointerArithmetic);
+    if (!out.expression) return false;
+    out.index = upperBound(*out.expression);
+    output.push_back(std::move(out)); return true;
+  }
   std::unique_ptr<Expr> pointerOffset(const clang::Expr *e, std::string &name) {
     e = e->IgnoreParens();
     if (e->getBeginLoc().isMacroID() || e->getEndLoc().isMacroID()) {
@@ -104,6 +252,9 @@ class Analyzer {
       fail(e->getExprLoc(), "pointer reinterpretation is unsupported"); return nullptr;
     }
     if (const auto *ref = llvm::dyn_cast<clang::DeclRefExpr>(e)) {
+      if (heapPointers.count(ref->getDecl())) {
+        name = ref->getDecl()->getNameAsString(); return constant(0);
+      }
       if (pointers.count(ref->getDecl())) {
         name = ref->getDecl()->getNameAsString(); return constant(0);
       }
@@ -191,6 +342,7 @@ class Analyzer {
     return out;
   }
   uint32_t upperBound(const Expr &e) const {
+    if (e.kind == Expr::Kind::PointerNonNull) return 1;
     if (e.kind == Expr::Kind::Constant) return e.value;
     if (e.kind == Expr::Kind::Load) {
       const auto &b = region.buffers.at(e.name);
@@ -237,6 +389,38 @@ class Analyzer {
       fail(e->getExprLoc(), "macro expansions are not transformed"); return nullptr;
     }
     if (auto *p = llvm::dyn_cast<clang::ParenExpr>(e)) return expression(p->getSubExpr());
+    if (region.ownedHeap) {
+      if (e->getType()->isPointerType() && heapExpression(e)) {
+        std::string pointer; bool arithmetic = false;
+        auto offset = heapPointer(e, pointer, arithmetic);
+        if (!offset || arithmetic) { fail(e->getExprLoc(), "pointer conditions require a captured owned handle"); return nullptr; }
+        if (pointer.empty()) return constant(0);
+        auto out = std::make_unique<Expr>(Expr::Kind::PointerNonNull); out->name = pointer; return out;
+      }
+      if (const auto *unary = llvm::dyn_cast<clang::UnaryOperator>(e))
+        if (unary->getOpcode() == clang::UO_LNot && unary->getSubExpr()->getType()->isPointerType()) {
+          auto out = std::make_unique<Expr>(Expr::Kind::Equal);
+          out->left = expression(unary->getSubExpr()); out->right = constant(0);
+          if (!out->left) return nullptr;
+          return out;
+        }
+      if (const auto *binary = llvm::dyn_cast<clang::BinaryOperator>(e))
+        if ((binary->getOpcode() == clang::BO_EQ || binary->getOpcode() == clang::BO_NE) &&
+            binary->getLHS()->getType()->isPointerType() && binary->getRHS()->getType()->isPointerType()) {
+          const auto null = [&](const clang::Expr *p) {
+            const auto *lit = llvm::dyn_cast<clang::IntegerLiteral>(p->IgnoreParenImpCasts());
+            return lit && lit->getValue() == 0;
+          };
+          if (!null(binary->getLHS()) && !null(binary->getRHS())) {
+            fail(e->getExprLoc(), "owned pointers can only be compared with null"); return nullptr;
+          }
+          auto out = std::make_unique<Expr>(binary->getOpcode() == clang::BO_EQ ? Expr::Kind::Equal : Expr::Kind::NotEqual);
+          out->left = expression(null(binary->getLHS()) ? binary->getRHS() : binary->getLHS());
+          out->right = constant(0);
+          if (!out->left) return nullptr;
+          return out;
+        }
+    }
     if (!region.buffers.empty()) if (auto *c = llvm::dyn_cast<clang::CastExpr>(e)) {
       const auto to = c->getType(), from = c->getSubExpr()->getType().getUnqualifiedType();
       const bool integral = c->getCastKind() == clang::CK_IntegralCast || c->getCastKind() == clang::CK_NoOp;
@@ -405,7 +589,7 @@ class Analyzer {
     return valid;
   }
   static bool limitReferences(const Expr &e, std::unordered_set<std::string> &references) {
-    if (e.kind == Expr::Kind::Load) return false;
+    if (e.kind == Expr::Kind::Load || e.kind == Expr::Kind::PointerNonNull) return false;
     if (e.kind == Expr::Kind::Reference) references.insert(e.name);
     for (const auto *child : {e.left.get(), e.right.get(), e.third.get()})
       if (child && !limitReferences(*child, references)) return false;
@@ -421,10 +605,13 @@ class Analyzer {
     for (const auto *child : s->children()) if (changesLimit(child, references)) return true;
     return false;
   }
-  static bool containsCall(const clang::Stmt *s) {
+  static bool containsCall(const clang::Stmt *s, bool allocation = false) {
     if (!s) return false;
-    if (llvm::isa<clang::CallExpr>(s)) return true;
-    for (const auto *child : s->children()) if (containsCall(child)) return true;
+    if (const auto *call = llvm::dyn_cast<clang::CallExpr>(s)) {
+      const bool allocator = call->getDirectCallee() && allocatorName(call->getDirectCallee()->getNameAsString());
+      if (allocator == allocation) return true;
+    }
+    for (const auto *child : s->children()) if (containsCall(child, allocation)) return true;
     return false;
   }
   const clang::CallExpr *directCall(const clang::Expr *e) const {
@@ -493,12 +680,16 @@ class Analyzer {
     return true;
   }
   bool statement(const clang::Stmt *s, bool final, std::vector<Statement> &output, bool nested = false) {
-    if (const auto *e = llvm::dyn_cast<clang::Expr>(s))
+    if (const auto *e = llvm::dyn_cast<clang::Expr>(s)) {
+      if (const auto *invoke = allocatorCall(e)) return allocate(invoke, "", false, output);
       if (const auto *invoke = directCall(e)) return call(invoke, "", false, output);
+    }
     if (const auto *discard = llvm::dyn_cast<clang::CStyleCastExpr>(s)) {
       if (discard->getCastKind() == clang::CK_ToVoid)
         if (const auto *invoke = directCall(discard->getSubExpr())) return call(invoke, "", false, output);
       const auto *ref = llvm::dyn_cast<clang::DeclRefExpr>(discard->getSubExpr()->IgnoreParenImpCasts());
+      if (ref && heapPointers.count(ref->getDecl()))
+        return fail(s->getBeginLoc(), "discarded owned pointer reads require an explicit lifetime-checked use");
       if (discard->getCastKind() == clang::CK_ToVoid && ref &&
           (pointers.count(ref->getDecl()) || pointerOrigins.count(ref->getDecl()))) return true;
       if (discard->getCastKind() == clang::CK_ToVoid &&
@@ -570,6 +761,15 @@ class Analyzer {
         return fail(v->getLocation(), "ordered-region local names must be fresh throughout the function");
       if (v && region.buffers.count(v->getNameAsString()) && region.buffers.at(v->getNameAsString()).persistent)
         return fail(v->getLocation(), "local declarations cannot shadow referenced persistent objects");
+      if (v && v->getType()->isPointerType() && region.ownedHeap && v->hasInit() && heapExpression(v->getInit())) {
+        if (v->getType().hasQualifiers() || !u32(v->getType()->getPointeeType()) ||
+            !v->hasLocalStorage() || v->getStorageClass() != clang::SC_None || v->hasAttrs())
+          return fail(v->getLocation(), "owned heap locals require unqualified automatic uint32_t pointers");
+        const auto name = v->getNameAsString();
+        if (!bindHeap(v->getInit(), name, true, output)) return false;
+        Region::Buffer buffer; buffer.heap = true;
+        region.buffers.emplace(name, buffer); heapPointers.insert(v); names.insert(name); return true;
+      }
       if (v && v->getType()->isPointerType() && !region.buffers.empty()) {
         const auto type = v->getType(), element = type->getPointeeType();
         if (type.hasQualifiers() || (!u32(element.getUnqualifiedType()) && !byte(element.getUnqualifiedType()) && !element->isRecordType()) ||
@@ -631,6 +831,8 @@ class Analyzer {
     if (auto *a = llvm::dyn_cast<clang::BinaryOperator>(s)) {
       if (a->getOpcode() != clang::BO_Assign) return fail(a->getExprLoc(), "only simple assignment statements are supported");
       auto *ref = llvm::dyn_cast<clang::DeclRefExpr>(a->getLHS()->IgnoreParens());
+      if (ref && heapPointers.count(ref->getDecl()))
+        return bindHeap(a->getRHS(), ref->getDecl()->getNameAsString(), false, output);
       if (!region.buffers.empty() && (!ref || persistent.count(ref->getDecl()))) {
         auto location = access(a->getLHS(), true);
         auto value = expression(a->getRHS());
@@ -672,7 +874,15 @@ public:
   Analysis run(const clang::FunctionDecl &f) {
     currentFunction = &f;
     region.orderedCalls = containsCall(f.getBody());
-    region.extendedMemory = region.orderedCalls;
+    region.ownedHeap = containsCall(f.getBody(), true);
+    region.extendedMemory = region.orderedCalls || region.ownedHeap;
+    region.memoryControl = region.ownedHeap;
+    if (region.ownedHeap && ctx.getTypeSize(ctx.CharTy) != 8) {
+      fail(f.getLocation(), "owned uint32_t heaps require 8-bit bytes"); return std::move(result);
+    }
+    if (region.ownedHeap && region.orderedCalls) {
+      fail(f.getLocation(), "owned heap regions cannot mix allocation with opaque calls or escaping pointers"); return std::move(result);
+    }
     region.name = f.getNameAsString();
     region.littleEndian = ctx.getTargetInfo().isLittleEndian();
     if (ctx.getTypeSize(ctx.IntTy) != 32 || ctx.getTypeSize(ctx.UnsignedIntTy) != 32 || !u32(f.getReturnType()) ||

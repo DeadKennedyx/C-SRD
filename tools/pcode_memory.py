@@ -21,6 +21,7 @@ class Pointer:
 
 TYPES = {"uint32": "unsigned int", "uint32-buffer": "unsigned int",
          "unsigned-char-buffer": "unsigned char", "signed-char-buffer": "signed char", "char-buffer": "char"}
+ALLOCATORS = {"malloc", "calloc", "realloc", "free"}
 
 
 def reconstruct(export, *, metrics=None, result_offset=0, store_offset=0, final_store_offset=0, call_argument_offset=0):
@@ -38,6 +39,8 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
     extended = calls or (export.get("schema_version") == 5 and export.get("memory_model") == "ordered-byte-buffers-v2")
     if not extended and (export.get("schema_version") != 4 or export.get("memory_model") != "ordered-u32-buffers-v1"):
         raise Unsupported("requires ordered buffer export schema 4 or 5")
+    heap = extended and any(o.get('opcode')=='CALL' and o.get('callee') in ALLOCATORS for o in export.get('operations',[]))
+    calls = calls or heap
     name, arity, parameters = export["function"], export["arity"], export["parameters"]
     if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*", name):
         raise Unsupported("invalid function symbol")
@@ -52,7 +55,7 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
         raise Unsupported("buffer observer requires at least one pointer")
     signatures = export.get("call_signatures", {}) if calls else {}
     if not isinstance(signatures,dict) or len(signatures)>64:raise Unsupported("invalid call signatures")
-    declarations=[]
+    declarations=['#include <stdlib.h>'] if heap else []
     record_types={}
     def symbol(name):
         return isinstance(name,str) and re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*",name) and not re.fullmatch(r"[pv][0-9]+",name)
@@ -116,11 +119,16 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
         raise Unsupported("requires ordered basic-block instructions")
     if extended:
         from pcode_memory_cfg import linearize,validated_graph
-        try:ops,diamonds=linearize(export)
-        except Unsupported:
-            if not records:raise
-            graph=validated_graph(export)
-            if any(o['opcode']=='CALL' for o in ops):raise Unsupported('conditional calls are not modeled')
+        if heap:
+            graph=validated_graph(export,heap=True)
+            if any(o['opcode']=='CALL' and o.get('callee') not in ALLOCATORS for o in ops):
+                raise Unsupported('heap observation excludes opaque or unknown calls')
+        else:
+            try:ops,diamonds=linearize(export)
+            except Unsupported:
+                if not records:raise
+                graph=validated_graph(export)
+                if any(o['opcode']=='CALL' for o in ops):raise Unsupported('conditional calls are not modeled')
         if graph is None:blocks=[{"id":0,"incoming":[],"outgoing":[],"operations":list(range(len(ops)))}]
     if graph is None and len(blocks) != 1:
         raise Unsupported("buffer observer currently requires one ordered basic block")
@@ -131,7 +139,7 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
     if graph is None and (not ops or ops[-1]["opcode"] != "RETURN" or any(o["opcode"] == "RETURN" for o in ops[:-1])):
         raise Unsupported("requires one final return")
     metrics.update(observer="ordered-calls-buffers-v1" if calls else "ordered-byte-buffers-v2" if extended else "ordered-u32-buffers-v1", evaluated_operations=0,
-                   emitted_statements=0, loads=0, stores=0, pointer_operations=0,
+                   emitted_statements=0, loads=0, stores=0, public_stores=0, pointer_operations=0,
                    calls=0,
                    scalar_diamonds=diamonds,
                    footprint_elements={str(i): 0 for i, p in enumerate(objects) if p["kind"] != "uint32"})
@@ -145,6 +153,7 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
     identical_scalars = {}
     lower,excluded={},{}
     constant_choices={};choice_depth={}
+    linear_forms={}
 
     def multiple(value):
         if value.known is not None:return (value.known & -value.known) if value.known else (1<<value.bits)
@@ -152,13 +161,23 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
 
     def bound(value):
         if value.known is not None: return value.known
-        if value in bounds: return bounds[value]
+        maximum=bounds.get(value,(1<<value.bits)-1)
+        if value in linear_forms:
+            constant,terms=linear_forms[value]
+            upper=constant+sum(coefficient*bound(term) for term,coefficient in terms.items())
+            if upper < (1<<value.bits):maximum=min(maximum,upper)
+        if value in bounds:return maximum
         if value.parts: return sum(bound(part) << (i*32) for i,part in enumerate(value.parts))
-        return (1 << value.bits)-1
+        return maximum
 
     def minimum(value,depth=0):
         if value.known is not None:return value.known
         result=lower.get(value,0)
+        if value in linear_forms:
+            constant,terms=linear_forms[value]
+            upper=constant+sum(coefficient*bound(term) for term,coefficient in terms.items())
+            if upper < (1<<value.bits):
+                result=max(result,constant+sum(coefficient*minimum(term,depth+1) for term,coefficient in terms.items()))
         if depth<32 and value in origins:
             code,bits,args=origins[value];a=minimum(args[0],depth+1);mask=(1<<bits)-1
             if code in ('COPY','CAST','INT_ZEXT') and bound(args[0])<=mask:result=max(result,a)
@@ -184,12 +203,12 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
         # Some high-P-code exports narrow a masked temporary without resizing
         # its inputs, or retain a wider comparison constant. Normalize only
         # when no possible value loses a bit; raw scalar shape checks stay strict.
-        if records and code=='INT_AND' and len(args)==2 and args[0].bits==args[1].bits and bits<args[0].bits<=32:
+        if (records or heap) and code=='INT_AND' and len(args)==2 and args[0].bits==args[1].bits and bits<args[0].bits<=32:
             if any(a.known is not None and a.known < (1<<bits) for a in args):
                 metrics['lossless_width_normalizations']=metrics.get('lossless_width_normalizations',0)+1
                 full=operation(code,args[0].bits,args)
                 return operation('SUBPIECE',bits,[full,literal(32,0)])
-        if records and code in COMPARE and bits==8 and len(args)==2 and args[0].bits!=args[1].bits:
+        if (records or heap) and code in COMPARE and bits==8 and len(args)==2 and args[0].bits!=args[1].bits:
             small,wide=sorted(args,key=lambda a:a.bits)
             if wide.known is not None and wide.known < (1<<small.bits):
                 metrics['lossless_width_normalizations']=metrics.get('lossless_width_normalizations',0)+1
@@ -215,6 +234,25 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
                     result=operation('INT_ADD',32,[result,select(flag,scaled,literal(32,0))])
                 return result
         value = builder.operation(code, bits, args)
+        if bits==32 and all(a.bits==32 for a in args) and value.known is None and value not in args:
+            # Exact unsigned affine normalization for range analysis. This is
+            # algebra over Z/(2^32), not recognition of an encoder or its seed.
+            # Infer a conventional interval only when the normalized sum cannot
+            # wrap; otherwise retain the full bit-vector range.
+            def form(a):return (a.known,{}) if a.known is not None else linear_forms.get(a,(0,{a:1}))
+            weights=None
+            if code in ('COPY','CAST'):weights=[1]
+            elif code in ('INT_ADD','INT_SUB'):weights=[1,1 if code=='INT_ADD' else -1]
+            elif code=='INT_MULT' and any(a.known is not None for a in args):
+                fixed=0 if args[0].known is not None else 1
+                weights=[0,0];weights[1-fixed]=args[fixed].known
+            if weights is not None:
+                constant=0;terms={};mask=0xffffffff
+                for a,weight in zip(args,weights):
+                    c,t=form(a);constant=(constant+weight*c)&mask
+                    for term,coefficient in t.items():terms[term]=(terms.get(term,0)+weight*coefficient)&mask
+                terms={term:coefficient for term,coefficient in terms.items() if coefficient}
+                if len(terms)<=16:linear_forms[value]=(constant,terms)
         if graph is not None and code in COMPARE:
             known=comparison(code,args[0],args[1])
             if known is not None:return literal(bits,int(known))
@@ -400,13 +438,44 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
         if obj.get("persistent"):
             if pointer.offset!=0:raise Unsupported("global scalar overrun")
             return "(&"+obj["name"]+")" if argument else obj["name"]
-        if argument:return f"p{pointer.slot}" if isinstance(pointer.offset,int) and pointer.offset==0 else f"(p{pointer.slot}+{expression})"
-        return f"p{pointer.slot}[{expression}]"
+        base=obj['heap_name'] if obj.get('heap_name') else f"p{pointer.slot}"
+        if argument:return base if isinstance(pointer.offset,int) and pointer.offset==0 else f"({base}+{expression})"
+        return f"{base}[{expression}]"
+
+    def heap_base(pointer):
+        if isinstance(pointer,Value) and pointer.bits==pointer_bits and pointer.known==0:return '0'
+        if not isinstance(pointer,Pointer) or not objects[pointer.slot].get('heap_name') or pointer.offset!=0:
+            raise Unsupported('allocator requires a captured owned base or null')
+        return objects[pointer.slot]['heap_name']
+
+    def allocation_size(value, *, bytes):
+        if not isinstance(value,Value) or value.bits!=pointer_bits:
+            raise Unsupported('allocator size does not match size_t ABI')
+        maximum=32*(4 if bytes else 1)
+        if bound(value)>maximum or (bytes and multiple(value)<4):
+            raise Unsupported('allocator extent is not bounded to 32 aligned words')
+        if value.known is not None:return str(value.known)+'u'
+        low=value.parts[0] if value.parts else value
+        if bytes:low=operation('INT_RIGHT',32,[low,literal(32,2)])
+        count=builder.emit(32,low.atom)
+        upper=bound(value)//(4 if bytes else 1)
+        clamped=f'({count.atom} <= {upper}u ? {count.atom} : {upper}u)'
+        return clamped+('*sizeof(unsigned int)' if bytes else '')
+
+    def heap_binding(expression):
+        slot=len(objects);name=f'csrd_observed_heap_{slot}'
+        if name in signatures or name==export['function'] or any(o.get('name')==name for o in objects):
+            raise Unsupported('generated heap handle conflicts with a public symbol')
+        objects.append({'kind':'uint32-buffer','read_only':False,'heap_name':name})
+        metrics['footprint_elements'][str(slot)]=0
+        builder.lines.append(f'    unsigned int *{name} = {expression};')
+        return Pointer(pointer_bits,slot)
 
     result = None
+    path_public_store = None
     final_store = max((i for i, op in enumerate(ops) if op["opcode"] == "STORE"), default=-1) if final_store_offset else -1
     def process(oi,op):
-        nonlocal result,call_argument_offset
+        nonlocal result,call_argument_offset,path_public_store
         code, inputs = op["opcode"], op["inputs"]
         if (graph is None and op.get("block") != block["id"]) or not isinstance(inputs, list):
             raise Unsupported("invalid instruction block or inputs")
@@ -431,6 +500,12 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             if not isinstance(result, Value) or result.bits != 32:
                 raise Unsupported("return must be uint32")
             if graph is not None:
+                if heap and final_store_offset and path_public_store is not None:
+                    # Corrupt the final public write on this executed path.
+                    # A lexically last store can belong to an unreachable arm;
+                    # a last private-heap store can be discarded by free.
+                    destination,value=path_public_store
+                    builder.lines.append(f'    {destination} = ({value} + {final_store_offset & 0xffffffff}u);')
                 expression=result.atom if not result_offset else f'({result.atom}+{result_offset & 0xffffffff}u)'
                 builder.lines.append('    return '+expression+';')
         elif records and code=="INDIRECT":
@@ -443,6 +518,25 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
                 nodes[inputs[0]].get("linkage_pointer")!=object_name or args[0].offset!=0):
                 raise Unsupported("INDIRECT is not an unchanged loader linkage slot")
             values[out]=args[0]
+        elif heap and code=='CALL':
+            callee=op.get('callee');arity=2 if callee in ('calloc','realloc') else 1
+            if callee not in ALLOCATORS or len(args)!=arity or not inputs:
+                raise Unsupported('unknown allocator or mismatched allocator arity')
+            if (callee=='free' and out is not None) or (callee!='free' and (out is None or bits!=pointer_bits)):
+                raise Unsupported('allocator return storage disagrees with the ABI')
+            if callee=='free':arguments=[heap_base(args[0])]
+            elif callee=='realloc':arguments=[heap_base(args[0]),allocation_size(args[1],bytes=True)]
+            elif callee=='malloc':arguments=[allocation_size(args[0],bytes=True)]
+            else:
+                widths=[i for i,a in enumerate(args) if isinstance(a,Value) and a.bits==pointer_bits and a.known==4]
+                if not widths:raise Unsupported('calloc requires one uint32 element-width argument')
+                width=1 if 1 in widths else 0
+                arguments=['4u' if i==width else allocation_size(a,bytes=False) for i,a in enumerate(args)]
+            invocation=callee+'('+', '.join(arguments)+')'
+            if callee=='free':builder.lines.append('    '+invocation+';')
+            else:values[out]=heap_binding(invocation)
+            metrics['calls']+=1
+            metrics['allocator_events']=metrics.get('allocator_events',0)+1
         elif calls and code=="CALL":
             spec=signatures.get(op.get("callee"))
             if not spec or len(args)!=len(spec["parameters"]) or not inputs:
@@ -481,10 +575,13 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
                 # Legacy all-store mutation is retained for historical replay.
                 # Mutating only the final store avoids cancellations across
                 # earlier stores and guarantees an observable memory change.
-                offset = store_offset + (final_store_offset if oi == final_store else 0)
+                offset = store_offset + (final_store_offset if not heap and oi == final_store else 0)
                 if offset:
                     expression = f"({expression} + {offset & 0xffffffff}u)"
                 destination=address(args[1], value.bits, write=True)
+                if not (isinstance(args[1],Pointer) and objects[args[1].slot].get('heap_name')):
+                    metrics['public_stores']+=1
+                    path_public_store=(destination,expression)
                 builder.lines.append(f"    {destination} = {expression};")
                 metrics["stores"] += 1
         elif code=="CSRD_SELECT":
@@ -493,6 +590,13 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
             values[out]=select(*args)
         elif any(isinstance(a, Pointer) for a in args):
             metrics["pointer_operations"] += 1
+            if heap and code in ('INT_EQUAL','INT_NOTEQUAL') and len(args)==2 and bits==8:
+                pointer=next((a for a in args if isinstance(a,Pointer)),None)
+                null=next((a for a in args if isinstance(a,Value) and a.bits==pointer_bits and a.known==0),None)
+                if pointer is not None and null is not None:
+                    values[out]=builder.emit(8,heap_base(pointer)+(' == 0' if code=='INT_EQUAL' else ' != 0'))
+                    bounds[values[out]]=1
+                    return
             if graph is not None and code in COMPARE and len(args)==2 and all(isinstance(a,Pointer) for a in args):
                 if args[0].slot!=args[1].slot:raise Unsupported('pointer comparisons require one shared base')
                 offsets=[a.offset if isinstance(a.offset,Value) else literal(pointer_bits,a.offset) for a in args]
@@ -586,13 +690,14 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
     if graph is None:
         for oi,op in enumerate(ops):process(oi,op)
     else:
-        metrics.update(observer='bounded-guarded-memory-v1',block_expansions=0,terminal_paths=0,constant_branches=0,symbolic_branches=0,max_path_block_entries=0)
-        def walk(bid,incoming,environment,limits,depth):
-            nonlocal values,bounds,lower,excluded
+        metrics.update(observer='bounded-owned-heap-v1' if heap else 'bounded-guarded-memory-v1',block_expansions=0,terminal_paths=0,constant_branches=0,symbolic_branches=0,max_path_block_entries=0)
+        def walk(bid,incoming,environment,limits,depth,last_store=None):
+            nonlocal values,bounds,lower,excluded,path_public_store
             metrics['block_expansions']+=1;metrics['max_path_block_entries']=max(metrics['max_path_block_entries'],depth)
             if depth>LIMITS['path_block_entries'] or metrics['block_expansions']>LIMITS['block_expansions']:
                 raise Unsupported('complete memory CFG expansion exceeds block budget')
             values=environment.copy();bounds,lower,excluded=limits[0].copy(),limits[1].copy(),{v:set(s) for v,s in limits[2].items()}
+            path_public_store=last_store
             body=graph.blocks[bid]
             phis=[ops[i] for i in body['operations'] if ops[i]['opcode']=='MULTIEQUAL']
             merged={op['output']:values[op['inputs'][incoming]] for op in phis}
@@ -607,7 +712,7 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
                     metrics['terminal_paths']+=1
                     if metrics['terminal_paths']>LIMITS['terminal_paths']:raise Unsupported('complete memory CFG expansion exceeds path budget')
                     return
-            env=values.copy();snapshot=(bounds.copy(),lower.copy(),{v:set(s) for v,s in excluded.items()})
+            env=values.copy();snapshot=(bounds.copy(),lower.copy(),{v:set(s) for v,s in excluded.items()});last_store=path_public_store
             def successor(slot,condition=None):
                 nonlocal bounds,lower,excluded
                 bounds,lower,excluded=snapshot[0].copy(),snapshot[1].copy(),{v:set(s) for v,s in snapshot[2].items()}
@@ -615,7 +720,7 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
                     # Exact interval contradiction, never a heuristic path cut.
                     builder.lines.append('    return 0u;');return
                 edge=body['outgoing'][slot]
-                walk(edge['block'],edge['reverse_index'],env,(bounds,lower,excluded),depth+1)
+                walk(edge['block'],edge['reverse_index'],env,(bounds,lower,excluded),depth+1,last_store)
             last=ops[body['operations'][-1]] if body['operations'] else None
             if last and last['opcode']=='CBRANCH':
                 condition=read(last['inputs'][1])
@@ -627,6 +732,8 @@ def _reconstruct(export, metrics, result_offset, store_offset, final_store_offse
                 builder.lines.append('    } else {');successor(0,condition);builder.lines.append('    }')
             else:successor(0)
         walk(graph.entry,None,values,(bounds,lower,excluded),1)
+    if heap and final_store_offset:
+        if not metrics['public_stores']:raise Unsupported('no public store for the observable-memory corruption control')
     expression = result.atom if graph is None else '0u'
     if result_offset:
         expression = f"({expression} + {result_offset & 0xffffffff}u)"

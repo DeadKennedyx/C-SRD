@@ -8,7 +8,7 @@ from pcode_cfg import Graph, CONTROL, LIMITS, index
 from pcode_values import SCALAR, Unsupported
 
 
-def validated_graph(export):
+def validated_graph(export, *, heap=False):
     nodes,ops=export["nodes"],export["operations"]
     if not isinstance(nodes,list) or not isinstance(ops,list) or len(nodes)>LIMITS["nodes"] or len(ops)>LIMITS["operations"]:
         raise Unsupported("invalid memory CFG or graph budget exceeded")
@@ -38,7 +38,7 @@ def validated_graph(export):
     graph.definitions={}
     for oi,op in enumerate(ops):
         code=op["opcode"]
-        calls={"CALL"} if (export.get("schema_version"),export.get("memory_model")) in ((7,"ordered-calls-buffers-v1"),(8,"records-state-buffers-v1")) else set()
+        calls={"CALL"} if heap or (export.get("schema_version"),export.get("memory_model")) in ((7,"ordered-calls-buffers-v1"),(8,"records-state-buffers-v1")) else set()
         extra={"INDIRECT"} if export.get("schema_version")==8 else set()
         if code not in SCALAR|CONTROL|{"LOAD","STORE","PTRADD","PTRSUB","MULTIEQUAL"}|calls|extra:
             raise Unsupported("unsupported memory CFG instruction: "+code)

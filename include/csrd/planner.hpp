@@ -9,6 +9,7 @@ struct PlanOptions {
   std::string strategy = "affine", objective = "balanced";
   std::string algorithm = "none";
   std::string controlFlow = "none";
+  std::string heapObservation = "events"; // Verification only; transforms always check all outcomes.
   unsigned coverage = 50, timeoutMs = 10000;
   CallContracts callContracts;
   std::string callContractsHash;

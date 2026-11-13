@@ -150,7 +150,86 @@ def duplicate_bound_graph():
     return data
 
 
+def heap_graph(callee='malloc',dynamic=False,private_tail=False):
+    e=Export();e.data.update(schema_version=5,memory_model='ordered-byte-buffers-v2')
+    args=[e.constant(4,8)]
+    if callee=='calloc':
+        count=e.constant(1,8)
+        if dynamic:
+            masked=e.op('INT_AND',[e.x,e.constant(3)])
+            ordinary=e.op('INT_ADD',[masked,e.constant(1)])
+            scaled=e.op('INT_MULT',[ordinary,e.constant(3)])
+            encoded=e.op('INT_ADD',[scaled,e.constant(4294967294)])
+            removed=e.op('INT_SUB',[encoded,e.constant(4294967294)])
+            decoded=e.op('INT_MULT',[removed,e.constant(2863311531)])
+            count=e.op('INT_ZEXT',[decoded],size=8)
+        args=[count,e.constant(4,8)]
+    if callee=='realloc':args=[e.constant(0,8),e.constant(4,8)]
+    pointer=e.op('CALL',[e.destination,*args],size=8);e.data['operations'][-1]['callee']=callee
+    condition=e.op('INT_EQUAL',[pointer,e.constant(0,8)],size=1)
+    e.op('CBRANCH',[e.destination,condition],size=None);yes=len(e.data['operations'])
+    value=e.op('INT_ADD',[e.x,e.constant(3)]);e.store(pointer,value)
+    after=e.load(pointer);e.store(e.p,after)
+    if private_tail:e.store(pointer,e.constant(99))
+    e.op('CALL',[e.destination,pointer],size=None);e.data['operations'][-1]['callee']='free'
+    e.finish(after);no=len(e.data['operations'])
+    data=e.finish(e.op('INT_ADD',[e.x,e.constant(1)]))
+    ranges=[(0,yes),(yes,no),(no,len(data['operations']))]
+    incoming=[[],[0],[0]];outgoing=[[1,2],[],[]];data['blocks']=[]
+    for i,(begin,end) in enumerate(ranges):
+        for op in data['operations'][begin:end]:op['block']=i
+        data['blocks'].append({'id':i,'operations':list(range(begin,end)),'incoming':incoming[i],'outgoing':outgoing[i]})
+    return data
+
+
 class MemoryReconstruction(unittest.TestCase):
+    def test_heap_calls_null_branches_and_public_effects(self):
+        for callee,arguments in [('malloc','4u'),('calloc','1u,4u'),('realloc','0,4u')]:
+            data=heap_graph(callee);metrics={}
+            reference='#include <stdlib.h>\nunsigned f(unsigned*p,unsigned*q,unsigned x){(void)q;'
+            reference+=f'unsigned*h={callee}({arguments});if(!h)return x+1u;*h=x+3u;'
+            reference+='unsigned r=*h;*p=r;free(h);return r;}'
+            with self.subTest(callee=callee):
+                self.grade(reference,reconstruct(data,metrics=metrics))
+                self.assertEqual(metrics['allocator_events'],2)
+                self.grade(reference,reconstruct(data,result_offset=1),'counterexample')
+                self.grade(reference,reconstruct(data,final_store_offset=1),'counterexample')
+
+    def test_heap_observer_rejects_unknown_calls_and_invalid_abi(self):
+        for fault in ('extent','alignment','size_width','result_width','free_public','opaque','indirect','escaped'):
+            bad=heap_graph();ops=bad['operations'];nodes=bad['nodes'];allocate=ops[0]
+            release=next(o for o in ops if o.get('callee')=='free')
+            if fault=='extent':nodes[allocate['inputs'][1]]['constant']='132'
+            elif fault=='alignment':nodes[allocate['inputs'][1]]['constant']='5'
+            elif fault=='size_width':nodes[allocate['inputs'][1]]['size']=4
+            elif fault=='result_width':nodes[allocate['output']]['size']=4
+            elif fault=='free_public':release['inputs'][1]=0
+            elif fault=='opaque':release['callee']='unknown_effect'
+            elif fault=='indirect':release['opcode']='CALLIND'
+            else:
+                store=next(o for o in ops if o['opcode']=='STORE');store['inputs'][2]=allocate['output']
+            with self.subTest(fault=fault),self.assertRaises(Unsupported):reconstruct(bad)
+
+    def test_allocator_extent_uses_exact_modular_range_normalization(self):
+        data=heap_graph('calloc',dynamic=True)
+        reference='#include <stdlib.h>\nunsigned f(unsigned*p,unsigned*q,unsigned x){(void)q;'
+        reference+='unsigned*h=calloc((x&3u)+1u,4u);if(!h)return x+1u;*h=x+3u;'
+        reference+='unsigned r=*h;*p=r;free(h);return r;}'
+        self.grade(reference,reconstruct(data))
+        bad=copy.deepcopy(data)
+        inverse=next(n for n in bad['nodes'] if n.get('constant')=='2863311531')
+        inverse['constant']='2863311533'
+        self.grade(reference,reconstruct(bad),'counterexample')
+        inverse['constant']='2863311534'
+        with self.assertRaisesRegex(Unsupported,'extent'):reconstruct(bad)
+
+    def test_heap_corruption_control_changes_public_memory(self):
+        data=heap_graph(private_tail=True);metrics={}
+        candidate=reconstruct(data,metrics=metrics)
+        self.assertEqual(metrics['stores'],3)
+        self.assertEqual(metrics['public_stores'],1)
+        self.grade(candidate,reconstruct(data,final_store_offset=1),'counterexample')
+
     def test_duplicate_scalar_bound_controls_pointer_loop(self):
         data=duplicate_bound_graph();metrics={}
         source='unsigned f(unsigned*p,unsigned*q,unsigned x){unsigned n=x&3u;for(unsigned i=0u;i<n;++i){p[i]=x;}return *q;}'

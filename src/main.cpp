@@ -21,6 +21,7 @@ void usage() {
     "       [--scope functions|private-regions] (private-regions: affine/identity integer declarations and assignments)\n"
     "       [--call-contracts contracts.json] (transform/analyze/verify, functions scope)\n"
     "       csrd verify original.c candidate.c [--function NAME] [--report report.json] [--timeout-ms UINT]\n"
+    "         [--heap-observation events|successful-private] (verify only; default events checks allocation failures)\n"
     "       csrd analyze input.c [--function NAME] [--report report.json] [--scope functions|private-regions]\n"
     "Transformations are checked against reparsed emitted C before output is written.\n";
 }
@@ -196,7 +197,7 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
       const auto &region = *d.region;
       const bool records = std::any_of(region.buffers.begin(), region.buffers.end(),
         [](const auto &entry) { return entry.second.persistent || entry.second.recordBytes; });
-      f["semantic_model"] = region.memoryControl ? "guarded-memory-c11-v1" : records ? "records-state-byte-c11-v1" : region.orderedCalls ? "ordered-calls-byte-c11-v1" : region.buffers.empty() ? "pure-u32-c11-v2" :
+      f["semantic_model"] = region.ownedHeap ? "owned-heap-c11-v1" : region.memoryControl ? "guarded-memory-c11-v1" : records ? "records-state-byte-c11-v1" : region.orderedCalls ? "ordered-calls-byte-c11-v1" : region.buffers.empty() ? "pure-u32-c11-v2" :
         region.extendedMemory ? "buffers-byte-c11-v2" : "buffers-u32-c11-v1";
       if (!region.buffers.empty()) f["byte_order"] = region.littleEndian ? "little" : "big";
       llvm::json::Array parameters;
@@ -250,6 +251,21 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
         f["call_assumptions"] = "synchronous; no callbacks/reentry, nonlocal jumps, retained pointers, frame introspection, async effects or invalidation of caller buffers; matching environment choices";
         f["observations_checked"] = "callee, argument values, entire pre-call memory at each event; return and entire final memory";
       }
+      if (region.ownedHeap) {
+        llvm::json::Array handles;
+        for (const auto &[name,buffer]:region.buffers) if (buffer.heap) handles.push_back(name);
+        f["owned_heap_handles"]=std::move(handles);
+        f["heap_assumptions"]="standard C11 malloc/calloc/realloc/free; coupled allocation outcomes; owned nonescaping uint32_t arrays of at most 32 elements; no allocator interposition or pointer-address observations; positive-size realloc; complete cleanup required on all returns";
+        f["heap_obligations"]="nonnull live storage, bounds, initialized reads, valid base for free/realloc, no dangling-handle use or leaks; checked for source and candidate on every path";
+        f["observations_checked"]="return, entire public memory, guarded allocator event order/arguments and public memory at events; private heap payload may differ";
+        f["control_assumptions"]="structured branches and bounded for loops; no opaque calls; at most 64 expanded allocator events and 4096 expanded statements";
+        f["heap_observation"]=result.options.heapObservation;
+        if (result.options.heapObservation=="successful-private") {
+          f["semantic_model"]="owned-heap-success-c11-v1";
+          f["heap_assumptions"]="all executed allocations succeed; standard C11 allocator behavior; private nonescaping uint32_t arrays; no allocator interposition or pointer-address observations; positive-size realloc; complete cleanup";
+          f["observations_checked"]="return and entire public memory under successful allocations; allocator events and allocation-failure behavior excluded";
+        }
+      }
     }
     f["source_metrics"] = llvm::json::Object{{"ast_nodes", d.metrics.astNodes}, {"expressions", d.metrics.expressions},
       {"branches", d.metrics.branches}, {"loops", d.metrics.loops}, {"cfg_blocks", d.metrics.cfgBlocks},
@@ -297,6 +313,7 @@ std::string report(const csrd::TransformResult &result, uint64_t seed, const std
     {"model", "per-function semantic_model; identical target, headers and compilation environment required"}, {"functions", std::move(functions)}};
   root["strategy"] = result.options.strategy;
   root["scope"] = result.options.scope;
+  if (action=="verify") root["verification_heap_observation"] = result.options.heapObservation;
   root["control_flow"] = result.options.controlFlow;
   root["objective"] = result.options.objective;
   root["coverage_percent"] = result.options.coverage;
@@ -319,7 +336,7 @@ int main(int argc, char **argv) {
     std::string output, reportPath, function, contractsPath;
     uint64_t seed = 0;
     unsigned timeout = 10000;
-    bool seedSet = false, timeoutSet = false;
+    bool seedSet = false, timeoutSet = false, heapObservationSet = false;
     csrd::PlanOptions options;
     bool strategySet = false, coverageSet = false, objectiveSet = false, algorithmSet = false, controlFlowSet = false, scopeSet = false;
     if (action == "verify") output = argv[3];
@@ -331,6 +348,10 @@ int main(int argc, char **argv) {
       else if (key == "--report" && reportPath.empty()) reportPath = value;
       else if (key == "--function" && action != "transform" && function.empty()) function = value;
       else if (key == "--call-contracts" && contractsPath.empty()) contractsPath = value;
+      else if (key == "--heap-observation" && action == "verify" && !heapObservationSet) {
+        if (value != "events" && value != "successful-private") throw std::runtime_error("unknown heap observation contract");
+        options.heapObservation=value;heapObservationSet=true;
+      }
       else if (key == "--seed" && action == "transform" && !seedSet) { seed = number(value); seedSet = true; }
       else if (key == "--scope" && action != "verify" && !scopeSet) {
         if (value != "functions" && value != "private-regions") throw std::runtime_error("unknown transformation scope");
@@ -408,8 +429,11 @@ int main(int argc, char **argv) {
         if (!d.region || found == candidate.decisions.end() || !found->region) {
           d.verification.status = "unsupported";
           d.verification.reason = !d.reason.empty() ? d.reason : "candidate function missing or unsupported";
-        } else d.verification = csrd::verify(*d.region, *found->region, timeout);
-        std::cerr << "csrd: " << d.function << ": " << d.verification.status << '\n';
+        } else if (options.heapObservation=="successful-private" && (d.region->ownedHeap || found->region->ownedHeap))
+          d.verification = csrd::verifyMemory(*d.region,*found->region,timeout,true);
+        else d.verification = csrd::verify(*d.region, *found->region, timeout);
+        std::cerr << "csrd: " << d.function << ": " << d.verification.status
+                  << (options.heapObservation=="successful-private" ? " (successful private allocations only)" : "") << '\n';
       }
     } else {
       if (!csrd::inspect(input, result)) return 1;

@@ -11,6 +11,79 @@ import shlex
 import gdb
 
 
+class HeapTracker:
+    """Observe standard allocator ABI boundaries, without source/encoding hints."""
+    def __init__(self, entry, extent, aarch64):
+        self.entry,self.extent,self.aarch64=entry,extent,aarch64
+        self.objects={};self.events=[];self.errors=[];self.sequence=0;self.breakpoints=[];self.pending=False
+        tracker=self
+        class Returned(gdb.FinishBreakpoint):
+            def __init__(self,kind,args):
+                super().__init__(gdb.newest_frame(),internal=True)
+                self.kind,self.args=kind,args;self.silent=True
+            def stop(self):
+                try:tracker.returned(self.kind,self.args,tracker.result())
+                except Exception as error:tracker.errors.append(str(error))
+                finally:tracker.pending=False
+                return False
+            def out_of_scope(self):
+                tracker.pending=False;tracker.errors.append('allocator did not return normally')
+        class Entered(gdb.Breakpoint):
+            def __init__(self,name):
+                super().__init__(name,internal=True);self.name=name;self.silent=True
+            def stop(self):
+                try:
+                    ret=tracker.return_address()
+                    if not tracker.entry<=ret<tracker.entry+tracker.extent:return False
+                    # realloc(NULL,n) can tail-call malloc with the same return
+                    # address. Observe the outer ABI event exactly once.
+                    if tracker.pending:return False
+                    args=tracker.arguments()
+                    if self.name=='free':
+                        tracker.release(args[0]);tracker.events.append({'kind':'free','null':args[0]==0})
+                    else:tracker.pending=True;Returned(self.name,args)
+                except Exception as error:tracker.pending=False;tracker.errors.append(str(error))
+                return False
+        self.breakpoints=[Entered(name) for name in ('malloc','calloc','realloc','free')]
+
+    def arguments(self):
+        names=('x0','x1') if self.aarch64 else ('rdi','rsi')
+        return tuple(int(gdb.parse_and_eval('$'+name)) for name in names)
+
+    def result(self):return int(gdb.parse_and_eval('$x0' if self.aarch64 else '$rax'))
+
+    def return_address(self):
+        if self.aarch64:return int(gdb.parse_and_eval('$x30'))
+        sp=int(gdb.parse_and_eval('$sp'))
+        return int.from_bytes(gdb.selected_inferior().read_memory(sp,8).tobytes(),'little')
+
+    def release(self,address):
+        if address:
+            if address not in self.objects:raise ValueError('unobserved or non-base heap release')
+            del self.objects[address]
+
+    def returned(self,kind,args,address):
+        size=args[0]*args[1] if kind=='calloc' else args[1] if kind=='realloc' else args[0]
+        if size>128 or size%4:raise ValueError('heap observation extent outside admitted uint32 capacity')
+        self.events.append({'kind':kind,'bytes':size,'success':bool(address)})
+        if not address:return
+        if kind=='realloc':self.release(args[0])
+        if address in self.objects:raise ValueError('overlapping live allocation base')
+        self.objects[address]=(self.sequence,size);self.sequence+=1
+
+    def words(self):
+        values={}
+        for address,(object_id,size) in self.objects.items():
+            try:
+                raw=gdb.selected_inferior().read_memory(address,size).tobytes()
+                values.update({f'heap:{object_id}:{i//4}':int.from_bytes(raw[i:i+4],'little') for i in range(0,size,4)})
+            except gdb.MemoryError as error:self.errors.append(str(error))
+        return values
+
+    def close(self):
+        for breakpoint in self.breakpoints:breakpoint.delete()
+
+
 def collect(config):
     gdb.execute("set pagination off")
     gdb.execute("set confirm off")
@@ -50,6 +123,7 @@ def collect(config):
     call_scope = config.get("call_scope",False)
     function_bytes = config.get("function_bytes",0)
     if call_scope and (type(function_bytes) is not int or function_bytes<1):raise ValueError("missing function extent")
+    heap=HeapTracker(entry,function_bytes,'aarch64' in architecture) if config.get('observe_heap') else None
     tail_transfers=0
     visits, samples, failures = collections.Counter(), [], 0
     for _ in range(config["step_limit"]):
@@ -66,6 +140,7 @@ def collect(config):
         memory = gdb.selected_inferior().read_memory(memory_address, 64*4).tobytes()
         values.update({f"caller:{i}": int.from_bytes(memory[4*i:4*i+4], "little") for i in range(64)})
         values.update(global_words())
+        if heap:values.update(heap.words())
         if config.get("sample_bytes"):
             values.update({f"caller-byte:{i}":value for i,value in enumerate(memory)})
         try:
@@ -84,6 +159,10 @@ def collect(config):
     if call_scope:
         result.update(tail_transfers_skipped=tail_transfers,
                       call_observation_scope="caller instructions only; nexti steps over callees; tail transfers run to caller return; callee interiors unmeasured")
+    if heap:
+        result.update(heap_events=heap.events,heap_observer_errors=heap.errors,heap_live_objects_at_return=len(heap.objects))
+        result['scope']+='; all words of live owned allocations at caller instruction boundaries, including uninitialized bytes; allocator ABI breakpoints supply addresses/extents only'
+        heap.close()
     if complete:
         memory = gdb.selected_inferior().read_memory(memory_address, 64*4).tobytes()
         result["final_memory"] = [int.from_bytes(memory[4*i:4*i+4], "little") for i in range(64)]
@@ -91,7 +170,7 @@ def collect(config):
         if globals_:
             result["persistent_state"]=list(global_words().values())
             result["scope"]+="; declared persistent globals sampled before every instruction and at return"
-        if call_scope:
+        if call_scope and config.get('observe_call_events',True):
             def word_symbol(name):
                 at=int(gdb.parse_and_eval("(unsigned long)&"+name))
                 return int.from_bytes(gdb.selected_inferior().read_memory(at,4).tobytes(),"little")

@@ -12,7 +12,7 @@ namespace csrd {
 struct Expr {
   enum class Kind { Constant, Reference, Add, Subtract, Scale, BitAnd, BitOr, BitXor,
                     BitNot, ShiftLeft, ShiftRight, Equal, NotEqual, Less, LessEqual,
-                    Greater, GreaterEqual, Select, Table, Load, ByteCast } kind;
+                    Greater, GreaterEqual, Select, Table, Load, ByteCast, PointerNonNull } kind;
   uint32_t value = 0; // Constant, scale, load index bound, or ByteCast signedness.
   std::string name;
   std::string member; // Named record field for a Load; never a C text fragment.
@@ -21,7 +21,8 @@ struct Expr {
   explicit Expr(Kind k) : kind(k) {}
 };
 struct Statement {
-  enum class Kind { Declare, Assign, Return, If, Repeat, Store, Call } kind;
+  enum class Kind { Declare, Assign, Return, If, Repeat, Store, Call,
+                    Allocate, Release, PointerBind } kind;
   std::string name;
   std::string member; // Named record field for a Store.
   std::unique_ptr<Expr> expression;
@@ -39,6 +40,8 @@ struct Statement {
   std::string callee;
   std::vector<Argument> arguments;
   bool declaresCallResult = false;
+  std::string pointer; // Owned pointer source; empty denotes null.
+  bool pointerArithmetic = false, callocSwapped = false;
   Statement(Kind k, std::string n, std::unique_ptr<Expr> e)
       : kind(k), name(std::move(n)), expression(std::move(e)) {}
 };
@@ -50,6 +53,7 @@ struct Region {
     std::string elementType = "uint32";
     unsigned minimumElements = 0, loads = 0, stores = 0;
     bool persistent = false, isUnion = false;
+    bool heap = false; // Local owned handle, never a caller footprint assumption.
     std::string recordTag;
     unsigned recordBytes = 0, recordAlignment = 0;
     std::map<std::string, unsigned> fields; // Byte offsets from Clang's layout.
@@ -63,7 +67,8 @@ struct Region {
   bool extendedMemory = false, littleEndian = true;
   bool orderedCalls = false;
   bool memoryControl = false;
+  bool ownedHeap = false;
   CallContracts calls;
-  bool ordered() const { return !buffers.empty() || orderedCalls; }
+  bool ordered() const { return !buffers.empty() || orderedCalls || ownedHeap; }
 };
 } // namespace csrd

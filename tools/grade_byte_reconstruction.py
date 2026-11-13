@@ -26,7 +26,8 @@ def batch_driver(function, parameters, corpus="byte"):
     from call_observation_cases import driver as call_driver
     from record_observation_cases import driver as record_driver
     from control_observation_cases import driver as control_driver
-    return "#define main csrd_one_case\n" + (control_driver if corpus=='control' else record_driver if corpus=="record" else call_driver if corpus=="call" else driver)(function, parameters) + r'''
+    from heap_observation_cases import driver as heap_driver
+    return "#define main csrd_one_case\n" + (heap_driver if corpus=='heap' else control_driver if corpus=='control' else record_driver if corpus=="record" else call_driver if corpus=="call" else driver)(function, parameters) + r'''
 #undef main
 #include <ctype.h>
 int main(void) {
@@ -53,17 +54,19 @@ def run(args, root):
     from call_observation_cases import expected as call_expected, LAYOUTS as call_layouts
     from record_observation_cases import expected as record_expected, LAYOUTS as record_layouts
     from control_observation_cases import cases as control_cases,expected as control_expected,LAYOUTS as control_layouts
-    layouts=control_layouts if args.corpus=='control' else record_layouts if args.corpus=="record" else call_layouts if args.corpus=="call" else LAYOUTS
-    vectors = (control_cases() if args.corpus=='control' else cases()) + [{"x": rng.getrandbits(32), "memory": [rng.getrandbits(32) for _ in range(64)]}
+    from heap_observation_cases import cases as heap_cases,expected as heap_expected,LAYOUTS as heap_layouts
+    layouts=heap_layouts if args.corpus=='heap' else control_layouts if args.corpus=='control' else record_layouts if args.corpus=="record" else call_layouts if args.corpus=="call" else LAYOUTS
+    vectors = (heap_cases() if args.corpus=='heap' else control_cases() if args.corpus=='control' else cases()) + [{"x": rng.getrandbits(32), "memory": [rng.getrandbits(32) for _ in range(64)]}
                          for _ in range(args.random_cases)]
     report = {"schema_version": 1, "status": "running", "commands": [], "records": [],
               "reference_checks": [], "skipped_observations":[], "source_model_outcomes":{}, "environment": environment(), "seed": args.seed, "corpus":args.corpus,
               "replay_report": str(path), "replay_sha256": file_hash(path),
               "matrix_sha256": file_hash(matrix_path),
+              "heap_observation":replay.get('heap_observation','events'),
               "implementation_hashes": {name: file_hash(ROOT/name) for name in
                   ("tools/grade_byte_reconstruction.py", "tools/byte_observation_cases.py",
                    "tools/call_observation_cases.py", "tests/fixtures/call_environment.h",
-                   "tools/record_observation_cases.py","tests/fixtures/records.h","tools/control_observation_cases.py",
+                   "tools/record_observation_cases.py","tests/fixtures/records.h","tools/control_observation_cases.py","tools/heap_observation_cases.py",
                    "tools/buffer_observation_cases.py","tools/pcode_memory.py","tools/pcode_memory_cfg.py",
                    "tools/pcode_values.py","tools/pcode_wide.py","tools/pcode_cfg.py")},
               "cases_per_answer": len(vectors)*len(layouts), "observer_target_queries": 0,
@@ -96,7 +99,7 @@ def run(args, root):
             if row['status'] in ('false-reconstruction','control-failure'):raise ValueError('known reconstruction/control failure')
             if not row.get('recovered_path'):
                 report['skipped_observations'].append({k:row[k] for k in ('function','profile','variant','status')});continue
-            if row['status'] not in ('recovered-under-source-model','inconclusive-grading','control-inconclusive'):
+            if row['status'] not in ('recovered-under-source-model','recovered-under-successful-allocations','inconclusive-grading','control-inconclusive'):
                 raise ValueError('ungraded replay answer')
             group = matrix["groups"][row["group"]]
             key = (group["reference_sha256"], row["recovered_sha256"], row["function"])
@@ -118,7 +121,7 @@ def run(args, root):
                 inputs, wanted = [], []
                 for p, q in layouts:
                     for vector in vectors:
-                        answer = (control_expected if args.corpus=='control' else record_expected if args.corpus=="record" else call_expected if args.corpus=="call" else expected)(row["function"], vector["memory"], p, q, vector["x"],
+                        answer = (heap_expected if args.corpus=='heap' else control_expected if args.corpus=='control' else record_expected if args.corpus=="record" else call_expected if args.corpus=="call" else expected)(row["function"], vector["memory"], p, q, vector["x"],
                                           plain_char_signed=group["parameters"][0].get("element_signed",False))
                         inputs.append(" ".join(map(str, [p, q, vector["x"], *vector["memory"]])))
                         wanted.extend([answer["return_value"], *answer["final_memory"]])
@@ -185,7 +188,7 @@ def run(args, root):
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--replay-report", required=True); p.add_argument("--output-dir", required=True)
-    p.add_argument("--corpus",choices=("byte","call","record","control"),default="byte")
+    p.add_argument("--corpus",choices=("byte","call","record","control","heap"),default="byte")
     p.add_argument("--random-cases", type=int, default=256); p.add_argument("--seed", type=int, default=20261113)
     args = p.parse_args()
     if args.random_cases < 1: p.error("positive random case count required")

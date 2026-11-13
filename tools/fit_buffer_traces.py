@@ -11,7 +11,7 @@ from observe_runtime import fit_affine, locations, score_models
 
 
 def location_scope(location):
-    return "public-return" if ":boundary:return" in location else "persistent-memory" if ":global:" in location else "caller-memory" if ":caller:" in location or ":caller-byte:" in location else "register" if ":reg:" in location else "stack"
+    return "public-return" if ":boundary:return" in location else "heap-memory" if ":heap:" in location else "persistent-memory" if ":global:" in location else "caller-memory" if ":caller:" in location or ":caller-byte:" in location else "register" if ":reg:" in location else "stack"
 
 
 def run(config):
@@ -22,7 +22,7 @@ def run(config):
     for entry in config["traces"]:
         if file_hash(entry["path"]) != entry["sha256"]: raise ValueError("trace changed before fitting")
         trace = json.loads(Path(entry["path"]).read_text())
-        if trace["status"] != "completed" or trace["stack_read_failures"]:
+        if trace["status"] != "completed" or trace["stack_read_failures"] or trace.get('heap_observer_errors'):
             raise ValueError("cannot score incomplete traces")
         if complete:
             if type(trace.get("return_value")) is not int or not 0<=trace["return_value"]<=0xffffffff:
@@ -47,6 +47,7 @@ def run(config):
         controls = score_models(negative, test, [values[i] for i in heldout])
         scopes=("register", "stack", "caller-memory")+(("public-return",) if complete else ())
         if any(":global:" in key for trace in traces for key in locations(trace)):scopes+=("persistent-memory",)
+        if any(":heap:" in key for trace in traces for key in locations(trace)):scopes+=("heap-memory",)
         by_scope = {key: {"validated_locations": 0, "false_locations": 0, "inconclusive_locations": 0} for key in scopes}
         for model in score["models"]:
             label = "validated_locations" if model["correct"] == model["total"] else (

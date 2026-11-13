@@ -20,7 +20,8 @@ def harness(function,parameters,corpus="byte"):
         return cost_driver(function,parameters)
     from call_observation_cases import signature as call_signature, ENVIRONMENT, INITIAL_STATE
     from control_observation_cases import signature as control_signature
-    byte_type,declaration=(control_signature if corpus=='control' else call_signature if corpus=="call" else signature)(function,parameters)
+    from heap_observation_cases import signature as heap_signature
+    byte_type,declaration=(heap_signature if corpus=='heap' else control_signature if corpus=='control' else call_signature if corpus=="call" else signature)(function,parameters)
     environment=("#define CSRD_RECORD_CALLS 0\n"+ENVIRONMENT.read_text()+"\n") if corpus=="call" else ""
     reset=f" reset(memory,{INITIAL_STATE}u);\n" if corpus=="call" else ""
     offset="4*(i&3u)" if byte_type=="uint32_t" else "(i&3u)"
@@ -43,7 +44,7 @@ int main(int argc,char**argv){
  if(clock_gettime(CLOCK_MONOTONIC,&a)||clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&c))return 3;
  for(unsigned long i=0;i<n;++i){
   uint32_t x=next(&state);memory[4]=x;memory[5]=next(&state);
-'''+f"  checksum+={function}(({byte_type}*)((unsigned char*)memory+16+{offset}),memory+4,x);\n"+r'''
+'''+f"  checksum+={function}(({byte_type}*)((unsigned char*)memory+16+{offset}),"+('' if corpus=='heap' else 'memory+4,')+r'''x);
  }
  if(clock_gettime(CLOCK_MONOTONIC,&b)||clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&d))return 3;
 '''+(" checksum+=external_state;\n" if corpus=="call" else "")+r'''
@@ -68,6 +69,9 @@ def run(args,root):
     source_root=Path(__file__).resolve().parents[1]
     report["dependencies"]={p:file_hash(source_root/p) for p in dependencies}
     if args.corpus=='control':report['dependencies']['tools/control_observation_cases.py']=file_hash(source_root/'tools/control_observation_cases.py')
+    if args.corpus=='heap':
+        report['dependencies']['tools/heap_observation_cases.py']=file_hash(source_root/'tools/heap_observation_cases.py')
+        report['scope']+='; real successful allocations; allocator failure paths excluded from timing'
     if args.corpus=="record":
         for p in ("tools/record_observation_cases.py","tests/fixtures/records.h"):
             report["dependencies"][p]=file_hash(source_root/p)
@@ -128,7 +132,7 @@ def run(args,root):
 if __name__=="__main__":
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("--reconstruction-report",required=True);p.add_argument("--output-dir",required=True)
     p.add_argument('--replay-report',help='finished revised observer replay for the same frozen binaries')
-    p.add_argument("--corpus",choices=("byte","call","record","control"),default="byte")
+    p.add_argument("--corpus",choices=("byte","call","record","control","heap"),default="byte")
     p.add_argument("--iterations",type=int,default=1000000);p.add_argument("--repetitions",type=int,default=7);args=p.parse_args()
     if args.iterations<1 or args.repetitions<3:p.error("positive iterations and at least three repetitions required")
     root=Path(args.output_dir).resolve();root.mkdir(parents=True,exist_ok=False)

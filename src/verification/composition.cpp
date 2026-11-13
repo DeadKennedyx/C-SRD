@@ -21,7 +21,7 @@ unsigned arity(Expr::Kind kind) {
   using K = Expr::Kind;
   switch (kind) {
   case K::Constant: case K::Reference: return 0;
-  case K::Load: case K::ByteCast: throw std::invalid_argument("memory expression is not a pure graph operation");
+  case K::Load: case K::ByteCast: case K::PointerNonNull: throw std::invalid_argument("memory expression is not a pure graph operation");
   case K::Scale: case K::BitNot: case K::ShiftLeft: case K::ShiftRight: case K::Table: return 1;
   case K::Select: return 3;
   case K::Add: case K::Subtract: case K::BitAnd: case K::BitOr: case K::BitXor:

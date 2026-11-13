@@ -47,9 +47,12 @@ class MemoryEmitter {
   std::string expression(const Expr &e) {
     if (e.kind == Expr::Kind::Constant) return rep.constant(e.value);
     if (e.kind == Expr::Kind::Reference) return values.at(e.name);
+    if (e.kind == Expr::Kind::PointerNonNull)
+      return encode("((unsigned int)(" + e.name + " != 0))",true);
     if (e.kind == Expr::Kind::Load) {
       auto load = location(e.name, e.member, e.left.get(), e.value);
       if (region->buffers.at(e.name).elementBits == 8) load = "((unsigned int)(" + load + "))";
+      if (region->buffers.at(e.name).heap) return load;
       return encode(load);
     }
     const auto left = e.left ? expression(*e.left) : "";
@@ -122,13 +125,44 @@ class MemoryEmitter {
       else result.body += " " + values.at(s.name) + " = " + value + ";";
     }
   }
+  std::string condition(const Expr &e) {
+    // Pointer validity is an ordinary boundary predicate. Keep its C spelling
+    // explicit so compiler lifetime diagnostics can recognize failure paths.
+    if (e.kind==Expr::Kind::PointerNonNull) return e.name+" != 0";
+    if ((e.kind==Expr::Kind::Equal || e.kind==Expr::Kind::NotEqual) &&
+        e.left->kind==Expr::Kind::PointerNonNull && e.right->kind==Expr::Kind::Constant && e.right->value<=1) {
+      const bool null=(e.kind==Expr::Kind::Equal)==(e.right->value==0);
+      return e.left->name+(null ? " == 0" : " != 0");
+    }
+    return "("+decode(expression(e),true)+") != 0u";
+  }
   void statements(const std::vector<Statement> &body) {
     for (const auto &s : body) {
+      if (s.kind == Statement::Kind::Allocate || s.kind == Statement::Kind::Release || s.kind == Statement::Kind::PointerBind) {
+        const auto pointer=s.pointer.empty() ? "0" : s.pointer;
+        if (s.kind==Statement::Kind::Release) { result.body+=" free("+pointer+");"; continue; }
+        std::string value, count;
+        if (s.kind==Statement::Kind::PointerBind)
+          value=s.pointerArithmetic ? "("+pointer+" + "+index(s.expression.get(),s.index)+")" : pointer;
+        else {
+          count=s.expression->kind==Expr::Kind::Constant ? literal(s.expression->value) : index(s.expression.get(),s.index);
+          if (s.callee=="calloc") value=s.callocSwapped ? "calloc(4u, "+count+")" : "calloc("+count+", sizeof(unsigned int))";
+          else value=s.callee+"("+(s.callee=="realloc" ? pointer+", " : "")+count+" * sizeof(unsigned int))";
+        }
+        result.body+=" "+std::string(s.declaresCallResult ? "unsigned int *" : "")+s.name+" = "+value+";";
+        if (s.kind==Statement::Kind::Allocate && s.callee=="calloc" && encoded) {
+          // calloc initializes ordinary zero. Initialize the private storage to
+          // E(0) before any read; realloc subsequently copies encoded words.
+          const auto induction=fresh();
+          result.body+=" if ("+s.name+" != 0) { for (unsigned int "+induction+" = 0u; "+induction+" < "+count+"; ++"+induction+") { "+s.name+"["+induction+"] = "+rep.constant(0)+"; } }";
+        }
+        continue;
+      }
       if (s.kind == Statement::Kind::Call) { call(s); continue; }
       if (s.kind == Statement::Kind::If) {
-        const auto condition = decode(expression(*s.expression), true);
+        const auto predicate = condition(*s.expression);
         const auto outer = values;
-        result.body += " if ((" + condition + ") != 0u) {";
+        result.body += " if (" + predicate + ") {";
         statements(s.thenBranch); values = outer;
         result.body += "} else {";
         statements(s.elseBranch); values = outer;
@@ -154,7 +188,7 @@ class MemoryEmitter {
       case Statement::Kind::Assign: result.body += " " + values.at(s.name) + " = " + value + ";"; break;
       case Statement::Kind::Store: {
         const auto target = location(s.name, s.member, s.dynamicIndex.get(), s.index);
-        result.body += " " + target + " = " + decode(value) + ";"; break;
+        result.body += " " + target + " = " + (region->buffers.at(s.name).heap ? value : decode(value)) + ";"; break;
       }
       case Statement::Kind::Return: result.body += " return " + decode(value) + ";"; break;
       default: throw std::invalid_argument("unmodeled control flow in ordered memory emission");

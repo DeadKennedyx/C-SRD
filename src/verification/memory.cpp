@@ -1,4 +1,5 @@
 #include "symbolic.hpp"
+#include "heap.hpp"
 #include <algorithm>
 #include <chrono>
 #include <set>
@@ -34,6 +35,7 @@ struct Execution {
   std::vector<CallEvent> events;
   std::vector<z3::expr> writes;
   std::vector<z3::expr> conditions;
+  std::vector<verification_detail::HeapState::Event> heapEvents;
 };
 class MemoryModel {
   z3::context &ctx;
@@ -80,16 +82,19 @@ public:
     return memory;
   }
   z3::expr value(const Region &r, const Expr &e, const Environment &scalars,
-                 const Environment &bases, const z3::expr &memory, const z3::expr &active) const {
-  auto eval = [&](const Expr &x) { return value(r, x, scalars, bases, memory, active); };
+                 const Environment &bases, const z3::expr &memory, const z3::expr &active,
+                 verification_detail::HeapState &heap) const {
+  auto eval = [&](const Expr &x) { return value(r, x, scalars, bases, memory, active, heap); };
   auto boolean = [&](const z3::expr &x) { return z3::ite(x, ctx.bv_val(1,32), ctx.bv_val(0,32)); };
   switch (e.kind) {
   case Expr::Kind::Constant: return ctx.bv_val(e.value, 32);
   case Expr::Kind::Reference: return scalars.at(e.name);
+  case Expr::Kind::PointerNonNull: return boolean(heap.nonnull(e.name,active));
   case Expr::Kind::Load: {
     const auto &buffer = r.buffers.at(e.name);
     const auto index = e.left ? eval(*e.left) : ctx.bv_val(e.value, 32);
     if (e.left) ranges = ranges && z3::implies(active, z3::ule(index, ctx.bv_val(e.value,32)));
+    if (buffer.heap) return heap.load(e.name,index,active);
     auto read = [&](const z3::expr &i) { return load(memory, location(buffer, bases.at(e.name), i, e.member), buffer.elementBits, buffer.elementSigned); };
     if (enumerate && e.left && e.value <= 16) {
       // The range is a proof obligation, never an assumed clamp. Enumerating
@@ -121,8 +126,8 @@ public:
   case Expr::Kind::GreaterEqual: return boolean(z3::uge(eval(*e.left), eval(*e.right)));
   case Expr::Kind::Select: {
     const auto condition = eval(*e.left) != ctx.bv_val(0,32);
-    const auto yes = value(r, *e.right, scalars, bases, memory, active && condition);
-    const auto no = value(r, *e.third, scalars, bases, memory, active && !condition);
+    const auto yes = value(r, *e.right, scalars, bases, memory, active && condition, heap);
+    const auto no = value(r, *e.third, scalars, bases, memory, active && !condition, heap);
     return z3::ite(condition, yes, no);
   }
   default: throw std::invalid_argument("unmodeled expression in buffer verification");
@@ -135,6 +140,7 @@ public:
     std::vector<z3::expr> writes;
     std::vector<z3::expr> conditions;
     unsigned visits = 0;
+    verification_detail::HeapState heap;
   };
   void statements(const Region &r, const std::vector<Statement> &body, const Environment &bases,
                   State &state, const z3::expr &guard) const {
@@ -148,7 +154,16 @@ public:
     // Do not expand loads or arithmetic from such paths; no runtime behavior
     // or object lifetime can depend on their statements.
     if (active.is_false()) continue;
-    auto eval = [&](const Expr &e) { return normalize(value(r, e, scalars, bases, memory, active)); };
+    auto eval = [&](const Expr &e) { return normalize(value(r, e, scalars, bases, memory, active, state.heap)); };
+    if (s.kind == Statement::Kind::Allocate || s.kind == Statement::Kind::Release) {
+      state.heap.allocation(s,s.expression ? eval(*s.expression) : ctx.bv_val(0,32),active,memory);
+      if (s.kind == Statement::Kind::Allocate)
+        state.conditions.push_back(verification_detail::HeapState::outcome(ctx,state.heap.events.back().ordinal));
+      continue;
+    }
+    if (s.kind == Statement::Kind::PointerBind) {
+      state.heap.bind(s,eval(*s.expression),active); continue;
+    }
     if (s.kind == Statement::Kind::If) {
       const auto condition = normalize(eval(*s.expression) != ctx.bv_val(0,32));
       state.conditions.push_back(condition);
@@ -162,7 +177,7 @@ public:
       for (unsigned i = 0; i < s.repetitions; ++i) {
         scalars.insert_or_assign(s.name, ctx.bv_val(i,32));
         if (s.expression) {
-          const auto limit = normalize(value(r, *s.expression, scalars, bases, memory, running && state.active));
+          const auto limit = normalize(value(r, *s.expression, scalars, bases, memory, running && state.active, state.heap));
           const auto condition = normalize(z3::ult(ctx.bv_val(i,32), limit));
           state.conditions.push_back(condition);
           running = normalize(running && condition);
@@ -172,7 +187,7 @@ public:
       }
       if (s.expression) {
         scalars.insert_or_assign(s.name, ctx.bv_val(s.repetitions,32));
-        const auto limit = value(r, *s.expression, scalars, bases, memory, running && state.active);
+        const auto limit = value(r, *s.expression, scalars, bases, memory, running && state.active, state.heap);
         // A finite unroll is sound only when every remaining path exits here.
         ranges = ranges && !(running && state.active && z3::ult(ctx.bv_val(s.repetitions,32), limit));
       }
@@ -211,6 +226,7 @@ public:
       const auto bits = r.buffers.at(s.name).elementBits;
       const auto index = s.dynamicIndex ? eval(*s.dynamicIndex) : ctx.bv_val(s.index,32);
       if (s.dynamicIndex) ranges = ranges && z3::implies(active, z3::ule(index,ctx.bv_val(s.index,32)));
+      if (r.buffers.at(s.name).heap) { state.heap.store(s.name,index,result,active); break; }
       const auto at = location(r.buffers.at(s.name), bases.at(s.name), index, s.member);
       for (unsigned i = 0; i < (bytes ? bits / 8 : 1); ++i) state.writes.push_back(normalize(at + ctx.int_val(i)));
       auto write = [&](const z3::expr &i) { return store(memory, location(r.buffers.at(s.name), bases.at(s.name), i, s.member), result, bits); };
@@ -223,6 +239,7 @@ public:
       break;
     }
     case Statement::Kind::Return:
+      state.heap.finish(active);
       state.output = normalize(z3::ite(active, result, state.output));
       state.active = normalize(state.active && !active); break;
     default: throw std::invalid_argument("unmodeled control flow in buffer verification");
@@ -232,13 +249,15 @@ public:
   Execution execute(const Region &r, Environment scalars,
                     const Environment &bases, z3::expr memory) const {
     ranges = ctx.bool_val(true);
-    State state{std::move(scalars), memory, ctx.bool_val(true), ctx.bv_val(0,32), {}, {}, {}, 0};
+    State state{std::move(scalars), memory, ctx.bool_val(true), ctx.bv_val(0,32), {}, {}, {}, 0, verification_detail::HeapState(ctx)};
     statements(r, r.statements, bases, state, ctx.bool_val(true));
-    return {state.output, state.memory, ranges && !state.active, std::move(state.events), std::move(state.writes), std::move(state.conditions)};
+    return {state.output, state.memory, ranges && state.heap.valid && !state.active, std::move(state.events),
+            std::move(state.writes), std::move(state.conditions), std::move(state.heap.events)};
   }
 };
 }
-Verification verifyMemory(const Region &original, const Region &candidate, unsigned timeoutMs) {
+Verification verifyMemory(const Region &original, const Region &candidate, unsigned timeoutMs,
+                          bool successfulPrivateAllocations) {
   Verification proof;
   const auto hasRecords = [](const Region &r) {
     return std::any_of(r.buffers.begin(), r.buffers.end(), [](const auto &entry) {
@@ -257,8 +276,10 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
   proof.strategy = std::string(bytes ? "shared-byte-memory" : "shared-word-memory") +
                    (wordProjection ? "/aligned-word-projection/blast-select-store/bv-sort-ac" : "") +
                    (original.orderedCalls || candidate.orderedCalls ? "/ordered-opaque-calls" : "") +
+                   (original.ownedHeap || candidate.ownedHeap ? "/owned-heap-lifetime-initialization/coupled-allocation-outcomes" : "") +
                    (original.memoryControl || candidate.memoryControl ? "/guarded-effects/checked-loop-exits/expanded-memory-reads/bv-extract-prop/ctx-simplify" : "") +
                    "/simplify/blast-term-ite/simplify/smt";
+  if (successfulPrivateAllocations) proof.strategy += "/assume-successful-private-allocations/exclude-allocator-events";
   proof.memoryAddressUnit = bytes ? "byte" : "word32";
   try {
     if (original.parameters.size() != candidate.parameters.size()) throw std::invalid_argument("parameter arity mismatch");
@@ -313,8 +334,10 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
     auto middle = z3::tactic(ctx, original.memoryControl || candidate.memoryControl ? "ctx-simplify" : "skip");
     auto solver = (simplify & z3::tactic(ctx, "blast-term-ite") & middle & simplify & z3::tactic(ctx, "smt")).mk_solver();
     solver.set("timeout", timeoutMs);
+    if (successfulPrivateAllocations) for (unsigned i=0;i<std::max(left.heapEvents.size(),right.heapEvents.size());++i)
+      solver.add(verification_detail::HeapState::outcome(ctx,ctx.int_val(i)));
     if (bytes) for (const auto &[name, buffer] : original.buffers)
-      if (buffer.elementBits == 32) solver.add(leftBases.at(name) % ctx.int_val(4) == 0);
+      if (buffer.elementBits == 32 && !buffer.heap) solver.add(leftBases.at(name) % ctx.int_val(4) == 0);
     // File-scope definitions denote separate complete objects. A pointer to a
     // flat record may designate that same complete record, but cannot start at
     // its second field. Ordinary uint32 pointers still alias record members.
@@ -322,10 +345,10 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
     const unsigned unit = bytes ? 1 : 4;
     for (auto a = original.buffers.begin(); a != original.buffers.end(); ++a) {
       const auto &x = a->second;
-      if (!x.minimumElements) continue;
+      if (!x.minimumElements || x.heap) continue;
       for (auto b = std::next(a); b != original.buffers.end(); ++b) {
         const auto &y = b->second;
-        if (!y.minimumElements || (!x.persistent && !y.persistent)) continue;
+        if (!y.minimumElements || y.heap || (!x.persistent && !y.persistent)) continue;
         const auto xb = leftBases.at(a->first), yb = leftBases.at(b->first);
         const auto disjoint = xb + ctx.int_val(x.minimumElements * x.stride() / unit) <= yb ||
                               yb + ctx.int_val(y.minimumElements * y.stride() / unit) <= xb;
@@ -354,6 +377,23 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
     }
     auto mismatch = !left.bounds || !right.bounds || left.first != right.first || memoryMismatch ||
                     ctx.bool_val(left.events.size() != right.events.size());
+    if (!successfulPrivateAllocations) {
+      auto count = [&](const auto &events) {
+        auto total=ctx.int_val(0);
+        for (const auto &event:events) total=total+z3::ite(event.active,ctx.int_val(1),ctx.int_val(0));
+        return total;
+      };
+      mismatch=mismatch || count(left.heapEvents)!=count(right.heapEvents);
+      // Active ordinals are unique and contiguous in each execution. Equal
+      // lengths plus pairwise agreement at equal ordinals is exact sequence
+      // equality even when a branch duplicates or moves an allocator site.
+      for (const auto &a:left.heapEvents) for (const auto &b:right.heapEvents) {
+        const auto aligned=(a.active && b.active && a.ordinal==b.ordinal).simplify(params);
+        if (aligned.is_false()) continue;
+        mismatch=mismatch || (aligned && (ctx.bool_val(a.callee!=b.callee) ||
+          a.count!=b.count || a.object!=b.object || a.offset!=b.offset || a.publicMemory!=b.publicMemory));
+      }
+    }
     for (unsigned i = 0; i < std::min(left.events.size(), right.events.size()); ++i) {
       const auto &a = left.events[i], &b = right.events[i];
       if (a.callee != b.callee || a.arguments.size() != b.arguments.size()) {
@@ -447,6 +487,13 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
       auto word = [&](const z3::expr &e) { return uint32_t(model.eval(e, true).get_numeral_uint64()); };
       for (const auto &input : inputs) proof.inputs.push_back(word(input));
       proof.originalOutput = word(left.first); proof.candidateOutput = word(right.first);
+      if (original.ownedHeap || candidate.ownedHeap) {
+        proof.reason = "heap safety/initialization/cleanup, return, public memory or allocator trace obligation failed";
+        for (unsigned i=0;i<std::max(left.heapEvents.size(),right.heapEvents.size());++i) {
+          const auto name="heap_success_"+std::to_string(i);
+          proof.localValues.emplace_back(name,model.eval(verification_detail::HeapState::outcome(ctx,ctx.int_val(i)),true).is_true() ? 1u : 0u);
+        }
+      }
       if (!left.events.empty() || !right.events.empty()) {
         proof.reason = "return, final memory or ordered call trace differs under shared environment choices";
         for (unsigned i = 0; i < std::max(left.events.size(), right.events.size()); ++i) {
@@ -456,6 +503,7 @@ Verification verifyMemory(const Region &original, const Region &candidate, unsig
       }
       std::set<std::string> seen;
       for (const auto &[name, buffer] : original.buffers) {
+        if (buffer.heap) continue;
         proof.pointerBases.emplace_back(name, model.eval(leftBases.at(name), true).to_string());
         const unsigned cells = buffer.minimumElements * (bytes ? buffer.stride() : buffer.stride() / 4);
         for (unsigned i = 0; i < cells; ++i) {

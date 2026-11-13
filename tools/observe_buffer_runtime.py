@@ -29,10 +29,12 @@ def run(args, root):
     from call_observation_cases import cases as call_cases, driver as call_driver, expected as call_expected, LAYOUTS as call_layouts
     from record_observation_cases import driver as record_driver, expected as record_expected, LAYOUTS as record_layouts, GLOBALS
     from control_observation_cases import cases as control_cases,driver as control_driver,expected as control_expected,LAYOUTS as control_layouts
+    from heap_observation_cases import cases as heap_cases,driver as heap_driver,expected as heap_expected,LAYOUTS as heap_layouts
     selected_cases = control_cases if args.corpus=="control" else byte_cases if args.corpus in ("byte","call","record") else cases
     selected_driver = control_driver if args.corpus=="control" else record_driver if args.corpus=="record" else call_driver if args.corpus=="call" else byte_driver if args.corpus == "byte" else driver
     selected_layouts = record_layouts if args.corpus=="record" else call_layouts if args.corpus=="call" else byte_layouts if args.corpus == "byte" else LAYOUTS
     if args.corpus=='control':selected_layouts=control_layouts
+    if args.corpus=='heap':selected_cases,selected_driver,selected_layouts=heap_cases,heap_driver,heap_layouts
     report = {"schema_version": 3, "status": "running", "protocol": vars(args), "commands": [],
               "environment": environment(), "cases": selected_cases(args.input_protocol), "layouts": selected_layouts, "observations": [],
               "claims": {"known_intermediate_targets": True, "seed_or_encoding_given_to_fit": False,
@@ -48,6 +50,10 @@ def run(args, root):
         report["gdb"] = {"path": gdb, "sha256": file_hash(gdb), "version": command([gdb, "--version"]).splitlines()[0]}
         report["implementation"] = {p: file_hash(ROOT / p) for p in IMPLEMENTATION}
         if args.corpus=='control':report['implementation']['tools/control_observation_cases.py']=file_hash(ROOT/'tools/control_observation_cases.py')
+        if args.corpus=='heap':
+            report['implementation']['tools/heap_observation_cases.py']=file_hash(ROOT/'tools/heap_observation_cases.py')
+            report['implementation']['tools/inspect_region_binaries.py']=file_hash(ROOT/'tools/inspect_region_binaries.py')
+            report['claims']['allocation_failure_paths']='not measured by runtime observer; separately tested with injected failures'
         if args.corpus=="byte": report["implementation"]["tools/byte_observation_cases.py"]=file_hash(ROOT/"tools/byte_observation_cases.py")
         if args.corpus=="record":
             for path in ("tools/record_observation_cases.py","tools/byte_observation_cases.py","tests/fixtures/records.h"):
@@ -76,7 +82,7 @@ def run(args, root):
                 command([tool["path"], "-std=c11", "-pedantic-errors", "-Wall", "-Wextra", "-Werror", "-O2",
                          harness, variant["binary"], "-o", executable_path])
                 extent=0
-                if args.corpus=="call":
+                if args.corpus in ("call","heap"):
                     from inspect_region_binaries import elf_functions
                     extent=elf_functions(Path(variant["binary"]).read_bytes(),[group["function"]])[group["function"]]["bytes"]
                 prepared.append({"group": group, "variant": variant, "executable": str(executable_path), "function_bytes":extent,
@@ -108,13 +114,14 @@ def run(args, root):
                 for ci, case in enumerate(report["cases"]):
                     inputs = directory / f"{ci}.input"
                     inputs.write_text(" ".join(map(str, [p, q, case["x"], *case["memory"]])) + "\n")
-                    wanted = control_expected(group["function"], case["memory"], p, q, case["x"]) if args.corpus=="control" else record_expected(group["function"], case["memory"], p, q, case["x"]) if args.corpus=="record" else call_expected(group["function"], case["memory"], p, q, case["x"]) if args.corpus=="call" else byte_expected(group["function"], case["memory"], p, q, case["x"],
+                    wanted = heap_expected(group["function"],case["memory"],p,q,case["x"]) if args.corpus=='heap' else control_expected(group["function"], case["memory"], p, q, case["x"]) if args.corpus=="control" else record_expected(group["function"], case["memory"], p, q, case["x"]) if args.corpus=="record" else call_expected(group["function"], case["memory"], p, q, case["x"]) if args.corpus=="call" else byte_expected(group["function"], case["memory"], p, q, case["x"],
                         plain_char_signed=group["parameters"][0].get("element_signed",False)) if args.corpus=="byte" else expected(group["function"], case["memory"], p, q, case["x"])
                     for target, value in wanted["targets"].items(): labels.setdefault(target, []).append(value)
                     trace_path, config_path, script = directory / f"{ci}.trace.json", directory / f"{ci}.json", directory / f"{ci}.gdb"
                     write_json(config_path, {"function": group["function"], "step_limit": args.step_limit,
                                             "sample_bytes": args.corpus in ("byte","call"),
-                                            "call_scope": args.corpus=="call", "function_bytes":item["function_bytes"],
+                                            "call_scope": args.corpus in ("call","heap"), "function_bytes":item["function_bytes"],
+                                            "observe_call_events":args.corpus=='call',"observe_heap":args.corpus=='heap',
                                             "persistent_objects":GLOBALS if args.corpus=="record" else {},
                                             "input_file": str(inputs), "output": str(trace_path)})
                     script.write_text("python\nimport sys\nsys.path.insert(0, " + repr(str(ROOT / "tools")) +
@@ -136,6 +143,8 @@ def run(args, root):
                         if args.corpus=="record" and trace.get("persistent_state")!=wanted["persistent_state"]:
                             record["status"]="oracle-mismatch"
                         if trace["stack_read_failures"]: record["status"] = "incomplete-memory-sampling"
+                        if args.corpus=='heap' and (trace.get('heap_observer_errors') or trace.get('heap_live_objects_at_return')!=0):
+                            record['status']='incomplete-heap-sampling'
                     observation["traces"].append(record)
                     progress()
                 observation["instruction_steps"] = sum(t.get("steps") or 0 for t in observation["traces"])
@@ -183,7 +192,7 @@ def main():
     p.add_argument("--step-limit", type=int, default=512)
     p.add_argument("--order-seed",type=int,default=20261115)
     p.add_argument("--input-protocol", choices=("basis-parity-v2", "seeded-v1"), default="basis-parity-v2")
-    p.add_argument("--corpus", choices=("word","byte","call","record","control"), default="word")
+    p.add_argument("--corpus", choices=("word","byte","call","record","control","heap"), default="word")
     p.add_argument("--fit-protocol",choices=("affine-v1","affine-literal-boundaries-v2"),default="affine-literal-boundaries-v2")
     p.add_argument("--output-dir", required=True)
     args = p.parse_args()

@@ -33,7 +33,8 @@ struct Verification {
   bool candidateDefined = true;
 };
 Verification verify(const Region &original, const Region &candidate, unsigned timeoutMs = 10000);
-Verification verifyMemory(const Region &original, const Region &candidate, unsigned timeoutMs);
+Verification verifyMemory(const Region &original, const Region &candidate, unsigned timeoutMs,
+                          bool successfulPrivateAllocations = false);
 Verification verifyIntegerFrame(const IntegerRegion &, const IntegerRegion &,
   const std::vector<std::pair<std::string,IntegerType>> &inputs,
   const std::vector<std::pair<std::string,IntegerType>> &outputs, unsigned timeoutMs,
