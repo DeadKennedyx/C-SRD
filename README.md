@@ -150,6 +150,14 @@ and recursive operations under the sequential contract below; it does not add
 encoded arithmetic rules for those operations. Combine passes by transforming
 the previous pass's output, or by listing ordered project `passes`.
 
+Version 0.17.0 adds `--scope outline-regions`: eligible pure integer expressions
+become ordinary static helpers with seeded scalar-parameter order. Translation
+validation checks the typed expression, capture bindings and helper arguments.
+This includes more integer operators than the affine representation supports;
+moving an expression does not create a new encoded arithmetic rule. The compiled
+pilot and recovery measurements below explicitly check whether the helpers survive
+optimization and change reconstruction costs.
+
 The private integer model covers `_Bool` and standard signed/unsigned types
 through 64 bits, with C promotions and selected casts/operators. It requires
 8-bit bytes, 16-bit short, 32-bit int, 32/64-bit long and 64-bit long long;
@@ -1510,3 +1518,223 @@ actual unoptimized helper calls and nonzero SIMD lane bytes in a disposable prob
 The new tracer observes execution; it does not modify benchmark execution or
 implement debugger interference. The register write used to validate SIMD byte
 order occurs only in the separate test probe.
+
+One fitting job evaluates all three labels using shared traces. Per-target rows
+therefore share resource counters; they are not independent timing samples.
+Matched input-seed repetitions and exact-copy controls remain the units for
+interpreting the collected costs.
+
+**Prior-art check before choosing another pass.** The current published
+[Tigress EncodeData design](https://tigress.wtf/encodeData.html) describes
+operator-aware automatic codec selection, encoding of alias-related integer
+arrays/pointers, and dynamic sharing codecs. Operator-aware selection or adding
+encoded arrays alone would therefore not establish novelty for C-SRD. The same
+documentation identifies alias-analysis precision and cost as practical
+constraints. These are published designs and stated capabilities, not independent
+correctness or protection measurements by this project. They inform the next
+coverage investigation after the current pass-combination measurements; no new
+data transformation is claimed by this checkpoint.
+
+## Runtime-value recovery results — 2026-11-13
+
+**Observation and validation.** The prescribed collection completed all **224
+groups**, **4,480 fresh GDB traces** and **672 fitting replays**. Every traced return
+matches the independent oracle. The separate evidence checker passed all 224 groups,
+recomputing the fixed training-only models and held-out grades and checking input,
+binary, implementation and resource-record bindings. The collection used 1,792
+training queries and 2,688 grading queries. Fitting replays do not count as new
+observations. Artifacts are `build-outline/runtime-1/runtime.json` and
+`build-outline/runtime-summary-1/summary.json`; the checker log is
+`build-outline/runtime-check-1.log`.
+
+The following descriptive medians use the **16 matched groups per variant and
+optimization level** (four families, two compilers, two input-seed repetitions).
+There are two internal targets per group. Ratios use the matched original group;
+CPU includes eight training traces and the first fitting process, excluding
+held-out grading. RSS is peak observer-process RSS, not application memory.
+These heterogeneous groups are not independent samples of one population, and
+the table is not a statistical confidence interval.
+
+| Variant | Internal recovery at `-O0` | Observer CPU ratio | Observer peak RSS ratio | Internal recovery at `-O2` | Observer CPU ratio | Observer peak RSS ratio |
+| --- | --- | --- | --- | --- | --- | --- |
+| Original | 32/32 | 1.000 | 1.000 | 26/32 | 1.000 | 1.000 |
+| Identity emission | 32/32 | 1.047 | 1.000 | 26/32 | 0.999 | 0.998 |
+| Exact binary copy | 32/32 | 1.001 | 1.000 | 26/32 | 1.008 | 0.999 |
+| Control | 32/32 | 2.102 | 2.437 | 32/32 | 1.069 | 1.006 |
+| Outline | 32/32 | 1.292 | 1.178 | 26/32 | 1.003 | 1.000 |
+| Outline then control | 32/32 | 2.482 | 2.849 | 32/32 | 1.098 | 1.006 |
+| Control then outline | 32/32 | 2.441 | 2.849 | 32/32 | 1.080 | 1.006 |
+
+**Interpretation.** No transformed variant loses primary recovery for any target
+that this observer recovered from its original. At `-O0`, outlining raises the
+median paired sampling/fitting CPU cost by about 29%; absolute observer CPU across
+the groups is 0.929–1.967 seconds, compared with 0.847–1.396 seconds for originals.
+It increases the median instruction-step ratio to 1.807. This is a measured cost
+of this fixed debugger/fitter workflow, not a measure of human comprehension or
+minimum recovery cost. The application also incurs the overhead reported in the
+compiled-code pilot. Observer memory includes stored traces and model-fitting
+allocations; a larger observer RSS does not establish hidden runtime values.
+
+At `-O2`, outlining has exactly the same training instruction count as its original
+in all 16 groups. Its paired observer CPU ratios range from 0.949 to 1.041, while
+the exact-copy controls range from 0.964 to 1.108. The absolute CPU ranges are
+0.782–0.915 seconds for outlining and 0.783–0.958 seconds for originals. This run
+does not demonstrate an optimized outlining recovery-cost advantage.
+
+The original's six missed target/repetition pairs are the four-round CRC state in
+Clang and the separately spread Morton `y` value in both compilers. Outlining and
+identity retain those misses. Control and both compositions recover **all six**,
+in addition to every baseline-recoverable target. For these labels and this
+observer, the changed implementation improves recovery coverage. Missing an
+intermediate in an optimized original must therefore not be reported as protection.
+All successful pairs use the same fixed eight-query training budget; this experiment
+does not determine the minimum number of queries needed.
+
+All **224 public-return visibility controls** are recovered on held-out inputs.
+All **672 permuted-label negative controls** produce no candidate. That is zero
+accepted false matches for this finite control set, not a universal false-positive
+bound. Primary target recovery remains empirical held-out evidence, distinct from
+source-model proofs and from the transformation's correctness contract. General
+memory coverage, unknown-value discovery, human reconstruction effort, other
+architectures and other observers remain unmeasured here.
+
+**Protocol tests.** The new runtime integration suite passes four tests on Linux,
+including live Clang artifacts, `-O0` helper calls, `-O2` SIMD
+observations, corrupted evidence, wrong first models and deliberately exhausted
+step budgets (`build-outline/runtime-tests-3.log`, 18.867 seconds). The native
+run passes its three platform-independent tests and explicitly skips live Linux
+GDB collection. These tests validate the observer infrastructure; they do not
+establish protection.
+
+Commands used for the collection and audit follow. Run from the repository root;
+use new output directories when repeating the experiment. The input matrix must
+already have been built by the pilot protocol above.
+
+```sh
+docker run --rm --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
+  -v "$PWD:/work" -w /work csrd-dev:ghidra \
+  python3 tools/measure_matrix_runtime.py \
+  --matrix-report build-outline/pilot-1/matrix/matrix.json \
+  --case crc32_byte --case jenkins_word --case morton16 --case rgb_luma8 \
+  --profile clang-O0 --profile gcc-O0 --profile clang-O2 --profile gcc-O2 \
+  --variant original --variant identity --variant original-copy \
+  --variant control-42 --variant outline-42 \
+  --variant outline-control-42 --variant control-outline-42 \
+  --repetitions 2 --training 8 --heldout 12 --fit-repetitions 3 \
+  --step-limit 2048 --output-dir build-outline/runtime-1
+docker run --rm -v "$PWD:/work" -w /work csrd-dev:ghidra \
+  python3 tools/check_matrix_runtime.py \
+  --runtime-report build-outline/runtime-1/runtime.json \
+  --output-dir build-outline/runtime-summary-1
+```
+
+## Persistent reconstruction and application costs — 2026-11-13
+
+**Protocol.** After runtime collection and its evidence audit, the unchanged `-O2`
+pilot binaries were measured with the frozen Ghidra adapter. All 56 cells are
+retained. Each has three fresh sessions, eight warm-up requests and five measured
+batches of sixteen requests, with a cache flush before each request. First-request,
+warm-up and empty calibration phases are reported separately. Collection, source
+grading and application timing run serially. Timed requests are correlated within
+sessions; repeated requests are not new independent programs.
+
+**Correctness and coverage.** All **168 sessions** complete. The **17 distinct
+reconstructed answers** pass source-model equivalence checks, and all **17
+wrong-output controls** are rejected. Across **840 measured batches**, this gives
+**12,720 source-model-verified requests** and **720 adapter refusals**. There are
+no inconclusive grades or wrong accepted answers. The refusals repeat the same
+three Clang Jenkins cells: control alone and both outlining/control orders. They
+are an adapter expansion-budget limitation, not successful recoveries or an
+additional outlining benefit. Source proofs validate the reconstructed C against
+the original under the model; they do not prove Ghidra's lifting or the compiler.
+
+The longer application experiment completes **392 timed executions** (56 cells,
+seven repetitions, ten million harness iterations each). Its memory-counter
+control also passes: an allocation in the launcher affects inherited resource
+high-water accounting while the executable's own VmHWM remains separately
+reported. No debugger or decompiler runs concurrently with these timings.
+
+The table gives **ranges across cells of median paired ratios**. Successful
+decompiler ratios use three matched sessions per cell and combine JVM, native
+decompiler and reconstruction-adapter CPU during requests. They exclude session
+startup and source grading. Application ratios use seven repetitions and include
+the benchmark's input generation, kernel and checksum. The ranges are descriptive,
+not confidence intervals; the refused cells remain in the report with unavailable
+successful-recovery ratios.
+
+| Variant | Reconstructed cells | Decompiler CPU ratio range | Application CPU ratio range |
+| --- | --- | --- | --- |
+| Identity emission | 8/8 | 0.950–2.050 | 0.906–1.009 |
+| Exact binary copy | 8/8 | 0.963–1.230 | 0.995–1.009 |
+| Outline | 8/8 | 0.955–1.304 | 0.990–1.012 |
+| Control | 7/8 | 0.211–2.481 | 0.999–2.799 |
+| Outline then control | 7/8 | 0.220–2.532 | 0.998–2.832 |
+| Control then outline | 7/8 | 0.216–2.630 | 0.998–2.831 |
+
+**Analysis.** Outlining alone produces the same emitted statement counts as the
+original in all eight cells. Its median paired native-decompiler CPU ratios span
+0.978–1.091 and adapter ratios span 0.993–1.049; larger combined deviations include
+JVM variation also visible in exact-copy controls. Session peak sampled process-tree
+RSS, summarized by per-cell medians, spans 416–741 MiB for outlining, 420–540 MiB
+for copies and 416–469 MiB for originals. These include the JVM and are not evidence
+that application runtime values are hidden. Application VmHWM for outlining is
+1,273,856–1,277,952 bytes. No consistent additional outlining advantage is
+established by these observations.
+
+There are program/compiler-specific effects worth retaining, rather than reducing
+all outcomes to a single success label:
+
+- With GCC Morton, control alone has a **2.481** median paired reconstruction CPU
+  ratio and **1.318** application CPU ratio. Median session CPU per reconstructed
+  request is about **5.06 ms**, versus **1.89 ms** for the original. Both orders
+  with outlining have similar reconstruction costs. This is an observed slowdown
+  for the fixed tool, while every requested reconstruction still succeeds.
+- With Clang CRC, control alone reduces the median paired reconstruction CPU
+  ratio to **0.211**, while application CPU rises to **1.066**. The emitted C has
+  46 statements versus 891 in the original's reconstruction. Clang Morton also
+  reconstructs faster (ratio **0.743**) while application CPU rises to **1.923**.
+- The three refused Clang Jenkins/control cells incur roughly **2.8 times**
+  application CPU. Their missing adapter answers are not evidence of a measured
+  recovery-cost advantage.
+
+The independent bit-linear query experiment likewise shows no required query
+increase on its tested budget grid. Across successful case/profile/budget cells,
+median paired observer CPU ratios span **0.989–1.035** for outlining and
+**0.992–1.025** for copies. The complete submitted models and transcripts are
+already compared above. Failed fits and wrong hypotheses remain failures of that
+observer, not evidence that diversification caused them.
+
+**Artifacts and reproducibility.** `build-outline/session-summary-1/summary.json`
+checks and binds the session, grading and longer application reports; its CSV files
+retain component costs and every cell. The source reports are `sessions-1/`,
+`grades-1/` and `costs-1/` under `build-outline/`. Runtime-observer code is committed
+as `9c85f37`; historical evidence must be checked against its bound implementation
+versions and frozen binaries. The following commands were run serially inside the
+Linux validation environment, with the repository at `/work` and Ghidra 12.2 at
+`/opt/ghidra`. Choose fresh output directories when reproducing.
+
+```sh
+python3 tools/measure_sessions.py --prior-cold build-outline/cold-1/effort.json \
+  --headless /opt/ghidra/support/analyzeHeadless \
+  --repetitions 3 --batches 5 --calls 16 --warmup-calls 8 \
+  --retain-unsupported --output-dir build-outline/sessions-1
+python3 tools/grade_session_answers.py \
+  --sessions build-outline/sessions-1/sessions.json --output-dir build-outline/grades-1
+python3 tools/measure_matrix_costs.py \
+  --matrix-report build-outline/pilot-1/matrix/matrix.json \
+  --profile clang-O2 --profile gcc-O2 --iterations 10000000 --repetitions 7 \
+  --output-dir build-outline/costs-1
+python3 tools/summarize_sessions.py \
+  --sessions build-outline/sessions-1/sessions.json --grades build-outline/grades-1 \
+  --matrix-report build-outline/pilot-1/matrix/matrix.json \
+  --application-costs build-outline/costs-1/costs.json \
+  --output-dir build-outline/session-summary-1
+```
+
+**Next engineering task.** This closes the outlined/control pilot's query,
+decompiler-cost and known-runtime-value measurement gaps. It does not complete the
+four-part development path. Outlining/private-affine and three-pass combinations
+still need measurements; broader compiler profiles, additional seeds, reserved
+families and real-project coverage remain necessary before generalizing. Measure
+the existing combinations next, keeping these negative results as controls, before
+adding another representation or claiming that broader support provides protection.
