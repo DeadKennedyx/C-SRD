@@ -1993,9 +1993,66 @@ Some effects warrant more investigation, without generalizing beyond their cells
 
 The checked joined report is `build-compose/session-summary-1/summary.json`; its
 CSV files retain component counters, individual sessions and every cell. The
-longer application report is `build-compose/costs-1/costs.json`. Known-runtime-value
-collection remains pending completion, so no memory-analysis conclusion follows
-from the decompiler results.
+longer application report is `build-compose/costs-1/costs.json`.
+
+**Checked runtime-value results.** Collection and the evidence checker completed
+for all **224 groups**, **4,480 traces** and **672 fitting runs**. Every traced
+return matched the independent oracle. All **224 public-return visibility
+controls** recovered on held-out inputs, and all **672 permuted-label target
+controls** produced no candidate. The latter comprise 448 internal-target and
+224 public-return negative controls; repeating the deterministic fitter does not
+create additional independent controls.
+
+Each variant has 16 groups: four families, two `-O2` compiler profiles and two
+input-seed repetitions. Each group uses eight training inputs, twelve held-out
+inputs and two selected internal targets, giving **32 internal target cases per
+variant**, not 32 independent algorithms. Transformation seed 42 is unchanged.
+The observer searches fixed instruction/visit/register or stack locations for
+affine relationships to known training labels; the first candidate is frozen
+before held-out grading. The observation window and model class are bounded.
+
+The following ratios are medians across the 16 matched groups. Observer CPU
+includes fresh GDB collection for the eight training inputs plus the **first**
+fitting run, including process startup, trace decompression and model search.
+The other fitting runs check repeatability and retain their own counters. Peak
+RSS is the largest per-process peak across these primary phases; it is not a
+process-tree sum. Held-out collection and grading are excluded from primary
+observer cost. Instruction steps count the training traces. Normal application
+costs are reported separately above.
+
+| Variant | Internal targets recovered | Observer CPU ratio | Observer peak RSS ratio | Instruction-step ratio |
+| --- | ---: | ---: | ---: | ---: |
+| Original | 26/32 | 1.000 | 1.000 | 1.000 |
+| Exact binary copy | 26/32 | 0.992 | 1.000 | 1.000 |
+| Identity emission | 26/32 | 0.984 | 1.000 | 1.000 |
+| Affine | 28/32 | 1.081 | 1.005 | 2.752 |
+| Control | 32/32 | 1.064 | 1.005 | 1.569 |
+| Affine→control | 30/32 | 1.383 | 1.025 | 4.456 |
+| Control→affine | 32/32 | 1.599 | 1.210 | 4.988 |
+| Outline | 26/32 | 0.991 | 1.000 | 1.000 |
+| Outline→affine | 26/32 | 1.002 | 1.001 | 1.000 |
+| Affine→outline | 28/32 | 1.091 | 1.004 | 2.752 |
+| Outline→control | 32/32 | 1.058 | 1.007 | 1.569 |
+| Control→outline | 32/32 | 1.072 | 1.005 | 1.569 |
+| Affine→outline→control | 30/32 | 1.374 | 1.025 | 4.753 |
+| Control→outline→affine | 32/32 | 1.153 | 1.012 | 2.779 |
+
+**No target recovered from the original became unrecovered after transformation.**
+Every selected candidate was correct on all twelve held-out inputs; remaining
+misses were no-candidate outcomes. Several combinations made all 32 target cases
+recoverable, including the six missed on the original. Control→affine increased
+median observer CPU and peak RSS while also increasing recovery. These results
+show costs for this observer and no demonstrated runtime-value hiding advantage
+on these targets. They do not establish whole-memory coverage, human effort,
+all-input recovery or confidentiality; two input-seed repetitions also do not
+establish a robust population-level cost increase.
+
+The raw report is `build-compose/runtime-1/runtime.json`; the checked summary is
+`build-compose/runtime-summary-1/summary.json`. The checker binds artifacts,
+recomputes training-only candidates, grades held-out inputs, checks traced
+returns against independent numerical oracles, and rebuilds paired resource
+summaries. Full per-cell ranges and both successes and misses remain in the
+artifacts rather than being reduced to a single protection score.
 
 Coverage reports reveal a composition gap: in the CRC fixture, outline→affine
 changes the source through outlining but its affine step transforms **zero
@@ -2005,7 +2062,12 @@ assignments. The same limitation appears in control→outline→affine. The RGB
 fixture also has no eligible control region. Such no-op steps are retained in
 the reports and are not counted as successful protection by multiple passes.
 Addressing helper eligibility will require its own semantic checks and matched
-measurements after the present frozen comparison is complete.
+measurements. The frozen comparison is now complete. The next engineering
+increment is to make eligible generated helpers participate in affine
+composition, check actual pass coverage and semantic preservation, then repeat
+the matched cost and recovery measurements. The observed GCC Morton cost
+increase remains a hypothesis to test across further seeds, unrelated families
+and independent observers; it is not a general protection result.
 
 The following commands reproduce the newer-frontend build and project audit;
 choose fresh build/artifact directories instead of overwriting historical runs:
