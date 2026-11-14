@@ -1427,3 +1427,86 @@ python3 tools/measure_code_size.py \
   --matrix-report build-outline-reproduction/matrix/matrix.json \
   --output-dir build-outline-reproduction/sizes
 ```
+
+## Independent outlining recovery and runtime protocol
+
+**Static and query observations.** The unchanged outlining pilot binaries were
+given to the independent bit-linear observer and Ghidra adapter. The query run
+(`build-outline/query-1/`, checked by `query-summary-1/`) completes **504 trials**
+with **37,968 training queries**: **168** source-model-verified recoveries,
+**84** wrong candidates and **252** no-candidate outcomes. All 504 matched
+input/output transcripts agree with the originals. All 252 submitted models and
+candidate C files match their original counterparts, including wrong hypotheses.
+Successful recoveries use the same tested query budgets. This is evidence against
+an advantage for these transforms under this observer, not proof of equivalence
+from fingerprints. The 252 deliberately corrupted output controls are rejected.
+
+The first Ghidra run (`build-outline/cold-1/`) completes **56** fresh-process `-O2`
+tasks: **53** candidates are verified under the source model and three are refused
+by the adapter's control-flow expansion budget. The refusals are Clang Jenkins
+with control alone and with each outlining/control order. **All eight originals
+and all eight outlining-only builds are recovered.** A refusal already present
+with the control component is not an added outlining benefit. These single cold
+trials include JVM startup and analysis; they do not establish stable CPU-cost
+ratios. Persistent-session measurements remain a separate stage.
+
+**Measurement gap and proposed test.** The older scalar runtime-effort collector
+only specifies the sum in `calculate`; its results do not answer whether values
+in CRC, Jenkins, Morton or RGB kernels remain observable. A new collector,
+`tools/measure_matrix_runtime.py`, accepts these frozen matrix artifacts directly.
+It uses prespecified numerical labels from `tools/matrix_runtime_tasks.py`:
+
+| Family | Internal calibration targets |
+| --- | --- |
+| CRC-32 byte update | State after byte injection; state after four bit rounds |
+| Jenkins word hash | State after the first byte; state before finalization |
+| Morton interleave | Separately spread low bits of each input |
+| Integer RGB weighting | Red component; weighted sum before division by 256 |
+
+Public return values are visibility controls and are excluded from internal
+recovery counts. These tasks assume known calibration values; they are not
+unassisted discovery of a program's purpose or recovery of an unknown secret.
+Target labels do not assume that every implementation materializes the named
+intermediate. Missing a value in the original is a limitation of the task or
+observer, not an effect attributable to diversification.
+
+The fixed protocol covers all four families, both compilers, `-O0`/`-O2`, and all
+seven pilot variants. Two matched input-seed repetitions use eight training and
+twelve held-out inputs each. Collection is serial, with randomized variant order
+within each case/profile/repetition block. Each trace gets 2,048 instruction steps
+and a 60-second wall budget. A new GDB process records low 32 bits of general
+registers, the 32-bit lanes of 128-bit SIMD registers, and 64 bytes at SP before
+each instruction, including helper calls. Wider vectors, heap contents, the
+remaining stack and unrelated threads are outside this observation scope. No
+source debug variables or transformation parameters are supplied. Complete traced
+returns must match the independent benchmark oracle.
+
+**Model selection and controls.** A separate measured process receives only the
+training traces and known training values. It fits invertible affine congruences
+modulo 2^32 at locations common to the training runs. It freezes the first fitting
+location in lexical order before grading on held-out data. Repeating that fitting
+process three times measures its cost and checks deterministic answers; these are
+replays of the same observations, not three new debugger experiments. Held-out
+data may reject a selected model but cannot choose a replacement. Counts over all
+candidate locations are diagnostic and are reported separately from primary
+recovery. Permuted training labels are negative controls. Incomplete traces,
+missing locations and failed fits remain explicit outcomes, with unknown recovery
+cost represented as null rather than zero.
+
+The collector records debugger and fitting wall/CPU costs separately, observer
+process and sampled-tree RSS, training/grading query counts, instruction steps,
+value observations, sampled stack depth, model counts, held-out accuracy,
+availability and negative-control outcomes. Primary observer cost excludes grading
+traces; it includes debugger startup/sampling and fitter startup/decompression.
+Application costs remain those measured without the debugger. These observation
+costs are not isolated hardware latency or a general estimate of human effort.
+
+`tools/check_matrix_runtime.py` revalidates the complete cell grid, inputs and
+partitions, binary/tool/trace hashes, return oracles, resource counters, fixed
+training-only fitted answers, held-out grades and matched summaries. Tests cover
+wrong first candidates even when a later candidate would succeed, corrupted
+reports and counters, changed calibration labels, truncated observation budgets,
+actual unoptimized helper calls and nonzero SIMD lane bytes in a disposable probe.
+The new tracer observes execution; it does not modify benchmark execution or
+implement debugger interference. The register write used to validate SIMD byte
+order occurs only in the separate test probe.
