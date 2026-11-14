@@ -1,0 +1,21 @@
+# Separate frontend compatibility environment; historical LLVM 18 artifacts keep
+# using tools/Dockerfile and their recorded binary/tool hashes.
+FROM ubuntu:24.04
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates curl gnupg \
+    && curl --fail --silent --show-error --location \
+       https://apt.llvm.org/llvm-snapshot.gpg.key -o /tmp/llvm-key.asc \
+    && LLVM_KEY_FINGERPRINT="$(gpg --batch --show-keys --with-colons /tmp/llvm-key.asc | awk -F: '$1 == "fpr" {print $10; exit}')" \
+    && test "$LLVM_KEY_FINGERPRINT" = 6084F3CF814B57C1CF12EFD515CF4D18AF4F7421 \
+    && gpg --batch --dearmor -o /usr/share/keyrings/llvm-archive.gpg /tmp/llvm-key.asc \
+    && printf '%s\n' 'deb [signed-by=/usr/share/keyrings/llvm-archive.gpg] https://apt.llvm.org/noble/ llvm-toolchain-noble-23 main' \
+       > /etc/apt/sources.list.d/llvm23.list \
+    && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+       cmake ninja-build clang-23 llvm-23-dev libclang-23-dev libclang-cpp23-dev \
+       libclang-rt-23-dev lld-23 gcc g++ python3 z3 libz3-dev gdb \
+    && mkdir -p /usr/local/share/csrd \
+    && dpkg-query -W > /usr/local/share/csrd/toolchain-packages.txt \
+    && rm -rf /var/lib/apt/lists/* /tmp/llvm-key.asc
+ENV CC=clang-23 CXX=clang++-23 CSRD_TEST_COMPILERS=clang-23:gcc CSRD_REQUIRE_BOTH_COMPILERS=1
+ENV PATH=/usr/lib/llvm-23/bin:$PATH
+WORKDIR /work

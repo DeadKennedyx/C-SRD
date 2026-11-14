@@ -31,6 +31,12 @@ paths, then run `cmake --build build` and
 the Xcode command-line tools are supported. GCC/Clang differential tests include
 optimization and sanitizer configurations; optional external tools report skips.
 
+For GCC-preprocessed system headers that Clang 18 rejects, the separate
+`tools/Dockerfile.llvm23` environment is also tested. It preserves the expanded
+headers rather than removing compiler attributes. Build commands, exact local
+results and the remaining coverage limits are recorded in the
+[compatibility investigation](#composition-and-build-compatibility-investigation--2026-11-13).
+
 ## Use
 
 ```sh
@@ -1738,3 +1744,168 @@ still need measurements; broader compiler profiles, additional seeds, reserved
 families and real-project coverage remain necessary before generalizing. Measure
 the existing combinations next, keeping these negative results as controls, before
 adding another representation or claiming that broader support provides protection.
+
+## Composition and build-compatibility investigation — 2026-11-13
+
+**Questions and frozen design.** Does combining pure integer outlining with private
+affine frames change compiled representations or measured recovery effort beyond
+their individual components? Does adding the structured-control pass change that
+answer? The experiment retains every existing recipe, including both outlining/
+affine orders and the three-pass orders affine→outline→control and
+control→outline→affine. Original, identity-emission and exact-copy controls are
+included. All candidates remain in the report regardless of runtime/size cost;
+no protection advantage or favorable trade-off is presumed.
+
+The development matrix uses the unchanged `build-linux-outline/csrd` executable,
+seed 42, all four development families and twelve GCC/Clang profiles: `-O0`,
+`-O2`, `-O3`, `-Os`, full LTO at `-O2` and ASan/UBSan at `-O1`. This is 672
+requested cells. Each pass validates its actual output and reports coverage for
+both public functions and generated helpers. Differential/oracle checks precede
+timing. Sanitizer timings are instrumentation costs, not production performance
+claims. Independent recovery measurements use the same frozen observer protocols;
+their scope and completed results will be reported separately.
+
+**Compatibility observation.** The existing project experiment excludes its I/O
+translation unit from C-SRD when GCC-expanded system headers fail in Clang 18.
+This is a frontend limitation worth testing independently of new representations.
+[Clang 21 release notes](https://releases.llvm.org/21.1.0/tools/clang/docs/ReleaseNotes.html)
+document changing the argument-bearing GCC `malloc` attribute from an error to a
+warning; the [current Clang attribute reference](https://clang.llvm.org/docs/AttributeReference.html#malloc)
+describes the deallocator form separately from the nonaliasing, zero-argument form.
+The [GCC attribute specification](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-malloc-function-attribute)
+likewise distinguishes these forms. Replacing one with the other could add an
+invalid aliasing assumption. No attribute-rewriting compatibility layer is proposed.
+
+A separate `tools/Dockerfile.llvm23` uses the LLVM 23 branch from the
+[official LLVM package repository](https://apt.llvm.org/), verifies its published
+signing-key fingerprint and saves an installed-package inventory. The LLVM 18
+experimental image and frozen compiler stay available for historical comparisons.
+The new `gcc_header_compatibility` test requires conservative rejection on the old
+frontend and successful transformation/execution on the newer frontend, preserving
+the complete GCC-expanded header prefix. Its full-project path selects all three
+translation units, including allocation/I/O, and checks ordinary and composed
+variants against the independent output/file oracle. These validation gates are
+implemented by `tests/integration/test_gcc_headers.py`; their completed
+results follow. This frontend change does not add broader arithmetic/memory proof
+rules, and opaque external effects retain their existing contracts.
+
+**Compatibility results.** The isolated image built successfully with LLVM
+**23.1.6**, GCC **13.3.0** and Z3 **4.8.12**, on Linux AArch64 under Docker. Its
+local image ID is
+`sha256:a1901f86f7e08c61600f074ab5b525871b4f9f93c0b433e24b6bf71582e53d5c`.
+The LLVM package version is
+`1:23.1.6~++20261108033755+c47d7823685a-1~exp1~20261108153854.96`;
+the complete inventory is retained in `build-linux-llvm23/toolchain-packages.txt`.
+The Dockerfile follows a versioned package branch, not an immutable package
+snapshot: future rebuilds must report their actual versions and rerun validation.
+
+- The old LLVM 18 environment passed its conservative-rejection test; the newer
+  positive project test was explicitly skipped there.
+- The LLVM 23 compatibility tests passed both paths. Their first run exposed an
+  incorrect test-oracle assumption: GCC selects offset 13 in the fixture's
+  compiler-conditioned header, while Clang selects 11. Every GCC variant,
+  including the original, consistently returned the offset-13 result. The oracle
+  was corrected, the failed run retained, and both tests rerun successfully in
+  **2.158 seconds**. No transformation or fixture was changed to fit the answer.
+- The full LLVM 23 suite passed **66/66 CTest groups in 354.89 seconds**. Within
+  those groups, nine optional tests were skipped: one MinGW/sysroot check, six
+  CBMC checks and two live-Ghidra checks. The Linux GDB runtime-observer checks
+  ran. These results do not imply that the skipped tools verified this build.
+
+The subsequent project audit selected **all three translation units**, including
+`main.c` with allocation and file I/O, in every profile. Both output compilers ran
+`-O0`, `-O2`, `-O3`, `-Os`, `-O2 -flto` and ASan/UBSan at `-O1`. All **12/12
+cells and 108 variant configurations** completed: **3,456 independent normal-case
+checks**, **108 file-open failure checks**, and **540 timed executions** passed.
+Checks compare complete file contents and a buffer guard, stdout, stderr and exit
+status. The control pass transformed 16 control nodes in the I/O unit in each
+cell; this is measured coverage of the existing opaque-effects control model,
+not a proof of libc, allocation failure, the filesystem or the whole application.
+The unit test additionally checks malformed arguments, count/repetition bounds
+and the affine→outline→control project recipe. The larger project audit compares
+affine/control orders; it does not measure that outlining recipe.
+
+Project costs remain descriptive whole-process measurements. Across the ten
+non-sanitizer compiler/profile cells, median paired application CPU ratios range
+from **1.000–3.952** for affine, **0.994–1.555** for control, **1.000–4.308** for
+affine→control and **1.001–7.891** for control→affine. Exact-copy ratios span
+**0.855–1.018**, so small differences cannot be interpreted as established
+speedups or overhead. Reconstruction and runtime-value recovery on this complete
+project remain **unmeasured**; no protection conclusion follows from build success,
+code differences or these costs. `build-compose/project-llvm23/matrix.json` binds
+the manifests and source/tool hashes and retains every cell.
+
+**Composition results so far.** The separate frozen LLVM 18 development matrix
+completed **672/672 cells**, **411,768 oracle comparisons** and **3,360 timed
+executions** with no unavailable profile or failed cell. Outlining alone has
+identical linked `.text` to its original in **7/8 `-O2` cells** and **8/8 LTO
+cells**. Adding other passes can retain machine-code differences, but this is
+not evidence of increased reconstruction effort. Independent recovery results
+are reported below as each frozen experiment completes.
+
+The follow-up protocol selects the **112 `-O2` cells** (four families, two
+compilers and fourteen variants including controls), without selecting on their
+cost or structural outcome. The input/output observer uses query budgets 33, 65
+and 128, three repetitions, no warmups and a 30-second process deadline: **1,008
+scheduled trials**. Cold Ghidra reconstruction uses one fresh process/project per
+cell, a 90-second process deadline and ten seconds per source-model proof.
+Persistent Ghidra measurements then use three sessions per cell, eight warmup
+requests and five batches of sixteen requests, retaining unsupported answers.
+Runtime-value observation uses two input-seed repetitions, eight training and
+twelve held-out inputs, a 2,048-instruction limit and three frozen-fit replays.
+These are separate known-value and reconstruction tasks; neither measures human
+reverse-engineering time or proves resistance to an unrestricted observer. Runs
+are serialized, and the already-bound binaries and observer implementations are
+not changed during collection.
+
+The input/output collection and independent evidence checker completed all
+**1,008 trials and 75,936 queries**. Outcomes were **336 recovered under the
+source model**, **168 wrong candidates** and **504 no-candidate results**. Every
+trial had identical probe inputs and outputs to its matched original; all **504
+submitted models and candidate C files** were also identical to their originals'
+submissions. All **504 deliberately corrupted-output controls** were rejected.
+The failures are therefore limitations of this observer on the original functions
+or its budget, not gains caused by diversification. Every successful paired query
+count ratio is **1.0**. Successful-cell median CPU ratio ranges include
+**0.969–1.059** for exact copies, **0.985–1.042** for affine→outline and
+**0.991–1.024** for affine→outline→control. These three-repeat, startup-inclusive
+measurements establish no consistent extra recovery cost. Query minima are only
+over the tested budget grid. The checked artifacts are
+`build-compose/query-1/effort.json` and
+`build-compose/query-summary-1/{summary,pairs}.json`. Cold/persistent decompiler
+and runtime-value measurements have not yet completed.
+
+Coverage reports reveal a composition gap: in the CRC fixture, outline→affine
+changes the source through outlining but its affine step transforms **zero
+functions**, including the three generated helpers. Those helpers have only a
+return expression; the private-frame pass currently selects declarations and
+assignments. The same limitation appears in control→outline→affine. The RGB
+fixture also has no eligible control region. Such no-op steps are retained in
+the reports and are not counted as successful protection by multiple passes.
+Addressing helper eligibility will require its own semantic checks and matched
+measurements after the present frozen comparison is complete.
+
+The following commands reproduce the newer-frontend build and project audit;
+choose fresh build/artifact directories instead of overwriting historical runs:
+
+```sh
+docker build -f tools/Dockerfile.llvm23 -t csrd-dev:llvm23 tools
+docker run --rm --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
+  -v "$PWD:/work" -w /work csrd-dev:llvm23 sh -c '
+    cmake -S . -B build-linux-llvm23 -G Ninja \
+      -DCMAKE_PREFIX_PATH=/usr/lib/llvm-23 -DCMAKE_BUILD_TYPE=Release &&
+    cmake --build build-linux-llvm23 --parallel 2 &&
+    cp /usr/local/share/csrd/toolchain-packages.txt build-linux-llvm23/toolchain-packages.txt &&
+    ctest --test-dir build-linux-llvm23 --output-on-failure -j 1'
+docker run --rm -v "$PWD:/work" -w /work csrd-dev:llvm23 \
+  python3 tools/audit_project_pipeline.py --csrd build-linux-llvm23/csrd \
+  --compiler clang=clang-23 --compiler gcc=gcc \
+  --profile O0 --profile O2 --profile O3 --profile Os --profile lto --profile sanitize \
+  --control-regions --objdump /usr/lib/llvm-23/bin/llvm-objdump \
+  --repetitions 5 --iterations 500000 --cases 24 \
+  --output-dir build-compose/project-llvm23
+```
+
+The new CI job runs the newer-frontend regression suite independently of the
+existing LLVM 18 jobs. Local test results above are not a claim that remote CI
+has run or passed.

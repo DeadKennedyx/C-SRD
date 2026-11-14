@@ -76,3 +76,24 @@ jobs:
             build/matrix-core/
             build/runtime-observation/
             build/reconstruction-effort/
+  linux_llvm23:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build isolated newer frontend environment
+        run: docker build -f tools/Dockerfile.llvm23 -t csrd-dev:llvm23 tools
+      - name: Configure, build and validate
+        run: |
+          docker run --rm --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
+            -v "$PWD:/work" -w /work csrd-dev:llvm23 sh -c '
+              cmake -S . -B build-llvm23 -G Ninja -DCMAKE_PREFIX_PATH=/usr/lib/llvm-23 -DCMAKE_BUILD_TYPE=Release &&
+              cmake --build build-llvm23 --parallel 2 &&
+              cp /usr/local/share/csrd/toolchain-packages.txt build-llvm23/toolchain-packages.txt &&
+              ctest --test-dir build-llvm23 --output-on-failure -j 1'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: llvm23-frontend-compatibility
+          path: |
+            build-llvm23/Testing/Temporary/LastTest.log
+            build-llvm23/toolchain-packages.txt
