@@ -1872,8 +1872,130 @@ count ratio is **1.0**. Successful-cell median CPU ratio ranges include
 measurements establish no consistent extra recovery cost. Query minima are only
 over the tested budget grid. The checked artifacts are
 `build-compose/query-1/effort.json` and
-`build-compose/query-summary-1/{summary,pairs}.json`. Cold/persistent decompiler
-and runtime-value measurements have not yet completed.
+`build-compose/query-summary-1/{summary,pairs}.json`.
+
+The cold Ghidra collection completed **112/112 trials**. It produced candidate
+C in 107 cases; **103 candidates were proved equivalent under the source model**,
+while four GCC CRC grades timed out. All **107 corrupted-output controls** were
+rejected. Five Clang Jenkins/control combinations reached the adapter's fixed
+control-flow expansion limit before producing a candidate. Counts by family are:
+
+| Family | Trials | Verified reconstructed candidates | Grading inconclusive | Adapter unsupported |
+| --- | ---: | ---: | ---: | ---: |
+| CRC | 28 | 24 | 4 | 0 |
+| Jenkins | 28 | 23 | 0 | 5 |
+| Morton | 28 | 28 | 0 | 0 |
+| RGB | 28 | 28 | 0 | 0 |
+
+The inconclusive cells are GCC CRC with affine alone, affine→outline,
+affine→control and affine→outline→control. They are **grading timeouts after
+reconstruction**, not decompiler failures. The five unsupported cells are Clang
+Jenkins with control alone, either control/outlining order, control→affine and
+control→outline→affine. Ghidra itself decompiled those functions; the fixed
+adapter could not expand their complete control flow within its limit. These
+outcomes are retained as coverage gaps, not promoted to protection successes.
+`build-compose/cold-1/effort.json` retains all answers, proof obligations,
+counterexamples and resource counters. Repeated decompiler sessions and
+runtime-value results are reported separately below.
+
+**Persistent answers and a grading limitation.** All **336 scheduled sessions**
+completed and passed their final input-binding checks. Their 37 distinct
+reference/candidate pairs were graded after collection: **36 proved under the
+source model**, **one inconclusive**, **zero counterexamples**, and **all 37
+wrong-output controls rejected**. The unresolved pair is shared by the four GCC
+CRC variants listed above. Repeated requests and shared grades are not independent
+program samples. The source reports are `build-compose/sessions-1/` and `grades-1/`.
+
+The saved unresolved obligation was replayed through the existing checked-circuit
+exporter and ABC. The actual exported circuit passed gate validation, but ABC's
+solve stage reached its **35-second wall limit**, with a requested 30-second solver
+budget. The candidate remains **inconclusive**. The corresponding wrong-output
+control and all three arithmetic-rule controls passed their expected SAT/UNSAT
+checks. `build-compose/grade-circuits-1/` retains the exact query, circuit,
+validation obligations, resource counters and unresolved status. This is grader
+cost, separate from the measured observer's cost; it establishes no reconstruction
+barrier.
+
+**Verification tooling deviation.** The optional checker image initially failed
+because the configured Ubuntu repositories did not provide `berkeley-abc`; that
+failed log is retained. `tools/Dockerfile.abc` instead builds the
+[upstream ABC source](https://github.com/berkeley-abc/abc) at commit
+`0587b343c45b8bd6dddd866fe4ac8e55e9cbda05`, verifying archive SHA-256
+`29d0b03dc2d6fd0704de2478edc993892f75d8b98b23803b93f929fdd2e20c7c`.
+The source revision, copyright and package inventory are saved in the image and
+copied to `build-compose/abc-source/`. The local image ID is
+`sha256:575ad535dba34ddc5d13d2d05059fbbf0589462e3c431be2c5a59cc7f58f303c`.
+The measurement image is unchanged.
+
+A new live integration test checks both a valid 32-bit carry identity and the
+deliberately incorrect identity obtained by dropping carries. All **11 circuit
+tests passed**, including actual ABC execution, using the LLVM 18-built exporter
+in **1.000 seconds** and the LLVM 23-built exporter in **1.025 seconds**. The newer
+frontend CI job now includes this pinned checker image. Its remote result is not
+asserted here. Without `CSRD_ABC` or a `berkeley-abc` executable, the live test
+reports an explicit skip; the earlier 66-group regression result predates this
+additional test case. No exporter or observer implementation was changed to fit
+these saved answers.
+
+**Checked reconstruction and application costs.** The joined evidence checker
+completed: **336 sessions**, **1,680 batches per stage**, and **26,880 measured
+requests**, of which **24,720** have source-model-verified answers, **960** share
+the unresolved grade and **1,200** are explicit adapter refusals. Longer application
+measurements completed **784 executions** (112 cells, seven repetitions, ten
+million harness iterations each). Their memory-counter control passed, separating
+the executable's Linux VmHWM from pre-exec launcher high-water accounting.
+
+The table gives ranges across the eight family/compiler cells of **median paired
+ratios**. Reconstruction CPU combines JVM, native-decompiler and adapter CPU during
+the five measured request batches; it excludes startup and grading. Only pairs
+with verified answers contribute to successful-reconstruction ratios. All eight
+cells contribute to the application ranges, including unsupported or inconclusive
+reconstruction cells. These are descriptive within-artifact repetitions, not
+confidence intervals or a population-level protection score.
+
+| Variant | Source-verified cells | Reconstruction CPU ratio range | Application CPU ratio range |
+| --- | ---: | ---: | ---: |
+| Identity emission | 8/8 | 0.977–1.297 | 0.904–1.010 |
+| Exact binary copy | 8/8 | 0.862–1.129 | 0.990–1.002 |
+| Affine | 7/8 | 0.903–3.541 | 0.972–11.563 |
+| Control | 7/8 | 0.251–2.426 | 0.994–2.797 |
+| Affine→control | 7/8 | 0.809–3.313 | 1.027–11.516 |
+| Control→affine | 7/8 | 0.193–6.913 | 1.024–15.282 |
+| Outline | 8/8 | 0.789–1.301 | 0.992–1.006 |
+| Outline→affine | 8/8 | 0.863–1.575 | 0.993–2.036 |
+| Affine→outline | 7/8 | 0.241–3.730 | 0.974–11.542 |
+| Outline→control | 7/8 | 0.191–3.158 | 1.003–2.804 |
+| Control→outline | 7/8 | 0.210–2.474 | 0.993–2.784 |
+| Affine→outline→control | 7/8 | 0.801–3.284 | 1.033–11.540 |
+| Control→outline→affine | 7/8 | 0.194–3.534 | 1.001–2.791 |
+
+Some effects warrant more investigation, without generalizing beyond their cells:
+
+- **GCC Morton:** control→affine has a 6.913 median paired reconstruction CPU ratio,
+  with a 7.931 application CPU ratio. Median absolute reconstruction CPU is
+  **13.35 ms/request**, versus **1.91 ms/request** for the original; all requests
+  reconstruct successfully. Control→outline→affine measures **6.58 ms/request**,
+  a 3.534 paired CPU ratio and a 1.542 application CPU ratio. Control alone measures
+  2.426 and 1.376 respectively. This is a task-specific cost increase worth
+  checking on more seeds, families and observers, with no demonstrated inability
+  to reconstruct the function.
+- **Clang CRC:** affine→outline reduces reconstruction CPU to a paired ratio of
+  **0.241** while application CPU rises to **1.036**. The reconstructed C has 145
+  statements versus 891 for the original. Its linked text differs from affine
+  alone, so these passes can also make this observer's task easier. Across five
+  other `-O2` cells, affine→outline and affine alone have identical linked text;
+  small timing differences between them cannot be attributed to new instructions.
+- Median session peak sampled process-tree RSS spans **412.6–563.3 MiB** for
+  originals, **417.3–541.4 MiB** for exact copies, **418.0–742.2 MiB** for
+  affine→outline and **431.2–655.5 MiB** for control→outline→affine. These include
+  the JVM and do not measure the application's runtime-value visibility. The
+  latter combination's application VmHWM spans **1,286,144–1,302,528 bytes**.
+
+The checked joined report is `build-compose/session-summary-1/summary.json`; its
+CSV files retain component counters, individual sessions and every cell. The
+longer application report is `build-compose/costs-1/costs.json`. Known-runtime-value
+collection remains pending completion, so no memory-analysis conclusion follows
+from the decompiler results.
 
 Coverage reports reveal a composition gap: in the CRC fixture, outline→affine
 changes the source through outlining but its affine step transforms **zero
@@ -1909,3 +2031,77 @@ docker run --rm -v "$PWD:/work" -w /work csrd-dev:llvm23 \
 The new CI job runs the newer-frontend regression suite independently of the
 existing LLVM 18 jobs. Local test results above are not a claim that remote CI
 has run or passed.
+
+For the composition experiment, use **Bash in the frozen LLVM 18/Ghidra
+environment**, with `/opt/ghidra` available and the unchanged 0.17.0 compiler
+built. These commands keep the twelve-profile build matrix separate from the
+two-profile observer comparison. Run collectors serially. Runtime tracing also
+requires the Docker ptrace permissions used by the regression command above.
+
+```bash
+CSRD_COMPOSE=build-compose-reproduction
+recipes=(private-affine control private-affine-control control-private-affine
+  outline outline-private-affine private-affine-outline outline-control
+  control-outline private-affine-outline-control control-outline-private-affine)
+selected=(--case crc32_byte --case jenkins_word --case morton16 --case rgb_luma8
+  --profile clang-O2 --profile gcc-O2)
+variants=(--variant original --variant identity --variant original-copy)
+for recipe in "${recipes[@]}"; do variants+=(--variant "$recipe-42"); done
+python3 tools/run_matrix.py --matrix benchmarks/rich.json \
+  --csrd build-linux-outline/csrd --compiler clang=clang-18 --compiler gcc=gcc \
+  --objdump llvm-objdump-18 --tier extended \
+  --profile clang-O0 --profile gcc-O0 --profile clang-O2 --profile gcc-O2 \
+  --profile clang-O3 --profile gcc-O3 --profile clang-Os --profile gcc-Os \
+  --profile clang-O2-lto --profile gcc-O2-lto \
+  --profile clang-O1-sanitizers --profile gcc-O1-sanitizers \
+  --strategies identity --seeds 42 --no-select --binary-copy-control \
+  --region-recipes "${recipes[@]}" \
+  --inputs 256 --iterations 1000000 --repetitions 5 --require-selected-profiles \
+  --output-dir "$CSRD_COMPOSE/matrix"
+python3 tools/measure_code_size.py --matrix-report "$CSRD_COMPOSE/matrix/matrix.json" \
+  --output-dir "$CSRD_COMPOSE/sizes"
+python3 tools/measure_effort.py --matrix-report "$CSRD_COMPOSE/matrix/matrix.json" \
+  --csrd build-linux-outline/csrd --observer bitlinear "${selected[@]}" "${variants[@]}" \
+  --wall-budgets 30 --query-budgets 33 65 128 --repetitions 3 --warmups 0 \
+  --timeout-ms 10000 --output-dir "$CSRD_COMPOSE/query"
+python3 tools/summarize_query_recovery.py --effort-report "$CSRD_COMPOSE/query/effort.json" \
+  --output-dir "$CSRD_COMPOSE/query-summary"
+python3 tools/measure_effort.py --matrix-report "$CSRD_COMPOSE/matrix/matrix.json" \
+  --csrd build-linux-outline/csrd --observer ghidra "${selected[@]}" "${variants[@]}" \
+  --wall-budgets 90 --repetitions 1 --warmups 0 --timeout-ms 10000 \
+  --headless /opt/ghidra/support/analyzeHeadless --output-dir "$CSRD_COMPOSE/cold"
+python3 tools/measure_sessions.py --prior-cold "$CSRD_COMPOSE/cold/effort.json" \
+  --headless /opt/ghidra/support/analyzeHeadless --repetitions 3 --batches 5 \
+  --calls 16 --warmup-calls 8 --retain-unsupported --output-dir "$CSRD_COMPOSE/sessions"
+python3 tools/grade_session_answers.py --sessions "$CSRD_COMPOSE/sessions/sessions.json" \
+  --output-dir "$CSRD_COMPOSE/grades"
+python3 tools/measure_matrix_costs.py --matrix-report "$CSRD_COMPOSE/matrix/matrix.json" \
+  --profile clang-O2 --profile gcc-O2 --iterations 10000000 --repetitions 7 \
+  --output-dir "$CSRD_COMPOSE/costs"
+python3 tools/measure_matrix_runtime.py --matrix-report "$CSRD_COMPOSE/matrix/matrix.json" \
+  "${selected[@]}" "${variants[@]}" --repetitions 2 --training 8 --heldout 12 \
+  --step-limit 2048 --fit-repetitions 3 --output-dir "$CSRD_COMPOSE/runtime"
+python3 tools/check_matrix_runtime.py --runtime-report "$CSRD_COMPOSE/runtime/runtime.json" \
+  --output-dir "$CSRD_COMPOSE/runtime-summary"
+```
+
+Build the optional replay image on the host with
+`docker build -f tools/Dockerfile.abc --build-arg BASE=csrd-dev:ghidra -t csrd-dev:compose-abc tools`.
+Inside that image, with the same repository and Ghidra mounts as the frozen run,
+the following checks replay every inconclusive distinct answer and join the
+results. A replay is an additional grade; it does not overwrite the original
+timeout. If a new reproduction has no inconclusive answers, omit the replay and
+the summarizer's `--followup` argument.
+
+```sh
+CSRD_COMPOSE=build-compose-reproduction
+python3 tests/integration/test_query_circuit.py build-linux-outline/csrd-query-circuit
+python3 tools/grade_session_queries.py --grades "$CSRD_COMPOSE/grades" \
+  --circuit-tool build-linux-outline/csrd-query-circuit --abc /usr/local/bin/csrd-abc \
+  --output-dir "$CSRD_COMPOSE/grade-circuits"
+python3 tools/summarize_sessions.py --sessions "$CSRD_COMPOSE/sessions/sessions.json" \
+  --grades "$CSRD_COMPOSE/grades" --followup "$CSRD_COMPOSE/grade-circuits" \
+  --matrix-report "$CSRD_COMPOSE/matrix/matrix.json" \
+  --application-costs "$CSRD_COMPOSE/costs/costs.json" \
+  --output-dir "$CSRD_COMPOSE/session-summary"
+```

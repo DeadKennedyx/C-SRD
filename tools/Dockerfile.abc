@@ -1,0 +1,23 @@
+# Optional saved-query grading environment. Keep the observer's image unchanged.
+# Build the validation image first, or supply another existing C-SRD image.
+ARG BASE=csrd-dev:validation
+FROM ${BASE}
+ARG ABC_REVISION=0587b343c45b8bd6dddd866fe4ac8e55e9cbda05
+ARG ABC_SOURCE_SHA256=29d0b03dc2d6fd0704de2478edc993892f75d8b98b23803b93f929fdd2e20c7c
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates curl make g++ \
+    && rm -rf /var/lib/apt/lists/*
+RUN curl --fail --silent --show-error --location \
+      "https://codeload.github.com/berkeley-abc/abc/tar.gz/${ABC_REVISION}" -o /tmp/abc.tar.gz \
+    && printf '%s  %s\n' "$ABC_SOURCE_SHA256" /tmp/abc.tar.gz | sha256sum -c - \
+    && mkdir /tmp/csrd-abc \
+    && tar -xzf /tmp/abc.tar.gz --strip-components=1 -C /tmp/csrd-abc \
+    && make -C /tmp/csrd-abc -j2 ABC_USE_NO_READLINE=1 \
+    && install -m 0755 /tmp/csrd-abc/abc /usr/local/bin/csrd-abc \
+    && mkdir -p /usr/local/share/csrd \
+    && cp /tmp/csrd-abc/copyright.txt /usr/local/share/csrd/abc-copyright.txt \
+    && printf '%s\n%s\n' "$ABC_REVISION" "$ABC_SOURCE_SHA256" > /usr/local/share/csrd/abc-source.txt \
+    && dpkg-query -W > /usr/local/share/csrd/abc-toolchain-packages.txt \
+    && rm -rf /tmp/csrd-abc /tmp/abc.tar.gz
+ENV CSRD_ABC=/usr/local/bin/csrd-abc
+WORKDIR /work

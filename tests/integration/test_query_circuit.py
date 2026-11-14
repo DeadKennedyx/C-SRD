@@ -5,6 +5,7 @@ messages, not fabricated reconstruction results.
 """
 import json
 import hashlib
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -13,6 +14,7 @@ import tempfile
 import unittest
 
 TOOL = str(Path(sys.argv.pop(1)).resolve())
+ABC = os.environ.get("CSRD_ABC") or shutil.which("berkeley-abc")
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
 from effort_resources import measure
 from verify_circuit import abc_status, check
@@ -103,6 +105,22 @@ class QueryCircuits(unittest.TestCase):
         circuit = self.export()
         self.query.write_text(self.query.read_text().replace("xor", "or"))
         self.invoke("check", self.query, circuit, succeeds=False)
+
+    @unittest.skipUnless(ABC, "live ABC unavailable; set CSRD_ABC or install berkeley-abc")
+    def test_live_checked_bitvector_identity_and_wrong_identity(self):
+        declarations = "(declare-const x (_ BitVec 32))(declare-const y (_ BitVec 32))\n"
+        # Carry decomposition is valid modulo 2^32; dropping the carries is not.
+        identities = [
+            ("(bvadd (bvxor x y) (bvshl (bvand x y) (_ bv1 32)))", "unsat"),
+            ("(bvxor x y)", "sat"),
+        ]
+        for index, (rhs, expected) in enumerate(identities):
+            with self.subTest(expected=expected):
+                self.query.write_text(declarations + f"(assert (distinct (bvadd x y) {rhs}))\n")
+                report = check(self.query, TOOL, ABC, self.root / f"live-abc-{index}")
+                self.assertEqual(report["status"], expected, report.get("reason"))
+                self.assertEqual(report["circuit_validation"]["status"], "circuit-validated")
+                self.assertEqual(report["stages"]["solve"]["status"], "completed")
 
     def test_unsupported_queries(self):
         for text in ["(assert true)(assert false)",
